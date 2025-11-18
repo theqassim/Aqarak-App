@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>عقارك - تسجيل الدخول</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="centered-body">
+
+    <main class="main-content">
+        <div class="auth-frame neon-glow centered-page-content">
+            
+            <div id="login-form-wrapper">
+                <h2>تسجيل الدخول</h2>
+                <p id="login-message" class="message"></p>
+                <form id="login-form" class="auth-form">
+                    <div class="input-group">
+                        <label for="login-email">البريد الإلكتروني</label>
+                        <input type="email" id="login-email" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">كلمة المرور</label>
+                        <input type="password" id="login-password" class="neon-input-white" required>
+                    </div>
+                    <button type="submit" class="btn-neon-auth">دخول</button>
+                </form>
+                <p class="form-switch">
+                    ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
+                </p>
+            </div>
+
+            <div id="register-form-wrapper" style="display:none;">
+                <h2>إنشاء حساب جديد</h2>
+                <p id="register-message" class="message"></p>
+                <form id="register-form" class="auth-form">
+                    <div class="input-group">
+                        <label for="reg-name">الاسم بالكامل</label>
+                        <input type="text" id="reg-name" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-email">البريد الإلكتروني</label>
+                        <input type="email" id="reg-email" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-password">كلمة المرور</label>
+                        <input type="password" id="reg-password" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-confirm-password">تأكيد كلمة المرور</label>
+                        <input type="password" id="reg-confirm-password" class="neon-input-white" required>
+                    </div>
+                    <button type="submit" class="btn-neon-auth">تسجيل</button>
+                </form>
+                <p class="form-switch">
+                    لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

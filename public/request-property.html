@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <title>عقارك - طلب عقار</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="centered-body">
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">عقارك مضمون!</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home.html" class="nav-button neon-button-white">الرئيسية للموقع</a> 
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="auth-frame neon-glow centered-page-content">
+            <h2>احجز عقارك المخصص</h2>
+            <p>املأ النموذج التالي لتخبرنا بالمواصفات التي تبحث عنها، وسنتواصل معك بأسرع وقت.</p>
+
+            <p id="request-message" class="message"></p>
+            <form id="request-form" class="auth-form">
+                <div class="input-group">
+                    <label for="req-name">اسمك بالكامل</label>
+                    <input type="text" id="req-name" name="name" class="neon-input-white" required>
+                </div>
+                <div class="input-group">
+                    <label for="req-phone">رقم هاتفك</label>
+                    <input type="tel" id="req-phone" name="phone" class="neon-input-white" required>
+                </div>
+                <div class="input-group">
+                    <label for="req-email">البريد الإلكتروني (اختياري)</label>
+                    <input type="email" id="req-email" name="email" class="neon-input-white">
+                </div>
+                <div class="input-group">
+                    <label for="req-specs">المواصفات المطلوبة بالتفصيل</label>
+                    <textarea id="req-specs" name="specifications" rows="5" class="neon-input-white" required></textarea>
+                </div>
+                <button type="submit" class="btn-neon-auth">إرسال الطلب</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="global-nav.js"></script> 
+    <script src="logout.js"></script>
+    <script src="request-property.js"></script>
+</body>
+</html>
