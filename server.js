@@ -20,9 +20,9 @@ const SALT_ROUNDS = 10;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || "aqarakproperty@gmail.com";
 const SENDER_PASSWORD = process.env.SENDER_PASSWORD || "httygvavpqopvcxs";
 
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
-const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || 'YOUR_API_KEY';
-const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'YOUR_API_SECRET';
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dalxzpcaj';
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '729741884569459';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'VzrH7_rMdnINCjZK4rg1O2AFiFI';
 
 // 🚨 تهيئة Cloudinary
 cloudinary.config({
