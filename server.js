@@ -2,28 +2,28 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const sqlite3 = require('sqlite3').verbose();
+// 🚨 استبدال sqlite3 بـ pg
+const { Pool } = require('pg'); 
 const multer = require('multer');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 
-// 🚨 الإضافات الجديدة لـ Cloudinary
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🚨 متغيرات البيئة (Render Environment Variables)
+// 🚨 متغيرات البيئة
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Aqarak@123";
 const SALT_ROUNDS = 10;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || "aqarakproperty@gmail.com";
 const SENDER_PASSWORD = process.env.SENDER_PASSWORD || "httygvavpqopvcxs";
 
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'Ydalxzpcaj';
-const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '729741884569459';
-const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'VzrH7_rMdnINCjZK4rg1O2AFiFI';
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || 'YOUR_API_KEY';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'YOUR_API_SECRET';
 
 // 🚨 تهيئة Cloudinary
 cloudinary.config({
@@ -40,11 +40,22 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// 🚨 إعداد اتصال PostgreSQL Pool
+const dbPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false 
+    }
+});
+
+// 🚨 دالة مساعدة لـ PostgreSQL (لتنفيذ الاستعلامات)
+function pgQuery(sql, params = []) {
+    return dbPool.query(sql, params);
+}
+
 // 🚨 دالة مساعدة لحذف الصور من Cloudinary
 async function deleteCloudinaryImages(imageUrls) {
     for (const url of imageUrls) {
-        // Cloudinary URL يحتوي على public_id في نهاية المسار
-        // يتم استخراج الـ public_id من رابط الـ URL
         const publicIdMatch = url.match(/\/(aqarak_[a-z]+\/.+)\.webp/);
         if (publicIdMatch && publicIdMatch[1]) {
             const publicId = publicIdMatch[1];
@@ -58,65 +69,28 @@ async function deleteCloudinaryImages(imageUrls) {
     }
 }
 
-
-// ----------------- SQLite Setup (Remains the same) -----------------
-const dbPath = path.join(__dirname, 'aqarak_test.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error("Could not connect to SQLite database:", err.message);
-    } else {
-        console.log(`Connected to the SQLite database: ${dbPath}`);
-    }
-});
-
-function dbRun(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        db.run(sql, params, function (err) {
-            if (err) reject(err);
-            else resolve(this);
-        });
-    });
-}
-
-function dbAll(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
-}
-
-function dbGet(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-        });
-    });
-}
-
 async function createTables() {
+    // 🚨 PostgreSQL يستخدم SERIAL و NUMERIC بدلاً من AUTOINCREMENT و REAL/TEXT
     const createPropertiesTableSql = `
         CREATE TABLE IF NOT EXISTS properties (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             price TEXT NOT NULL,
-            numericPrice REAL,
+            "numericPrice" NUMERIC, 
             rooms INTEGER,
             bathrooms INTEGER,
             area INTEGER,
             description TEXT,
-            imageUrl TEXT,
-            imageUrls TEXT,
+            "imageUrl" TEXT,
+            "imageUrls" TEXT,
             type TEXT NOT NULL,
-            hiddenCode TEXT UNIQUE
+            "hiddenCode" TEXT UNIQUE
         )
     `;
 
     const createUsersTableSql = `
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
@@ -126,36 +100,36 @@ async function createTables() {
 
     const createSellerSubmissionsTableSql = `
         CREATE TABLE IF NOT EXISTS seller_submissions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sellerName TEXT NOT NULL,
-            sellerPhone TEXT NOT NULL,
-            propertyTitle TEXT NOT NULL,
-            propertyType TEXT NOT NULL,
-            propertyPrice TEXT NOT NULL,
-            propertyArea INTEGER,
-            propertyRooms INTEGER,
-            propertyBathrooms INTEGER,
-            propertyDescription TEXT,
-            imagePaths TEXT,
-            submissionDate TEXT,
+            id SERIAL PRIMARY KEY,
+            "sellerName" TEXT NOT NULL,
+            "sellerPhone" TEXT NOT NULL,
+            "propertyTitle" TEXT NOT NULL,
+            "propertyType" TEXT NOT NULL,
+            "propertyPrice" TEXT NOT NULL,
+            "propertyArea" INTEGER,
+            "propertyRooms" INTEGER,
+            "propertyBathrooms" INTEGER,
+            "propertyDescription" TEXT,
+            "imagePaths" TEXT,
+            "submissionDate" TEXT,
             status TEXT DEFAULT 'pending' 
         )
     `;
 
     const createPropertyRequestsTableSql = `
         CREATE TABLE IF NOT EXISTS property_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             phone TEXT NOT NULL,
             email TEXT,
             specifications TEXT NOT NULL,
-            submissionDate TEXT
+            "submissionDate" TEXT
         )
     `;
 
     const createFavoritesTableSql = `
         CREATE TABLE IF NOT EXISTS favorites (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_email TEXT NOT NULL,
             property_id INTEGER NOT NULL,
             UNIQUE(user_email, property_id)
@@ -163,12 +137,12 @@ async function createTables() {
     `;
 
     try {
-        await dbRun(createPropertiesTableSql);
-        await dbRun(createUsersTableSql);
-        await dbRun(createSellerSubmissionsTableSql);
-        await dbRun(createPropertyRequestsTableSql);
-        await dbRun(createFavoritesTableSql);
-        console.log('Tables created or already exist on SQLite.');
+        await pgQuery(createPropertiesTableSql);
+        await pgQuery(createUsersTableSql);
+        await pgQuery(createSellerSubmissionsTableSql);
+        await pgQuery(createPropertyRequestsTableSql);
+        await pgQuery(createFavoritesTableSql);
+        console.log('Tables created or already exist on PostgreSQL.');
     } catch (err) {
         console.error('ERROR creating tables:', err);
     }
@@ -226,8 +200,6 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 
 app.use(cors());
 app.use(express.json());
-// 🚨 تم إزالة express.static لملفات الصور المرفوعة (لأنها الآن في Cloudinary)
-// app.use(express.static(path.join(__dirname, 'public'))); 
 
 
 // 🚨 منطق التخزين السحابي لطلبات البائعين
@@ -265,8 +237,9 @@ app.post('/api/admin/publish-submission', async (req, res) => {
 
     try {
         // 1. جلب بيانات الطلب
-        const submissionSql = `SELECT * FROM seller_submissions WHERE id = ? AND status = 'pending'`;
-        const submission = await dbGet(submissionSql, [submissionId]);
+        const submissionSql = `SELECT * FROM seller_submissions WHERE id = $1 AND status = 'pending'`;
+        const submissionResult = await pgQuery(submissionSql, [submissionId]);
+        const submission = submissionResult.rows[0];
 
         if (!submission) {
             return res.status(404).json({ message: 'لم يتم العثور على الطلب أو تم التعامل معه مسبقاً.' });
@@ -282,11 +255,13 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         const imageUrlsJson = JSON.stringify(imageUrls);
         const numericPrice = parseFloat(submission.propertyPrice.replace(/[^0-9.]/g, ''));
 
+        // 🚨 استخدام $1, $2, ... في PostgreSQL
         const publishSql = `
             INSERT INTO properties (
-                title, price, numericPrice, rooms, bathrooms, area, description, 
-                imageUrl, imageUrls, type, hiddenCode
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                title, price, "numericPrice", rooms, bathrooms, area, description, 
+                "imageUrl", "imageUrls", type, "hiddenCode"
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            RETURNING id
         `;
 
         const params = [
@@ -297,20 +272,21 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         ];
 
         // 3. النشر في جدول properties
-        await dbRun(publishSql, params);
+        const result = await pgQuery(publishSql, params);
 
         // 4. حذف الطلب الأصلي من جدول seller_submissions
-        const deleteSql = `DELETE FROM seller_submissions WHERE id = ?`;
-        await dbRun(deleteSql, [submissionId]);
+        const deleteSql = `DELETE FROM seller_submissions WHERE id = $1`;
+        await pgQuery(deleteSql, [submissionId]);
 
         res.status(201).json({ 
             success: true, 
-            message: `تم نشر العقار بنجاح! والكود السري: ${hiddenCode}`
+            message: `تم نشر العقار بنجاح! والكود السري: ${hiddenCode}`,
+            id: result.rows[0].id 
         });
 
     } catch (err) {
         console.error('Error publishing submission:', err.message);
-        const errorMessage = err.message && err.message.includes('SQLITE_CONSTRAINT: UNIQUE') ?
+        const errorMessage = err.message && err.message.includes('unique constraint') ?
             'خطأ في قاعدة البيانات: الكود السري مسجل بالفعل.' : 'خطأ في قاعدة البيانات، يرجى مراجعة الكود السري.';
         return res.status(500).json({ message: errorMessage });
     }
@@ -329,7 +305,6 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
         return res.status(400).json({ message: 'الرجاء إرفاق صورة واحدة على الأقل للعقار.' });
     }
 
-    // 🚨 هنا نستخدم file.path الذي هو رابط Cloudinary URL
     const imageUrls = files.map(file => file.path); 
     const mainImageUrl = imageUrls[0];
     const imageUrlsJson = JSON.stringify(imageUrls);
@@ -337,9 +312,10 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
 
     const sql = `
         INSERT INTO properties (
-            title, price, numericPrice, rooms, bathrooms, area, description,
-            imageUrl, imageUrls, type, hiddenCode
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            title, price, "numericPrice", rooms, bathrooms, area, description,
+            "imageUrl", "imageUrls", type, "hiddenCode"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id
     `;
 
     const params = [
@@ -350,16 +326,15 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
     ];
 
     try {
-        const result = await dbRun(sql, params);
+        const result = await pgQuery(sql, params);
         res.status(201).json({
             success: true,
-            message: `تم نشر العقار بنجاح! ID: ${result.lastID}`,
-            id: result.lastID
+            message: `تم نشر العقار بنجاح! ID: ${result.rows[0].id}`,
+            id: result.rows[0].id
         });
     } catch (err) {
         console.error('Error inserting property:', err.message);
-        // 🚨 لا نحتاج لـ fs.unlink لأن الملفات في Cloudinary
-        const errorMessage = err.message && err.message.includes('SQLITE_CONSTRAINT: UNIQUE') ?
+        const errorMessage = err.message && err.message.includes('unique constraint') ?
             'خطأ في قاعدة البيانات: الكود السري مسجل بالفعل.' : 'خطأ في قاعدة البيانات، يرجى مراجعة الكود السري.';
         return res.status(500).json({ message: errorMessage });
     }
@@ -370,20 +345,18 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const files = req.files || [];
 
     if (!data.propertyTitle || !data.sellerName || !data.sellerPhone) {
-        // 🚨 لا نحتاج لـ fs.unlink لملفات Cloudinary في حالة الخطأ
         return res.status(400).json({ message: 'الرجاء ملء الحقول المطلوبة (العنوان والاسم ورقم الهاتف).' });
     }
 
-    // 🚨 نستخدم file.path لتخزين رابط Cloudinary
     const imagePaths = files.map(file => file.path).join(' | ');
     const submissionDate = new Date().toISOString(); 
 
     const sql = `
         INSERT INTO seller_submissions (
-            sellerName, sellerPhone, propertyTitle, propertyType, propertyPrice,
-            propertyArea, propertyRooms, propertyBathrooms, propertyDescription,
-            imagePaths, submissionDate
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice",
+            "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription",
+            "imagePaths", "submissionDate"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     `;
     
     const params = [
@@ -394,7 +367,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     ];
 
     try {
-        await dbRun(sql, params);
+        await pgQuery(sql, params);
         await sendNotificationEmail(data, imagePaths, false);
         
         res.status(200).json({ success: true, message: 'تم استلام طلبك بنجاح للمراجعة.' });
@@ -414,12 +387,12 @@ app.post('/api/request-property', async (req, res) => {
     const submissionDate = new Date().toISOString();
     
     const sql = `
-        INSERT INTO property_requests (name, phone, email, specifications, submissionDate)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO property_requests (name, phone, email, specifications, "submissionDate")
+        VALUES ($1, $2, $3, $4, $5)
     `;
 
     try {
-        await dbRun(sql, [name, phone, email, specifications, submissionDate]);
+        await pgQuery(sql, [name, phone, email, specifications, submissionDate]);
         await sendNotificationEmail(req.body, null, true);
         res.status(200).json({ success: true, message: 'تم استلام طلب عقارك المخصص بنجاح.' });
     } catch (error) {
@@ -435,13 +408,13 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const sql = `INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`;
+        const sql = `INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)`;
         
-        await dbRun(sql, [name, email, hashedPassword, 'user']);
+        await pgQuery(sql, [name, email, hashedPassword, 'user']);
         
         res.status(201).json({ success: true, message: 'تم إنشاء الحساب بنجاح!' });
     } catch (error) {
-        if (error.message && error.message.includes('SQLITE_CONSTRAINT: UNIQUE')) {
+        if (error.message && error.message.includes('unique constraint')) {
             return res.status(400).json({ message: 'هذا البريد الإلكتروني مسجل بالفعل' });
         }
         res.status(500).json({ message: 'خطأ في السيرفر عند التسجيل' });
@@ -454,10 +427,11 @@ app.post('/api/login', async (req, res) => {
         return res.json({ success: true, role: 'admin' });
     }
 
-    const sql = `SELECT * FROM users WHERE email = ?`;
+    const sql = `SELECT * FROM users WHERE email = $1`;
     
     try {
-        const user = await dbGet(sql, [email]);
+        const result = await pgQuery(sql, [email]);
+        const user = result.rows[0];
         
         if (!user) return res.status(401).json({ message: 'الإيميل أو كلمة المرور غير صحيحة' });
 
@@ -478,10 +452,11 @@ app.put('/api/user/change-password', async (req, res) => {
         return res.status(400).json({ message: 'يرجى ملء جميع الحقول.' });
     }
 
-    const sql = `SELECT * FROM users WHERE email = ?`;
+    const sql = `SELECT * FROM users WHERE email = $1`;
 
     try {
-        const user = await dbGet(sql, [email]);
+        const userResult = await pgQuery(sql, [email]);
+        const user = userResult.rows[0];
 
         if (!user) return res.status(404).json({ message: 'المستخدم غير موجود.' });
 
@@ -491,9 +466,9 @@ app.put('/api/user/change-password', async (req, res) => {
         }
 
         const newHashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
-        const updateSql = `UPDATE users SET password = ? WHERE id = ?`;
+        const updateSql = `UPDATE users SET password = $1 WHERE id = $2`;
 
-        await dbRun(updateSql, [newHashedPassword, user.id]);
+        await pgQuery(updateSql, [newHashedPassword, user.id]);
 
         res.json({ success: true, message: 'تم تحديث كلمة المرور بنجاح!' });
     } catch (err) {
@@ -508,12 +483,12 @@ app.delete('/api/user/delete-account', async (req, res) => {
         return res.status(400).json({ message: 'الإيميل مطلوب لحذف الحساب.' });
     }
 
-    const deleteSql = `DELETE FROM users WHERE email = ?`;
+    const deleteSql = `DELETE FROM users WHERE email = $1`;
 
     try {
-        const result = await dbRun(deleteSql, [email]);
+        const result = await pgQuery(deleteSql, [email]);
 
-        if (result.changes === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'لم يتم العثور على المستخدم.' });
         }
         res.json({ success: true, message: 'تم حذف الحساب بنجاح.' });
@@ -528,12 +503,12 @@ app.post('/api/favorites', async (req, res) => {
     if (!userEmail || !propertyId) {
         return res.status(400).json({ message: 'بيانات المستخدم والعقار مطلوبة.' });
     }
-    const sql = `INSERT INTO favorites (user_email, property_id) VALUES (?, ?)`;
+    const sql = `INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`;
     try {
-        await dbRun(sql, [userEmail, propertyId]);
+        await pgQuery(sql, [userEmail, propertyId]);
         res.status(201).json({ success: true, message: 'تمت الإضافة إلى المفضلة.' });
     } catch (err) {
-        if (err.message && err.message.includes('SQLITE_CONSTRAINT')) {
+        if (err.code === '23505') { // PostgreSQL unique violation error code
             return res.status(409).json({ message: 'العقار موجود بالفعل في المفضلة.' });
         }
         return res.status(500).json({ message: 'فشل الإضافة إلى المفضلة.' });
@@ -548,10 +523,10 @@ app.delete('/api/favorites/:propertyId', async (req, res) => {
         return res.status(400).json({ message: 'الإيميل مطلوب للحذف.' });
     }
 
-    const sql = `DELETE FROM favorites WHERE user_email = ? AND property_id = ?`;
+    const sql = `DELETE FROM favorites WHERE user_email = $1 AND property_id = $2`;
     try {
-        const result = await dbRun(sql, [userEmail, propertyId]);
-        if (result.changes === 0) {
+        const result = await pgQuery(sql, [userEmail, propertyId]);
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'العقار غير موجود في المفضلة.' });
         }
         res.json({ success: true, message: 'تمت الإزالة من المفضلة.' });
@@ -567,46 +542,46 @@ app.get('/api/favorites', async (req, res) => {
     }
     
     const sql = `
-        SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p.imageUrl, p.type, f.id AS favorite_id 
+        SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id 
         FROM properties p
         JOIN favorites f ON p.id = f.property_id
-        WHERE f.user_email = ?
+        WHERE f.user_email = $1
         ORDER BY f.id DESC
     `;
 
     try {
-        const rows = await dbAll(sql, [userEmail]);
-        res.json(rows);
+        const result = await pgQuery(sql, [userEmail]);
+        res.json(result.rows);
     } catch (err) {
         return res.status(500).json({ "error": err.message });
     }
 });
 
 app.get('/api/admin/seller-submissions', async (req, res) => {
-    const sql = "SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY submissionDate DESC";
+    const sql = "SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC";
     try {
-        const rows = await dbAll(sql);
-        res.json(rows);
+        const result = await pgQuery(sql);
+        res.json(result.rows);
     } catch (err) {
         return res.status(500).json({ "error": err.message });
     }
 });
 
 app.get('/api/admin/property-requests', async (req, res) => {
-    const sql = "SELECT * FROM property_requests ORDER BY submissionDate DESC";
+    const sql = "SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC";
     try {
-        const rows = await dbAll(sql);
-        res.json(rows);
+        const result = await pgQuery(sql);
+        res.json(result.rows);
     } catch (err) {
         return res.status(500).json({ "error": err.message });
     }
 });
 
 app.delete('/api/admin/property-request/:id', async (req, res) => {
-    const sql = `DELETE FROM property_requests WHERE id = ?`;
+    const sql = `DELETE FROM property_requests WHERE id = $1`;
     try {
-        const result = await dbRun(sql, [req.params.id]);
-        if (result.changes === 0) {
+        const result = await pgQuery(sql, [req.params.id]);
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'لم يتم العثور على الطلب.' });
         }
         res.json({ message: 'تم حذف طلب العقار بنجاح.' });
@@ -617,19 +592,20 @@ app.delete('/api/admin/property-request/:id', async (req, res) => {
 
 app.delete('/api/admin/seller-submission/:id', async (req, res) => {
     const submissionId = req.params.id;
-    const sqlSelect = `SELECT imagePaths FROM seller_submissions WHERE id = ?`;
+    const sqlSelect = `SELECT "imagePaths" FROM seller_submissions WHERE id = $1`;
 
     try {
-        const row = await dbGet(sqlSelect, [submissionId]);
+        const rowResult = await pgQuery(sqlSelect, [submissionId]);
+        const row = rowResult.rows[0];
+
         if (!row) return res.status(404).json({ message: 'لم يتم العثور على الطلب.' });
 
         let imageUrls = (row.imagePaths || '').split(' | ').filter(p => p.trim() !== '');
         
-        // 🚨 حذف الصور من Cloudinary بدلاً من نظام الملفات المحلي
         await deleteCloudinaryImages(imageUrls);
 
-        const deleteSql = `DELETE FROM seller_submissions WHERE id = ?`;
-        await dbRun(deleteSql, [submissionId]);
+        const deleteSql = `DELETE FROM seller_submissions WHERE id = $1`;
+        await pgQuery(deleteSql, [submissionId]);
         
         res.json({ message: 'تم حذف طلب عرض العقار بنجاح.' });
     } catch (err) {
@@ -639,42 +615,43 @@ app.delete('/api/admin/seller-submission/:id', async (req, res) => {
 });
 
 app.get('/api/properties', async (req, res) => {
-    let sql = "SELECT id, title, price, rooms, bathrooms, area, imageUrl, type FROM properties";
+    let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type FROM properties";
     const params = [];
     const filters = [];
+    let paramIndex = 1;
 
     const { type, limit, keyword, minPrice, maxPrice, rooms } = req.query;
 
     if (type) {
-        if (type === 'buy') filters.push("type = ?");
-        else if (type === 'rent') filters.push("type = ?");
+        if (type === 'buy') filters.push(`type = $${paramIndex}`);
+        else if (type === 'rent') filters.push(`type = $${paramIndex}`);
         params.push(type === 'buy' ? 'بيع' : 'إيجار');
+        paramIndex++;
     }
     
     if (keyword) {
-        filters.push("(title LIKE ? OR description LIKE ? OR hiddenCode LIKE ?)"); 
+        filters.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR "hiddenCode" ILIKE $${paramIndex})`);
         params.push(`%${keyword}%`);
-        params.push(`%${keyword}%`);
-        params.push(`%${keyword}%`);
+        paramIndex++;
     }
 
-    if (minPrice) { filters.push("numericPrice >= ?"); params.push(Number(minPrice)); }
-    if (maxPrice) { filters.push("numericPrice <= ?"); params.push(Number(maxPrice)); }
+    if (minPrice) { filters.push(`"numericPrice" >= $${paramIndex}`); params.push(Number(minPrice)); paramIndex++; }
+    if (maxPrice) { filters.push(`"numericPrice" <= $${paramIndex}`); params.push(Number(maxPrice)); paramIndex++; }
 
     if (rooms) {
-        if (rooms === '4+') { filters.push("rooms >= ?"); params.push(4); } 
-        else { filters.push("rooms = ?"); params.push(Number(rooms)); }
+        if (rooms === '4+') { filters.push(`rooms >= $${paramIndex}`); params.push(4); paramIndex++; } 
+        else { filters.push(`rooms = $${paramIndex}`); params.push(Number(rooms)); paramIndex++; }
     }
 
     if (filters.length > 0) sql += " WHERE " + filters.join(" AND ");
     
     sql += " ORDER BY id DESC";
 
-    if (limit) { sql += " LIMIT ?"; params.push(parseInt(limit, 10)); }
+    if (limit) { sql += ` LIMIT $${paramIndex}`; params.push(parseInt(limit, 10)); }
 
     try {
-        const rows = await dbAll(sql, params);
-        res.json(rows);
+        const result = await pgQuery(sql, params);
+        res.json(result.rows);
     } catch (err) {
         return res.status(500).json({ "error": err.message });
     }
@@ -685,7 +662,7 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
     
     let existingImageUrls = JSON.parse(existingImages || '[]');
-    const newImageUrls = req.files ? req.files.map(file => file.path) : []; // 🚨 file.path من Cloudinary
+    const newImageUrls = req.files ? req.files.map(file => file.path) : [];
     
     const allImageUrls = [...existingImageUrls, ...newImageUrls];
     const mainImageUrl = allImageUrls[0];
@@ -698,9 +675,9 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
 
     const sql = `
         UPDATE properties SET
-        title = ?, price = ?, numericPrice = ?, rooms = ?, bathrooms = ?, area = ?, 
-        description = ?, imageUrl = ?, imageUrls = ?, type = ?, hiddenCode = ?
-        WHERE id = ?
+        title = $1, price = $2, "numericPrice" = $3, rooms = $4, bathrooms = $5, area = $6, 
+        description = $7, "imageUrl" = $8, "imageUrls" = $9, type = $10, "hiddenCode" = $11
+        WHERE id = $12
     `;
 
     const params = [
@@ -710,9 +687,9 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     ];
 
     try {
-        const result = await dbRun(sql, params);
+        const result = await pgQuery(sql, params);
 
-        if (result.changes === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'لم يتم العثور على العقار لتحديثه' });
         }
         res.status(200).json({ message: 'تم تحديث العقار بنجاح!' });
@@ -724,12 +701,11 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
 
 app.get('/api/property-by-code/:code', async (req, res) => {
     const code = req.params.code.trim();
-    const codeWithWildcard = '%' + code + '%';
-    
-    const sql = "SELECT id, title, price, hiddenCode FROM properties WHERE UPPER(hiddenCode) LIKE UPPER(?)";
+    const sql = "SELECT id, title, price, \"hiddenCode\" FROM properties WHERE UPPER(\"hiddenCode\") LIKE UPPER($1)";
 
     try {
-        const row = await dbGet(sql, [codeWithWildcard]);
+        const result = await pgQuery(sql, [`%${code}%`]);
+        const row = result.rows[0];
         
         if (row) {
             res.json(row);
@@ -742,13 +718,13 @@ app.get('/api/property-by-code/:code', async (req, res) => {
 });
 
 app.get('/api/property/:id', async (req, res) => {
-    const sql = "SELECT * FROM properties WHERE id = ?";
+    const sql = "SELECT * FROM properties WHERE id = $1";
     
     try {
-        const row = await dbGet(sql, [req.params.id]);
+        const result = await pgQuery(sql, [req.params.id]);
+        const row = result.rows[0];
         
         if (row) {
-            // 🚨 يتم قراءة روابط Cloudinary المخزنة
             if (row.imageUrls) {
                 row.imageUrls = JSON.parse(row.imageUrls);
             } else {
@@ -764,10 +740,11 @@ app.get('/api/property/:id', async (req, res) => {
 });
 
 app.delete('/api/property/:id', async (req, res) => {
-    const sqlSelect = `SELECT imageUrls FROM properties WHERE id = ?`;
+    const sqlSelect = `SELECT "imageUrls" FROM properties WHERE id = $1`;
     
     try {
-        const row = await dbGet(sqlSelect, [req.params.id]);
+        const rowResult = await pgQuery(sqlSelect, [req.params.id]);
+        const row = rowResult.rows[0];
 
         if (!row) return res.status(404).json({ message: 'لم يتم العثور على العقار.' });
 
@@ -776,17 +753,16 @@ app.delete('/api/property/:id', async (req, res) => {
             try {
                 imageUrls = JSON.parse(row.imageUrls);
             } catch (e) {
-                console.error("Failed to parse imageUrls from SQLite:", e.message);
+                console.error("Failed to parse imageUrls:", e.message);
             }
         }
         
-        // 🚨 حذف الصور من Cloudinary
         await deleteCloudinaryImages(imageUrls);
 
-        const deleteSql = `DELETE FROM properties WHERE id = ?`;
-        const deleteResult = await dbRun(deleteSql, [req.params.id]);
+        const deleteSql = `DELETE FROM properties WHERE id = $1`;
+        const deleteResult = await pgQuery(deleteSql, [req.params.id]);
         
-        if (deleteResult.changes === 0) {
+        if (deleteResult.rowCount === 0) {
               return res.status(404).json({ message: 'لم يتم العثور على العقار للحذف.' });
         }
         
