@@ -158,58 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIconClass = isCurrentlyFavorite ? 'fas fa-heart' : 'far fa-heart';
         const favText = isCurrentlyFavorite ? ' تمت الإضافة' : ' أضف إلى المفضلة';
 
-        // 3. بناء الهيكل: التفاصيل أولاً، ثم الصور (لتحقيق الترتيب الصحيح في Grid RTL)
-        const detailHTML = `
-            <div class="property-detail-content">
-                <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
-                <span class="property-code">الكود السري: ${property.hiddenCode}</span>
-
-                <div class="details-layout">
-                    
-                    <div class="details-info-frame neon-glow">
-                        <div class="price-type-info">
-                            <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
-                        </div>
-
-                        <div class="property-specs">
-                            <h3>المواصفات الرئيسية</h3>
-                            <ul class="specs-list">
-                                <li><span>المساحة:</span> ${property.area || 'N/A'} م² <i class="fas fa-ruler-combined"></i></li>
-                                <li><span>عدد الغرف:</span> ${property.rooms || 'N/A'} <i class="fas fa-bed"></i></li>
-                                <li><span>عدد الحمامات:</span> ${property.bathrooms || 'N/A'} <i class="fas fa-bath"></i></li>
-                            </ul>
-                        </div>
-                        
-                        <div class="property-description-box">
-                            <h3>الوصف التفصيلي</h3>
-                            <p>${property.description || 'لا يوجد وصف متوفر حالياً.'}</p>
-                        </div>
-                        
-                        <div class="action-buttons-group">
-                            <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="background-color: #25d366; box-shadow: 0 0 8px #25d366; color: white;">
-                                <i class="fab fa-whatsapp"></i> تواصل معنا للمعاينة
-                            </a>
-                            <button class="favorite-button btn-neon-auth ${favClass}" id="favoriteBtn" data-id="${property.id}" style="background-color: #c0392b; box-shadow: 0 0 8px #e74c3c; color: white;">
-                                <i id="favIcon" class="${favIconClass}"></i> ${favText}
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="image-gallery-frame neon-glow">
-                        <div class="gallery-inner">
-                            <div class="main-image-container">
-                                <img id="property-main-image" src="${imageUrls[0]}" alt="${property.title}" class="main-image">
-                                <button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
-                                <button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
-                            </div>
-                            <div id="image-thumbnails" class="image-thumbnails"></div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        `;
-        
         container.innerHTML = detailHTML;
         
         // 4. ربط العناصر للـ JS (بعد حقن الـ HTML)
