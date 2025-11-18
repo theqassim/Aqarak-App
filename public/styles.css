@@ -304,14 +304,14 @@ a:hover {
 }
 
 .details-info-frame {
-    background-color: var(--detail-box-bg); /* الخلفية البيضاء */
+    background-color: var(--detail-box-bg); 
     color: var(--detail-text-color); 
     border: none;
     padding: 25px;
     border-radius: 12px;
 }
 
-/* 🚨 تصحيح ألوان النصوص والعناوين فوق الخلفية البيضاء */
+/* تصحيح ألوان النصوص والعناوين فوق الخلفية البيضاء */
 .details-info-frame h3 {
     color: var(--secondary-color); 
     text-shadow: none;
@@ -322,7 +322,7 @@ a:hover {
 
 .detail-price {
     font-size: 2.5em;
-    color: var(--error-color); /* أحمر للسعر */
+    color: var(--error-color); 
 }
 
 .price-type-info {
@@ -337,7 +337,7 @@ a:hover {
 
 .price-type-info .property-type {
     background: none;
-    color: #777; /* رمادي داكن */
+    color: #777; 
     font-size: 1.2em;
     font-weight: normal;
     padding: 0;
@@ -349,13 +349,12 @@ a:hover {
     border-left: 3px solid #ccc;
 }
 .specs-list li span {
-    color: var(--primary-color); /* لون داكن لأرقام المواصفات */
+    color: var(--primary-color);
     font-weight: bold;
 }
 .specs-list i {
-    color: var(--secondary-color); /* أيقونات المواصفات */
+    color: var(--secondary-color);
 }
-
 
 .gallery-nav-btn {
     position: absolute;
@@ -592,19 +591,46 @@ a:hover {
 
 /* 11. استجابة التصميم (Media Queries) */
 @media (max-width: 768px) {
+    /* 🚨 تصحيح: لجعل أزرار القائمة لا تتداخل في الموبايل */
     .header-container {
         flex-direction: column;
         text-align: center;
+        padding: 10px 5px;
     }
+    
     .main-nav {
         margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center;
     }
+
+    .main-nav a {
+        margin: 5px 5px; 
+        flex-grow: 1;
+        min-width: 100px;
+        text-align: center;
+    }
+
+    /* تحويل تقسيم التفاصيل إلى عمود واحد */
     .main-content-grid {
         grid-template-columns: 1fr;
     }
     .details-layout {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
+    
+    /* جعل أزرار الإجراءات تستغل كامل العرض */
+    .action-buttons-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .action-buttons-group a, .action-buttons-group button {
+        width: 100%;
+        text-align: center;
+    }
+    
     .main-image-container {
         height: 300px;
     }
