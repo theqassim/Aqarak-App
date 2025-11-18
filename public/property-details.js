@@ -1,5 +1,6 @@
 // property-details.js
 
+// 🚨 دوال مساعدة (نفترض أنها موجودة في utils.js لكن نضعها هنا للسلامة)
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -15,7 +16,7 @@ window.getTypeTag = (type) => {
     return '';
 };
 
-// منطق المفضلة (تمت تحديثه لاستخدام API)
+// 🚨 منطق المفضلة (باستخدام API)
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
@@ -45,7 +46,6 @@ window.toggleFavorite = async (propertyId) => {
             body: body
         });
         
-        // التحقق من النجاح أو التعارض (409)
         if (response.ok || response.status === 409) { 
             if (isFavorite) {
                 btn.classList.remove('is-favorite');
@@ -74,9 +74,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentImageIndex = 0;
     let imageUrls = [];
 
+    // --- الدوال المساعدة للمرئيات والتنقل (التنقل الدائري) ---
     const updateMainImage = (mainImage, thumbnailsContainer) => {
         mainImage.src = imageUrls[currentImageIndex];
-        thumbnailsContainer.querySelectorAll('.thumbnail-image').forEach((thumb, index) => {
+        document.querySelectorAll('.thumbnail-image').forEach((thumb, index) => {
             thumb.classList.toggle('active', index === currentImageIndex);
         });
     };
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
     
+    // --- منطق جلب البيانات وربطها ---
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
@@ -127,11 +129,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let isCurrentlyFavorite = false;
         
         if (userEmail) {
-            // المسار يقوم بجلب قائمة المفضلة ويتم البحث داخلها
             const favCheckResponse = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
             if (favCheckResponse.ok) {
                 const favorites = await favCheckResponse.json();
-                // التحقق مما إذا كان هذا العقار موجوداً في قائمة المفضلة
                 isCurrentlyFavorite = favorites.some(fav => fav.id === property.id);
             }
         }
@@ -158,6 +158,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIconClass = isCurrentlyFavorite ? 'fas fa-heart' : 'far fa-heart';
         const favText = isCurrentlyFavorite ? ' تمت الإضافة' : ' أضف إلى المفضلة';
 
+        // 🚨 بناء الهيكل: التفاصيل أولاً، ثم الصور (لضمان عمل الـ Grid)
+        const detailHTML = `
+            <div class="property-detail-content">
+                <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
+                <span class="property-code">الكود السري: ${property.hiddenCode}</span>
+
+                <div class="details-layout">
+                    
+                    <div class="details-info-frame neon-glow">
+                        <div class="price-type-info">
+                            <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
+                        </div>
+
+                        <div class="property-specs">
+                            <h3>المواصفات الرئيسية</h3>
+                            <ul class="specs-list">
+                                <li><span>المساحة:</span> ${property.area || 'N/A'} م² <i class="fas fa-ruler-combined"></i></li>
+                                <li><span>عدد الغرف:</span> ${property.rooms || 'N/A'} <i class="fas fa-bed"></i></li>
+                                <li><span>عدد الحمامات:</span> ${property.bathrooms || 'N/A'} <i class="fas fa-bath"></i></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="property-description-box">
+                            <h3>الوصف التفصيلي</h3>
+                            <p>${property.description || 'لا يوجد وصف متوفر حالياً.'}</p>
+                        </div>
+                        
+                        <div class="action-buttons-group">
+                            <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="background-color: #25d366; box-shadow: 0 0 8px #25d366; color: white;">
+                                <i class="fab fa-whatsapp"></i> تواصل معنا للمعاينة
+                            </a>
+                            <button class="favorite-button btn-neon-auth ${favClass}" id="favoriteBtn" data-id="${property.id}" style="background-color: #c0392b; box-shadow: 0 0 8px #e74c3c; color: white;">
+                                <i id="favIcon" class="${favIconClass}"></i> ${favText}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="image-gallery-frame neon-glow">
+                        <div class="gallery-inner">
+                            <div class="main-image-container">
+                                <img id="property-main-image" src="${imageUrls[0]}" alt="${property.title}" class="main-image">
+                                <button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
+                                <button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div id="image-thumbnails" class="image-thumbnails"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
+        
         container.innerHTML = detailHTML;
         
         // 4. ربط العناصر للـ JS (بعد حقن الـ HTML)
@@ -169,17 +221,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const updateMainImageWithElements = () => updateMainImage(mainImage, thumbnailsContainer);
 
+        // --- منطق التنقل الدائري بالصور ---
         if(imageUrls.length <= 1) {
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
         }
 
         prevBtn.addEventListener('click', () => {
-            currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+            // التنقل الدائري
+            currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length; 
             updateMainImageWithElements();
         });
 
         nextBtn.addEventListener('click', () => {
+            // التنقل الدائري
             currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
             updateMainImageWithElements();
         });
