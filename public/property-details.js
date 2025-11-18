@@ -45,6 +45,7 @@ window.toggleFavorite = async (propertyId) => {
             body: body
         });
         
+        // التحقق من النجاح أو التعارض (409)
         if (response.ok || response.status === 409) { 
             if (isFavorite) {
                 btn.classList.remove('is-favorite');
@@ -67,27 +68,6 @@ window.toggleFavorite = async (propertyId) => {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const detailHTML = `
-    <div class="property-detail-content">
-        <div class="details-layout">
-            
-            <div class="details-info-frame neon-glow">
-                </div>
-            
-            <div class="image-gallery-frame neon-glow">
-                <div class="gallery-inner">
-                    <div class="main-image-container">
-                        <img id="property-main-image" src="${imageUrls[0]}" alt="${property.title}" class="main-image">
-                        <button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
-                        <button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    <div id="image-thumbnails" class="image-thumbnails"></div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-`;
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
 
@@ -142,15 +122,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(property.message || 'العقار غير موجود في قاعدة البيانات.');
         }
 
-        // 🚨 هنا نحتاج إلى مسار API إضافي للتحقق من حالة المفضلة لهذا العقار
+        // 🚨 التحقق من حالة المفضلة عند تحميل الصفحة
         const userEmail = localStorage.getItem('userEmail');
         let isCurrentlyFavorite = false;
         
         if (userEmail) {
+            // المسار يقوم بجلب قائمة المفضلة ويتم البحث داخلها
             const favCheckResponse = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
             if (favCheckResponse.ok) {
                 const favorites = await favCheckResponse.json();
-                // تحقق مما إذا كان هذا العقار موجوداً في قائمة المفضلة
+                // التحقق مما إذا كان هذا العقار موجوداً في قائمة المفضلة
                 isCurrentlyFavorite = favorites.some(fav => fav.id === property.id);
             }
         }
@@ -177,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIconClass = isCurrentlyFavorite ? 'fas fa-heart' : 'far fa-heart';
         const favText = isCurrentlyFavorite ? ' تمت الإضافة' : ' أضف إلى المفضلة';
 
-        // 3. بناء الهيكل: التفاصيل أولاً، ثم الصور
+        // 3. بناء الهيكل: التفاصيل أولاً، ثم الصور (لتحقيق الترتيب الصحيح في Grid RTL)
         const detailHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -255,6 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateMainImageWithElements();
         });
         
+        // ربط زر المفضلة بالدالة
         if (favoriteButtonEl) {
              favoriteButtonEl.addEventListener('click', () => {
                 window.toggleFavorite(favoriteButtonEl.dataset.id);
