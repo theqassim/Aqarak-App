@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-// 🚨 استبدال sqlite3 بـ pg
 const { Pool } = require('pg'); 
 const multer = require('multer');
 const fs = require('fs');
@@ -48,7 +47,7 @@ const dbPool = new Pool({
     }
 });
 
-// 🚨 دالة مساعدة لـ PostgreSQL (لتنفيذ الاستعلامات)
+// 🚨 دالة مساعدة لـ PostgreSQL
 function pgQuery(sql, params = []) {
     return dbPool.query(sql, params);
 }
@@ -70,7 +69,6 @@ async function deleteCloudinaryImages(imageUrls) {
 }
 
 async function createTables() {
-    // 🚨 PostgreSQL يستخدم SERIAL و NUMERIC بدلاً من AUTOINCREMENT و REAL/TEXT
     const createPropertiesTableSql = `
         CREATE TABLE IF NOT EXISTS properties (
             id SERIAL PRIMARY KEY,
@@ -227,6 +225,12 @@ const uploadProperties = multer({ storage: storageProperties });
 
 // ----------------- API Endpoints -----------------
 
+// 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
+app.get('/', (req, res) => {
+    // نفترض أن ملف index.html موجود في مجلد 'public'
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // 🚨 المسار الجديد: نشر عقار من بيانات موجودة (نشر فوري)
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
@@ -255,7 +259,6 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         const imageUrlsJson = JSON.stringify(imageUrls);
         const numericPrice = parseFloat(submission.propertyPrice.replace(/[^0-9.]/g, ''));
 
-        // 🚨 استخدام $1, $2, ... في PostgreSQL
         const publishSql = `
             INSERT INTO properties (
                 title, price, "numericPrice", rooms, bathrooms, area, description, 
@@ -617,8 +620,8 @@ app.delete('/api/admin/seller-submission/:id', async (req, res) => {
 app.get('/api/properties', async (req, res) => {
     let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type FROM properties";
     const params = [];
-    const filters = [];
     let paramIndex = 1;
+    const filters = [];
 
     const { type, limit, keyword, minPrice, maxPrice, rooms } = req.query;
 
