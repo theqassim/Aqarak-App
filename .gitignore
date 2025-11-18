@@ -1,0 +1,10 @@
+# Dependencies
+/node_modules
+
+# Database Files
+*.sqlite
+*.db
+
+# Log files
+npm-debug.log*
+.DS_Store
