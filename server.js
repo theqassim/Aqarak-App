@@ -199,6 +199,9 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 app.use(cors());
 app.use(express.json());
 
+// 🚨 خدمة الملفات الثابتة (CSS, JS, HTML) من مجلد 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // 🚨 منطق التخزين السحابي لطلبات البائعين
 const storageSeller = new CloudinaryStorage({
