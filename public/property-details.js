@@ -67,6 +67,27 @@ window.toggleFavorite = async (propertyId) => {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const detailHTML = `
+    <div class="property-detail-content">
+        <div class="details-layout">
+            
+            <div class="details-info-frame neon-glow">
+                </div>
+            
+            <div class="image-gallery-frame neon-glow">
+                <div class="gallery-inner">
+                    <div class="main-image-container">
+                        <img id="property-main-image" src="${imageUrls[0]}" alt="${property.title}" class="main-image">
+                        <button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
+                        <button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div id="image-thumbnails" class="image-thumbnails"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+`;
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
 
