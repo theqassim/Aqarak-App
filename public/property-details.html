@@ -7,6 +7,25 @@
     <title>عقارك - تفاصيل العقار</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* 1. الحل القاطع لترتيب Grid (Desktop) */
+        .details-layout {
+            display: grid !important;
+            grid-template-columns: 1fr 2fr !important; /* التفاصيل (يمين) والصور (يسار) */
+            gap: 30px;
+        }
+
+        /* 2. الحل القاطع لعدم تداخل Header في الموبايل */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 180px !important; /* لزيادة المسافة أسفل الهيدر الملتف */
+            }
+            .details-layout {
+                grid-template-columns: 1fr !important; /* عمود واحد في الموبايل */
+            }
+        }
+    </style>
 </head>
 <body class="internal-page">
 
@@ -30,7 +49,7 @@
             <div id="loading-message" class="empty-message">
                 <p>جاري تحميل تفاصيل العقار...</p>
             </div>
-            </div>
+        </div>
     </main>
 
     <footer class="main-footer">
