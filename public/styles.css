@@ -6,17 +6,18 @@
 
 /* 1. المتغيرات والألوان الرئيسية */
 :root {
-    --neon-color: #008cff;      /* اللون الرئيسي: أزرق سماوي/كهربائي */
-    --primary-color: #2c3e50;   /* لون الخلفية الداكن */
-    --secondary-color: #34495e; /* لون العناصر الأغمق قليلاً */
-    --text-color: #ecf0f1;      /* لون النص الفاتح */
-    --error-color: #e74c3c;     /* لون السعر (الأحمر) والأخطاء */
-    --success-color: #2ecc71;   /* لون النجاح */
+    --neon-color: #ffffff;      /* اللون الرئيسي: أبيض لامع للنيون والأزرار */
+    --primary-color: #1c2630;   /* لون الخلفية الداكن جداً */
+    --secondary-color: #2a3847; /* لون العناصر الأغمق قليلاً */
+    --text-color: #f0f0f0;      /* لون النص الفاتح */
+    --accent-color: #008cff;    /* لون ثانوي (أزرق) للعناوين والروابط */
+    --error-color: #e74c3c;     /* لون السعر والأخطاء */
+    --success-color: #2ecc71;   /* لون النجاح (زر الواتساب) */
 
-    /* ألوان لوحة التفاصيل (property-details) */
-    --detail-box-bg: #fff;
-    --detail-text-color: #333;
-    --detail-divider: #ccc;
+    /* ألوان لوحة التفاصيل */
+    --detail-box-bg: var(--secondary-color); /* الخلفية الداكنة المتناسقة */
+    --detail-text-color: var(--text-color); /* نص أبيض */
+    --detail-divider: #444;
     --font-family: 'Arial', sans-serif;
 }
 
@@ -39,13 +40,13 @@ body {
 }
 
 h1, h2, h3 {
-    color: var(--neon-color);
-    text-shadow: 0 0 5px rgba(0, 140, 255, 0.5); 
+    color: var(--accent-color); /* العناوين باللون الأزرق */
+    text-shadow: 0 0 5px rgba(0, 140, 255, 0.3); 
     margin-bottom: 10px;
 }
 
 a {
-    color: var(--neon-color);
+    color: var(--accent-color);
     text-decoration: none;
     transition: color 0.3s;
 }
@@ -59,7 +60,7 @@ a:hover {
     background-color: var(--secondary-color);
     padding: 10px 0;
     border-bottom: 2px solid var(--neon-color);
-    box-shadow: 0 4px 10px rgba(0, 140, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
     position: fixed;
     top: 0;
     width: 100%;
@@ -95,27 +96,29 @@ a:hover {
     margin-right: 15px;
 }
 
+/* 🚨 تنسيق الأزرار الأبيض المضيء والدائري */
 .neon-button-white {
     background: var(--secondary-color); 
-    color: var(--text-color);
+    color: var(--neon-color); /* النص أبيض */
     border: 1px solid rgba(255, 255, 255, 0.5);
     padding: 8px 15px;
-    border-radius: 8px;
+    border-radius: 25px; /* شكل دائري */
     transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* إضاءة خفيفة */
 }
 
 .neon-button-white:hover {
     color: var(--primary-color);
     background: var(--neon-color);
-    box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+    box-shadow: 0 0 10px var(--neon-color), 0 0 30px rgba(255, 255, 255, 0.8);
     border-color: var(--neon-color);
 }
 
 /* 3. تأثيرات النيون والحقول (Forms) */
 .neon-glow {
     background-color: var(--secondary-color);
-    border: 1px solid rgba(0, 140, 255, 0.4);
-    box-shadow: 0 0 10px rgba(0, 140, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
     padding: 20px;
     border-radius: 12px; 
     transition: all 0.3s;
@@ -141,7 +144,7 @@ a:hover {
 
 .neon-input-white:focus, .filters-sidebar input:focus, .filters-sidebar select:focus, .auth-form input:focus, .auth-form textarea:focus {
     border-color: var(--neon-color);
-    box-shadow: 0 0 8px rgba(0, 140, 255, 0.6);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
     outline: none;
     background-color: #3f5268;
 }
@@ -170,8 +173,8 @@ a:hover {
 }
 
 .btn-neon-auth {
-    background-color: var(--neon-color);
-    color: var(--primary-color);
+    background-color: var(--accent-color); /* زر الدخول باللون الأزرق */
+    color: var(--text-color);
     padding: 12px 25px;
     border-radius: 8px;
     font-weight: bold;
@@ -184,7 +187,7 @@ a:hover {
 
 .btn-neon-auth:hover {
     background-color: #0077d4;
-    box-shadow: 0 0 10px var(--neon-color);
+    box-shadow: 0 0 10px var(--accent-color);
 }
 
 .message {
@@ -195,20 +198,28 @@ a:hover {
 }
 .message.error { background-color: rgba(231, 76, 60, 0.2); border: 1px solid var(--error-color); color: var(--error-color); }
 .message.success { background-color: rgba(46, 204, 113, 0.2); border: 1px solid var(--success-color); color: var(--success-color); }
-.message.info { background-color: rgba(52, 152, 219, 0.2); border: 1px solid var(--neon-color); color: var(--neon-color); }
+.message.info { background-color: rgba(52, 152, 219, 0.2); border: 1px solid var(--accent-color); color: var(--accent-color); }
 
-/* 4. قسم البحث (الصفحة الرئيسية) */
+/* 4. شريط البحث (عكس الأيقونة) */
 .search-bar-container {
+    display: flex;
+    flex-direction: row-reverse; /* عكس اتجاه العناصر لجعل الأيقونة على اليسار */
+    max-width: 600px;
+    margin: 0 auto;
     border: 2px solid var(--neon-color);
     border-radius: 30px; 
     overflow: hidden;
-    max-width: 600px;
-    margin: 0 auto;
 }
 
 .search-section {
     padding: 40px 0;
     text-align: center;
+}
+
+.search-bar.neon-input-white {
+    flex-grow: 1;
+    border: none !important;
+    border-radius: 30px 0 0 30px; 
 }
 
 .search-button {
@@ -217,6 +228,8 @@ a:hover {
     padding: 12px 20px;
     font-weight: bold;
     border: none;
+    border-radius: 0 30px 30px 0; 
+    order: -1; /* وضع الزر على اليسار */
 }
 
 /* 5. بطاقات العقارات (Listings) */
@@ -238,7 +251,7 @@ a:hover {
 
 .property-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 140, 255, 0.3);
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
 }
 
 /* تنسيق صور البطاقات (حجم موحد لمنع الاستطالة) */
@@ -258,10 +271,10 @@ a:hover {
 
 .card-content .btn {
     display: inline-block;
-    background-color: var(--neon-color);
-    color: var(--primary-color);
+    background-color: var(--accent-color);
+    color: var(--text-color);
     padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: 25px; /* زر دائري */
     font-weight: bold;
     transition: background-color 0.3s;
     cursor: pointer;
@@ -282,7 +295,7 @@ a:hover {
 .btn-neon-large {
     padding: 15px 40px;
     font-size: 1.2em;
-    border-radius: 10px;
+    border-radius: 30px; /* زر دائري */
     background-color: var(--success-color);
     color: var(--primary-color);
     font-weight: bold;
@@ -305,16 +318,16 @@ a:hover {
 }
 
 .details-info-frame {
-    background-color: var(--detail-box-bg); 
+    background-color: var(--detail-box-bg); /* الخلفية الداكنة المتناسقة */
     color: var(--detail-text-color); 
     border: none;
     padding: 25px;
     border-radius: 12px;
 }
 
-/* تصحيح ألوان النصوص والعناوين فوق الخلفية البيضاء */
+/* 🚨 تصحيح ألوان النصوص والعناوين فوق الخلفية الداكنة */
 .details-info-frame h3 {
-    color: var(--secondary-color); 
+    color: var(--accent-color); /* العناوين باللون الأزرق */
     text-shadow: none;
 }
 .details-info-frame .submission-desc {
@@ -322,8 +335,9 @@ a:hover {
 }
 
 .detail-price {
-    font-size: 2.5em;
-    color: var(--error-color); 
+    font-size: 1.5em; /* 🚨 تصغير حجم السعر */
+    color: var(--neon-color); /* 🚨 السعر باللون الأبيض/النيون */
+    font-weight: normal;
 }
 
 .price-type-info {
@@ -338,23 +352,63 @@ a:hover {
 
 .price-type-info .property-type {
     background: none;
-    color: #777; 
+    color: var(--text-color); 
     font-size: 1.2em;
     font-weight: normal;
     padding: 0;
 }
 
+/* 🚨 تنسيق المواصفات جنبًا إلى جنب */
+.specs-list {
+    display: flex; 
+    justify-content: space-around;
+    list-style: none;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    border-top: 1px solid var(--detail-divider);
+    border-bottom: 1px solid var(--detail-divider);
+}
 .specs-list li {
-    background-color: #f7f7f7;
-    color: var(--detail-text-color);
-    border-left: 3px solid #ccc;
+    background: none;
+    padding: 0;
+    margin-bottom: 0;
+    flex-direction: row;
+    align-items: center;
+    color: var(--text-color);
 }
 .specs-list li span {
-    color: var(--primary-color);
-    font-weight: bold;
+    color: var(--text-color);
+    font-weight: normal;
+    margin-left: 5px;
 }
 .specs-list i {
-    color: var(--secondary-color);
+    color: var(--neon-color);
+    margin-left: 5px;
+}
+
+
+/* 🚨 تنسيق أزرار الإجراءات (دائري ومضيء) */
+.action-buttons-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+.action-buttons-group a, .action-buttons-group button {
+    border-radius: 25px; /* دائري */
+    padding: 12px 15px;
+    font-size: 1em;
+    flex-grow: 1;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* إضاءة */
+}
+.action-buttons-group .whatsapp-btn {
+    background-color: var(--success-color);
+    color: var(--primary-color);
+}
+.action-buttons-group .favorite-button {
+    background-color: var(--error-color);
+    color: var(--text-color);
 }
 
 .gallery-nav-btn {
@@ -422,7 +476,7 @@ a:hover {
 
 .icon-large {
     font-size: 3em;
-    color: var(--neon-color);
+    color: var(--accent-color);
     margin-bottom: 15px;
 }
 
@@ -594,7 +648,7 @@ a:hover {
 @media (max-width: 768px) {
     /* 🚨 زيادة الإزاحة العلوية للمحتوى لتجنب تداخل الهيدر (الحل النهائي) */
     body {
-        padding-top: 180px; /* زيادة القيمة لتعويض ارتفاع الـ Header الملتف */
+        padding-top: 180px; 
     }
     
     /* تصحيح: لجعل أزرار القائمة لا تتداخل في الموبايل */

@@ -1,0 +1,150 @@
+/*
+=====================================================
+auth.css - (تنسيق المصادقة: نيوني داكن + شكل عصري)
+=====================================================
+*/
+
+/* 1. المتغيرات والألوان */
+:root {
+    --neon-color: #ffffff;      /* اللون الرئيسي: أبيض لامع للنيون */
+    --primary-color: #1c2630;   /* لون الخلفية الداكن جداً */
+    --secondary-color: #2a3847; /* لون فريم الحقول الداكن */
+    --accent-color: #008cff;    /* لون ثانوي (أزرق) للعناوين والروابط */
+    --text-color: #f0f0f0;      /* لون النص الفاتح */
+    --success-color: #2ecc71;   /* لون النجاح (زر الدخول) */
+    --divider-color: #444;      /* لون الخط الفاصل */
+}
+
+/* 2. التنسيق العام والمركزية */
+body {
+    font-family: 'Cairo', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-color); /* الخلفية الداكنة */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    direction: rtl;
+    text-align: right;
+    color: var(--text-color);
+}
+
+/* 3. واجهة الدخول/التسجيل: الفريم المستدير */
+.auth-container {
+    background-color: var(--secondary-color); /* الخلفية الداكنة للفريم */
+    padding: 30px 40px;
+    border-radius: 25px; /* حواف دائرية قوية */
+    /* تأثير النيون الأبيض المضيء */
+    box-shadow: 0 0 10px var(--neon-color), 
+                0 0 20px rgba(255, 255, 255, 0.4); 
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--divider-color);
+}
+
+.logo-title {
+    color: var(--accent-color); /* لون أزرق للشعار */
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 140, 255, 0.5);
+}
+
+/* 4. أزرار التبديل (دخول/تسجيل) */
+.toggle-switch {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--primary-color);
+    border-radius: 15px;
+    padding: 5px;
+    margin-bottom: 25px;
+}
+
+.toggle-button {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-color); /* نص أبيض */
+    border-radius: 12px;
+    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.toggle-button.active {
+    background-color: var(--accent-color); /* لون أزرق عند التحديد */
+    color: var(--primary-color); /* نص داكن فوق الأزرق */
+    box-shadow: 0 0 8px var(--accent-color);
+}
+
+/* 5. النماذج وحقول الإدخال */
+.auth-form h2 {
+    color: var(--text-color);
+    text-shadow: none;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    color: var(--text-color);
+    font-weight: 400;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--divider-color);
+    border-radius: 10px;
+    box-sizing: border-box;
+    background-color: var(--primary-color); /* خلفية داكنة للحقل */
+    color: var(--text-color);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    text-align: right;
+}
+
+.input-field:focus {
+    border-color: var(--neon-color); /* نيون أبيض عند التركيز */
+    box-shadow: 0 0 5px var(--neon-color);
+    outline: none;
+}
+
+/* 6. زر الدخول/إنشاء الحساب (أخضر دائري) */
+.auth-button {
+    background-color: var(--success-color); /* لون أخضر */
+    color: var(--primary-color); /* نص داكن */
+    padding: 14px 20px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 25px; /* زر دائري الحواف (Pill shape) */
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    font-size: 16px;
+    /* تأثير الإضاءة الخضراء */
+    box-shadow: 0 0 10px var(--success-color), 
+                0 0 20px rgba(46, 204, 113, 0.4);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.auth-button:hover {
+    background-color: #218838;
+    box-shadow: 0 0 15px var(--success-color);
+}
+
+.small-text {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin-top: 15px;
+}
+
+/* إخفاء النموذج عند التبديل */
+.hidden {
+    display: none;
+}
