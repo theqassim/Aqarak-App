@@ -11,7 +11,8 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// 🚨 تصحيح: استخدام process.env.PORT الصحيح
+const PORT = process.env.PORT || 3000; 
 
 // 🚨 متغيرات البيئة
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
@@ -777,8 +778,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
 app.get('/', (req, res) => {
-    // هذا المسار سيخدم index.html فقط إذا لم يتم العثور على أي ملف ثابت أو مسار API آخر.
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 🚨 معالج أخطاء شامل (يجب وضعه قبل app.listen) - لضمان إرجاع JSON في حالة خطأ 500
+app.use((err, req, res, next) => {
+    console.error("CRITICAL SERVER ERROR:", err.stack);
+    
+    // إذا كان الخطأ من قاعدة البيانات أو خطأ غير مُعالج
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    // إرسال رد JSON موحد في حالة الخطأ بدلاً من HTML
+    res.status(500).json({
+        success: false,
+        message: 'خطأ داخلي حرج في الخادم. يرجى مراجعة السجلات (Logs) في Render.',
+        error: err.message
+    });
 });
 
 
