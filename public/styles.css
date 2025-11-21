@@ -1,0 +1,649 @@
+/*
+=====================================================
+تنسيقات CSS الأساسية والنيون (styles.css) - (النسخة النهائية والمصححة)
+=====================================================
+*/
+
+/* 1. المتغيرات والألوان الرئيسية */
+:root {
+    --neon-color: #008cff;      /* اللون الرئيسي: أزرق سماوي/كهربائي */
+    --primary-color: #2c3e50;   /* لون الخلفية الداكن */
+    --secondary-color: #34495e; /* لون العناصر الأغمق قليلاً */
+    --text-color: #ecf0f1;      /* لون النص الفاتح */
+    --error-color: #e74c3c;     /* لون السعر (الأحمر) والأخطاء */
+    --success-color: #2ecc71;   /* لون النجاح */
+
+    /* ألوان لوحة التفاصيل (property-details) */
+    --detail-box-bg: #fff;
+    --detail-text-color: #333;
+    --detail-divider: #ccc;
+    --font-family: 'Arial', sans-serif;
+}
+
+/* Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    direction: rtl; 
+    text-align: right;
+    /* الإزاحة القياسية للشاشات الكبيرة */
+    padding-top: 80px; 
+}
+
+h1, h2, h3 {
+    color: var(--neon-color);
+    text-shadow: 0 0 5px rgba(0, 140, 255, 0.5); 
+    margin-bottom: 10px;
+}
+
+a {
+    color: var(--neon-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: var(--text-color);
+}
+
+/* 2. الـ Header والتنقل */
+.main-header {
+    background-color: var(--secondary-color);
+    padding: 10px 0;
+    border-bottom: 2px solid var(--neon-color);
+    box-shadow: 0 4px 10px rgba(0, 140, 255, 0.2);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-left: 10px;
+    border: 2px solid var(--neon-color);
+    box-shadow: 0 0 8px var(--neon-color);
+}
+
+.logo-text {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--neon-color);
+    text-shadow: 0 0 10px var(--neon-color);
+}
+
+.main-nav a {
+    margin-right: 15px;
+}
+
+.neon-button-white {
+    background: var(--secondary-color); 
+    color: var(--text-color);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+}
+
+.neon-button-white:hover {
+    color: var(--primary-color);
+    background: var(--neon-color);
+    box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+    border-color: var(--neon-color);
+}
+
+/* 3. تأثيرات النيون والحقول (Forms) */
+.neon-glow {
+    background-color: var(--secondary-color);
+    border: 1px solid rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.2);
+    padding: 20px;
+    border-radius: 12px; 
+    transition: all 0.3s;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 0.9em;
+}
+
+.neon-input-white, .filters-sidebar input, .filters-sidebar select, .auth-form input, .auth-form textarea {
+    background: var(--secondary-color);
+    border: 1px solid #7f8c8d;
+    color: var(--text-color);
+    padding: 12px 15px;
+    border-radius: 8px; 
+    width: 100%;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.neon-input-white:focus, .filters-sidebar input:focus, .filters-sidebar select:focus, .auth-form input:focus, .auth-form textarea:focus {
+    border-color: var(--neon-color);
+    box-shadow: 0 0 8px rgba(0, 140, 255, 0.6);
+    outline: none;
+    background-color: #3f5268;
+}
+
+.centered-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.main-content {
+    flex-grow: 1;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.centered-page-content {
+    max-width: 550px; 
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.auth-form {
+    display: grid;
+    gap: 15px;
+}
+
+.btn-neon-auth {
+    background-color: var(--neon-color);
+    color: var(--primary-color);
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    font-size: 1.1em;
+    margin-top: 10px;
+}
+
+.btn-neon-auth:hover {
+    background-color: #0077d4;
+    box-shadow: 0 0 10px var(--neon-color);
+}
+
+.message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    text-align: center;
+}
+.message.error { background-color: rgba(231, 76, 60, 0.2); border: 1px solid var(--error-color); color: var(--error-color); }
+.message.success { background-color: rgba(46, 204, 113, 0.2); border: 1px solid var(--success-color); color: var(--success-color); }
+.message.info { background-color: rgba(52, 152, 219, 0.2); border: 1px solid var(--neon-color); color: var(--neon-color); }
+
+/* 4. قسم البحث (الصفحة الرئيسية) */
+.search-bar-container {
+    border: 2px solid var(--neon-color);
+    border-radius: 30px; 
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-section {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.search-button {
+    background-color: var(--neon-color);
+    color: var(--primary-color);
+    padding: 12px 20px;
+    font-weight: bold;
+    border: none;
+}
+
+/* 5. بطاقات العقارات (Listings) */
+.listings-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.property-card {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 140, 255, 0.3);
+}
+
+/* تنسيق صور البطاقات (حجم موحد لمنع الاستطالة) */
+.property-card img {
+    width: 100%;
+    height: 200px; 
+    object-fit: cover; 
+    display: block;
+}
+
+.card-content .price {
+    font-size: 1.4em;
+    color: var(--neon-color);
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.card-content .btn {
+    display: inline-block;
+    background-color: var(--neon-color);
+    color: var(--primary-color);
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    border: none;
+}
+
+.request-box {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.request-text {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.btn-neon-large {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border-radius: 10px;
+    background-color: var(--success-color);
+    color: var(--primary-color);
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 0 10px var(--success-color);
+    transition: all 0.3s;
+}
+
+.btn-neon-large:hover {
+    background-color: #24a860;
+    box-shadow: 0 0 15px var(--success-color);
+}
+
+/* 6. لوحة التفاصيل (property-details.html) */
+.details-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* التفاصيل (يمين) والصور (يسار) */
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.details-info-frame {
+    background-color: var(--detail-box-bg); 
+    color: var(--detail-text-color); 
+    border: none;
+    padding: 25px;
+    border-radius: 12px;
+}
+
+/* تصحيح ألوان النصوص والعناوين فوق الخلفية البيضاء */
+.details-info-frame h3 {
+    color: var(--secondary-color); 
+    text-shadow: none;
+}
+.details-info-frame .submission-desc {
+    color: var(--detail-text-color);
+}
+
+.detail-price {
+    font-size: 2.5em;
+    color: var(--error-color); 
+}
+
+.price-type-info {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 15px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed var(--detail-divider);
+}
+
+.price-type-info .property-type {
+    background: none;
+    color: #777; 
+    font-size: 1.2em;
+    font-weight: normal;
+    padding: 0;
+}
+
+.specs-list li {
+    background-color: #f7f7f7;
+    color: var(--detail-text-color);
+    border-left: 3px solid #ccc;
+}
+.specs-list li span {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+.specs-list i {
+    color: var(--secondary-color);
+}
+
+.gallery-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--text-color);
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.3s;
+}
+.gallery-nav-btn:hover {
+    background: rgba(0, 140, 255, 0.8);
+    color: var(--primary-color);
+}
+.prev-btn { right: 10px; }
+.next-btn { left: 10px; }
+
+
+.main-image-container {
+    position: relative;
+    width: 100%;
+    height: 450px; 
+    overflow: hidden;
+    border-radius: 8px; 
+    background-color: var(--primary-color); 
+}
+
+/* استخدام 'contain' لعرض الصورة كاملة دون قص في المعرض */
+.main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+    display: block;
+}
+
+.thumbnail-image {
+    width: 80px;
+    height: 60px;
+    object-fit: cover; 
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+}
+.thumbnail-image.active {
+    border-color: var(--neon-color);
+    box-shadow: 0 0 5px var(--neon-color);
+}
+
+/* 7. لوحة تحكم الأدمن والطلبات */
+.admin-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.dashboard-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.icon-large {
+    font-size: 3em;
+    color: var(--neon-color);
+    margin-bottom: 15px;
+}
+
+.count-number {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--error-color);
+}
+
+.btn-full {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.submission-card {
+    background-color: #4a5d71; 
+    border-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.submission-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    margin: 15px 0;
+}
+
+.submission-thumbnail {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    margin-left: 10px;
+    border: 1px solid var(--neon-color);
+}
+
+.thumbnails-flex {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-neon-red {
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+.btn-neon-red:hover {
+    background-color: #c0392b;
+}
+
+/* 8. معرض الصور المصغر لصفحة البائع */
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 10px;
+    min-height: 80px; 
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background-color: var(--secondary-color);
+    overflow: auto;
+}
+
+.preview-image {
+    width: 100px;
+    height: 70px;
+    object-fit: cover;
+    border: 2px solid var(--neon-color);
+    border-radius: 4px;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.existing-image-wrapper {
+    position: relative;
+    width: 100px;
+    height: 70px;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 5;
+}
+
+/* 9. زر الإرسال الأخضر الكبير */
+.btn-neon-large-green {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border-radius: 30px; 
+    background-color: var(--success-color); 
+    color: var(--primary-color);
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--success-color);
+    transition: all 0.3s;
+}
+
+.btn-neon-large-green:hover {
+    background-color: #24a860;
+    box-shadow: 0 0 15px var(--success-color), 0 0 20px var(--success-color);
+}
+
+/* 10. الـ Footer */
+.main-footer {
+    background-color: var(--secondary-color);
+    padding: 20px 0;
+    border-top: 2px solid var(--neon-color);
+    margin-top: 40px;
+    text-align: center;
+    color: #bdc3c7;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.social-links {
+    margin: 15px 0 10px;
+}
+
+.social-links a {
+    font-size: 1.5em;
+    margin: 0 10px;
+    color: var(--neon-color);
+}
+
+.contact-info {
+    font-weight: bold;
+    color: var(--neon-color);
+    margin-bottom: 5px;
+}
+
+/* 11. استجابة التصميم (Media Queries) */
+@media (max-width: 768px) {
+    /* 🚨 زيادة الإزاحة العلوية للمحتوى لتجنب تداخل الهيدر (الحل النهائي) */
+    body {
+        padding-top: 180px; /* زيادة القيمة لتعويض ارتفاع الـ Header الملتف */
+    }
+    
+    /* تصحيح: لجعل أزرار القائمة لا تتداخل في الموبايل */
+    .header-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 10px 5px;
+    }
+    
+    .main-nav {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center;
+    }
+
+    .main-nav a {
+        margin: 5px 5px; 
+        flex-grow: 1;
+        min-width: 100px;
+        text-align: center;
+    }
+
+    /* تحويل تقسيم التفاصيل إلى عمود واحد */
+    .main-content-grid {
+        grid-template-columns: 1fr;
+    }
+    .details-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    /* جعل أزرار الإجراءات تستغل كامل العرض */
+    .action-buttons-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .action-buttons-group a, .action-buttons-group button {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .main-image-container {
+        height: 300px;
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .centered-page-content {
+        max-width: 95%;
+    }
+}

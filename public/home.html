@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <script src="auth-guard.js"></script>
+    <title>عقارك - الرئيسية</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">عقارك مضمون!</span>
+            </div>
+            <nav class="main-nav">
+                <a href="all-properties.html" class="nav-button neon-button-white">جميع العقارات</a>
+                <a href="buy.html" class="nav-button neon-button-white">شراء</a>
+                <a href="rent.html" class="nav-button neon-button-white">ايجار</a>
+                <a href="seller-dashboard.html" class="nav-button neon-button-white">اعرض عقار للبيع!</a>
+                <a href="user-dashboard.html" class="nav-button neon-button-white">حسابي</a> 
+                </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="search-section">
+            <div class="search-bar-container">
+                <input type="text" class="search-bar neon-input-white" placeholder="ابحث عن عقارك (الاسم، السعر، الغرف، الكود السري)...">
+                <button class="search-button"><i class="fas fa-search"></i> ابحث</button>
+            </div>
+        </section>
+
+        <section class="listings-section">
+            <h2 class="section-title">أحدث العقارات</h2>
+            <div class="listings-container" id="listings-container">
+            </div>
+        </section>
+        
+        <section class="request-property-section">
+            <div class="request-box neon-glow centered-page-content">
+                <p class="request-text">لم تجد العقار الذي تبحث عنه؟</p>
+                <a href="request-property.html" class="btn-neon-large">احجز عقارك الآن!</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://www.facebook.com/share/17H591aR7r/" title="فيسبوك" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/aqarak.eg?igsh=ZHZhd2U0NTg4MzAy" title="انستجرام" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38" title="واتساب" target="_blank"><i class="fab fa-whatsapp"></i></a>
+            </div>
+            <p class="contact-info">تواصلوا معنا!</p>
+            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+        </div>
+    </footer>
+    <script src="home.js"></script>
+    <script src="global-nav.js"></script> 
+    <script src="dash.js"></script> 
+    <script src="logout.js"></script> 
+    <script src="search-handler.js"></script>
+    <script src="utils.js"></script>
+</body>
+</html>
