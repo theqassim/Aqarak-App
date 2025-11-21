@@ -318,7 +318,7 @@ a:hover {
 }
 
 .details-info-frame {
-    background-color: var(--detail-box-bg); /* الخلفية الداكنة المتناسقة */
+    background-color: var(--detail-box-bg); 
     color: var(--detail-text-color); 
     border: none;
     padding: 25px;
@@ -645,14 +645,14 @@ a:hover {
 
 /* 11. استجابة التصميم (Media Queries) */
 @media (max-width: 768px) {
-    /* 🚨 الإزاحة العلوية للمحتوى لتجنب تداخل الهيدر (الحل النهائي) */
+    /* 🚨 زيادة الإزاحة العلوية للمحتوى لتجنب تداخل الهيدر (الحل النهائي) */
     body {
         padding-top: 180px; 
     }
     
-    /* تصحيح: لجعل أزرار القائمة لا تتداخل في الموبايل */
+    /* 🚨 تحويل الهيدر إلى عرض رأسي لكي تظهر الأزرار متتالية */
     .header-container {
-        flex-direction: column;
+        flex-direction: column; /* اللوجو أولاً، ثم القائمة تحته */
         text-align: center;
         padding: 10px 5px;
     }
@@ -660,18 +660,17 @@ a:hover {
     .main-nav {
         margin-top: 10px;
         display: flex;
-        /* 🚨 إزالة الالتفاف وإضافة التمرير الأفقي لإبقاء الأزرار على سطر واحد */
-        flex-wrap: nowrap; 
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 5px;
-        justify-content: flex-start;
+        flex-wrap: wrap; /* 🚨 السماح بالالتفاف لظهور الأزرار على سطرين */
+        overflow-x: hidden; 
+        justify-content: center;
+        width: 100%;
+        padding-bottom: 0;
     }
 
     .main-nav a {
         margin: 5px 5px; 
-        flex-shrink: 0; /* منع الانكماش */
-        min-width: 110px; /* ضمان عرض أدنى */
+        flex-grow: 1;
+        min-width: 100px;
         text-align: center;
     }
 
