@@ -11,7 +11,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-const PORT = process.env.process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // 🚨 متغيرات البيئة
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
