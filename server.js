@@ -11,8 +11,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-// 🚨 تصحيح: استخدام process.env.PORT الصحيح
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 
 // 🚨 متغيرات البيئة
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
@@ -47,6 +46,20 @@ const dbPool = new Pool({
         rejectUnauthorized: false 
     }
 });
+
+// 🚨 اختبار الاتصال المبدئي والضروري
+dbPool.connect()
+    .then(client => {
+        console.log("Successfully connected to PostgreSQL!");
+        client.release(); // تحرير العميل إلى المجمع
+    })
+    .catch(err => {
+        console.error("FATAL ERROR: Could not connect to PostgreSQL pool.");
+        console.error("PG Connection Error Message:", err.message);
+        // إيقاف العملية لمنع الخطأ المجهول (TypeError)
+        process.exit(1); 
+    });
+
 
 // 🚨 دالة مساعدة لـ PostgreSQL
 function pgQuery(sql, params = []) {
@@ -223,7 +236,7 @@ const storageProperties = new CloudinaryStorage({
 const uploadProperties = multer({ storage: storageProperties });
 
 
-// ----------------- 1. مسارات API (يجب أن تكون أولاً) -----------------
+// ----------------- 1. مسارات API -----------------
 
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
@@ -770,7 +783,7 @@ app.get('/api/ping', (req, res) => {
 });
 
 
-// ----------------- 2. مسارات الخدمة الثابتة (يجب أن تأتي في النهاية) -----------------
+// ----------------- 2. مسارات الخدمة الثابتة ومعالج الأخطاء (يجب أن تأتي في النهاية) -----------------
 
 // 🚨 خدمة الملفات الثابتة (CSS, JS, HTML) من مجلد 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -780,6 +793,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // 🚨 معالج أخطاء شامل (يجب وضعه قبل app.listen) - لضمان إرجاع JSON في حالة خطأ 500
 app.use((err, req, res, next) => {
