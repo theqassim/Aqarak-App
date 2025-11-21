@@ -11,7 +11,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.process.env.PORT || 3000;
 
 // 🚨 متغيرات البيئة
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
@@ -199,7 +199,6 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 app.use(cors());
 app.use(express.json());
 
-
 // 🚨 منطق التخزين السحابي لطلبات البائعين
 const storageSeller = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -223,7 +222,7 @@ const storageProperties = new CloudinaryStorage({
 const uploadProperties = multer({ storage: storageProperties });
 
 
-// ----------------- 1. مسارات المصادقة والـ CRUD (يجب أن تأتي أولاً) -----------------
+// ----------------- 1. مسارات API (يجب أن تكون أولاً) -----------------
 
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
@@ -778,7 +777,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
 app.get('/', (req, res) => {
-    // نفترض أن ملف index.html موجود في مجلد 'public'
+    // هذا المسار سيخدم index.html فقط إذا لم يتم العثور على أي ملف ثابت أو مسار API آخر.
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
