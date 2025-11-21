@@ -20,9 +20,9 @@ const SALT_ROUNDS = 10;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || "aqarakproperty@gmail.com";
 const SENDER_PASSWORD = process.env.SENDER_PASSWORD || "httygvavpqopvcxs";
 
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dalxzpcaj';
-const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '729741884569459';
-const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'VzrH7_rMdnINCjZK4rg1O2AFiFI';
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || 'YOUR_API_KEY';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'YOUR_API_SECRET';
 
 // 🚨 تهيئة Cloudinary
 cloudinary.config({
@@ -199,9 +199,6 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 app.use(cors());
 app.use(express.json());
 
-// 🚨 خدمة الملفات الثابتة (CSS, JS, HTML) من مجلد 'public'
-app.use(express.static(path.join(__dirname, 'public')));
-
 
 // 🚨 منطق التخزين السحابي لطلبات البائعين
 const storageSeller = new CloudinaryStorage({
@@ -226,15 +223,8 @@ const storageProperties = new CloudinaryStorage({
 const uploadProperties = multer({ storage: storageProperties });
 
 
-// ----------------- API Endpoints -----------------
+// ----------------- 1. مسارات المصادقة والـ CRUD (يجب أن تأتي أولاً) -----------------
 
-// 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
-app.get('/', (req, res) => {
-    // نفترض أن ملف index.html موجود في مجلد 'public'
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// 🚨 المسار الجديد: نشر عقار من بيانات موجودة (نشر فوري)
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
 
@@ -243,7 +233,6 @@ app.post('/api/admin/publish-submission', async (req, res) => {
     }
 
     try {
-        // 1. جلب بيانات الطلب
         const submissionSql = `SELECT * FROM seller_submissions WHERE id = $1 AND status = 'pending'`;
         const submissionResult = await pgQuery(submissionSql, [submissionId]);
         const submission = submissionResult.rows[0];
@@ -252,7 +241,6 @@ app.post('/api/admin/publish-submission', async (req, res) => {
             return res.status(404).json({ message: 'لم يتم العثور على الطلب أو تم التعامل معه مسبقاً.' });
         }
 
-        // 2. تجهيز البيانات للنشر في جدول properties
         const imageUrls = (submission.imagePaths || '').split(' | ').filter(p => p.trim() !== '');
         if (imageUrls.length === 0) {
             return res.status(400).json({ message: 'لا توجد صور مرفقة في الطلب للنشر.' });
@@ -277,10 +265,8 @@ app.post('/api/admin/publish-submission', async (req, res) => {
             submission.propertyType, hiddenCode
         ];
 
-        // 3. النشر في جدول properties
         const result = await pgQuery(publishSql, params);
 
-        // 4. حذف الطلب الأصلي من جدول seller_submissions
         const deleteSql = `DELETE FROM seller_submissions WHERE id = $1`;
         await pgQuery(deleteSql, [submissionId]);
 
@@ -782,6 +768,20 @@ app.delete('/api/property/:id', async (req, res) => {
 app.get('/api/ping', (req, res) => {
     res.json({ status: "OK", server_time: new Date() });
 });
+
+
+// ----------------- 2. مسارات الخدمة الثابتة (يجب أن تأتي في النهاية) -----------------
+
+// 🚨 خدمة الملفات الثابتة (CSS, JS, HTML) من مجلد 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+// 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
+app.get('/', (req, res) => {
+    // نفترض أن ملف index.html موجود في مجلد 'public'
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
