@@ -162,7 +162,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const detailHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
-                <span class="property-code">الكود السري: ${property.hiddenCode}</span>
 
                 <div class="details-layout">
                     
