@@ -1,6 +1,7 @@
 // admin-edit.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // التحقق من صلاحية الأدمن
     if (localStorage.getItem('userRole') !== 'admin') {
         window.location.href = 'index.html';
         return;
@@ -14,43 +15,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMessageEl = document.getElementById('edit-form-message');
     let currentPropertyId = null; 
 
-    // 1. منطق البحث بالكود السري
+    // --- دالة مساعدة لجلب البيانات بأمان (تمنع خطأ JSON input) ---
+    async function safeFetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const text = await response.text(); // قراءة الرد كنص أولاً
+        
+        let data;
+        try {
+            data = text ? JSON.parse(text) : {}; // محاولة التحويل لـ JSON
+        } catch (err) {
+            throw new Error(`خطأ في استجابة السيرفر: لم يتم إرجاع بيانات JSON صالحة. (${response.status})`);
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || `حدث خطأ: ${response.status}`);
+        }
+
+        return data;
+    }
+
+    // 1. منطق البحث بالكود السري (مصحح)
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = document.getElementById('search-code').value;
+        const code = document.getElementById('search-code').value.trim();
+        
+        if (!code) {
+            searchMessageEl.textContent = 'الرجاء إدخال كود للعقارات.';
+            searchMessageEl.className = 'error';
+            return;
+        }
+
         searchMessageEl.textContent = 'جاري البحث...';
         searchMessageEl.className = '';
         editArea.style.display = 'none';
 
         try {
-            // المسار الذي يبحث بالكود السري (موجود في server.js)
-            const response = await fetch(`/api/property-by-code/${code}`);
-            
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'فشل البحث.');
-            }
-            
-            const result = await response.json();
+            // استخدام الدالة الآمنة بدلاً من fetch العادي
+            const result = await safeFetchJson(`/api/property-by-code/${code}`);
             
             // جلب التفاصيل الكاملة باستخدام الـ ID
             await loadPropertyDetailsForEdit(result.id);
+            
             searchMessageEl.textContent = 'تم العثور على العقار.';
             searchMessageEl.className = 'success';
             editArea.style.display = 'block';
 
         } catch (error) {
-            searchMessageEl.textContent = `خطأ: ${error.message}`;
+            console.error("Search Error:", error);
+            searchMessageEl.textContent = error.message;
             searchMessageEl.className = 'error';
         }
     });
 
-    // 2. دالة جلب البيانات وملء حقول التعديل
+    // 2. دالة جلب البيانات وملء حقول التعديل (مصححة)
     async function loadPropertyDetailsForEdit(id) {
         currentPropertyId = id;
         try {
-            const response = await fetch(`/api/property/${id}`);
-            const property = await response.json();
+            const property = await safeFetchJson(`/api/property/${id}`);
 
             document.getElementById('edit-property-id').value = property.id;
             document.getElementById('edit-property-title').textContent = property.title;
@@ -66,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderExistingImages(property.imageUrls || []);
             
         } catch (error) {
+            console.error("Load Details Error:", error);
             editMessageEl.textContent = 'فشل في تحميل تفاصيل العقار للتعديل.';
             editMessageEl.className = 'error';
         }
@@ -94,14 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
         container.querySelectorAll('.remove-image-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                const urlToRemove = e.target.dataset.url;
-                e.target.closest('.existing-image-wrapper').remove();
+                // العثور على العنصر الأب في حالة الضغط على الأيقونة داخل الزر
+                const btn = e.target.closest('.remove-image-btn');
+                const urlToRemove = btn.dataset.url;
+                
+                btn.closest('.existing-image-wrapper').remove();
                 
                 // تحديث قائمة الصور المخفية
                 let updatedUrls = JSON.parse(hiddenInput.value);
                 updatedUrls = updatedUrls.filter(url => url !== urlToRemove);
                 hiddenInput.value = JSON.stringify(updatedUrls);
-                editMessageEl.textContent = 'تم إزالة الصورة. لا تنس حفظ التعديلات.';
+                
+                editMessageEl.textContent = 'تم إزالة الصورة من العرض (اضغط حفظ لتأكيد الحذف).';
                 editMessageEl.className = 'info';
             });
         });
@@ -123,7 +149,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData,
             });
 
-            const data = await response.json();
+            // قراءة الرد يدوياً هنا أيضاً لأننا نستخدم fetch مباشرة للـ FormData
+            const text = await response.text();
+            let data;
+            try { data = text ? JSON.parse(text) : {}; } catch(e) {}
 
             if (!response.ok) {
                 throw new Error(data.message || 'فشل في حفظ التعديلات.');
@@ -132,6 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
             editMessageEl.textContent = data.message;
             editMessageEl.className = 'success';
             
+            // إعادة تحميل الصور لتحديث الواجهة
+            loadPropertyDetailsForEdit(propertyId);
+
         } catch (error) {
             editMessageEl.textContent = `خطأ: ${error.message}`;
             editMessageEl.className = 'error';
@@ -149,14 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
         editMessageEl.className = '';
 
         try {
-            const response = await fetch(`/api/property/${propertyId}`, {
+            const data = await safeFetchJson(`/api/property/${propertyId}`, {
                 method: 'DELETE',
             });
-            
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'فشل في مسح العقار.');
-            }
             
             editMessageEl.textContent = 'تم مسح العقار بنجاح!';
             editMessageEl.className = 'success';

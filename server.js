@@ -56,7 +56,6 @@ dbPool.connect()
     .catch(err => {
         console.error("FATAL ERROR: Could not connect to PostgreSQL pool.");
         console.error("PG Connection Error Message:", err.message);
-        // إيقاف العملية لمنع الخطأ المجهول (TypeError)
         process.exit(1); 
     });
 
@@ -68,6 +67,8 @@ function pgQuery(sql, params = []) {
 
 // 🚨 دالة مساعدة لحذف الصور من Cloudinary
 async function deleteCloudinaryImages(imageUrls) {
+    if (!imageUrls || !Array.isArray(imageUrls)) return;
+    
     for (const url of imageUrls) {
         const publicIdMatch = url.match(/\/(aqarak_[a-z]+\/.+)\.webp/);
         if (publicIdMatch && publicIdMatch[1]) {
@@ -670,9 +671,9 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     const newImageUrls = req.files ? req.files.map(file => file.path) : [];
     
     const allImageUrls = [...existingImageUrls, ...newImageUrls];
-    const mainImageUrl = allImageUrls[0];
+    const mainImageUrl = allImageUrls.length > 0 ? allImageUrls[0] : null; // حماية ضد المصفوفة الفارغة
     const imageUrlsJson = JSON.stringify(allImageUrls);
-    const numericPrice = parseFloat(price.replace(/,/g, ''));
+    const numericPrice = parseFloat((price || '0').replace(/,/g, ''));
 
     if (!title || !price || !type || !hiddenCode) {
         return res.status(400).json({ message: 'خطأ: الحقول الأساسية مطلوبة' });
@@ -768,7 +769,7 @@ app.delete('/api/property/:id', async (req, res) => {
         const deleteResult = await pgQuery(deleteSql, [req.params.id]);
         
         if (deleteResult.rowCount === 0) {
-              return res.status(404).json({ message: 'لم يتم العثور على العقار للحذف.' });
+             return res.status(404).json({ message: 'لم يتم العثور على العقار للحذف.' });
         }
         
         res.json({ message: 'تم حذف العقار بنجاح.' });
@@ -795,11 +796,11 @@ app.get('/', (req, res) => {
 });
 
 
-// 🚨 معالج أخطاء شامل (يجب وضعه قبل app.listen) - لضمان إرجاع JSON في حالة خطأ 500
+// 🚨 معالج أخطاء شامل (مهم جداً لحل مشكلة JSON)
 app.use((err, req, res, next) => {
     console.error("CRITICAL SERVER ERROR:", err.stack);
     
-    // إذا كان الخطأ من قاعدة البيانات أو خطأ غير مُعالج
+    // إذا تم إرسال الرد بالفعل، لا نحاول الإرسال مرة أخرى
     if (res.headersSent) {
         return next(err);
     }
@@ -807,7 +808,7 @@ app.use((err, req, res, next) => {
     // إرسال رد JSON موحد في حالة الخطأ بدلاً من HTML
     res.status(500).json({
         success: false,
-        message: 'خطأ داخلي حرج في الخادم. يرجى مراجعة السجلات (Logs) في Render.',
+        message: 'خطأ داخلي حرج في الخادم.',
         error: err.message
     });
 });
