@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const { Pool } = require('pg'); 
 const multer = require('multer');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
+// ❌ تم حذف Nodemailer
 
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -13,12 +13,10 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🚨 متغيرات البيئة
+// 🚨 متغيرات البيئة (تم حذف إيميل المرسل والإبقاء على بيانات دخول الأدمن)
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Aqarak@123";
 const SALT_ROUNDS = 10;
-const SENDER_EMAIL = process.env.SENDER_EMAIL || "aqarakproperty@gmail.com";
-const SENDER_PASSWORD = process.env.SENDER_PASSWORD || "httygvavpqopvcxs";
 
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dalxzpcaj';
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '729741884569459';
@@ -31,13 +29,7 @@ cloudinary.config({
     api_secret: CLOUDINARY_API_SECRET
 });
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: SENDER_EMAIL,
-        pass: SENDER_PASSWORD
-    }
-});
+// ❌ تم حذف إعدادات Transporter الخاصة بالإيميل
 
 // 🚨 إعداد اتصال PostgreSQL Pool
 const dbPool = new Pool({
@@ -158,53 +150,7 @@ async function createTables() {
 }
 createTables();
 
-async function sendNotificationEmail(data, imagePaths, isRequest = false) {
-    const subject = isRequest ? `إشعار: طلب عقار مخصص جديد من ${data.name}` : `إشعار: ${data.propertyTitle} - تم تقديم عقار جديد!`;
-    
-    let htmlContent;
-    
-    if (isRequest) {
-        htmlContent = `
-            <p><strong>تم استلام طلب عقار مخصص جديد:</strong></p>
-            <ul>
-                <li><strong>الاسم:</strong> ${data.name}</li>
-                <li><strong>رقم الهاتف:</strong> ${data.phone}</li>
-                <li><strong>البريد الإلكتروني:</strong> ${data.email || 'N/A'}</li>
-            </ul>
-            <p><strong>المواصفات المطلوبة:</strong></p>
-            <p>${data.specifications}</p>
-        `;
-    } else {
-        htmlContent = `
-            <p><strong>تم استلام طلب جديد لعرض عقار:</strong></p>
-            <ul>
-                <li><strong>اسم البائع:</strong> ${data.sellerName}</li>
-                <li><strong>رقم الهاتف:</strong> ${data.sellerPhone}</li>
-                <li><strong>عنوان العقار:</strong> ${data.propertyTitle}</li>
-                <li><strong>نوع العرض:</strong> ${data.propertyType}</li>
-                <li><strong>السعر:</strong> ${data.propertyPrice} جنيه</li>
-                <li><strong>المساحة:</strong> ${data.propertyArea} م²</li>
-                <li><strong>الغرف/الحمامات:</strong> ${data.propertyRooms} غرف / ${data.propertyBathrooms} حمامات</li>
-            </ul>
-            <p><strong>الوصف:</strong> ${data.propertyDescription}</p>
-            <p><strong>مسارات الصور:</strong> ${imagePaths.split(' | ').map(p => `<a href="${p}">صورة</a>`).join(', ')}</p>
-        `;
-    }
-
-    const mailOptions = {
-        from: `"Aqarak Submission" <${SENDER_EMAIL}>`,
-        to: ADMIN_EMAIL,
-        subject: subject,
-        html: htmlContent
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-    } catch (error) {
-        console.error("NODEMAILER ERROR:", error);
-    }
-}
-
+// ❌ تم حذف دالة sendNotificationEmail بالكامل
 
 app.use(cors());
 app.use(express.json());
@@ -368,7 +314,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
 
     try {
         await pgQuery(sql, params);
-        await sendNotificationEmail(data, imagePaths, false);
+        // ❌ تم حذف استدعاء دالة الإيميل من هنا
         res.status(200).json({ success: true, message: 'تم استلام طلبك بنجاح للمراجعة.' });
     } catch (error) {
         console.error("SUBMISSION ERROR:", error);
@@ -392,7 +338,7 @@ app.post('/api/request-property', async (req, res) => {
 
     try {
         await pgQuery(sql, [name, phone, email, specifications, submissionDate]);
-        await sendNotificationEmail(req.body, null, true);
+        // ❌ تم حذف استدعاء دالة الإيميل من هنا
         res.status(200).json({ success: true, message: 'تم استلام طلب عقارك المخصص بنجاح.' });
     } catch (error) {
         console.error("REQUEST PROPERTY ERROR:", error);
@@ -656,15 +602,13 @@ app.get('/api/properties', async (req, res) => {
     }
 });
 
-// ✅ تم تصحيح هذا المسار لحماية السيرفر من التكرار
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
     
-    // 🔥 الحماية من التكرار (Duplicate Protection)
+    // 🔥 الحماية من التكرار
     let rawExistingImages = existingImages;
     if (Array.isArray(rawExistingImages)) {
-        // إذا وصلت مصفوفة، نأخذ العنصر الأول فقط
         rawExistingImages = rawExistingImages[0];
     }
     let existingImageUrls = [];
