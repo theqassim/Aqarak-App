@@ -60,21 +60,17 @@ function pgQuery(sql, params = []) {
     return dbPool.query(sql, params);
 }
 
-// 🔥 دالة مساعدة جديدة: تمنع الأرقام الفلكية التي تكسر قاعدة البيانات
+// 🔥 دالة حماية الأرقام الصحيحة (تمنع انهيار السيرفر بالأرقام الفلكية)
 function safeInt(value) {
-    const MAX_POSTGRES_INT = 2147483647; // الحد الأقصى لقاعدة البيانات
+    const MAX_POSTGRES_INT = 2147483647; 
     const num = parseInt(value);
-    
     if (isNaN(num)) return 0;
-    
-    // إذا كان الرقم أكبر من الحد المسموح، نرجعه للحد الأقصى أو 0 لتجنب الخطأ
     if (num > MAX_POSTGRES_INT) return MAX_POSTGRES_INT; 
-    
     return num;
 }
 
 // -----------------------------------------------------
-// 3. إعدادات Multer
+// 3. إعدادات Multer (حجم الملف)
 // -----------------------------------------------------
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -155,8 +151,6 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         if (!imageUrls.length) return res.status(400).json({ message: 'لا توجد صور' });
 
         const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
-        
-        // استخدام safeInt لمنع الخطأ هنا أيضاً
         const params = [
             sub.propertyTitle, 
             sub.propertyPrice, 
@@ -175,19 +169,23 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
 
         res.status(201).json({ success: true, message: 'تم النشر بنجاح', id: result.rows[0].id });
-    } catch (err) { throw err; }
+    } catch (err) { 
+        if (err.code === '23505') return res.status(400).json({ message: `الكود السري "${hiddenCode}" مستخدم بالفعل.` });
+        throw err; 
+    }
 });
 
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const files = req.files || [];
     const data = req.body;
-    if (!data.title || !data.hiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
+    const cleanHiddenCode = data.hiddenCode ? data.hiddenCode.trim() : '';
+
+    if (!data.title || !cleanHiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
     if (!files.length) return res.status(400).json({ message: 'يجب رفع صورة واحدة' });
 
     const urls = files.map(f => f.path);
     const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
     
-    // استخدام safeInt للحماية
     const params = [
         data.title, 
         data.price, 
@@ -199,18 +197,22 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
         urls[0], 
         JSON.stringify(urls), 
         data.type, 
-        data.hiddenCode
+        cleanHiddenCode
     ];
 
     try {
         const result = await pgQuery(sql, params);
         res.status(201).json({ success: true, message: 'تم النشر', id: result.rows[0].id });
-    } catch (err) { throw err; }
+    } catch (err) { 
+        if (err.code === '23505') return res.status(400).json({ message: `الكود السري "${cleanHiddenCode}" مستخدم بالفعل.` });
+        throw err; 
+    }
 });
 
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
+    const cleanHiddenCode = hiddenCode ? hiddenCode.trim() : '';
 
     let rawImages = existingImages;
     if (Array.isArray(rawImages)) rawImages = rawImages[0];
@@ -223,7 +225,6 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
 
     const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11 WHERE id=$12`;
     
-    // استخدام safeInt للحماية
     const params = [
         title, 
         price, 
@@ -235,7 +236,7 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
         mainUrl, 
         JSON.stringify(allUrls), 
         type, 
-        hiddenCode, 
+        cleanHiddenCode, 
         propertyId
     ];
 
@@ -243,7 +244,10 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
         const result = await pgQuery(sql, params);
         if (result.rowCount === 0) return res.status(404).json({ message: 'غير موجود' });
         res.status(200).json({ message: 'تم التحديث' });
-    } catch (err) { throw err; }
+    } catch (err) { 
+        if (err.code === '23505') return res.status(400).json({ message: `الكود السري "${cleanHiddenCode}" مستخدم بالفعل.` });
+        throw err; 
+    }
 });
 
 app.get('/api/admin/seller-submissions', async (req, res) => {
@@ -289,17 +293,15 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const paths = files.map(f => f.path).join(' | ');
     const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
     
-    // ✅ هنا قمنا بحماية الأرقام باستخدام safeInt
-    // هذا سيمنع الخطأ 22003 الذي حدث معك
     const params = [
         data.sellerName, 
         data.sellerPhone, 
         data.propertyTitle, 
         data.propertyType, 
         data.propertyPrice, 
-        safeInt(data.propertyArea),      // حماية المساحة
-        safeInt(data.propertyRooms),     // حماية الغرف
-        safeInt(data.propertyBathrooms), // حماية الحمامات
+        safeInt(data.propertyArea), 
+        safeInt(data.propertyRooms), 
+        safeInt(data.propertyBathrooms), 
         data.propertyDescription, 
         paths, 
         new Date().toISOString()
@@ -371,7 +373,7 @@ app.delete('/api/property/:id', async (req, res) => {
     } catch (e) { throw e; }
 });
 
-// --- مسارات المفضلة ---
+// ✅ --- مسارات المفضلة --- ✅
 
 app.post('/api/favorites', async (req, res) => {
     const { userEmail, propertyId } = req.body;
