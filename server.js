@@ -60,8 +60,21 @@ function pgQuery(sql, params = []) {
     return dbPool.query(sql, params);
 }
 
+// 🔥 دالة مساعدة جديدة: تمنع الأرقام الفلكية التي تكسر قاعدة البيانات
+function safeInt(value) {
+    const MAX_POSTGRES_INT = 2147483647; // الحد الأقصى لقاعدة البيانات
+    const num = parseInt(value);
+    
+    if (isNaN(num)) return 0;
+    
+    // إذا كان الرقم أكبر من الحد المسموح، نرجعه للحد الأقصى أو 0 لتجنب الخطأ
+    if (num > MAX_POSTGRES_INT) return MAX_POSTGRES_INT; 
+    
+    return num;
+}
+
 // -----------------------------------------------------
-// 3. إعدادات Multer (مع تحديد حجم الملف 10MB)
+// 3. إعدادات Multer
 // -----------------------------------------------------
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -142,7 +155,21 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         if (!imageUrls.length) return res.status(400).json({ message: 'لا توجد صور' });
 
         const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
-        const params = [sub.propertyTitle, sub.propertyPrice, parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), sub.propertyRooms, sub.propertyBathrooms, sub.propertyArea, sub.propertyDescription, imageUrls[0], JSON.stringify(imageUrls), sub.propertyType, hiddenCode];
+        
+        // استخدام safeInt لمنع الخطأ هنا أيضاً
+        const params = [
+            sub.propertyTitle, 
+            sub.propertyPrice, 
+            parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), 
+            safeInt(sub.propertyRooms), 
+            safeInt(sub.propertyBathrooms), 
+            safeInt(sub.propertyArea), 
+            sub.propertyDescription, 
+            imageUrls[0], 
+            JSON.stringify(imageUrls), 
+            sub.propertyType, 
+            hiddenCode
+        ];
         
         const result = await pgQuery(sql, params);
         await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
@@ -159,7 +186,21 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
 
     const urls = files.map(f => f.path);
     const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`;
-    const params = [data.title, data.price, parseFloat((data.price || '0').replace(/[^0-9.]/g, '')), data.rooms || 0, data.bathrooms || 0, data.area || 0, data.description, urls[0], JSON.stringify(urls), data.type, data.hiddenCode];
+    
+    // استخدام safeInt للحماية
+    const params = [
+        data.title, 
+        data.price, 
+        parseFloat((data.price || '0').replace(/[^0-9.]/g, '')), 
+        safeInt(data.rooms), 
+        safeInt(data.bathrooms), 
+        safeInt(data.area), 
+        data.description, 
+        urls[0], 
+        JSON.stringify(urls), 
+        data.type, 
+        data.hiddenCode
+    ];
 
     try {
         const result = await pgQuery(sql, params);
@@ -181,7 +222,22 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     const mainUrl = allUrls.length ? allUrls[0] : null;
 
     const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11 WHERE id=$12`;
-    const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), rooms, bathrooms, area, description, mainUrl, JSON.stringify(allUrls), type, hiddenCode, propertyId];
+    
+    // استخدام safeInt للحماية
+    const params = [
+        title, 
+        price, 
+        parseFloat((price||'0').replace(/,/g,'')), 
+        safeInt(rooms), 
+        safeInt(bathrooms), 
+        safeInt(area), 
+        description, 
+        mainUrl, 
+        JSON.stringify(allUrls), 
+        type, 
+        hiddenCode, 
+        propertyId
+    ];
 
     try {
         const result = await pgQuery(sql, params);
@@ -232,7 +288,22 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
 
     const paths = files.map(f => f.path).join(' | ');
     const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
-    const params = [data.sellerName, data.sellerPhone, data.propertyTitle, data.propertyType, data.propertyPrice, data.propertyArea || 0, data.propertyRooms || 0, data.propertyBathrooms || 0, data.propertyDescription, paths, new Date().toISOString()];
+    
+    // ✅ هنا قمنا بحماية الأرقام باستخدام safeInt
+    // هذا سيمنع الخطأ 22003 الذي حدث معك
+    const params = [
+        data.sellerName, 
+        data.sellerPhone, 
+        data.propertyTitle, 
+        data.propertyType, 
+        data.propertyPrice, 
+        safeInt(data.propertyArea),      // حماية المساحة
+        safeInt(data.propertyRooms),     // حماية الغرف
+        safeInt(data.propertyBathrooms), // حماية الحمامات
+        data.propertyDescription, 
+        paths, 
+        new Date().toISOString()
+    ];
 
     try {
         await pgQuery(sql, params);
@@ -300,7 +371,7 @@ app.delete('/api/property/:id', async (req, res) => {
     } catch (e) { throw e; }
 });
 
-// ✅ --- مسارات المفضلة (تمت إعادتها) --- ✅
+// --- مسارات المفضلة ---
 
 app.post('/api/favorites', async (req, res) => {
     const { userEmail, propertyId } = req.body;

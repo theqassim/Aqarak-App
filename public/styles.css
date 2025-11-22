@@ -172,6 +172,11 @@ a:hover {
     gap: 15px;
 }
 
+.filter-apply-btn{
+    background-color: var(--success-color);
+    color: var(--primary-color);
+}
+
 .btn-neon-auth {
     background-color: var(--accent-color); /* زر الدخول باللون الأزرق */
     color: var(--text-color);
