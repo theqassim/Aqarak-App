@@ -26,7 +26,7 @@ const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-// فحص أمان لمفاتيح Cloudinary
+// فحص أمان
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
     console.error("❌ CRITICAL ERROR: Cloudinary keys are missing!");
 }
@@ -64,8 +64,7 @@ function pgQuery(sql, params = []) {
 // 3. إعدادات Multer (مع تحديد حجم الملف 10MB)
 // -----------------------------------------------------
 
-// الحد الأقصى: 10 ميجابايت (بالبايت) لحماية Cloudinary Free Plan
-const MAX_FILE_SIZE = 10 * 1024 * 1024; 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const storageSeller = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -76,7 +75,6 @@ const storageSeller = new CloudinaryStorage({
     },
 });
 
-// ✅ إضافة limits هنا
 const uploadSeller = multer({ 
     storage: storageSeller,
     limits: { fileSize: MAX_FILE_SIZE } 
@@ -91,7 +89,6 @@ const storageProperties = new CloudinaryStorage({
     },
 });
 
-// ✅ إضافة limits هنا
 const uploadProperties = multer({ 
     storage: storageProperties,
     limits: { fileSize: MAX_FILE_SIZE } 
@@ -130,7 +127,8 @@ app.use(express.json());
 // 4. مسارات API
 // -----------------------------------------------------
 
-// نشر طلب (Admin)
+// --- مسارات الأدمن (Admin) ---
+
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
     if (!submissionId || !hiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
@@ -153,7 +151,6 @@ app.post('/api/admin/publish-submission', async (req, res) => {
     } catch (err) { throw err; }
 });
 
-// إضافة عقار (Admin)
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const files = req.files || [];
     const data = req.body;
@@ -170,7 +167,6 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
     } catch (err) { throw err; }
 });
 
-// تحديث عقار (Admin)
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
@@ -194,7 +190,6 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     } catch (err) { throw err; }
 });
 
-// جلب الطلبات (Admin)
 app.get('/api/admin/seller-submissions', async (req, res) => {
     try {
         const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC");
@@ -209,7 +204,6 @@ app.get('/api/admin/property-requests', async (req, res) => {
     } catch (err) { throw err; }
 });
 
-// حذف (Admin)
 app.delete('/api/admin/seller-submission/:id', async (req, res) => {
     try {
         const r = await pgQuery(`SELECT "imagePaths" FROM seller_submissions WHERE id = $1`, [req.params.id]);
@@ -229,7 +223,8 @@ app.delete('/api/admin/property-request/:id', async (req, res) => {
     } catch (err) { throw err; }
 });
 
-// مسارات المستخدم (Public)
+// --- مسارات عامة (Public) ---
+
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const data = req.body;
     const files = req.files || [];
@@ -305,7 +300,43 @@ app.delete('/api/property/:id', async (req, res) => {
     } catch (e) { throw e; }
 });
 
-// Auth & Register
+// ✅ --- مسارات المفضلة (تمت إعادتها) --- ✅
+
+app.post('/api/favorites', async (req, res) => {
+    const { userEmail, propertyId } = req.body;
+    if (!userEmail || !propertyId) return res.status(400).json({ message: 'بيانات ناقصة' });
+    try {
+        await pgQuery(`INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`, [userEmail, propertyId]);
+        res.status(201).json({ success: true, message: 'تمت الإضافة للمفضلة' });
+    } catch (err) {
+        if (err.code === '23505') return res.status(409).json({ message: 'موجودة بالفعل' });
+        throw err;
+    }
+});
+
+app.delete('/api/favorites/:propertyId', async (req, res) => {
+    const { userEmail } = req.query;
+    if (!userEmail) return res.status(400).json({ message: 'الإيميل مطلوب' });
+    try {
+        const result = await pgQuery(`DELETE FROM favorites WHERE user_email = $1 AND property_id = $2`, [userEmail, req.params.propertyId]);
+        if (result.rowCount === 0) return res.status(404).json({ message: 'غير موجودة' });
+        res.json({ success: true, message: 'تمت الإزالة' });
+    } catch (err) { throw err; }
+});
+
+app.get('/api/favorites', async (req, res) => {
+    const { userEmail } = req.query;
+    if (!userEmail) return res.status(400).json({ message: 'الإيميل مطلوب' });
+    const sql = `SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id 
+                 FROM properties p JOIN favorites f ON p.id = f.property_id WHERE f.user_email = $1 ORDER BY f.id DESC`;
+    try {
+        const result = await pgQuery(sql, [userEmail]);
+        res.json(result.rows);
+    } catch (err) { throw err; }
+});
+
+// --- تسجيل ودخول ---
+
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     if(email === ADMIN_EMAIL && password === ADMIN_PASSWORD) return res.json({success:true, role:'admin'});
@@ -320,7 +351,7 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ message: 'البيانات ناقصة' });
+    if (!name || !email || !password) return res.status(400).json({ message: 'بيانات ناقصة' });
     try {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         await pgQuery(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)`, [name, email, hashedPassword, 'user']);
@@ -331,34 +362,58 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// Static & Ping
+app.put('/api/user/change-password', async (req, res) => {
+    const { email, currentPassword, newPassword } = req.body;
+    if (!email || !currentPassword || !newPassword) return res.status(400).json({ message: 'بيانات ناقصة' });
+
+    try {
+        const r = await pgQuery(`SELECT * FROM users WHERE email=$1`, [email]);
+        if (!r.rows[0]) return res.status(404).json({ message: 'غير موجود' });
+        if (!(await bcrypt.compare(currentPassword, r.rows[0].password))) return res.status(401).json({ message: 'كلمة المرور خطأ' });
+
+        const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+        await pgQuery(`UPDATE users SET password = $1 WHERE id = $2`, [hash, r.rows[0].id]);
+        res.json({ success: true, message: 'تم التغيير' });
+    } catch (err) { throw err; }
+});
+
+app.delete('/api/user/delete-account', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'الإيميل مطلوب' });
+    try {
+        const r = await pgQuery(`DELETE FROM users WHERE email = $1`, [email]);
+        if (r.rowCount === 0) return res.status(404).json({ message: 'غير موجود' });
+        res.json({ success: true, message: 'تم الحذف' });
+    } catch (err) { throw err; }
+});
+
+// ملفات ثابتة و Ping
 app.get('/api/ping', (req, res) => res.json({status: "OK"}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // -----------------------------------------------------
-// 5. معالج الأخطاء الشامل (يصيد أخطاء الحجم)
+// 5. معالج الأخطاء
 // -----------------------------------------------------
 app.use((err, req, res, next) => {
     console.log("🔥 ERROR CAUGHT:");
-    console.error(err); // طباعة الخطأ
+    console.error(err); 
 
     if (res.headersSent) return next(err);
 
-    // ✅ معالجة خطأ حجم الملف (File Too Large)
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({ 
                 success: false, 
-                message: 'عفواً، حجم الصورة كبير جداً. الحد الأقصى هو 10 ميجابايت للصورة الواحدة.', 
+                message: 'حجم الصورة كبير جداً. الحد الأقصى 10 ميجابايت.', 
                 error: err.code 
             });
         }
-        return res.status(500).json({ success: false, message: `خطأ في رفع الصور: ${err.code}`, error: err.message });
+        return res.status(500).json({ success: false, message: `فشل الرفع: ${err.code}`, error: err.message });
     }
 
     const msg = err.message || "خطأ غير معروف";
-    res.status(500).json({ success: false, message: 'حدث خطأ داخلي في السيرفر', error: msg });
+    res.status(500).json({ success: false, message: 'خطأ داخلي في السيرفر', error: msg });
 });
 
 app.listen(PORT, () => {
