@@ -128,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'thank-you.html'; 
 
             } catch (error) {
-                messageEl.textContent = `فشل الإرسال. ${error.message}. يرجى التحقق من Terminal السيرفر.`;
+                messageEl.textContent = `فشل الإرسال. ${error.message}
+                برجاء المحاولة في وقت لاحق او التواصل عبر رقم الواتساب +201008102237.`;
                 messageEl.className = 'error';
                 console.error('Fetch Error:', error);
             }
