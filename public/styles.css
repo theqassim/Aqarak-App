@@ -162,14 +162,40 @@ a:hover {
 }
 
 .btn-neon {
-    padding: 15px 25px;
-    font-size: 0.8em;
-    border-radius: 30px; /* زر دائري */
-    background-color: var(--success-color);
-    color: var(--primary-color);
+    /* التنسيق الأساسي */
+    padding: 12px 35px;          /* تكبير العرض قليلاً ليكون مريحاً */
+    font-size: 0.9em;            /* تكبير الخط قليلاً */
+    font-weight: bold;           /* جعل الخط عريضاً */
+    border-radius: 50px;         /* حواف دائرية ناعمة */
+    border: 2px solid var(--success-color); /* إطار بنفس لون التوهج */
+    
+    /* الألوان والخلفية */
+    background-color: transparent; /* خلفية شفافة (ستايل النيون المعتاد) */
+    color: var(--success-color);   /* لون النص نفس لون التوهج */
+    
+    /* تأثير النيون الأساسي */
+    box-shadow: 0 0 10px var(--success-color); 
+    text-shadow: 0 0 5px var(--success-color); /* توهج للنص نفسه */
+
+    /* خصائص أخرى */
     display: inline-block;
-    box-shadow: 0 0 10px var(--success-color);
-    transition: all 0.3s;
+    cursor: pointer;             /* شكل اليد عند المرور */
+    transition: all 0.3s ease-in-out; /* تنعيم الحركة */
+    text-decoration: none;
+}
+
+/* تأثير عند مرور الماوس (Hover) */
+.btn-neon:hover {
+    background-color: var(--success-color); /* ملء الزر باللون */
+    color: #fff;                            /* تحويل النص للأبيض */
+    
+    /* زيادة التوهج بشكل كبير */
+    box-shadow: 0 0 20px var(--success-color),
+                0 0 40px var(--success-color),
+                0 0 60px var(--success-color);
+    
+    text-shadow: none; /* إزالة توهج النص لأنه أصبح أبيض */
+    transform: scale(1.05); /* تكبير بسيط جداً */
 }
 
 .centered-page-content {
