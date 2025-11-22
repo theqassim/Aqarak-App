@@ -161,6 +161,11 @@ a:hover {
     padding: 20px;
 }
 
+.btn-neon {
+    background-color: var(--success-color);
+    color: var(--primary-color);
+}
+
 .centered-page-content {
     max-width: 550px; 
     margin: 30px auto;
@@ -170,11 +175,6 @@ a:hover {
 .auth-form {
     display: grid;
     gap: 15px;
-}
-
-.filter-apply-btn{
-    background-color: var(--success-color);
-    color: var(--primary-color);
 }
 
 .btn-neon-auth {
