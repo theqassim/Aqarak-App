@@ -47,25 +47,22 @@ const dbPool = new Pool({
     }
 });
 
-// 🚨 اختبار الاتصال المبدئي والضروري
+// 🚨 اختبار الاتصال
 dbPool.connect()
     .then(client => {
         console.log("Successfully connected to PostgreSQL!");
-        client.release(); // تحرير العميل إلى المجمع
+        client.release();
     })
     .catch(err => {
         console.error("FATAL ERROR: Could not connect to PostgreSQL pool.");
-        console.error("PG Connection Error Message:", err.message);
         process.exit(1); 
     });
 
 
-// 🚨 دالة مساعدة لـ PostgreSQL
 function pgQuery(sql, params = []) {
     return dbPool.query(sql, params);
 }
 
-// 🚨 دالة مساعدة لحذف الصور من Cloudinary
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || !Array.isArray(imageUrls)) return;
     
@@ -75,7 +72,6 @@ async function deleteCloudinaryImages(imageUrls) {
             const publicId = publicIdMatch[1];
             try {
                 await cloudinary.uploader.destroy(publicId);
-                console.log(`Deleted Cloudinary asset: ${publicId}`);
             } catch (err) {
                 console.error(`Failed to delete Cloudinary asset ${publicId}:`, err);
             }
@@ -155,7 +151,7 @@ async function createTables() {
         await pgQuery(createSellerSubmissionsTableSql);
         await pgQuery(createPropertyRequestsTableSql);
         await pgQuery(createFavoritesTableSql);
-        console.log('Tables created or already exist on PostgreSQL.');
+        console.log('Tables check complete.');
     } catch (err) {
         console.error('ERROR creating tables:', err);
     }
@@ -204,7 +200,6 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log("Notification Email sent.");
     } catch (error) {
         console.error("NODEMAILER ERROR:", error);
     }
@@ -214,7 +209,7 @@ async function sendNotificationEmail(data, imagePaths, isRequest = false) {
 app.use(cors());
 app.use(express.json());
 
-// 🚨 منطق التخزين السحابي لطلبات البائعين
+// 🚨 Cloudinary Storage Setup
 const storageSeller = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -225,7 +220,6 @@ const storageSeller = new CloudinaryStorage({
 });
 const uploadSeller = multer({ storage: storageSeller });
 
-// 🚨 منطق التخزين السحابي لعقارات الأدمن
 const storageProperties = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -237,7 +231,7 @@ const storageProperties = new CloudinaryStorage({
 const uploadProperties = multer({ storage: storageProperties });
 
 
-// ----------------- 1. مسارات API -----------------
+// ----------------- API Routes -----------------
 
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
@@ -375,7 +369,6 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     try {
         await pgQuery(sql, params);
         await sendNotificationEmail(data, imagePaths, false);
-        
         res.status(200).json({ success: true, message: 'تم استلام طلبك بنجاح للمراجعة.' });
     } catch (error) {
         console.error("SUBMISSION ERROR:", error);
@@ -514,7 +507,7 @@ app.post('/api/favorites', async (req, res) => {
         await pgQuery(sql, [userEmail, propertyId]);
         res.status(201).json({ success: true, message: 'تمت الإضافة إلى المفضلة.' });
     } catch (err) {
-        if (err.code === '23505') { // PostgreSQL unique violation error code
+        if (err.code === '23505') { 
             return res.status(409).json({ message: 'العقار موجود بالفعل في المفضلة.' });
         }
         return res.status(500).json({ message: 'فشل الإضافة إلى المفضلة.' });
@@ -663,15 +656,28 @@ app.get('/api/properties', async (req, res) => {
     }
 });
 
+// ✅ تم تصحيح هذا المسار لحماية السيرفر من التكرار
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
     
-    let existingImageUrls = JSON.parse(existingImages || '[]');
+    // 🔥 الحماية من التكرار (Duplicate Protection)
+    let rawExistingImages = existingImages;
+    if (Array.isArray(rawExistingImages)) {
+        // إذا وصلت مصفوفة، نأخذ العنصر الأول فقط
+        rawExistingImages = rawExistingImages[0];
+    }
+    let existingImageUrls = [];
+    try {
+        existingImageUrls = JSON.parse(rawExistingImages || '[]');
+    } catch (e) {
+        console.error("JSON Parse Error in update:", e.message);
+    }
+
     const newImageUrls = req.files ? req.files.map(file => file.path) : [];
     
     const allImageUrls = [...existingImageUrls, ...newImageUrls];
-    const mainImageUrl = allImageUrls.length > 0 ? allImageUrls[0] : null; // حماية ضد المصفوفة الفارغة
+    const mainImageUrl = allImageUrls.length > 0 ? allImageUrls[0] : null; 
     const imageUrlsJson = JSON.stringify(allImageUrls);
     const numericPrice = parseFloat((price || '0').replace(/,/g, ''));
 
@@ -783,36 +789,25 @@ app.get('/api/ping', (req, res) => {
     res.json({ status: "OK", server_time: new Date() });
 });
 
-
-// ----------------- 2. مسارات الخدمة الثابتة ومعالج الأخطاء -----------------
-
-// 🚨 خدمة الملفات الثابتة (CSS, JS, HTML) من مجلد 'public'
+// 🚨 خدمة الملفات الثابتة
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// 🚨 المسار الإضافي: لخدمة صفحة index.html على المسار الرئيسي (/)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
-// 🚨 معالج أخطاء شامل (مهم جداً لحل مشكلة JSON)
+// 🚨 معالج أخطاء شامل
 app.use((err, req, res, next) => {
     console.error("CRITICAL SERVER ERROR:", err.stack);
-    
-    // إذا تم إرسال الرد بالفعل، لا نحاول الإرسال مرة أخرى
     if (res.headersSent) {
         return next(err);
     }
-
-    // إرسال رد JSON موحد في حالة الخطأ بدلاً من HTML
     res.status(500).json({
         success: false,
         message: 'خطأ داخلي حرج في الخادم.',
         error: err.message
     });
 });
-
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

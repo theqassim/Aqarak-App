@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             data = text ? JSON.parse(text) : {}; // محاولة التحويل لـ JSON
         } catch (err) {
-            throw new Error(`خطأ في استجابة السيرفر: لم يتم إرجاع بيانات JSON صالحة. (${response.status})`);
+            console.error("Non-JSON response:", text);
+            throw new Error(`خطأ في استجابة السيرفر: لم يتم إرجاع بيانات JSON صالحة.`);
         }
 
         if (!response.ok) {
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
-    // 1. منطق البحث بالكود السري (مصحح)
+    // 1. منطق البحث بالكود السري
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const code = document.getElementById('search-code').value.trim();
@@ -50,10 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editArea.style.display = 'none';
 
         try {
-            // استخدام الدالة الآمنة بدلاً من fetch العادي
             const result = await safeFetchJson(`/api/property-by-code/${code}`);
-            
-            // جلب التفاصيل الكاملة باستخدام الـ ID
             await loadPropertyDetailsForEdit(result.id);
             
             searchMessageEl.textContent = 'تم العثور على العقار.';
@@ -67,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. دالة جلب البيانات وملء حقول التعديل (مصححة)
+    // 2. دالة جلب البيانات وملء حقول التعديل
     async function loadPropertyDetailsForEdit(id) {
         currentPropertyId = id;
         try {
@@ -116,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
         container.querySelectorAll('.remove-image-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                // العثور على العنصر الأب في حالة الضغط على الأيقونة داخل الزر
                 const btn = e.target.closest('.remove-image-btn');
                 const urlToRemove = btn.dataset.url;
                 
@@ -133,15 +130,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. منطق حفظ التعديلات (PUT)
+    // 4. منطق حفظ التعديلات (PUT) - **تم التصحيح هنا**
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const propertyId = document.getElementById('edit-property-id').value;
         editMessageEl.textContent = 'جاري حفظ التعديلات...';
         editMessageEl.className = '';
 
+        // ✅ التصحيح: نكتفي بإنشاء FormData من النموذج لأن الحقل المخفي موجود داخله
         const formData = new FormData(editForm);
-        formData.append('existingImages', document.getElementById('existing-images-data').value);
+        
+        // ❌ تمت إزالة سطر الـ append المكرر لمنع الخطأ
 
         try {
             const response = await fetch(`/api/update-property/${propertyId}`, {
@@ -149,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData,
             });
 
-            // قراءة الرد يدوياً هنا أيضاً لأننا نستخدم fetch مباشرة للـ FormData
             const text = await response.text();
             let data;
             try { data = text ? JSON.parse(text) : {}; } catch(e) {}
@@ -161,10 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
             editMessageEl.textContent = data.message;
             editMessageEl.className = 'success';
             
-            // إعادة تحميل الصور لتحديث الواجهة
+            // إعادة تحميل البيانات لتحديث الواجهة
             loadPropertyDetailsForEdit(propertyId);
 
         } catch (error) {
+            console.error(error);
             editMessageEl.textContent = `خطأ: ${error.message}`;
             editMessageEl.className = 'error';
         }
@@ -173,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. منطق مسح العقار (DELETE)
     deleteBtn.addEventListener('click', async () => {
         const propertyId = document.getElementById('edit-property-id').value;
-        if (!confirm(`تحذير: هل أنت متأكد من مسح العقار رقم ${propertyId} نهائياً؟ سيتم مسح الصور من السيرفر.`)) {
+        if (!confirm(`تحذير: هل أنت متأكد من مسح العقار رقم ${propertyId} نهائياً؟`)) {
             return;
         }
 
@@ -181,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editMessageEl.className = '';
 
         try {
-            const data = await safeFetchJson(`/api/property/${propertyId}`, {
+            await safeFetchJson(`/api/property/${propertyId}`, {
                 method: 'DELETE',
             });
             
