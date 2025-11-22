@@ -162,8 +162,15 @@ a:hover {
 }
 
 .btn-neon {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border-radius: 30px; /* زر دائري */
     background-color: var(--success-color);
     color: var(--primary-color);
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 0 10px var(--success-color);
+    transition: all 0.3s;
 }
 
 .centered-page-content {

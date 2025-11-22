@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // الحد الأقصى: 10 ميجابايت
     const MAX_SIZE = 10 * 1024 * 1024;
 
-    // مصفوفة لتخزين كل الملفات المختارة (من الجلسات المتعددة)
+    // مصفوفة لتخزين كل الملفات المختارة
     let allSelectedFiles = []; 
 
     // --- دالة عرض المعاينة ---
@@ -26,11 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const imgWrapper = document.createElement('div');
                 imgWrapper.className = 'preview-image-wrapper';
                 
-                // 🚨 فحص الحجم: تظليل الصورة إذا كانت كبيرة
+                // فحص الحجم وتظليل الصورة
                 if (file.size > MAX_SIZE) {
-                    imgWrapper.classList.add('invalid-file'); // تفعيل ستايل الخطأ
-                    
-                    // شريط نصي فوق الصورة
+                    imgWrapper.classList.add('invalid-file');
                     const errorOverlay = document.createElement('div');
                     errorOverlay.className = 'error-overlay';
                     errorOverlay.textContent = 'حجم كبير جداً';
@@ -41,14 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = e.target.result;
                 img.classList.add('preview-image');
                 
-                // زر الحذف
                 const removeBtn = document.createElement('button');
                 removeBtn.classList.add('remove-preview-btn');
                 removeBtn.innerHTML = '<i class="fas fa-times"></i>';
                 removeBtn.setAttribute('data-index', index);
 
                 removeBtn.addEventListener('click', (event) => {
-                    event.preventDefault(); // منع إرسال النموذج عند الضغط
+                    event.preventDefault();
                     removeFileByIndex(index);
                 });
 
@@ -57,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewContainer.appendChild(imgWrapper);
             }
             
-            // قراءة الملف فقط إذا كان ملفاً صالحاً
             if (file instanceof File) {
                  reader.readAsDataURL(file);
             }
@@ -74,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (imageInput) {
         imageInput.addEventListener('change', (event) => {
             const newFiles = Array.from(event.target.files);
-            allSelectedFiles.push(...newFiles); // إضافة للقائمة الحالية
-            imageInput.value = ''; // تفريغ الحقل للسماح باختيار المزيد
+            allSelectedFiles.push(...newFiles);
+            imageInput.value = '';
             renderPreviews(); 
         });
     }
@@ -84,30 +80,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sellerForm) {
         sellerForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
+            
+            // إعادة تعيين الرسالة في البداية
             messageEl.textContent = 'جاري التحقق من الملفات...';
+            messageEl.style.color = ''; // إعادة اللون للافتراضي
             messageEl.className = 'info';
 
-            // 🚨 1. التحقق: هل توجد صور كبيرة في القائمة؟
+            // 1. التحقق من الصور الكبيرة
             const hasLargeFiles = allSelectedFiles.some(file => file.size > MAX_SIZE);
             if (hasLargeFiles) {
                 messageEl.textContent = '⚠️ لا يمكن الإرسال: يوجد صور تتخطى 10 ميجابايت (المظللة بالأحمر). يرجى حذفها.';
                 messageEl.className = 'error';
-                return; // إيقاف العملية
-            }
-
-            // 🚨 2. التحقق: هل القائمة فارغة؟
-            if (allSelectedFiles.length === 0) {
-                messageEl.textContent = 'يرجى اختيار صورة واحدة على الأقل.';
-                messageEl.className = 'error';
+                messageEl.style.color = '#ff4444';
                 return;
             }
 
-            messageEl.textContent = 'جاري إرسال البيانات والصور...';
+            // 2. التحقق من وجود صور
+            if (allSelectedFiles.length === 0) {
+                messageEl.textContent = 'يرجى اختيار صورة واحدة على الأقل.';
+                messageEl.className = 'error';
+                messageEl.style.color = '#ff4444';
+                return;
+            }
+
+            // ✅ التغيير المطلوب: رسالة الانتظار باللون الأخضر
+            messageEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> برجاء الانتظار جاري ارسال البيانات...';
+            messageEl.className = 'info';
+            messageEl.style.color = '#28a745'; // اللون الأخضر
+
             
-            // تجهيز البيانات
             const formData = new FormData(sellerForm);
             
-            // حذف الحقل الفارغ الأصلي وإضافة الملفات من المصفوفة
             formData.delete('images[]'); 
             for (let i = 0; i < allSelectedFiles.length; i++) {
                 formData.append('images', allSelectedFiles[i]); 
@@ -125,17 +128,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(data.message || 'فشل في إرسال البيانات.');
                 }
                 
-                // نجاح
-                window.location.href = 'thank-you.html'; // أو أي صفحة نجاح
+                window.location.href = 'thank-you.html';
 
             } catch (error) {
                 messageEl.textContent = `فشل الإرسال: ${error.message}`;
                 messageEl.className = 'error';
+                messageEl.style.color = '#ff4444'; // إعادة اللون للأحمر عند الخطأ
             }
         });
     }
     
-    // 🚨 حقن كود CSS الخاص بالتظليل (لتجنب تعديل ملف الـ CSS)
+    // CSS Styles
     const style = document.createElement('style');
     style.innerHTML = `
         .image-preview-container {
@@ -162,12 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
             object-fit: cover;
         }
         
-        /* 🔥 تنسيق الصور الكبيرة (المخالفة) 🔥 */
         .preview-image-wrapper.invalid-file {
-            border: 2px solid #ff4444; /* إطار أحمر */
+            border: 2px solid #ff4444;
         }
         .preview-image-wrapper.invalid-file img {
-            filter: grayscale(100%) brightness(0.7); /* أبيض وأسود + تغميق */
+            filter: grayscale(100%) brightness(0.7);
         }
         .error-overlay {
             position: absolute;
