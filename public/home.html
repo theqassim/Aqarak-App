@@ -19,9 +19,10 @@
             <nav class="main-nav">
             <div id="guest-nav" style="display: none;">
                 <a href="index.html" class="nav-button neon-button-white">تسجيل الدخول</a>
-                <a href="index.html" class="nav-button neon-button-blue">إنشاء حساب</a>
+                <a href="index.html" class="nav-button neon-button-white">إنشاء حساب</a>
             </div>
 
+            <div id="user-nav" style="display: none;">
             <nav class="main-nav">
                 <a href="all-properties.html" class="nav-button neon-button-white">جميع العقارات</a>
                 <a href="buy.html" class="nav-button neon-button-white">شراء</a>
@@ -29,6 +30,8 @@
                 <a href="seller-dashboard.html" class="nav-button neon-button-white">اعرض عقار للبيع!</a>
                 <a href="user-dashboard.html" class="nav-button neon-button-white">حسابي</a> 
                 </nav>
+            </div>
+
         </div>
     </header>
 
@@ -66,65 +69,55 @@
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
-    <script>document.addEventListener('DOMContentLoaded', () => {
-    const userRole = localStorage.getItem('userRole');
-    const isLoggedIn = userRole !== null; // هل هو مسجل دخول؟
+   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. فحص حالة المستخدم
+        const userRole = localStorage.getItem('userRole');
+        const isLoggedIn = userRole !== null; // true لو مسجل، false لو زائر
 
-    // ==========================================
-    // 1. التحكم في الهيدر (Header Control)
-    // ==========================================
-    const guestNav = document.getElementById('guest-nav');
-    const userNav = document.getElementById('user-nav');
+        // 2. التحكم في الهيدر (إظهار/إخفاء القوائم)
+        const guestNav = document.getElementById('guest-nav');
+        const userNav = document.getElementById('user-nav');
 
-    if (isLoggedIn) {
-        // لو مسجل: أظهر قائمة المستخدم
-        if(userNav) userNav.style.display = 'flex';
-        if(guestNav) guestNav.style.display = 'none';
-    } else {
-        // لو زائر: أظهر زراير التسجيل
-        if(userNav) userNav.style.display = 'none';
-        if(guestNav) guestNav.style.display = 'flex';
-    }
+        if (isLoggedIn) {
+            // حالة: مسجل دخول
+            if (userNav) userNav.style.display = 'flex';
+            if (guestNav) guestNav.style.display = 'none';
+        } else {
+            // حالة: زائر (Guest)
+            if (userNav) userNav.style.display = 'none';
+            if (guestNav) guestNav.style.display = 'flex';
+        }
 
-    // ==========================================
-    // 2. قفل التفاعلات (Restricting Actions)
-    // ==========================================
-    
-    // سنقوم بالبحث عن كل الروابط والأزرار التي نريد قفلها
-    // سنفترض أن أزرار "عرض التفاصيل" و"فلترة" لها كلاسات معينة
-    
-    // دالة لقفل زر معين
-    function protectButton(btn) {
-        btn.addEventListener('click', (e) => {
-            if (!isLoggedIn) {
-                e.preventDefault(); // منع الانتقال
-                e.stopPropagation(); // منع أي حدث آخر
-                
-                // توجيه المستخدم لصفحة التسجيل مع رسالة (اختياري)
-                if(confirm('يجب عليك تسجيل الدخول أولاً لعرض التفاصيل أو التواصل. هل تريد الانتقال لصفحة الدخول؟')) {
-                    window.location.href = 'index.html';
+        // 3. منطق تسجيل الخروج (Logout)
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('هل تريد تسجيل الخروج؟')) {
+                    localStorage.clear(); // مسح البيانات
+                    window.location.reload(); // إعادة تحميل الصفحة (سيتحول لزائر)
+                }
+            });
+        }
+
+        // 4. حماية أزرار "عرض التفاصيل" (تتطلب تسجيل)
+        // نستخدم Event Delegation عشان يشتغل حتى لو العناصر اترسمت بعدين
+        document.body.addEventListener('click', (e) => {
+            // لو ضغط على زرار واخد كلاس view-details-btn
+            if (e.target.closest('.view-details-btn')) {
+                if (!isLoggedIn) {
+                    e.preventDefault(); // منع فتح الصفحة
+                    e.stopPropagation();
+                    
+                    // رسالة توجيه
+                    if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً لعرض تفاصيل العقار والتواصل مع البائع.\nهل تريد الانتقال لصفحة التسجيل؟')) {
+                        window.location.href = 'index.html';
+                    }
                 }
             }
         });
-    }
-
-    // تطبيق الحماية على أزرار "عرض التفاصيل" (افترضنا الكلاس .view-details-btn)
-    // ملحوظة: لو الأزرار بتترسم بالجافاسكريبت (Dynamic)، الكود ده لازم يتحط بعد رسم العقارات
-    document.body.addEventListener('click', (e) => {
-        // هل العنصر المضغوط هو زر تفاصيل أو زر تواصل؟
-        if (e.target.closest('.view-details-btn') || e.target.closest('.contact-seller-btn') || e.target.closest('.buy-btn')) {
-            if (!isLoggedIn) {
-                e.preventDefault();
-                alert('عفواً، هذه الميزة متاحة للأعضاء المسجلين فقط.');
-                window.location.href = 'index.html';
-            }
-        }
     });
-
-    // حماية الفلاتر (البيع/الشراء) في الهيدر لو موجودة كروابط
-    const restrictedLinks = document.querySelectorAll('.restricted-link');
-    restrictedLinks.forEach(link => protectButton(link));
-}); 
 </script>
     <script src="home.js"></script>
     <script src="dash.js"></script> 
