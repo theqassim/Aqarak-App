@@ -151,8 +151,15 @@ a:hover {
 
 .centered-body {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    /* ❌ تم إلغاء align-items: center لأنها تسبب الفراغ الكبير */
+    
+    align-items: flex-start; /* ✅ 1. البدء من الأعلى */
+    padding-top: 80px;       /* ✅ 2. تحديد مسافة ثابتة من رأس المتصفح */
+    
     min-height: 100vh;
+    background-color: #f0f2f5;
+    box-sizing: border-box; /* لضمان حساب المسافات بشكل صحيح */
 }
 .main-content {
     flex-grow: 1;
