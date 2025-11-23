@@ -462,7 +462,7 @@ app.delete('/api/user/delete-account', async (req, res) => {
 
 // ملفات ثابتة و Ping
 app.get('/api/ping', (req, res) => res.json({status: "OK"}));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'home.html')));
 
 // -----------------------------------------------------
