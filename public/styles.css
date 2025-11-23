@@ -753,7 +753,7 @@ a:hover {
 .auth-frame {
     width: 95%;
     max-width: 700px; /* ⬅️ التغيير هنا: كان 400 وأصبح 700 */
-    background: rgba(255, 255, 255, 0.95);
+    background: #2a3847(255, 255, 255, 0.95);
     padding: 40px;
     border-radius: 20px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
