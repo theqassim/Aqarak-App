@@ -17,8 +17,11 @@
             </div>
 
             <nav class="main-nav">
+                <a href="#" id="help-btn" class="nav-button help-icon" title="كيف يعمل الموقع؟">
+                    <i class="fas fa-question-circle"></i>
+                </a>
             <div id="guest-nav" style="display: none;">
-                <a href="index.html" class="nav-button neon-button-white">تسجيل الدخول</a>
+                <a href="index.html?mode=login" class="nav-button neon-button-white">تسجيل الدخول</a>
                 <a href="index.html" class="nav-button neon-button-white">إنشاء حساب</a>
             </div>
 
@@ -55,6 +58,61 @@
                 <a href="request-property.html" class="btn-neon-large">احجز عقارك الآن!</a>
             </div>
         </section>
+
+        <div id="help-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content neon-glow">
+        <span class="close-modal">&times;</span>
+        <h2 class="modal-title">كيف يعمل <span style="color: var(--primary-color);">عقارك</span>؟ 🚀</h2>
+        
+        <div class="gallery-container">
+            
+            <div class="gallery-card">
+                <div class="image-box">
+                    <img src="https://placehold.co/300x200/0072ff/ffffff?text=1+Search" alt="بحث">
+                    <div class="step-number">1</div>
+                </div>
+                <div class="text-box">
+                    <h3>تصفح العقارات</h3>
+                    <p>استخدم الفلتر الذكي للبحث عن شقة أحلامك، سواء إيجار أو تمليك.</p>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <div class="image-box">
+                    <img src="https://placehold.co/300x200/28a745/ffffff?text=2+Register" alt="تسجيل">
+                    <div class="step-number">2</div>
+                </div>
+                <div class="text-box">
+                    <h3>أنشئ حسابك</h3>
+                    <p>سجل دخولك مجاناً لتتمكن من عرض تفاصيل البائعين والتواصل معهم.</p>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <div class="image-box">
+                    <img src="https://placehold.co/300x200/ffc107/ffffff?text=3+Sell" alt="بيع">
+                    <div class="step-number">3</div>
+                </div>
+                <div class="text-box">
+                    <h3>اعرض عقارك</h3>
+                    <p>صور عقارك وارفع الإعلان في دقائق، وسيعرض في احدث العقارات.</p>
+                </div>
+            </div>
+
+            <div class="gallery-card">
+                <div class="image-box">
+                    <img src="https://placehold.co/300x200/dc3545/ffffff?text=4+Connect" alt="تواصل">
+                    <div class="step-number">4</div>
+                </div>
+                <div class="text-box">
+                    <h3>تواصل مباشر</h3>
+                    <p>تواصل مباشرة عبر الهاتف أو الواتساب.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
     </main>
 
@@ -119,6 +177,36 @@
         });
     });
 </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    // تعريف العناصر
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeModal = document.querySelector('.close-modal');
+
+    // فتح النافذة
+    if (helpBtn) {
+        helpBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            helpModal.style.display = 'flex';
+        });
+    }
+
+    // إغلاق النافذة عند الضغط على X
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            helpModal.style.display = 'none';
+        });
+    }
+
+    // إغلاق النافذة عند الضغط في أي مكان خارج الصندوق
+    window.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.style.display = 'none';
+        }
+    });
+});
+    </script>
     <script src="home.js"></script>
     <script src="dash.js"></script> 
     <script src="logout.js"></script> 

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // التحقق الفوري (كما هو)
+    // 1. التحقق الفوري: هل المستخدم مسجل دخول بالفعل؟
     const savedRole = localStorage.getItem('userRole');
     if (savedRole) {
         if (savedRole === 'admin') window.location.href = 'admin-home.html';
@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginFormWrapper = document.getElementById('login-form-wrapper');
     const registerFormWrapper = document.getElementById('register-form-wrapper');
     
-    // ✅ تعريف أزرار التبويب الجديدة
     const tabRegister = document.getElementById('tab-register');
     const tabLogin = document.getElementById('tab-login');
 
@@ -21,10 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginMessageEl = document.getElementById('login-message');
     const registerMessageEl = document.getElementById('register-message');
 
-    // الحالة الافتراضية (تسجيل جديد)
+    // 2. الحالة الافتراضية (تسجيل جديد)
     if (loginFormWrapper && registerFormWrapper) {
         loginFormWrapper.style.display = 'none';
         registerFormWrapper.style.display = 'block';
+        if(tabRegister) tabRegister.classList.add('active'); // تأكد أن التبويب نشط
     }
 
     // ✅ دالة للتبديل إلى وضع "إنشاء حساب"
@@ -32,9 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loginFormWrapper.style.display = 'none';
         registerFormWrapper.style.display = 'block';
         
-        // تحديث شكل التبويبات
-        tabRegister.classList.add('active');
-        tabLogin.classList.remove('active');
+        if(tabRegister) tabRegister.classList.add('active');
+        if(tabLogin) tabLogin.classList.remove('active');
         
         loginMessageEl.textContent = '';
     }
@@ -44,14 +43,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loginFormWrapper.style.display = 'block';
         registerFormWrapper.style.display = 'none';
         
-        // تحديث شكل التبويبات
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
+        if(tabLogin) tabLogin.classList.add('active');
+        if(tabRegister) tabRegister.classList.remove('active');
         
         registerMessageEl.textContent = '';
     }
 
-    // ✅ ربط الأحداث بأزرار التبويب
+    // ربط الأحداث بأزرار التبويب
     if (tabRegister) {
         tabRegister.addEventListener('click', (e) => {
             e.preventDefault();
@@ -66,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- باقي كود الفورم (Login & Register submit logic) ---
-    // --- يظل كما هو تماماً بدون تغيير ---
+    // --- منطق الفورم (Login & Register submit logic) ---
     
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -145,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 registerForm.reset();
                 
-                // ✅ استخدام دالة التبديل الجديدة للتحويل التلقائي
                 setTimeout(() => {
                     switchToLogin();
                 }, 1500);
@@ -158,5 +154,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 registerMessageEl.style.color = '#ff4444';
             }
         });
+    }
+
+    // ============================================================
+    // ✅ الجزء الجديد: فحص الرابط وتغيير التبويب تلقائياً
+    // ============================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+
+    if (mode === 'login') {
+        // لو الرابط فيه ?mode=login، شغل دالة التبديل للدخول فوراً
+        switchToLogin();
     }
 });
