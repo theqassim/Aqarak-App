@@ -10,11 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginMessageEl = document.getElementById('login-message');
     const registerMessageEl = document.getElementById('register-message');
 
-    // 🚨 التأكد من أن نموذج الدخول مرئي وأن نموذج التسجيل مخفي عند التحميل
-    // (هذا يحل مشكلة اختفاء الحقول عند بدء التشغيل)
+    // 🚨 التعديل الأول: جعل نموذج التسجيل هو الافتراضي
     if (loginFormWrapper && registerFormWrapper) {
-        loginFormWrapper.style.display = 'block';
-        registerFormWrapper.style.display = 'none';
+        loginFormWrapper.style.display = 'none';    // إخفاء الدخول
+        registerFormWrapper.style.display = 'block'; // إظهار التسجيل
     }
 
 
@@ -39,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             loginMessageEl.textContent = 'جاري التحقق...';
             loginMessageEl.className = 'info';
+            loginMessageEl.style.color = ''; // إعادة اللون للافتراضي
 
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -70,8 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } catch (error) {
-                loginMessageEl.textContent = error.message;
+                // 🚨 التعديل الثاني: رسالة الخطأ المخصصة باللون الأحمر
+                loginMessageEl.textContent = 'برجاء التحقق من الايميل او الباسورد وإعادة المحاولة';
                 loginMessageEl.className = 'error';
+                loginMessageEl.style.color = '#ff4444'; // ضمان اللون الأحمر
             }
         });
     }
@@ -82,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             registerMessageEl.textContent = 'جاري إنشاء الحساب...';
             registerMessageEl.className = 'info';
+            registerMessageEl.style.color = '';
 
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
@@ -91,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (password !== confirmPassword) {
                 registerMessageEl.textContent = 'كلمتا المرور غير متطابقتين!';
                 registerMessageEl.className = 'error';
+                registerMessageEl.style.color = '#ff4444';
                 return;
             }
 
@@ -104,17 +108,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || 'فشل في إنشاء الحساب.');
+                    // إذا كان الخطأ بسبب أن الإيميل موجود مسبقاً، نظهر رسالة محددة
+                    if(data.message && data.message.includes('مسجل')) {
+                         throw new Error('هذا البريد الإلكتروني مسجل بالفعل.');
+                    }
+                    throw new Error('فشل التسجيل');
                 }
 
-                registerMessageEl.textContent = data.message + ' يمكنك تسجيل الدخول الآن.';
+                registerMessageEl.textContent = 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.';
                 registerMessageEl.className = 'success';
+                registerMessageEl.style.color = '#28a745'; // أخضر للنجاح
+                
                 registerForm.reset();
-                showLogin.click(); // التحويل لنموذج الدخول
+                
+                // الانتظار قليلاً ثم التحويل لصفحة الدخول
+                setTimeout(() => {
+                    showLogin.click(); 
+                }, 1500);
 
             } catch (error) {
-                registerMessageEl.textContent = `خطأ: ${error.message}`;
+                // 🚨 التعديل الثالث: رسالة الخطأ المخصصة في التسجيل أيضاً (إذا فشل بسبب البيانات)
+                if (error.message.includes('مسجل')) {
+                     registerMessageEl.textContent = error.message;
+                } else {
+                     registerMessageEl.textContent = 'برجاء التحقق من البيانات وإعادة المحاولة';
+                }
                 registerMessageEl.className = 'error';
+                registerMessageEl.style.color = '#ff4444';
             }
         });
     }
