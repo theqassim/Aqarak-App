@@ -1,44 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // العناصر الرئيسية
+    // التحقق الفوري (كما هو)
+    const savedRole = localStorage.getItem('userRole');
+    if (savedRole) {
+        if (savedRole === 'admin') window.location.href = 'admin-home.html';
+        else window.location.href = 'home.html';
+        return;
+    }
+
+    // التعريفات
     const loginFormWrapper = document.getElementById('login-form-wrapper');
     const registerFormWrapper = document.getElementById('register-form-wrapper');
+    
+    // ✅ تعريف أزرار التبويب الجديدة
+    const tabRegister = document.getElementById('tab-register');
+    const tabLogin = document.getElementById('tab-login');
+
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const showRegister = document.getElementById('show-register');
-    const showLogin = document.getElementById('show-login');
     const loginMessageEl = document.getElementById('login-message');
     const registerMessageEl = document.getElementById('register-message');
 
-    // 🚨 التعديل الأول: جعل نموذج التسجيل هو الافتراضي
+    // الحالة الافتراضية (تسجيل جديد)
     if (loginFormWrapper && registerFormWrapper) {
-        loginFormWrapper.style.display = 'none';    // إخفاء الدخول
-        registerFormWrapper.style.display = 'block'; // إظهار التسجيل
-    }
-
-
-    // منطق تبديل النماذج (Toggle Logic)
-    showRegister.addEventListener('click', (e) => {
-        e.preventDefault();
         loginFormWrapper.style.display = 'none';
         registerFormWrapper.style.display = 'block';
-        loginMessageEl.textContent = ''; // مسح رسالة الدخول
-    });
+    }
 
-    showLogin.addEventListener('click', (e) => {
-        e.preventDefault();
+    // ✅ دالة للتبديل إلى وضع "إنشاء حساب"
+    function switchToRegister() {
+        loginFormWrapper.style.display = 'none';
+        registerFormWrapper.style.display = 'block';
+        
+        // تحديث شكل التبويبات
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        
+        loginMessageEl.textContent = '';
+    }
+
+    // ✅ دالة للتبديل إلى وضع "تسجيل الدخول"
+    function switchToLogin() {
         loginFormWrapper.style.display = 'block';
         registerFormWrapper.style.display = 'none';
-        registerMessageEl.textContent = ''; // مسح رسالة التسجيل
-    });
+        
+        // تحديث شكل التبويبات
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        
+        registerMessageEl.textContent = '';
+    }
 
-    // 1. منطق تسجيل الدخول (Login)
+    // ✅ ربط الأحداث بأزرار التبويب
+    if (tabRegister) {
+        tabRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchToRegister();
+        });
+    }
+
+    if (tabLogin) {
+        tabLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchToLogin();
+        });
+    }
+
+    // --- باقي كود الفورم (Login & Register submit logic) ---
+    // --- يظل كما هو تماماً بدون تغيير ---
+    
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             loginMessageEl.textContent = 'جاري التحقق...';
             loginMessageEl.className = 'info';
-            loginMessageEl.style.color = ''; // إعادة اللون للافتراضي
+            loginMessageEl.style.color = '';
 
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -52,33 +88,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.message || 'فشل تسجيل الدخول');
-                }
+                if (!response.ok) throw new Error(data.message || 'فشل الدخول');
 
-                // حفظ الإيميل ودور المستخدم عند النجاح
                 if (data.success) {
                     localStorage.setItem('userRole', data.role);
-                    localStorage.setItem('userEmail', email); // حفظ الإيميل
-                }
-
-
-                if (data.success && data.role === 'admin') {
-                    window.location.href = 'admin-home.html';
-                } else if (data.success && data.role === 'user') {
-                    window.location.href = 'home.html';
+                    localStorage.setItem('userEmail', email);
+                    
+                    if (data.role === 'admin') window.location.href = 'admin-home.html';
+                    else window.location.href = 'home.html';
                 }
 
             } catch (error) {
-                // 🚨 التعديل الثاني: رسالة الخطأ المخصصة باللون الأحمر
                 loginMessageEl.textContent = 'برجاء التحقق من الايميل او الباسورد وإعادة المحاولة';
                 loginMessageEl.className = 'error';
-                loginMessageEl.style.color = '#ff4444'; // ضمان اللون الأحمر
+                loginMessageEl.style.color = '#ff4444';
             }
         });
     }
 
-    // 2. منطق إنشاء حساب (Register)
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -108,31 +135,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    // إذا كان الخطأ بسبب أن الإيميل موجود مسبقاً، نظهر رسالة محددة
-                    if(data.message && data.message.includes('مسجل')) {
-                         throw new Error('هذا البريد الإلكتروني مسجل بالفعل.');
-                    }
+                    if(data.message && data.message.includes('مسجل')) throw new Error('هذا البريد الإلكتروني مسجل بالفعل.');
                     throw new Error('فشل التسجيل');
                 }
 
-                registerMessageEl.textContent = 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.';
+                registerMessageEl.textContent = 'تم إنشاء الحساب بنجاح! جاري التحويل لتسجيل الدخول...';
                 registerMessageEl.className = 'success';
-                registerMessageEl.style.color = '#28a745'; // أخضر للنجاح
+                registerMessageEl.style.color = '#28a745';
                 
                 registerForm.reset();
                 
-                // الانتظار قليلاً ثم التحويل لصفحة الدخول
+                // ✅ استخدام دالة التبديل الجديدة للتحويل التلقائي
                 setTimeout(() => {
-                    showLogin.click(); 
+                    switchToLogin();
                 }, 1500);
 
             } catch (error) {
-                // 🚨 التعديل الثالث: رسالة الخطأ المخصصة في التسجيل أيضاً (إذا فشل بسبب البيانات)
-                if (error.message.includes('مسجل')) {
-                     registerMessageEl.textContent = error.message;
-                } else {
-                     registerMessageEl.textContent = 'برجاء التحقق من البيانات وإعادة المحاولة';
-                }
+                if (error.message.includes('مسجل')) registerMessageEl.textContent = error.message;
+                else registerMessageEl.textContent = 'برجاء التحقق من البيانات وإعادة المحاولة';
+                
                 registerMessageEl.className = 'error';
                 registerMessageEl.style.color = '#ff4444';
             }

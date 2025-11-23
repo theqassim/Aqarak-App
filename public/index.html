@@ -3,7 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>عقارك - إنشاء حساب</title>
+    <title>عقارك - دخول / تسجيل</title>
     <link rel="stylesheet" href="styles.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -12,15 +12,13 @@
     <main class="main-content">
         <div class="auth-frame neon-glow centered-page-content">
             
-            <div id="register-form-wrapper">
-                <h2>إنشاء حساب جديد</h2>
-                
-                <p class="form-switch" style="margin-top: 5px; margin-bottom: 15px;">
-                    لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
-                </p>
+            <div class="auth-tabs">
+                <button id="tab-register" class="tab-btn active">إنشاء حساب</button>
+                <button id="tab-login" class="tab-btn">تسجيل الدخول</button>
+            </div>
 
+            <div id="register-form-wrapper">
                 <p id="register-message" class="message"></p>
-                
                 <form id="register-form" class="auth-form">
                     <div class="input-group">
                         <label for="reg-name">الاسم بالكامل</label>
@@ -38,19 +36,12 @@
                         <label for="reg-confirm-password">تأكيد كلمة المرور</label>
                         <input type="password" id="reg-confirm-password" class="neon-input-white" required>
                     </div>
-                    <button type="submit" class="btn-neon-auth">تسجيل</button>
+                    <button type="submit" class="btn-neon-auth">تسجيل جديد</button>
                 </form>
             </div>
 
             <div id="login-form-wrapper" style="display:none;">
-                <h2>تسجيل الدخول</h2>
-
-                <p class="form-switch" style="margin-top: 5px; margin-bottom: 15px;">
-                    ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
-                </p>
-
                 <p id="login-message" class="message"></p>
-                
                 <form id="login-form" class="auth-form">
                     <div class="input-group">
                         <label for="login-email">البريد الإلكتروني</label>

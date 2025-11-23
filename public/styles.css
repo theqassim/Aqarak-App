@@ -740,3 +740,36 @@ a:hover {
         max-width: 95%;
     }
 }
+
+/* تنسيق حاوية التبويبات */
+.auth-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee; /* خط فاصل خفيف */
+}
+
+/* تنسيق أزرار التبويب */
+.tab-btn {
+    flex: 1; /* جعل الأزرار تأخذ مساحة متساوية */
+    padding: 15px;
+    background: transparent;
+    border: none;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #777; /* لون باهت للزر غير النشط */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    position: relative;
+}
+
+/* تنسيق الزر النشط */
+.tab-btn.active {
+    color: var(--primary-color); /* أو اللون الأزرق/الأخضر المميز لديك */
+    border-bottom: 3px solid var(--primary-color); /* خط ملون تحت الزر النشط */
+}
+
+.tab-btn:hover {
+    color: #333;
+}
