@@ -22,21 +22,26 @@ async function fetchLatestProperties() {
             return;
         }
 
-        properties.forEach(property => {
-            const formattedPrice = formatPrice(property.price, property.type);
-            const typeTag = getTypeTag(property.type);
+       properties.forEach(property => {
+    const formattedPrice = formatPrice(property.price, property.type);
+    const typeTag = getTypeTag(property.type);
 
-            const cardHTML = `
-                <div class="property-card">
-                    <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=صورة+الشقة'}" alt="${property.title}">
-                    <div class="card-content">
-                        <h3>${property.title} ${typeTag}</h3> <p class="price">${formattedPrice}</p> <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
-                        <a href="property-details.html?id=${property.id}" class="btn">عرض التفاصيل</a>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += cardHTML;
-        });
+    const cardHTML = `
+        <div class="property-card">
+            <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=صورة+الشقة'}" alt="${property.title}">
+            <div class="card-content">
+                <h3>${property.title} ${typeTag}</h3>
+                <p class="price">${formattedPrice}</p>
+                <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
+                
+                <a href="property-details.html?id=${property.id}" class="btn view-details-btn">
+                    عرض التفاصيل
+                </a>
+            </div>
+        </div>
+    `;
+    container.innerHTML += cardHTML;
+});
 
     } catch (error) {
         console.error('Error fetching properties:', error);

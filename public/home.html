@@ -3,7 +3,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <script src="auth-guard.js"></script>
     <title>عقارك - الرئيسية</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -16,6 +15,13 @@
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
+
+            <nav class="main-nav">
+            <div id="guest-nav" style="display: none;">
+                <a href="index.html" class="nav-button neon-button-white">تسجيل الدخول</a>
+                <a href="index.html" class="nav-button neon-button-blue">إنشاء حساب</a>
+            </div>
+
             <nav class="main-nav">
                 <a href="all-properties.html" class="nav-button neon-button-white">جميع العقارات</a>
                 <a href="buy.html" class="nav-button neon-button-white">شراء</a>
@@ -60,6 +66,66 @@
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
+    <script>document.addEventListener('DOMContentLoaded', () => {
+    const userRole = localStorage.getItem('userRole');
+    const isLoggedIn = userRole !== null; // هل هو مسجل دخول؟
+
+    // ==========================================
+    // 1. التحكم في الهيدر (Header Control)
+    // ==========================================
+    const guestNav = document.getElementById('guest-nav');
+    const userNav = document.getElementById('user-nav');
+
+    if (isLoggedIn) {
+        // لو مسجل: أظهر قائمة المستخدم
+        if(userNav) userNav.style.display = 'flex';
+        if(guestNav) guestNav.style.display = 'none';
+    } else {
+        // لو زائر: أظهر زراير التسجيل
+        if(userNav) userNav.style.display = 'none';
+        if(guestNav) guestNav.style.display = 'flex';
+    }
+
+    // ==========================================
+    // 2. قفل التفاعلات (Restricting Actions)
+    // ==========================================
+    
+    // سنقوم بالبحث عن كل الروابط والأزرار التي نريد قفلها
+    // سنفترض أن أزرار "عرض التفاصيل" و"فلترة" لها كلاسات معينة
+    
+    // دالة لقفل زر معين
+    function protectButton(btn) {
+        btn.addEventListener('click', (e) => {
+            if (!isLoggedIn) {
+                e.preventDefault(); // منع الانتقال
+                e.stopPropagation(); // منع أي حدث آخر
+                
+                // توجيه المستخدم لصفحة التسجيل مع رسالة (اختياري)
+                if(confirm('يجب عليك تسجيل الدخول أولاً لعرض التفاصيل أو التواصل. هل تريد الانتقال لصفحة الدخول؟')) {
+                    window.location.href = 'index.html';
+                }
+            }
+        });
+    }
+
+    // تطبيق الحماية على أزرار "عرض التفاصيل" (افترضنا الكلاس .view-details-btn)
+    // ملحوظة: لو الأزرار بتترسم بالجافاسكريبت (Dynamic)، الكود ده لازم يتحط بعد رسم العقارات
+    document.body.addEventListener('click', (e) => {
+        // هل العنصر المضغوط هو زر تفاصيل أو زر تواصل؟
+        if (e.target.closest('.view-details-btn') || e.target.closest('.contact-seller-btn') || e.target.closest('.buy-btn')) {
+            if (!isLoggedIn) {
+                e.preventDefault();
+                alert('عفواً، هذه الميزة متاحة للأعضاء المسجلين فقط.');
+                window.location.href = 'index.html';
+            }
+        }
+    });
+
+    // حماية الفلاتر (البيع/الشراء) في الهيدر لو موجودة كروابط
+    const restrictedLinks = document.querySelectorAll('.restricted-link');
+    restrictedLinks.forEach(link => protectButton(link));
+}); 
+</script>
     <script src="home.js"></script>
     <script src="dash.js"></script> 
     <script src="logout.js"></script> 
