@@ -820,15 +820,62 @@ a:hover {
 }
 
 /* زر المساعدة في الهيدر */
-.help-icon {
-    font-size: 1.5rem;
-    color: #fff;
-    margin-right: 15px;
-    transition: transform 0.3s;
+/* =========================================
+   تصميم زر المساعدة العائم (Floating Help Button)
+   ========================================= */
+.floating-help-btn {
+    position: fixed; /* تثبيت الزر في الشاشة */
+    bottom: 30px;    /* المسافة من الأسفل */
+    left: 30px;      /* المسافة من اليسار (مناسب للمواقع العربية) */
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #00c6ff, #0072ff); /* لون أزرق متدرج */
+    border-radius: 50%; /* شكل دائري */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 28px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4); /* ظل مبدئي */
+    z-index: 999; /* لضمان ظهوره فوق كل العناصر */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* حركة ناعمة */
 }
-.help-icon:hover {
-    transform: scale(1.1) rotate(10deg);
-    color: #00c6ff;
+
+/* تأثير عند مرور الماوس */
+.floating-help-btn:hover {
+    transform: scale(1.1) rotate(15deg); /* تكبير ودوران بسيط */
+    box-shadow: 0 0 25px rgba(0, 198, 255, 0.8), 
+                0 0 50px rgba(0, 114, 255, 0.4); /* توهج نيون قوي */
+    background: linear-gradient(135deg, #0072ff, #00c6ff); /* عكس الألوان */
+}
+
+/* تأثير النبض (Pulse Animation) لجذب الانتباه */
+.floating-help-btn::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 198, 255, 0.6);
+    animation: pulse-ring 2s infinite;
+    z-index: -1;
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* تحسين الظهور في الموبايل */
+@media (max-width: 768px) {
+    .floating-help-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        bottom: 20px;
+        left: 20px;
+    }
 }
 
 /* =========================================
