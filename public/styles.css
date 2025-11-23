@@ -158,7 +158,7 @@ a:hover {
     padding-top: 80px;       /* ✅ 2. تحديد مسافة ثابتة من رأس المتصفح */
     
     min-height: 100vh;
-    background-color: #f0f2f5;
+    background-color: #2a3847;
     box-sizing: border-box; /* لضمان حساب المسافات بشكل صحيح */
 }
 .main-content {
