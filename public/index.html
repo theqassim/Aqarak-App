@@ -12,28 +12,15 @@
     <main class="main-content">
         <div class="auth-frame neon-glow centered-page-content">
             
-            <div id="login-form-wrapper" style="display:none;">
-                <h2>تسجيل الدخول</h2>
-                <p id="login-message" class="message"></p>
-                <form id="login-form" class="auth-form">
-                    <div class="input-group">
-                        <label for="login-email">البريد الإلكتروني</label>
-                        <input type="email" id="login-email" class="neon-input-white" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="login-password">كلمة المرور</label>
-                        <input type="password" id="login-password" class="neon-input-white" required>
-                    </div>
-                    <button type="submit" class="btn-neon-auth">دخول</button>
-                </form>
-                <p class="form-switch">
-                    ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
-                </p>
-            </div>
-
             <div id="register-form-wrapper">
                 <h2>إنشاء حساب جديد</h2>
+                
+                <p class="form-switch" style="margin-top: 5px; margin-bottom: 15px;">
+                    لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
+                </p>
+
                 <p id="register-message" class="message"></p>
+                
                 <form id="register-form" class="auth-form">
                     <div class="input-group">
                         <label for="reg-name">الاسم بالكامل</label>
@@ -53,10 +40,30 @@
                     </div>
                     <button type="submit" class="btn-neon-auth">تسجيل</button>
                 </form>
-                <p class="form-switch">
-                    لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
-                </p>
             </div>
+
+            <div id="login-form-wrapper" style="display:none;">
+                <h2>تسجيل الدخول</h2>
+
+                <p class="form-switch" style="margin-top: 5px; margin-bottom: 15px;">
+                    ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
+                </p>
+
+                <p id="login-message" class="message"></p>
+                
+                <form id="login-form" class="auth-form">
+                    <div class="input-group">
+                        <label for="login-email">البريد الإلكتروني</label>
+                        <input type="email" id="login-email" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">كلمة المرور</label>
+                        <input type="password" id="login-password" class="neon-input-white" required>
+                    </div>
+                    <button type="submit" class="btn-neon-auth">دخول</button>
+                </form>
+            </div>
+
         </div>
     </main>
 
