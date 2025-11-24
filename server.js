@@ -117,14 +117,26 @@ async function deleteCloudinaryImages(imageUrls) {
 // إنشاء الجداول
 async function createTables() {
     const queries = [
-        `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE)`,
+        `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "ownerName" TEXT, "ownerPhone" TEXT)`,
         `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`
     ];
-    for (const query of queries) {
-        try { await pgQuery(query); } catch (err) { console.error('Table Error:', err.message); }
+
+    try {
+        for (const query of queries) {
+            await pgQuery(query);
+        }
+
+        // 🔥 السطرين دول هما الحل السحري 🔥
+        // بيأمروا قاعدة البيانات: "لو الأعمدة دي مش موجودة في الجدول القديم، ضيفيها فوراً"
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "ownerName" TEXT`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "ownerPhone" TEXT`);
+
+        console.log('✅ Tables checked and updated successfully.');
+    } catch (err) {
+        console.error('❌ ERROR creating/updating tables:', err);
     }
 }
 createTables();
@@ -250,11 +262,55 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     }
 });
 
-app.get('/api/admin/seller-submissions', async (req, res) => {
+// تعديل مسار نشر طلبات البائعين (عشان ينقل الاسم والرقم)
+app.post('/api/admin/publish-submission', async (req, res) => {
+    const { submissionId, hiddenCode } = req.body;
+    if (!submissionId || !hiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
+
     try {
-        const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC");
-        res.json(r.rows);
-    } catch (err) { throw err; }
+        // 1. جلب بيانات الطلب الأصلي
+        const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]);
+        const sub = subRes.rows[0];
+        if (!sub) return res.status(404).json({ message: 'الطلب غير موجود' });
+
+        const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean);
+        if (!imageUrls.length) return res.status(400).json({ message: 'لا توجد صور' });
+
+        // 2. ✅ التعديل هنا: إضافة ownerName و ownerPhone في جملة الإدخال
+        const sql = `INSERT INTO properties (
+            title, price, "numericPrice", rooms, bathrooms, area, description, 
+            "imageUrl", "imageUrls", type, "hiddenCode", 
+            "ownerName", "ownerPhone"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`;
+        
+        // 3. ✅ التعديل هنا: تمرير القيم (sellerName و sellerPhone) للباراميترز
+        const params = [
+            sub.propertyTitle, 
+            sub.propertyPrice, 
+            parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), 
+            safeInt(sub.propertyRooms), 
+            safeInt(sub.propertyBathrooms), 
+            safeInt(sub.propertyArea), 
+            sub.propertyDescription, 
+            imageUrls[0], 
+            JSON.stringify(imageUrls), 
+            sub.propertyType, 
+            hiddenCode,
+            sub.sellerName,  // $12: اسم المالك
+            sub.sellerPhone  // $13: رقم الهاتف
+        ];
+        
+        const result = await pgQuery(sql, params);
+        
+        // 4. حذف الطلب من قائمة الانتظار
+        await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
+
+        res.status(201).json({ success: true, message: 'تم النشر بنجاح', id: result.rows[0].id });
+
+    } catch (err) { 
+        if (err.code === '23505') return res.status(400).json({ message: `الكود السري "${hiddenCode}" مستخدم بالفعل.` });
+        throw err; 
+    }
 });
 
 app.get('/api/admin/property-requests', async (req, res) => {
