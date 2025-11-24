@@ -1177,9 +1177,71 @@ a:hover {
 }
 
 /* تحسين للموبايل: الزر ياخد العرض كامل */
+/* =========================================
+   تحسينات الموبايل (Header & Layout) - النسخة المدمجة
+   ========================================= */
 @media (max-width: 768px) {
-    .btn-filter-submit {
-        width: 100%; /* عرض كامل في الموبايل لسهولة الضغط */
-        margin: 20px 0; /* مسافة من فوق وتحت فقط */
+    
+    /* 1. تقليل مساحة الحماية العلوية لأن الهيدر سيصغر */
+    body {
+        padding-top: 170px !important; /* قللنا المسافة من 240 إلى 170 */
+    }
+    
+    /* 2. ضغط حاوية الهيدر */
+    .header-container {
+        flex-direction: column; 
+        padding: 5px 10px; /* تقليل الحواف */
+        gap: 5px; /* تقليل المسافة بين اللوجو والأزرار */
+    }
+    
+    /* تصغير اللوجو قليلاً ليتناسب مع الموبايل */
+    .logo {
+        width: 40px;
+        height: 40px;
+    }
+    .logo-text {
+        font-size: 1.1rem;
+    }
+    
+    /* 3. تحويل القائمة لنظام شبكة (Grid) */
+    /* هذا هو الجزء السحري الذي سيضع الأزرار بجانب بعضها */
+    .main-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* عمودين متساويين (50% - 50%) */
+        gap: 8px; /* مسافة صغيرة بين الأزرار */
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    /* تنسيق الأزرار في الموبايل لتكون أصغر */
+    .nav-button {
+        width: 100%;
+        margin: 0; /* إلغاء الهوامش القديمة */
+        text-align: center;
+        font-size: 0.8rem; /* تصغير الخط قليلاً */
+        padding: 8px 2px; /* تقليل الحشو الداخلي */
+        white-space: nowrap; /* منع الكلام من النزول لسطرين */
+        height: 40px; /* ارتفاع ثابت وموحد */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* حركة جمالية: لو عدد الأزرار فردي، آخر زر يأخذ العرض كاملاً */
+    .main-nav a:last-child:nth-child(odd) {
+        grid-column: span 2;
+    }
+
+    /* تنسيق باقي العناصر للموبايل (كما هي) */
+    .main-content-grid, .details-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons-group {
+        flex-direction: column;
+    }
+    
+    .main-image-container {
+        height: 250px;
     }
 }
