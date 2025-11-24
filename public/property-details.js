@@ -172,8 +172,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         <div id="admin-secret-box" style="display: none; margin: 15px 0; background: #0f0707ff; border: 2px dashed #dc3545; padding: 10px; border-radius: 8px;">
                             <h4 style="color: #dc3545; margin: 0 0 10px 0; font-size: 1em;"><i class="fas fa-lock"></i> بيانات الأدمن</h4>
-                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>المالك:</strong> <span id="owner-name">-</span></p>
-                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الهاتف:</strong> <span id="owner-phone">-</span></p>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>المالك:</strong> <span id="admin-owner-name">-</span></p>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الهاتف:</strong> <span id="admin-owner-phone">-</span></p>
                             <p style="margin: 5px 0; font-size: 0.9em;"><strong>الكود:</strong> <span id="admin-hidden-code" style="background:#333; color:#fff; padding:2px 5px; border-radius:3px;">-</span></p>
                         </div>
 
