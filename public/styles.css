@@ -688,66 +688,77 @@ a:hover {
 }
 
 /* 11. استجابة التصميم (Media Queries) */
+/* =========================================
+   تحسينات الموبايل النهائية (Compact Header)
+   ========================================= */
 @media (max-width: 768px) {
-    /* 🚨 زيادة الإزاحة العلوية للمحتوى لتجنب تداخل الهيدر (الحل النهائي) */
+    
+    /* 1. تقليل إزاحة الجسم لأن الهيدر سيصبح صغيراً جداً */
     body {
-        padding-top: 180px; 
+        padding-top: 140px !important; 
     }
     
-    /* 🚨 تحويل الهيدر إلى عرض رأسي لكي تظهر الأزرار متتالية */
+    /* 2. ضغط حاوية الهيدر لأقصى درجة */
     .header-container {
-        flex-direction: column; /* اللوجو أولاً، ثم القائمة تحته */
-        text-align: center;
-        padding: 10px 5px;
+        flex-direction: column; 
+        padding: 5px; 
+        gap: 5px;
     }
     
+    /* تصغير اللوجو */
+    .logo-container {
+        transform: scale(0.9); /* تصغير بسيط للوجو */
+        margin-bottom: 0;
+    }
+    
+    /* 3. شبكة الأزرار (المعدلة) */
     .main-nav {
-        margin-top: 10px;
-        display: flex;
-        flex-wrap: wrap; /* 🚨 السماح بالالتفاف لظهور الأزرار على سطرين */
-        overflow-x: hidden; 
-        justify-content: center;
+        display: grid;
+        /* هذا السطر يجعل الأعمدة تأخذ مساحة متساوية وتملأ الشاشة */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 6px; /* مسافة صغيرة جداً بين الأزرار */
         width: 100%;
-        padding-bottom: 0;
+        margin-top: 2px;
     }
 
-    .main-nav a {
-        margin: 5px 5px; 
-        flex-grow: 1;
-        min-width: 100px;
+    /* تنسيق الأزرار المضغوط */
+    .nav-button {
+        width: 100%;
+        margin: 0;
         text-align: center;
+        font-size: 0.75rem; /* خط صغير وأنيق */
+        padding: 6px 2px;
+        height: 35px; /* ارتفاع ثابت صغير */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px; /* تقليل دوران الحواف لتوفير مساحة */
+        white-space: nowrap;
     }
 
-    /* تحويل تقسيم التفاصيل إلى عمود واحد */
-    .main-content-grid {
-        grid-template-columns: 1fr;
+    /* 4. زر "خروج" أو الزر الخامس */
+    /* نجعله يأخذ عرض كامل ليكون شكله مرتباً في النهاية */
+    .main-nav a:last-child:nth-child(odd) {
+        grid-column: 1 / -1; /* يمتد من العمود الأول للأخير */
+        background-color: rgba(220, 53, 69, 0.1); /* تمييز خفيف لزر الخروج */
+        color: var(--error-color);
+        border: 1px solid var(--error-color);
     }
-    .details-layout {
+
+    /* تحسينات عامة لباقي الصفحة */
+    .main-content-grid, .details-layout {
         grid-template-columns: 1fr;
-        gap: 20px;
     }
     
-    /* جعل أزرار الإجراءات تستغل كامل العرض */
     .action-buttons-group {
         flex-direction: column;
-        gap: 10px;
-    }
-    .action-buttons-group a, .action-buttons-group button {
-        width: 100%;
-        text-align: center;
     }
     
-    .main-image-container {
-        height: 300px;
-    }
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    .centered-page-content {
-        max-width: 95%;
+    .search-bar-container {
+        margin-top: 10px;
+        width: 95%;
     }
 }
-
 /* تنسيق حاوية التبويبات */
 .auth-tabs {
     display: flex;
@@ -1177,77 +1188,9 @@ a:hover {
 }
 
 /* تحسين للموبايل: الزر ياخد العرض كامل */
-/* =========================================
-   تحسينات الموبايل (Header & Layout) - النسخة المدمجة
-   ========================================= */
-/* =========================================
-   تحسينات الموبايل النهائية (Compact Header)
-   ========================================= */
 @media (max-width: 768px) {
-    
-    /* 1. تقليل إزاحة الجسم لأن الهيدر سيصبح صغيراً جداً */
-    body {
-        padding-top: 140px !important; 
-    }
-    
-    /* 2. ضغط حاوية الهيدر لأقصى درجة */
-    .header-container {
-        flex-direction: column; 
-        padding: 5px; 
-        gap: 5px;
-    }
-    
-    /* تصغير اللوجو */
-    .logo-container {
-        transform: scale(0.9); /* تصغير بسيط للوجو */
-        margin-bottom: 0;
-    }
-    
-    /* 3. شبكة الأزرار (المعدلة) */
-    .main-nav {
-        display: grid;
-        /* هذا السطر يجعل الأعمدة تأخذ مساحة متساوية وتملأ الشاشة */
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 6px; /* مسافة صغيرة جداً بين الأزرار */
-        width: 100%;
-        margin-top: 2px;
-    }
-
-    /* تنسيق الأزرار المضغوط */
-    .nav-button {
-        width: 100%;
-        margin: 0;
-        text-align: center;
-        font-size: 0.75rem; /* خط صغير وأنيق */
-        padding: 6px 2px;
-        height: 35px; /* ارتفاع ثابت صغير */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 15px; /* تقليل دوران الحواف لتوفير مساحة */
-        white-space: nowrap;
-    }
-
-    /* 4. زر "خروج" أو الزر الخامس */
-    /* نجعله يأخذ عرض كامل ليكون شكله مرتباً في النهاية */
-    .main-nav a:last-child:nth-child(odd) {
-        grid-column: 1 / -1; /* يمتد من العمود الأول للأخير */
-        background-color: rgba(220, 53, 69, 0.1); /* تمييز خفيف لزر الخروج */
-        color: var(--error-color);
-        border: 1px solid var(--error-color);
-    }
-
-    /* تحسينات عامة لباقي الصفحة */
-    .main-content-grid, .details-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .action-buttons-group {
-        flex-direction: column;
-    }
-    
-    .search-bar-container {
-        margin-top: 10px;
-        width: 95%;
+    .btn-filter-submit {
+        width: 100%; /* عرض كامل في الموبايل لسهولة الضغط */
+        margin: 20px 0; /* مسافة من فوق وتحت فقط */
     }
 }
