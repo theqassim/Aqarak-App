@@ -520,6 +520,22 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'خطأ داخلي في السيرفر', error: msg });
 });
 
+// 🛑 مسار مؤقت لإصلاح قاعدة البيانات (استخدمه مرة واحدة ثم احذفه)
+app.get('/fix-db', async (req, res) => {
+    try {
+        // حذف الجداول القديمة التي تسبب المشاكل
+        await pgQuery(`DROP TABLE IF EXISTS seller_submissions`);
+        await pgQuery(`DROP TABLE IF EXISTS properties`);
+        
+        // إعادة إنشاء الجداول بالأعمدة الجديدة الصحيحة
+        await createTables();
+        
+        res.send("✅ Database Fixed! Tables dropped and recreated with new columns (sellerName, sellerPhone).");
+    } catch (err) {
+        res.status(500).send("Error fixing DB: " + err.message);
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
