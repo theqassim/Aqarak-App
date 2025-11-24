@@ -24,6 +24,18 @@
         </div>
     </header>
 
+    <div class="filter-container">
+    <div class="filter-header" id="filter-toggle">
+        <h3><i class="fas fa-filter"></i> تصفية البحث</h3>
+        <i class="fas fa-chevron-down toggle-icon"></i>
+    </div>
+
+    <div class="filter-body" id="filter-body" style="display: none;">
+        <form id="filter-form">
+            </form>
+    </div>
+</div>
+
     <main class="main-content-grid">
         <aside class="filters-sidebar neon-glow">
             <h3><i class="fas fa-filter"></i> فلترة البحث</h3>
@@ -89,5 +101,20 @@
 
     <script src="all-properties.js"></script>
     <script src="utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const filterToggle = document.getElementById('filter-toggle');
+    const filterBody = document.getElementById('filter-body');
+    const filterContainer = document.querySelector('.filter-container');
+
+    if (filterToggle && filterBody) {
+        filterToggle.addEventListener('click', () => {
+            const isHidden = filterBody.style.display === 'none';
+            filterBody.style.display = isHidden ? 'block' : 'none';
+            filterContainer.classList.toggle('active');
+        });
+    }
+});
+    </script>
 </body>
 </html>

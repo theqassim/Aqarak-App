@@ -1201,3 +1201,32 @@ a:hover {
         margin: 20px 0; /* مسافة من فوق وتحت فقط */
     }
 }
+
+.filter-container {
+    background: var(--main-accent);
+    border-radius: 15px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.filter-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: rgba(255,255,255,0.05);
+}
+
+.filter-header h3 { margin: 0; font-size: 1.1rem; color: var(--main-secondary); }
+.filter-header .toggle-icon { transition: 0.3s; }
+
+.filter-body {
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    animation: slideDown 0.3s ease;
+}
+
+/* تدوير السهم لما يفتح */
+.filter-container.active .toggle-icon { transform: rotate(180deg); }
