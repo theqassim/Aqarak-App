@@ -39,21 +39,35 @@ async function fetchRentProperties() {
         }
 
         title.innerText = `تم العثور على ${properties.length} عقار للإيجار`;
-        properties.forEach(property => {
-            const formattedPrice = formatPrice(property.price, property.type);
-            const typeTag = getTypeTag(property.type);
+       properties.forEach(property => {
+    const formattedPrice = formatPrice(property.price, property.type);
+    const typeTag = getTypeTag(property.type);
 
-            const cardHTML = `
-                <div class="property-card">
-                    <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=صورة+الشقة'}" alt="${property.title}">
-                    <div class="card-content">
-                        <h3>${property.title} ${typeTag}</h3> <p class="price">${formattedPrice}</p> <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
-                        <a href="property-details.html?id=${property.id}" class="btn">عرض التفاصيل</a>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += cardHTML;
-        });
+    // ✅ نضع رابط التفاصيل هنا عشان نستخدمه في الكارت وفي الزرار
+    const detailsUrl = `property-details.html?id=${property.id}`;
+
+    const cardHTML = `
+        <div class="property-card" onclick="window.location.href='${detailsUrl}'">
+            
+            <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=صورة+العقار'}" alt="${property.title}">
+            
+            <div class="card-content">
+                <h3>${property.title} ${typeTag}</h3>
+                <p class="price">${formattedPrice}</p>
+                <p style="color: #666; margin: 10px 0;">
+                    <i class="fas fa-bed"></i> ${property.rooms} غرف | 
+                    <i class="fas fa-bath"></i> ${property.bathrooms} حمام | 
+                    <i class="fas fa-ruler-combined"></i> ${property.area} م²
+                </p>
+                
+                <a href="${detailsUrl}" class="btn-details-pro view-details-btn" onclick="event.stopPropagation()">
+                    عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right: 5px;"></i>
+                </a>
+            </div>
+        </div>
+    `;
+    container.innerHTML += cardHTML;
+});
 
 
     } catch (error) {

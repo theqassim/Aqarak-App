@@ -1067,3 +1067,62 @@ a:hover {
     from { opacity: 0; transform: translateY(50px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* 1. تحسين كارت العقار ليكون تفاعلياً */
+.property-card {
+    background: #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; /* ✅ تحويل المؤشر ليد عند المرور على الكارت */
+    display: flex;
+    flex-direction: column; /* لضمان توزيع العناصر */
+    position: relative;
+    border: 1px solid #eee;
+}
+
+/* تأثير عند مرور الماوس على الكارت بالكامل */
+.property-card:hover {
+    transform: translateY(-10px); /* يرتفع للأعلى */
+    box-shadow: 0 15px 30px rgba(0, 114, 255, 0.15); /* ظل أزرق خفيف */
+    border-color: #00c6ff;
+}
+
+/* 2. تنسيق محتوى الكارت لضبط المسافات */
+.card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+    text-align: right; /* أو center حسب تفضيلك */
+}
+
+/* 3. تنسيق زر "عرض التفاصيل" الاحترافي الجديد */
+.btn-details-pro {
+    display: block; /* يسمح بالتحكم في العرض والهوامش */
+    width: fit-content; /* العرض على قد الكلام */
+    margin: 20px auto 10px auto; /* ✅ (أهم جزء) مسافة من فوق 20 ومن تحت 10، و auto يخليه في النص */
+    padding: 10px 30px;
+    
+    /* خلفية متدرجة زرقاء */
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    color: white;
+    
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 50px; /* حواف دائرية */
+    box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3);
+    transition: all 0.3s ease;
+    text-align: center;
+    z-index: 2; /* لضمان أنه فوق الكارت */
+    position: relative;
+}
+
+/* تأثير الهوفر للزرار */
+.btn-details-pro:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 114, 255, 0.5);
+    background: linear-gradient(45deg, #0072ff, #00c6ff); /* عكس الألوان */
+}
