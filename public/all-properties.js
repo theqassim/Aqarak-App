@@ -1,44 +1,57 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // تحميل جميع العقارات عند فتح الصفحة
-    fetchProperties();
+    
+    // 1. التحقق: هل يوجد بحث قادم من الصفحة الرئيسية؟
+    const urlParams = new URLSearchParams(window.location.search);
+    const incomingKeyword = urlParams.get('keyword');
 
-    // تشغيل زر الفلتر
+    if (incomingKeyword) {
+        // لو فيه كلمة بحث، حطها في الفلتر وطبق البحث فوراً
+        const keywordInput = document.getElementById('filter-keyword');
+        if (keywordInput) {
+            keywordInput.value = incomingKeyword; // وضع الكلمة في الخانة
+            
+            // فتح قائمة الفلتر عشان المستخدم يشوف هو بحث عن إيه (اختياري)
+            const filterBody = document.getElementById('filter-body');
+            const filterContainer = document.querySelector('.filter-container');
+            if(filterBody) filterBody.style.display = 'block';
+            if(filterContainer) filterContainer.classList.add('active');
+        }
+        
+        // تشغيل البحث بالكلمة دي
+        fetchProperties(`keyword=${encodeURIComponent(incomingKeyword)}`);
+    } else {
+        // لو مفيش بحث، هات كل العقارات عادي
+        fetchProperties();
+    }
+
+    // تشغيل زر الفلتر (كما هو)
     const filterForm = document.getElementById('filter-form');
     if (filterForm) {
         filterForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // منع إعادة تحميل الصفحة
+            e.preventDefault(); 
             applyFilter();
         });
     }
 });
 
-// دالة جلب العقارات (مع أو بدون فلتر)
+// باقي الكود (fetchProperties, applyFilter, renderProperties) زي ما هو بالظبط...
+// (تأكد إنك ناسخ باقي الدوال اللي بعتهالك قبل كده هنا)
+
 async function fetchProperties(queryParams = '') {
-    const container = document.querySelector('.properties-grid'); // تأكد أن هذا الكلاس موجود في الـ HTML للحاوية
-    
-    // عرض رسالة تحميل
-    if (container) {
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
-    }
+    const container = document.querySelector('.properties-grid');
+    if (container) container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
 
     try {
-        // بناء الرابط
         const url = `/api/properties${queryParams ? '?' + queryParams : ''}`;
-        
         const response = await fetch(url);
         const properties = await response.json();
-
         renderProperties(properties);
-
     } catch (error) {
-        console.error('Error fetching properties:', error);
-        if (container) {
-            container.innerHTML = '<p class="empty-message error">حدث خطأ أثناء تحميل العقارات. حاول مرة أخرى.</p>';
-        }
+        console.error(error);
+        if (container) container.innerHTML = '<p class="empty-message error">حدث خطأ.</p>';
     }
 }
 
-// دالة تطبيق الفلتر (قراءة البيانات من الفورم الجديد)
 function applyFilter() {
     const keyword = document.getElementById('filter-keyword').value;
     const type = document.getElementById('filter-type').value;
@@ -46,33 +59,35 @@ function applyFilter() {
     const minPrice = document.getElementById('filter-price-min').value;
     const maxPrice = document.getElementById('filter-price-max').value;
 
-    // تجهيز المتغيرات للرابط
     const params = new URLSearchParams();
-
     if (keyword) params.append('keyword', keyword);
     if (type) params.append('type', type);
     if (rooms) params.append('rooms', rooms);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
 
-    // استدعاء الدالة بالفلتر الجديد
     fetchProperties(params.toString());
+
+    // إغلاق القائمة
+    const filterBody = document.getElementById('filter-body');
+    const filterContainer = document.querySelector('.filter-container');
+    if (filterBody) {
+        filterBody.style.display = 'none';
+        if(filterContainer) filterContainer.classList.remove('active');
+    }
 }
 
-// دالة رسم العقارات (Design Render)
 function renderProperties(properties) {
-    const container = document.querySelector('.properties-grid'); // الحاوية في ملف all-properties.html
-    
+    const container = document.querySelector('.properties-grid');
     if (!container) return;
-
-    container.innerHTML = ''; // مسح المحتوى القديم
+    container.innerHTML = '';
 
     if (properties.length === 0) {
         container.innerHTML = `
-            <div class="empty-state" style="text-align:center; grid-column: 1/-1; padding: 40px;">
+            <div class="empty-state" style="grid-column: 1/-1; text-align:center; padding:40px;">
                 <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
-                <h3>لا توجد عقارات مطابقة للبحث</h3>
-                <p>جرب تغيير شروط الفلتر أو البحث عن شيء آخر.</p>
+                <h3>لا توجد عقارات مطابقة</h3>
+                <p>جرب كلمات بحث أخرى.</p>
             </div>
         `;
         return;
@@ -83,24 +98,19 @@ function renderProperties(properties) {
         const typeTag = property.type === 'rent' || property.type === 'إيجار' 
             ? '<span style="color: #ffc107;">(للإيجار)</span>' 
             : '<span style="color: #28a745;">(للبيع)</span>';
-
         const detailsUrl = `property-details.html?id=${property.id}`;
 
         const cardHTML = `
             <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'">
-                
-                <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=Aqarak'}" alt="${property.title}">
-                
+                <img src="${property.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${property.title}">
                 <div class="card-content">
                     <h3>${property.title} ${typeTag}</h3>
                     <p class="price">${formattedPrice} ج.م</p>
-                    
                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
                         <i class="fas fa-bed"></i> ${property.rooms} غرف | 
                         <i class="fas fa-bath"></i> ${property.bathrooms} حمام | 
                         <i class="fas fa-ruler-combined"></i> ${property.area} م²
                     </p>
-                    
                     <a href="${detailsUrl}" class="btn-details-pro" onclick="event.stopPropagation()">
                         عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right: 5px;"></i>
                     </a>
