@@ -1,6 +1,6 @@
 // property-details.js
 
-// 🚨 دوال مساعدة (نفترض أنها موجودة في utils.js لكن نضعها هنا للسلامة)
+// 🚨 دوال مساعدة
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -16,7 +16,7 @@ window.getTypeTag = (type) => {
     return '';
 };
 
-// 🚨 منطق المفضلة (باستخدام API)
+// 🚨 منطق المفضلة
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentImageIndex = 0;
     let imageUrls = [];
 
-    // --- الدوال المساعدة للمرئيات والتنقل (التنقل الدائري) ---
+    // --- الدوال المساعدة للمرئيات والتنقل ---
     const updateMainImage = (mainImage, thumbnailsContainer) => {
         mainImage.src = imageUrls[currentImageIndex];
         document.querySelectorAll('.thumbnail-image').forEach((thumb, index) => {
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(property.message || 'العقار غير موجود في قاعدة البيانات.');
         }
 
-        // 🚨 التحقق من حالة المفضلة عند تحميل الصفحة
+        // 🚨 التحقق من حالة المفضلة
         const userEmail = localStorage.getItem('userEmail');
         let isCurrentlyFavorite = false;
         
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIconClass = isCurrentlyFavorite ? 'fas fa-heart' : 'far fa-heart';
         const favText = isCurrentlyFavorite ? ' تمت الإضافة' : ' أضف إلى المفضلة';
 
-        // 🚨 بناء الهيكل: التفاصيل أولاً، ثم الصور (لضمان عمل الـ Grid)
+        // 🚨 بناء الهيكل
         const detailHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -168,6 +168,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info">
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
+                        </div>
+
+                        <div id="admin-secret-box" style="display: none; margin: 15px 0; background: #fff0f0; border: 2px dashed #dc3545; padding: 10px; border-radius: 8px;">
+                            <h4 style="color: #dc3545; margin: 0 0 10px 0; font-size: 1em;"><i class="fas fa-lock"></i> بيانات الأدمن</h4>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>المالك:</strong> <span id="admin-owner-name">-</span></p>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الهاتف:</strong> <span id="admin-owner-phone">-</span></p>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الكود:</strong> <span id="admin-hidden-code" style="background:#333; color:#fff; padding:2px 5px; border-radius:3px;">-</span></p>
                         </div>
 
                         <div class="property-specs">
@@ -211,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         container.innerHTML = detailHTML;
         
-        // 4. ربط العناصر للـ JS (بعد حقن الـ HTML)
+        // 4. ربط العناصر للـ JS
         const mainImage = document.getElementById('property-main-image');
         const prevBtn = document.getElementById('prev-image');
         const nextBtn = document.getElementById('next-image');
@@ -220,25 +227,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const updateMainImageWithElements = () => updateMainImage(mainImage, thumbnailsContainer);
 
-        // --- منطق التنقل الدائري بالصور ---
+        // --- منطق التنقل ---
         if(imageUrls.length <= 1) {
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
         }
 
         prevBtn.addEventListener('click', () => {
-            // التنقل الدائري
             currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length; 
             updateMainImageWithElements();
         });
 
         nextBtn.addEventListener('click', () => {
-            // التنقل الدائري
             currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
             updateMainImageWithElements();
         });
         
-        // ربط زر المفضلة بالدالة
         if (favoriteButtonEl) {
              favoriteButtonEl.addEventListener('click', () => {
                 window.toggleFavorite(favoriteButtonEl.dataset.id);
@@ -247,6 +251,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         updateMainImageWithElements();
         renderThumbnails(thumbnailsContainer, updateMainImageWithElements);
+
+        // ============================================================
+        // ✅ الجزء الجديد: ملء وإظهار الصندوق السري للأدمن فقط
+        // ============================================================
+        const userRole = localStorage.getItem('userRole');
+        if (userRole === 'admin') {
+            const adminBox = document.getElementById('admin-secret-box');
+            if (adminBox) {
+                document.getElementById('admin-owner-name').textContent = property.ownerName || 'غير مسجل';
+                document.getElementById('admin-owner-phone').textContent = property.ownerPhone || 'غير مسجل';
+                document.getElementById('admin-hidden-code').textContent = property.hiddenCode || 'لا يوجد';
+                
+                adminBox.style.display = 'block'; // إظهار الصندوق
+            }
+        }
 
     } catch (error) {
         console.error('Error fetching property details:', error);
