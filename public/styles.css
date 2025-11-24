@@ -691,73 +691,80 @@ a:hover {
 /* =========================================
    تحسينات الموبايل النهائية (Compact Header)
    ========================================= */
+/* =========================================
+   تحسينات الموبايل النهائية (Flexbox Flow)
+   ========================================= */
 @media (max-width: 768px) {
     
-    /* 1. تقليل إزاحة الجسم لأن الهيدر سيصبح صغيراً جداً */
+    /* 1. ضبط مسافة الجسم */
     body {
-        padding-top: 140px !important; 
+        padding-top: 150px !important; 
     }
     
-    /* 2. ضغط حاوية الهيدر لأقصى درجة */
+    /* 2. حاوية الهيدر الرئيسية */
     .header-container {
-        flex-direction: column; 
-        padding: 5px; 
+        display: flex;
+        flex-direction: column; /* العناصر فوق بعض (اللوجو فوق، والأزرار تحت) */
+        align-items: center;
+        padding: 5px 10px;
         gap: 5px;
     }
     
-    /* تصغير اللوجو */
+    /* 3. إصلاح اللوجو والجملة (في سطر واحد) */
     .logo-container {
-        transform: scale(0.9); /* تصغير بسيط للوجو */
-        margin-bottom: 0;
+        display: flex;
+        flex-direction: row; /* ترتيب أفقي */
+        align-items: center;
+        justify-content: center;
+        gap: 10px; /* مسافة بين اللوجو والكلام */
+        width: 100%;
+        margin-bottom: 5px;
     }
     
-    /* 3. شبكة الأزرار (المعدلة) */
+    .logo {
+        width: 45px;
+        height: 45px;
+        margin: 0; /* إزالة أي هوامش قديمة */
+    }
+    
+    .logo-text {
+        font-size: 1.2rem;
+        white-space: nowrap; /* منع النص من النزول لسطرين */
+    }
+    
+    /* 4. تحويل الأزرار لنظام مرن (Flex Wrap) */
     .main-nav {
-        display: grid;
-        /* هذا السطر يجعل الأعمدة تأخذ مساحة متساوية وتملأ الشاشة */
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 6px; /* مسافة صغيرة جداً بين الأزرار */
+        display: flex;
+        flex-wrap: wrap; /* يسمح للأزرار بالنزول للسطر التالي لو مفيش مكان */
+        justify-content: center; /* توسيط الأزرار */
+        gap: 8px; /* المسافة بين الأزرار */
         width: 100%;
-        margin-top: 2px;
+        margin-top: 0;
     }
 
-    /* تنسيق الأزرار المضغوط */
+    /* تنسيق الزر ليكون مرناً */
     .nav-button {
-        width: 100%;
+        flex-grow: 1; /* ✅ الزر يتمدد ليملأ أي فراغ بجانبه */
+        flex-basis: 30%; /* العرض المبدئي للزر (ثلث الشاشة تقريباً) */
+        
+        /* حدود العرض عشان الزرار ميكبرش أوي ولا يصغر أوي */
+        min-width: 90px; 
+        max-width: 48%; /* عشان يضمن إن زرارين بس يجوا جنب بعض لو الشاشة صغيرة */
+        
         margin: 0;
         text-align: center;
-        font-size: 0.75rem; /* خط صغير وأنيق */
-        padding: 6px 2px;
-        height: 35px; /* ارتفاع ثابت صغير */
+        font-size: 0.8rem;
+        padding: 8px 5px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 15px; /* تقليل دوران الحواف لتوفير مساحة */
         white-space: nowrap;
     }
 
-    /* 4. زر "خروج" أو الزر الخامس */
-    /* نجعله يأخذ عرض كامل ليكون شكله مرتباً في النهاية */
-    .main-nav a:last-child:nth-child(odd) {
-        grid-column: 1 / -1; /* يمتد من العمود الأول للأخير */
-        background-color: rgba(220, 53, 69, 0.1); /* تمييز خفيف لزر الخروج */
-        color: var(--error-color);
-        border: 1px solid var(--error-color);
-    }
-
-    /* تحسينات عامة لباقي الصفحة */
-    .main-content-grid, .details-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .action-buttons-group {
-        flex-direction: column;
-    }
-    
-    .search-bar-container {
-        margin-top: 10px;
-        width: 95%;
-    }
+    /* تحسينات عامة */
+    .action-buttons-group { flex-direction: column; }
+    .main-content-grid, .details-layout { grid-template-columns: 1fr; }
 }
 /* تنسيق حاوية التبويبات */
 .auth-tabs {
