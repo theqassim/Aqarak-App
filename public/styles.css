@@ -1180,59 +1180,64 @@ a:hover {
 /* =========================================
    تحسينات الموبايل (Header & Layout) - النسخة المدمجة
    ========================================= */
+/* =========================================
+   تحسينات الموبايل النهائية (Compact Header)
+   ========================================= */
 @media (max-width: 768px) {
     
-    /* 1. تقليل مساحة الحماية العلوية لأن الهيدر سيصغر */
+    /* 1. تقليل إزاحة الجسم لأن الهيدر سيصبح صغيراً جداً */
     body {
-        padding-top: 170px !important; /* قللنا المسافة من 240 إلى 170 */
+        padding-top: 140px !important; 
     }
     
-    /* 2. ضغط حاوية الهيدر */
+    /* 2. ضغط حاوية الهيدر لأقصى درجة */
     .header-container {
         flex-direction: column; 
-        padding: 5px 10px; /* تقليل الحواف */
-        gap: 5px; /* تقليل المسافة بين اللوجو والأزرار */
+        padding: 5px; 
+        gap: 5px;
     }
     
-    /* تصغير اللوجو قليلاً ليتناسب مع الموبايل */
-    .logo {
-        width: 40px;
-        height: 40px;
-    }
-    .logo-text {
-        font-size: 1.1rem;
+    /* تصغير اللوجو */
+    .logo-container {
+        transform: scale(0.9); /* تصغير بسيط للوجو */
+        margin-bottom: 0;
     }
     
-    /* 3. تحويل القائمة لنظام شبكة (Grid) */
-    /* هذا هو الجزء السحري الذي سيضع الأزرار بجانب بعضها */
+    /* 3. شبكة الأزرار (المعدلة) */
     .main-nav {
         display: grid;
-        grid-template-columns: 1fr 1fr; /* عمودين متساويين (50% - 50%) */
-        gap: 8px; /* مسافة صغيرة بين الأزرار */
+        /* هذا السطر يجعل الأعمدة تأخذ مساحة متساوية وتملأ الشاشة */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 6px; /* مسافة صغيرة جداً بين الأزرار */
         width: 100%;
-        margin-top: 5px;
+        margin-top: 2px;
     }
 
-    /* تنسيق الأزرار في الموبايل لتكون أصغر */
+    /* تنسيق الأزرار المضغوط */
     .nav-button {
         width: 100%;
-        margin: 0; /* إلغاء الهوامش القديمة */
+        margin: 0;
         text-align: center;
-        font-size: 0.8rem; /* تصغير الخط قليلاً */
-        padding: 8px 2px; /* تقليل الحشو الداخلي */
-        white-space: nowrap; /* منع الكلام من النزول لسطرين */
-        height: 40px; /* ارتفاع ثابت وموحد */
+        font-size: 0.75rem; /* خط صغير وأنيق */
+        padding: 6px 2px;
+        height: 35px; /* ارتفاع ثابت صغير */
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 15px; /* تقليل دوران الحواف لتوفير مساحة */
+        white-space: nowrap;
     }
 
-    /* حركة جمالية: لو عدد الأزرار فردي، آخر زر يأخذ العرض كاملاً */
+    /* 4. زر "خروج" أو الزر الخامس */
+    /* نجعله يأخذ عرض كامل ليكون شكله مرتباً في النهاية */
     .main-nav a:last-child:nth-child(odd) {
-        grid-column: span 2;
+        grid-column: 1 / -1; /* يمتد من العمود الأول للأخير */
+        background-color: rgba(220, 53, 69, 0.1); /* تمييز خفيف لزر الخروج */
+        color: var(--error-color);
+        border: 1px solid var(--error-color);
     }
 
-    /* تنسيق باقي العناصر للموبايل (كما هي) */
+    /* تحسينات عامة لباقي الصفحة */
     .main-content-grid, .details-layout {
         grid-template-columns: 1fr;
     }
@@ -1241,7 +1246,8 @@ a:hover {
         flex-direction: column;
     }
     
-    .main-image-container {
-        height: 250px;
+    .search-bar-container {
+        margin-top: 10px;
+        width: 95%;
     }
 }
