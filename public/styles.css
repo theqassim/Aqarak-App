@@ -1126,3 +1126,16 @@ a:hover {
     box-shadow: 0 6px 20px rgba(0, 114, 255, 0.5);
     background: linear-gradient(45deg, #0072ff, #00c6ff); /* عكس الألوان */
 }
+
+.admin-secret-box {
+    background: #3a1616;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; /* ✅ تحويل المؤشر ليد عند المرور على الكارت */
+    display: flex;
+    flex-direction: column; /* لضمان توزيع العناصر */
+    position: relative;
+    border: 1px solid #1c2630;
+}

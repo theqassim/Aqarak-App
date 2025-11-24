@@ -137,6 +137,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // دالة إرسال الإشعار لتليجرام
+const sendTelegramNotification = async (propertyData) => {
+  // 1. بيانات البوت بتاعك
+  const botToken = "8445587657:AAEprDvEMXDm_fhuLP7KNxoTptw6WqAtd8s";
+  const chatId = "1804430659";
+
+  // 2. تجهيز الرسالة (ممكن تحط إيموجي وتظبط الشكل)
+  const message = `
+🚨 **عقار جديد تم نشره!** 🏠
+
+👤 **المالك:** ${propertyData.ownerName}
+📞 **الهاتف:** ${propertyData.phone}
+💰 **السعر:** ${propertyData.price} جنيه
+📍 **العنوان:** ${propertyData.address}
+
+🔗 [اضغط للمراجعة](https://aqarakeg.com/admin/admin-submissions.html
+  `;
+
+  // 3. إرسال الطلب لتليجرام
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+  
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown' // عشان التنسيق (Bold) يشتغل
+      })
+    });
+    console.log("Notification sent!");
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
+};
     
     // CSS Styles
     const style = document.createElement('style');
