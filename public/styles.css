@@ -1230,3 +1230,163 @@ a:hover {
 
 /* تدوير السهم لما يفتح */
 .filter-container.active .toggle-icon { transform: rotate(180deg); }
+
+/* تحسين شكل الفلتر */
+.filters-sidebar {
+    background: rgba(255, 255, 255, 0.05); /* خلفية شفافة */
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* حدود خفيفة جداً بدل الأبيض الصريح */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+}
+
+/* تحويل الفورم لشبكة (Grid) */
+.filters-sidebar form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* عمودين */
+    gap: 15px; /* مسافة بين العناصر */
+}
+
+/* عناصر تاخد العرض كامل (زي البحث بالكلمة وزر التطبيق) */
+.filters-sidebar .full-width {
+    grid-column: span 2;
+}
+
+/* تحسين شكل حقول الإدخال */
+.filters-sidebar input, .filters-sidebar select {
+    background: rgba(0, 0, 0, 0.3) !important; /* خلفية الحقل غامقة */
+    border: 1px solid #444 !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    height: 45px; /* ارتفاع موحد */
+}
+
+/* تحسين العناوين (Labels) */
+.filters-sidebar label {
+    font-size: 0.9rem;
+    color: #ccc; /* لون رمادي فاتح بدل الأبيض الفاقع */
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* زر التطبيق */
+.btn-filter-submit {
+    width: 100%;
+    grid-column: span 2;
+    margin-top: 10px;
+}
+
+/* =========================================
+   تنسيق فلتر البحث المتقدم (Accordion Style)
+   ========================================= */
+
+.filter-wrapper {
+    margin-bottom: 30px;
+}
+
+.filter-container {
+    background: var(--main-accent); /* لون الخلفية من المتغيرات */
+    border-radius: 15px;
+    overflow: hidden; /* عشان الحواف الدائرية تبان */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* رأس الفلتر (الزرار) */
+.filter-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    transition: background 0.3s;
+}
+
+.filter-header:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--main-secondary);
+}
+
+.toggle-icon {
+    color: var(--main-text);
+    transition: transform 0.3s ease;
+}
+
+/* تدوير السهم عند الفتح */
+.filter-container.active .toggle-icon {
+    transform: rotate(180deg);
+    color: var(--main-secondary);
+}
+
+/* جسم الفلتر */
+.filter-body {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideDown 0.3s ease-in-out;
+}
+
+/* تنسيق الفورم كشبكة (Grid) */
+#filter-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* عمودين متساويين */
+    gap: 15px; /* مسافة بين الخانات */
+}
+
+/* العناصر اللي تاخد العرض كامل */
+.full-width, .full-width-btn {
+    grid-column: span 2; /* يمتد على العمودين */
+}
+
+/* تنسيق الحقول */
+.form-row label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.filter-body input, .filter-body select {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.filter-body input:focus, .filter-body select:focus {
+    border-color: var(--main-secondary);
+    box-shadow: 0 0 8px rgba(0, 198, 255, 0.3);
+}
+
+/* تحسين حقل البحث (أيقونة داخلية) */
+.input-icon-wrapper {
+    position: relative;
+}
+.input-icon-wrapper i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+.input-icon-wrapper input {
+    padding-right: 40px; /* مساحة للأيقونة */
+}
+
+/* زر التطبيق */
+.btn-filter-submit {
+    margin-top: 10px;
+    width: 100%; /* يأخذ العرض كامل */
+}
