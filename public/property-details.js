@@ -170,12 +170,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
                         </div>
 
-                        <div id="admin-secret-box" style="display: none; margin: 15px 0; background: #0f0707ff; border: 2px dashed #dc3545; padding: 10px; border-radius: 8px;">
-                            <h4 style="color: #dc3545; margin: 0 0 10px 0; font-size: 1em;"><i class="fas fa-lock"></i> بيانات الأدمن</h4>
-                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>المالك:</strong> <span id="admin-owner-name">-</span></p>
-                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الهاتف:</strong> <span id="admin-owner-phone">-</span></p>
-                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>الكود:</strong> <span id="admin-hidden-code" style="background:#333; color:#fff; padding:2px 5px; border-radius:3px;">-</span></p>
-                        </div>
+                       <div id="admin-secret-box" style="display: none; margin: 20px 0; background: #180f0fff; border: 2px dashed #dc3545; padding: 15px; border-radius: 10px;">
+    <h3 style="color: #dc3545; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-size: 1.1em;">
+        <i class="fas fa-user-shield"></i> بيانات خاصة للإدارة
+    </h3>
+    <div style="display: grid; gap: 10px; font-size: 1em; color: #333;">
+        <p><strong>👤 اسم المالك:</strong> <span id="admin-seller-name">-</span></p>
+        <p><strong>📞 رقم الهاتف:</strong> <span id="admin-seller-phone">-</span></p>
+        <p><strong>🔑 الكود السري:</strong> <span id="admin-hidden-code" style="background: #333; color: #fff; padding: 2px 8px; border-radius: 4px;">-</span></p>
+    </div>
+</div>
 
                         <div class="property-specs">
                             <h3>المواصفات الرئيسية</h3>
@@ -259,14 +263,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userRole === 'admin') {
             const adminBox = document.getElementById('admin-secret-box');
             if (adminBox) {
-                document.getElementById('admin-owner-name').textContent = property.ownerName || 'غير مسجل';
-                document.getElementById('admin-owner-phone').textContent = property.ownerPhone || 'غير مسجل';
+                // ✅ هنا نقرأ من property.sellerName ونضعها في العنصر admin-seller-name
+                // لاحظ أننا استخدمنا || لدعم العقارات القديمة (owner) والجديدة (seller) مؤقتاً
+                document.getElementById('admin-seller-name').textContent = property.sellerName || property.ownerName || 'غير مسجل';
+                document.getElementById('admin-seller-phone').textContent = property.sellerPhone || property.ownerPhone || 'غير مسجل';
                 document.getElementById('admin-hidden-code').textContent = property.hiddenCode || 'لا يوجد';
                 
-                adminBox.style.display = 'block'; // إظهار الصندوق
+                adminBox.style.display = 'block'; 
             }
         }
-
     } catch (error) {
         console.error('Error fetching property details:', error);
         loadingMessage.style.display = 'none';

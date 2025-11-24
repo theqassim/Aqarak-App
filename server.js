@@ -116,19 +116,50 @@ async function deleteCloudinaryImages(imageUrls) {
 
 // إنشاء الجداول
 async function createTables() {
+    // إنشاء الجداول الأساسية
     const queries = [
-        `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE)`,
+        // جدول العقارات (لاحظ استخدام sellerName بدلاً من ownerName)
+        `CREATE TABLE IF NOT EXISTS properties (
+            id SERIAL PRIMARY KEY, 
+            title TEXT NOT NULL, 
+            price TEXT NOT NULL, 
+            "numericPrice" NUMERIC, 
+            rooms INTEGER, 
+            bathrooms INTEGER, 
+            area INTEGER, 
+            description TEXT, 
+            "imageUrl" TEXT, 
+            "imageUrls" TEXT, 
+            type TEXT NOT NULL, 
+            "hiddenCode" TEXT UNIQUE,
+            "sellerName" TEXT,  -- ✅ تم التغيير
+            "sellerPhone" TEXT  -- ✅ تم التغيير
+        )`,
         `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`
     ];
-    for (const query of queries) {
-        try { await pgQuery(query); } catch (err) { console.error('Table Error:', err.message); }
+
+    try {
+        for (const query of queries) {
+            await pgQuery(query);
+        }
+
+        // 🔥🔥🔥 إضافة الأعمدة يدوياً للتأكد 100% 🔥🔥🔥
+        // سنضيف الأعمدة الجديدة (seller)
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "sellerName" TEXT`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "sellerPhone" TEXT`);
+        
+        // (اختياري) لو عايز تنضف القديم ممكن تمسح اعمدة owner بس مش ضروري دلوقتي عشان البيانات القديمة
+        // await pgQuery(`ALTER TABLE properties DROP COLUMN IF EXISTS "ownerName"`);
+
+        console.log('✅ Tables & Columns checked successfully.');
+    } catch (err) {
+        console.error('❌ ERROR creating/updating tables:', err);
     }
 }
 createTables();
-
 app.use(cors());
 app.use(express.json());
 
