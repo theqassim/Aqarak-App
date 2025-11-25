@@ -2021,7 +2021,7 @@ textarea.neon-input-white {
     border: none;
     border-radius: 12px;
     background: linear-gradient(45deg, #00f260, #0575e6);
-    color: white;
+    color: rgb(7, 103, 182);
     font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
@@ -2058,120 +2058,135 @@ textarea.neon-input-white {
     color: #00f260;
     border: 1px solid rgba(0, 242, 96, 0.3);
 }
-/* --- إعدادات الهيدر الرئيسية --- */
-.main-header {
-    position: sticky; /* يفضل sticky عشان يثبت لما تنزل بالصفحة */
-    top: 0;
-    z-index: 1000; /* عشان يفضل فوق أي محتوى تاني */
-    width: 100%;
-    background: rgba(0, 0, 0, 0.6); /* لون أسود شفاف */
-    backdrop-filter: blur(12px); /* تأثير الزجاج الضبابي */
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* خط رفيع جداً من تحت */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    padding: 10px 0;
-    transition: all 0.3s ease;
-}
-
-/* --- الحاوية الداخلية (لضبط المحتوى في المنتصف) --- */
-.header-container {
-    display: flex;
-    justify-content: space-between; /* اللوجو يمين والزرار شمال */
-    align-items: center;
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* --- تنسيق اللوجو والنص --- */
+/* --- إعدادات الهيدر الرئيسية --- *//* --- 1. تنسيق الهيدر (الشعار والنص) --- */
 .logo-container {
     display: flex;
+    flex-direction: row-reverse; /* اللوجو يمين والنص شمال */
     align-items: center;
-    gap: 15px; /* مسافة بين الصورة والنص */
-    text-decoration: none;
-    cursor: pointer;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px; /* مسافة تحت اللوجو */
 }
 
 .logo {
-    height: 50px; /* حجم اللوجو */
-    width: 50px;
-    border-radius: 50%; /* يخلي الصورة مدورة */
-    object-fit: cover;
-    border: 2px solid rgba(0, 242, 96, 0.5); /* إطار أخضر خافت */
-    box-shadow: 0 0 15px rgba(0, 242, 96, 0.2); /* توهج خفيف */
-    transition: transform 0.3s ease;
-}
-
-.logo-container:hover .logo {
-    transform: rotate(10deg) scale(1.1); /* حركة بسيطة عند الوقوف عليها */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 242, 96, 0.5); /* إطار نيون أخضر */
+    box-shadow: 0 0 15px rgba(0, 242, 96, 0.3); /* توهج */
 }
 
 .logo-text {
-    font-family: 'Tajawal', sans-serif;
     font-size: 1.5rem;
     font-weight: 800;
-    /* التدرج اللوني المميز للموقع */
-    background: linear-gradient(90deg, #00f260, #0575e6); 
+    font-family: 'Tajawal', sans-serif;
+    /* تدرج لوني للنص */
+    background: linear-gradient(90deg, #00f260, #0575e6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
 }
 
-/* --- تنسيق زرار التنقل (النيون الأبيض) --- */
-.main-nav {
-    display: flex;
-    align-items: center;
+/* --- 2. شبكة الأزرار الرئيسية (Grid) --- */
+.buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* عمودين متساويين */
+    gap: 15px; /* مسافة بين الأزرار */
+    max-width: 500px;
+    margin: 0 auto 30px auto; /* توسيط ومسافة من تحت */
+    padding: 0 20px;
 }
 
-.nav-button {
-    text-decoration: none;
-    font-family: 'Tajawal', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    padding: 10px 25px;
-    border-radius: 50px; /* حواف دائرية كاملة */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+/* الزرار الخامس (حسابي) يأخذ العرض الكامل */
+.buttons-grid .full-width-btn {
+    grid-column: span 2;
 }
 
-/* ستايل الكلاس neon-button-white */
-.neon-button-white {
+/* ستايل الأزرار الزجاجية */
+.glass-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    background: rgba(255, 255, 255, 0.05); /* خلفية بيضاء شفافة جداً */
-    border: 1px solid rgba(255, 255, 255, 0.3); /* حدود بيضاء */
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* توهج أبيض خافت */
+    padding: 12px;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
 }
 
-/* تأثير الهوفر (لما الماوس يجي عليه) */
-.neon-button-white:hover {
-    background: #fff; /* يتحول لأبيض كامل */
-    color: #000; /* النص يسود */
-    border-color: #fff;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4); /* توهج قوي جداً */
+.glass-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #00f260;
+    box-shadow: 0 0 15px rgba(0, 242, 96, 0.2);
     transform: translateY(-2px);
 }
 
-/* --- التجاوب مع الموبايل --- */
-@media (max-width: 768px) {
-    .logo-text {
-        font-size: 1.2rem; /* تصغير الخط شوية */
-        display: none; /* (اختياري) ممكن تخفي النص وتكتفي باللوجو لو الشاشة ضيقة */
-    }
-    
-    .logo {
-        height: 40px;
-        width: 40px;
-    }
-
-    .nav-button {
-        padding: 8px 15px;
-        font-size: 0.85rem;
-    }
+/* --- 3. شريط البحث (Search Bar) --- */
+.search-container {
+    position: relative;
+    max-width: 600px;
+    margin: 20px auto 40px auto;
+    padding: 0 20px;
 }
-/* إظهار النص في الموبايل لو المساحة تسمح */
-@media (max-width: 768px) {
-     .logo-text {
-        display: block; 
-    }
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 20px; /* مسافة عشان أيقونة البحث */
+    border-radius: 50px; /* شكل كبسولة */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: right; /* الكتابة من اليمين */
+}
+
+.search-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #0575e6; /* لون أزرق عند الكتابة */
+    box-shadow: 0 0 20px rgba(5, 117, 230, 0.3);
+}
+
+.search-btn {
+    position: absolute;
+    left: 25px; /* تثبيت الزرار داخل الشريط */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- 4. عنوان "أحدث العقارات" --- */
+h2.section-title {
+    text-align: center;
+    color: #0575e6; /* لون أزرق واضح */
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* خط تحت العنوان */
+h2.section-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: #00f260;
+    margin: 10px auto 0 auto;
+    border-radius: 2px;
 }
