@@ -1491,3 +1491,18 @@ a:hover {
         right: 20px;
     }
 }
+
+/* تنسيق قسم العقارات المشابهة */
+.similar-properties-section {
+    padding-top: 30px;
+    border-top: 1px solid var(--detail-divider);
+}
+
+/* تنسيق كارت العقار المشابه (نسخة مصغرة) */
+.similar-properties-section .property-card {
+    font-size: 0.9rem; /* تصغير الخط قليلاً */
+}
+
+.similar-properties-section .property-card img {
+    height: 180px; /* تصغير الصورة قليلاً */
+}
