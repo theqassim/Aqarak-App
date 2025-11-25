@@ -21,7 +21,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Aqarak@123";
 const SALT_ROUNDS = 10;
 
 // 🛑 ضع رابط الويب هوك هنا مباشرة
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1442988734365831183/zNYS7qewKwW3Y6plEd_rt2FepU5Nh6rVZS6nQDo9PBqvjROc1msPZ3kqyvohx86h1cLW";
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
