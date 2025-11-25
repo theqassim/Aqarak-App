@@ -1916,3 +1916,262 @@ textarea.neon-input-white {
         padding: 30px 20px;
     }
 }
+/* --- حاوية تسجيل الدخول (Glassmorphism) --- */
+.auth-frame {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    margin: 60px auto;
+    max-width: 450px; /* عرض أصغر قليلاً من نموذج العقار ليكون مناسباً للدخول */
+    width: 90%;
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    position: relative;
+}
+
+/* --- تصميم التبويبات (Tabs) --- */
+.auth-tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* خط فاصل خافت */
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #aaa; /* لون رمادي للخامل */
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.3s ease;
+    position: relative;
+    outline: none;
+}
+
+.tab-btn:hover {
+    color: #fff;
+}
+
+/* --- التبويب النشط (Active Tab) --- */
+.tab-btn.active {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* الخط المضيء تحت التبويب النشط */
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -11px; /* ليلامس الخط الفاصل */
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #00f260, #0575e6); /* نفس تدرج اللوجو */
+    border-radius: 3px;
+    box-shadow: 0 -2px 10px rgba(0, 242, 96, 0.5); /* إضاءة نيون للأعلى */
+}
+
+/* --- الحقول (Input Fields) - نفس الستايل الموحد --- */
+.input-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    color: #ddd;
+    margin-right: 5px;
+}
+
+.neon-input-white {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 15px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.neon-input-white:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #00f260;
+    box-shadow: 0 0 10px rgba(0, 242, 96, 0.2);
+    transform: translateY(-2px);
+}
+
+/* --- زر الدخول/التسجيل (Gradient Button) --- */
+.btn-neon-auth {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #00f260, #0575e6);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 242, 96, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-auth:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 242, 96, 0.6);
+    background: linear-gradient(45deg, #0575e6, #00f260);
+}
+
+/* --- رسائل الخطأ والنجاح --- */
+.message {
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: none; /* مخفي افتراضياً */
+}
+
+.message.error {
+    display: block;
+    background: rgba(255, 68, 68, 0.15);
+    color: #ff4444;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.message.success {
+    display: block;
+    background: rgba(0, 242, 96, 0.15);
+    color: #00f260;
+    border: 1px solid rgba(0, 242, 96, 0.3);
+}
+/* --- إعدادات الهيدر الرئيسية --- */
+.main-header {
+    position: sticky; /* يفضل sticky عشان يثبت لما تنزل بالصفحة */
+    top: 0;
+    z-index: 1000; /* عشان يفضل فوق أي محتوى تاني */
+    width: 100%;
+    background: rgba(0, 0, 0, 0.6); /* لون أسود شفاف */
+    backdrop-filter: blur(12px); /* تأثير الزجاج الضبابي */
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* خط رفيع جداً من تحت */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
+    transition: all 0.3s ease;
+}
+
+/* --- الحاوية الداخلية (لضبط المحتوى في المنتصف) --- */
+.header-container {
+    display: flex;
+    justify-content: space-between; /* اللوجو يمين والزرار شمال */
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- تنسيق اللوجو والنص --- */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* مسافة بين الصورة والنص */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.logo {
+    height: 50px; /* حجم اللوجو */
+    width: 50px;
+    border-radius: 50%; /* يخلي الصورة مدورة */
+    object-fit: cover;
+    border: 2px solid rgba(0, 242, 96, 0.5); /* إطار أخضر خافت */
+    box-shadow: 0 0 15px rgba(0, 242, 96, 0.2); /* توهج خفيف */
+    transition: transform 0.3s ease;
+}
+
+.logo-container:hover .logo {
+    transform: rotate(10deg) scale(1.1); /* حركة بسيطة عند الوقوف عليها */
+}
+
+.logo-text {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    /* التدرج اللوني المميز للموقع */
+    background: linear-gradient(90deg, #00f260, #0575e6); 
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+}
+
+/* --- تنسيق زرار التنقل (النيون الأبيض) --- */
+.main-nav {
+    display: flex;
+    align-items: center;
+}
+
+.nav-button {
+    text-decoration: none;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 10px 25px;
+    border-radius: 50px; /* حواف دائرية كاملة */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ستايل الكلاس neon-button-white */
+.neon-button-white {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05); /* خلفية بيضاء شفافة جداً */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* حدود بيضاء */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* توهج أبيض خافت */
+}
+
+/* تأثير الهوفر (لما الماوس يجي عليه) */
+.neon-button-white:hover {
+    background: #fff; /* يتحول لأبيض كامل */
+    color: #000; /* النص يسود */
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4); /* توهج قوي جداً */
+    transform: translateY(-2px);
+}
+
+/* --- التجاوب مع الموبايل --- */
+@media (max-width: 768px) {
+    .logo-text {
+        font-size: 1.2rem; /* تصغير الخط شوية */
+        display: none; /* (اختياري) ممكن تخفي النص وتكتفي باللوجو لو الشاشة ضيقة */
+    }
+    
+    .logo {
+        height: 40px;
+        width: 40px;
+    }
+
+    .nav-button {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+}
+/* إظهار النص في الموبايل لو المساحة تسمح */
+@media (max-width: 768px) {
+     .logo-text {
+        display: block; 
+    }
+}
