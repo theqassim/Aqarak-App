@@ -21,7 +21,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Aqarak@123";
 const SALT_ROUNDS = 10;
 
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1442988734365831183/zNYS7qewKwW3Y6plEd_rt2FepU5Nh6rVZS6nQDo9PBqvjROc1msPZ3kqyvohx86h1cLW";
 // مفاتيح Cloudinary
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
@@ -377,19 +377,46 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         await pgQuery(sql, params);
         
         // الآن المتغير mainImage موجود وسيعمل الكود
-        await sendDiscordNotification(
-            "📢 طلب عرض عقار جديد!",
-            [
-                { name: "👤 المالك", value: data.sellerName, inline: true },
-                { name: "📞 الهاتف", value: data.sellerPhone, inline: true },
-                { name: "🏠 العنوان", value: data.propertyTitle },
-                { name: "💰 السعر", value: `${data.propertyPrice} ج.م`, inline: true },
-                { name: "📏 المساحة", value: `${data.propertyArea} م²`, inline: true }
-            ],
-            3066993, // لون أخضر
-            mainImage // ✅ سيتم تمريره بنجاح الآن
-        );
+        async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
+    console.log("🚀 Trying to send Discord Notification..."); // رسالة بداية
 
+    // 1. التأكد من الرابط
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) {
+        console.error("❌ ERROR: Discord Webhook URL is MISSING or INVALID inside server.js");
+        return;
+    }
+
+    console.log("✅ URL found, preparing payload...");
+
+    const embed = {
+        title: title,
+        color: color,
+        fields: fields,
+        footer: { text: "Aqarak Bot 🏠" },
+        timestamp: new Date().toISOString()
+    };
+
+    if (imageUrl) embed.image = { url: imageUrl };
+
+    try {
+        const response = await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] })
+        });
+
+        // 2. التحقق من رد ديسكورد
+        if (response.ok) {
+            console.log("✅✅ SUCCESS: Discord notification SENT successfully!");
+        } else {
+            const errorText = await response.text();
+            console.error(`❌ Discord API Error: ${response.status} ${response.statusText}`);
+            console.error("Response Body:", errorText);
+        }
+    } catch (error) {
+        console.error("❌ Network Error sending to Discord:", error.message);
+    }
+}
         res.status(200).json({ success: true, message: 'تم الاستلام' });
     } catch (err) { 
         throw err; 
