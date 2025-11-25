@@ -2367,8 +2367,8 @@ a[href="seller-dashboard.html"]:hover {
 }
 
 .property-type.sale {
-    background: rgba(220, 53, 69, 0.8); /* أحمر للبيع */
-    border: 1px solid #dc3545;
+    background: rgba(12, 179, 40, 0.8); /* أحمر للبيع */
+    border: 1px solid #20e95c;
 }
 
 .property-type.rent {
@@ -2509,4 +2509,23 @@ a[href="seller-dashboard.html"]:hover {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     
     padding: 10px 0;
+}
+
+/* --- تصفير الهوامش الافتراضية (Global Reset) --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* بيظبط المقاسات عشان متضربش */
+}
+
+body, html {
+    width: 100%;
+    overflow-x: hidden; /* لمنع السكرول العرضي الزائد */
+    background-color: #121212; /* أو لون الخلفية بتاعك عشان لو في فراغ يبان لونه */
+}
+
+/* --- التأكد من الهيدر نفسه --- */
+.main-header {
+    margin-top: 0 !important; /* إجبار الهيدر يبدأ من الصفر */
+    top: 0;
 }
