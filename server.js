@@ -21,6 +21,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "aqarakproperty@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Aqarak@123";
 const SALT_ROUNDS = 10;
 
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "https://discord.com/api/webhooks/1442988734365831183/zNYS7qewKwW3Y6plEd_rt2FepU5Nh6rVZS6nQDo9PBqvjROc1msPZ3kqyvohx86h1cLW";
 // مفاتيح Cloudinary
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
@@ -67,6 +68,36 @@ function safeInt(value) {
     if (isNaN(num)) return 0;
     if (num > MAX_POSTGRES_INT) return MAX_POSTGRES_INT; 
     return num;
+}
+
+async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1442988734365831183/zNYS7qewKwW3Y6plEd_rt2FepU5Nh6rVZS6nQDo9PBqvjROc1msPZ3kqyvohx86h1cLW")) {
+        console.log("⚠️ Discord Webhook URL is missing.");
+        return;
+    }
+
+    const embed = {
+        title: title,
+        color: color, // لون الشريط الجانبي (أزرق افتراضياً)
+        fields: fields,
+        footer: { text: "نظام إشعارات عقارك 🏠" },
+        timestamp: new Date().toISOString()
+    };
+
+    if (imageUrl) {
+        embed.image = { url: imageUrl };
+    }
+
+    try {
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] })
+        });
+        console.log("✅ Discord notification sent!");
+    } catch (error) {
+        console.error("❌ Failed to send Discord notification:", error);
+    }
 }
 
 // -----------------------------------------------------
@@ -337,6 +368,18 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
 
     try {
         await pgQuery(sql, params);
+        await sendDiscordNotification(
+            "📢 طلب عرض عقار جديد!",
+            [
+                { name: "👤 المالك", value: data.sellerName, inline: true },
+                { name: "📞 الهاتف", value: data.sellerPhone, inline: true },
+                { name: "🏠 العنوان", value: data.propertyTitle },
+                { name: "💰 السعر", value: `${data.propertyPrice} ج.م`, inline: true },
+                { name: "📏 المساحة", value: `${data.propertyArea} م²`, inline: true }
+            ],
+            3066993, // لون أخضر
+            mainImage
+        );
         res.status(200).json({ success: true, message: 'تم الاستلام' });
     } catch (err) { throw err; }
 });
@@ -346,6 +389,18 @@ app.post('/api/request-property', async (req, res) => {
     if (!name || !phone) return res.status(400).json({ message: 'بيانات ناقصة' });
     try {
         await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]);
+        
+        await sendDiscordNotification(
+            "📩 طلب عقار مخصص جديد",
+            [
+                { name: "👤 الاسم", value: name, inline: true },
+                { name: "📞 الهاتف", value: phone, inline: true },
+                { name: "📧 الإيميل", value: email || "غير متوفر", inline: true },
+                { name: "📝 المواصفات المطلوبة", value: specifications }
+            ],
+            15158332 // لون أحمر
+        );
+        
         res.status(200).json({ success: true, message: 'تم الاستلام' });
     } catch (err) { throw err; }
 });
