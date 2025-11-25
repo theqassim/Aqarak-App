@@ -2014,24 +2014,22 @@ textarea.neon-input-white {
 }
 
 /* --- 1. حاوية الهيدر الرئيسية (الثبات والزجاج) --- */
+/* --- تعديل الهيدر ليكون عادياً (يتحرك مع الصفحة) --- */
 .main-header {
-    position: fixed; /* هذا ما يجعله ثابتاً لا يتحرك */
-    top: 0;
-    left: 0;
+    position: relative; /* التغيير الأساسي: يجعله جزءاً من تدفق الصفحة */
     width: 100%;
-    z-index: 1000; /* يضمن ظهوره فوق أي محتوى آخر */
+    z-index: 1000;
     
-    /* الستايل الزجاجي */
+    /* نفس الستايل الزجاجي للحفاظ على الشكل */
     background: rgba(0, 0, 0, 0.7); /* خلفية سوداء شفافة */
-    backdrop-filter: blur(15px); /* تمويه ما خلف الهيدر */
+    backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     
     padding: 10px 0;
-    transition: all 0.3s ease;
+    margin-bottom: 20px; /* مسافة صغيرة تحته عشان ميبقاش لازق في الزراير */
 }
-
 /* --- 2. تنسيق المحتوى الداخلي --- */
 .header-container {
     display: flex;
