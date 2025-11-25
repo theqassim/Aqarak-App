@@ -2248,3 +2248,142 @@ a[href="seller-dashboard.html"]:hover {
     display: block;
     text-align: center;
 }
+
+/* --- حاوية الكروت (الشبكة) --- */
+/* تأكد أن الحاوية الأب (container) واخدة ديسبلاي grid أو flex */
+#properties-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* تجاوب تلقائي */
+    gap: 25px;
+    padding: 20px 0;
+}
+
+/* --- تصميم كارت العقار (Glassmorphism) --- */
+.property-card {
+    background: rgba(255, 255, 255, 0.05); /* زجاجي غامق */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    overflow: hidden; /* عشان الصورة متخرجش بره الحواف */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* عشان الكروت كلها تكون نفس الطول */
+}
+
+/* تأثير الهوفر على الكارت */
+.property-card:hover {
+    transform: translateY(-7px); /* يرتفع لفوق */
+    box-shadow: 0 10px 25px rgba(0, 242, 96, 0.15); /* ظل نيون أخضر */
+    border-color: rgba(0, 242, 96, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- صورة العقار --- */
+.property-card img {
+    width: 100%;
+    height: 220px; /* ارتفاع ثابت للصورة */
+    object-fit: cover; /* الصورة تملأ المساحة بدون مط */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.5s ease;
+}
+
+/* تكبير الصورة ببطء عند الهوفر */
+.property-card:hover img {
+    transform: scale(1.05);
+}
+
+/* --- محتوى الكارت --- */
+.card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* يملأ المساحة المتبقية */
+    text-align: right;
+    color: #fff;
+}
+
+/* --- العنوان والتاج --- */
+.card-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.5;
+    display: flex;
+    justify-content: space-between; /* العنوان يمين والتاج شمال */
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* --- السعر --- */
+.price {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #00f260; /* أخضر نيون */
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(0, 242, 96, 0.2);
+}
+
+/* --- التفاصيل (غرف، حمام، مساحة) --- */
+.card-content p i {
+    color: #0575e6; /* لون الأيقونات أزرق */
+    margin-left: 5px;
+}
+
+.card-content p {
+    color: #bbb;
+    font-size: 0.9rem;
+    margin-bottom: 20px !important; /* مسافة قبل الزرار */
+}
+
+/* --- زر عرض التفاصيل --- */
+.view-details-btn {
+    margin-top: auto; /* يزق الزرار لآخر الكارت تحت */
+    display: block;
+    text-align: center;
+    background: linear-gradient(90deg, #00f260, #0575e6);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.view-details-btn:hover {
+    box-shadow: 0 5px 20px rgba(0, 242, 96, 0.4);
+    transform: scale(1.02);
+}
+
+/* --- بادج نوع العقار (للبيع / للإيجار) --- */
+/* أنت محتاج تضيف كلاسات للـ spans اللي بتطلع من دالة getTypeTag */
+.property-type {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.property-type.sale {
+    background: rgba(220, 53, 69, 0.8); /* أحمر للبيع */
+    border: 1px solid #dc3545;
+}
+
+.property-type.rent {
+    background: rgba(255, 193, 7, 0.2); /* أصفر للإيجار */
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+/* --- رسالة الخطأ أو عدم وجود عقارات --- */
+.empty-message {
+    text-align: center;
+    color: #aaa;
+    grid-column: 1 / -1; /* تأخذ العرض بالكامل */
+    padding: 40px;
+    font-size: 1.2rem;
+}

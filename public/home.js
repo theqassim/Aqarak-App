@@ -26,6 +26,14 @@ async function fetchLatestProperties() {
     const formattedPrice = formatPrice(property.price, property.type);
     const typeTag = getTypeTag(property.type);
 
+    // تأكد ان الدالة دي عندك بالشكل ده
+function getTypeTag(type) {
+    if (type === 'buy' || type === 'بيع') {
+        return '<span class="property-type sale">بيع</span>';
+    } else {
+        return '<span class="property-type rent">إيجار</span>';
+    }
+}
     // ✅ نضع رابط التفاصيل هنا عشان نستخدمه في الكارت وفي الزرار
     const detailsUrl = `property-details.html?id=${property.id}`;
 
