@@ -1390,3 +1390,104 @@ a:hover {
     margin-top: 10px;
     width: 100%; /* يأخذ العرض كامل */
 }
+
+/* =========================================
+   تنسيق معرض الصور المكبر (Lightbox)
+   ========================================= */
+.lightbox-overlay {
+    display: none; /* مخفي افتراضياً */
+    position: fixed;
+    z-index: 3000; /* أعلى طبقة في الموقع */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95); /* خلفية سوداء معتمة */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    backdrop-filter: blur(5px);
+}
+
+/* حاوية الصورة */
+.lightbox-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border: 2px solid #333;
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+}
+
+/* عداد الصور */
+.lightbox-counter {
+    color: #fff;
+    margin-top: 10px;
+    font-size: 1.1rem;
+    font-family: sans-serif;
+}
+
+/* أزرار التحكم (إغلاق - يمين - يسار) */
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 3001;
+}
+.close-lightbox:hover { color: var(--error-color); }
+
+.lightbox-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    padding: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: 0.3s;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-btn:hover {
+    background: var(--main-secondary);
+    box-shadow: 0 0 15px var(--main-secondary);
+}
+
+.prev-lightbox { right: 20px; } /* زر السابق يمين (عربي) */
+.next-lightbox { left: 20px; }  /* زر التالي يسار */
+
+/* تحسين للموبايل */
+@media (max-width: 768px) {
+    .lightbox-btn {
+        padding: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        background: rgba(0,0,0,0.5);
+    }
+    .close-lightbox {
+        top: 10px;
+        right: 20px;
+    }
+}
