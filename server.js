@@ -347,9 +347,16 @@ app.delete('/api/admin/property-request/:id', async (req, res) => {
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const data = req.body;
     const files = req.files || [];
-    if (!data.sellerName || !data.sellerPhone) return res.status(400).json({ message: 'الاسم والهاتف مطلوبان' });
+    
+    if (!data.sellerName || !data.sellerPhone) {
+        return res.status(400).json({ message: 'الاسم والهاتف مطلوبان' });
+    }
 
     const paths = files.map(f => f.path).join(' | ');
+    
+    // ✅✅✅ هذا هو السطر الناقص (تعريف الصورة الرئيسية) ✅✅✅
+    const mainImage = files.length > 0 ? files[0].path : null;
+
     const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
     
     const params = [
@@ -368,6 +375,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
 
     try {
         await pgQuery(sql, params);
+        
+        // الآن المتغير mainImage موجود وسيعمل الكود
         await sendDiscordNotification(
             "📢 طلب عرض عقار جديد!",
             [
@@ -378,12 +387,14 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 { name: "📏 المساحة", value: `${data.propertyArea} م²`, inline: true }
             ],
             3066993, // لون أخضر
-            mainImage
+            mainImage // ✅ سيتم تمريره بنجاح الآن
         );
-        res.status(200).json({ success: true, message: 'تم الاستلام' });
-    } catch (err) { throw err; }
-});
 
+        res.status(200).json({ success: true, message: 'تم الاستلام' });
+    } catch (err) { 
+        throw err; 
+    }
+});
 app.post('/api/request-property', async (req, res) => {
     const { name, phone, email, specifications } = req.body;
     if (!name || !phone) return res.status(400).json({ message: 'بيانات ناقصة' });
