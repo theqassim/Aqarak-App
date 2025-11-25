@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info"><p class="detail-price">${window.formatPrice(property.price, property.type)}</p></div>
 
-                        <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
+                        <div id="admin-secret-box" style="display:none; margin:15px 0; background:#000000; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <p><strong>المالك:</strong> <span id="admin-owner-name">${property.sellerName || property.ownerName || '-'}</span></p>
                             <p><strong>الهاتف:</strong> <span id="admin-owner-phone">${property.sellerPhone || property.ownerPhone || '-'}</span></p>
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         <div class="action-buttons-group">
                             <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="flex:2;">
-                                <i class="fab fa-whatsapp"></i> تواصل
+                                <i class="fab fa-whatsapp"></i> تواصل معنا للمعاينة
                             </a>
                             
                             <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
