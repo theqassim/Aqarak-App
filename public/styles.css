@@ -2163,3 +2163,88 @@ a[href="seller-dashboard.html"]:hover {
         padding: 6px 12px;
     }
 }
+
+/* --- 1. إصلاح شريط البحث (المشكلة الكبيرة) --- */
+.search-bar-container {
+    position: relative;
+    width: 100%;
+    margin-top: 40px; /* مسافة كبيرة تفصله عن الزراير اللي فوق */
+}
+
+.search-bar {
+    width: 100%;
+    height: 55px;
+    /* التريك هنا: بنسيب مسافة كبيرة شمال عشان الزرار، ويمين عشان الكلام */
+    padding: 10px 20px 10px 130px !important; 
+    border-radius: 50px;
+    text-align: right; /* الكتابة تبدأ من اليمين */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    box-sizing: border-box; /* عشان الـ Padding ميبوظش العرض */
+}
+
+/* زرار البحث */
+.search-button {
+    position: absolute;
+    left: 5px; /* لازق في الشمال */
+    top: 5px;
+    bottom: 5px;
+    width: 110px; /* عرض ثابت للزرار */
+    border-radius: 40px;
+    background: linear-gradient(90deg, #00f260, #0575e6);
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    z-index: 2; /* يظهر فوق الشريط */
+}
+
+/* --- 2. إصلاح شبكة الأزرار (إبعادها عن بعض) --- */
+.buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* عمودين */
+    gap: 15px; /* مسافة بين الزرار وأخوه */
+    margin-bottom: 30px; /* مسافة تحت الشبكة كلها */
+    padding: 0 10px;
+}
+
+.buttons-grid a {
+    white-space: nowrap; /* يمنع الكلام ينزل سطرين */
+    font-size: 0.9rem; /* تصغير الخط شوية للموبايل */
+    padding: 12px 5px;
+}
+
+/* زر "حسابي" ياخد العرض كله ومسافة فوقه */
+.full-width-btn {
+    grid-column: span 2;
+    margin-top: 5px;
+}
+
+/* --- 3. تظبيط اللوجو في الموبايل --- */
+.logo-container {
+    flex-direction: column; /* اللوجو فوق والنص تحته */
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.logo-text {
+    font-size: 1.2rem; /* تصغير الخط شوية */
+}
+
+/* --- 4. صندوق "لم تجد العقار" --- */
+.request-box {
+    margin-top: 50px; /* يبعد عن اللي فوقه */
+    padding: 30px 20px;
+}
+
+.request-box .btn-neon-large {
+    width: 100%; /* الزرار ياخد العرض كامل في الموبايل */
+    padding: 15px 0;
+    margin-top: 20px;
+    display: block;
+    text-align: center;
+}
