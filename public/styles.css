@@ -1688,3 +1688,231 @@ small {
     color: #ff4444;
     border: 1px solid #ff4444;
 }
+/* --- حاوية النموذج (نفس ستايل Glassmorphism) --- */
+.auth-frame {
+    background: rgba(255, 255, 255, 0.05); /* خلفية شفافة */
+    backdrop-filter: blur(15px); /* تمويه الخلفية */
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    margin: 60px auto; /* توسيط عمودي */
+    max-width: 500px; /* عرض مناسب لنموذج الحجز */
+    width: 90%;
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- العناوين والنصوص --- */
+.auth-frame h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, #00f260, #0575e6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.auth-frame p {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* --- مجموعات الإدخال --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ddd;
+    margin-right: 5px;
+}
+
+/* --- حقول الإدخال (نفس ستايل الحقول البيضاء) --- */
+.neon-input-white {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 15px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%; /* تأكد أن الحقل يملأ المساحة */
+    box-sizing: border-box; /* لمنع الخروج عن الإطار */
+}
+
+/* تأثير النيون عند الضغط */
+.neon-input-white:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #00f260;
+    box-shadow: 0 0 10px rgba(0, 242, 96, 0.2);
+    transform: translateY(-2px);
+}
+
+/* تنسيق خاص لمنطقة النص (Textarea) */
+textarea.neon-input-white {
+    resize: vertical; /* السماح بالتغيير الرأسي فقط */
+    min-height: 100px;
+}
+
+/* --- زر الإرسال (نفس ستايل الزر السابق) --- */
+.btn-neon-auth {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #00f260, #0575e6);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 242, 96, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-auth:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 242, 96, 0.6);
+    background: linear-gradient(45deg, #0575e6, #00f260);
+}
+
+.btn-neon-auth:active {
+    transform: translateY(1px);
+}
+
+/* --- رسائل الحالة --- */
+.message {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none; /* مخفي افتراضياً */
+}
+
+.message.success {
+    display: block;
+    background: rgba(0, 242, 96, 0.1);
+    color: #00f260;
+    border: 1px solid #00f260;
+}
+
+.message.error {
+    display: block;
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+    border: 1px solid #ff4444;
+}
+/* --- حاوية القسم (لضبط المسافات الخارجية) --- */
+.request-property-section {
+    padding: 60px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- الصندوق الزجاجي المضيء --- */
+.request-box {
+    background: rgba(255, 255, 255, 0.05); /* خلفية شفافة */
+    backdrop-filter: blur(12px); /* تمويه الخلفية */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15); /* حدود رفيعة */
+    border-radius: 25px; /* حواف دائرية ناعمة */
+    padding: 50px 30px;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto; /* توسيط الصندوق */
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); /* ظل قوي للعمق */
+    
+    /* ترتيب العناصر داخله */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px; /* مسافة بين النص والزرار */
+}
+
+/* تأثير ضوء خافت خلف النص (لمسة جمالية) */
+.request-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0, 242, 96, 0.15) 0%, rgba(0,0,0,0) 70%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* --- النص التحفيزي --- */
+.request-text {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    z-index: 1; /* عشان يظهر فوق الإضاءة الخلفية */
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    font-family: 'Tajawal', sans-serif;
+}
+
+/* --- الزرار الكبير (CTA Button) --- */
+.btn-neon-large {
+    display: inline-block;
+    padding: 16px 50px;
+    background: linear-gradient(90deg, #00f260, #0575e6);
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 50px; /* شكل كبسولة */
+    box-shadow: 0 5px 20px rgba(0, 242, 96, 0.4); /* ظل نيون */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* حركة ناعمة */
+    z-index: 1;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* تأثير التحويم على الزرار */
+.btn-neon-large:hover {
+    transform: translateY(-5px) scale(1.05); /* يرتفع ويكبر قليلاً */
+    box-shadow: 0 10px 30px rgba(0, 242, 96, 0.6); /* الظل يقوى */
+    background: linear-gradient(90deg, #0575e6, #00f260); /* عكس الألوان */
+}
+
+/* تأثير عند الضغط */
+.btn-neon-large:active {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 10px rgba(0, 242, 96, 0.3);
+}
+
+/* --- التجاوب مع الموبايل --- */
+@media (max-width: 768px) {
+    .request-text {
+        font-size: 1.3rem; /* تصغير الخط قليلاً */
+    }
+    
+    .btn-neon-large {
+        width: 100%; /* الزرار يأخذ العرض بالكامل */
+        padding: 15px;
+        font-size: 1.1rem;
+        box-sizing: border-box;
+    }
+    
+    .request-box {
+        padding: 30px 20px;
+    }
+}
