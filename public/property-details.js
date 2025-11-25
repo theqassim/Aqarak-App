@@ -1,6 +1,17 @@
 // property-details.js
 
 // 1. دوال مساعدة
+// 1. استدعاء مكتبة Supabase
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+// 2. إعدادات الاتصال (هاتهم من لوحة تحكم Supabase)
+const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
+
+// 3. إنشاء المتغير اللي هنستخدمه في الكود تحت
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// ... (بعد كده ييجي باقي الكود بتاعك زي window.formatPrice وغيره)
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -67,28 +78,31 @@ window.shareProperty = async (title) => {
     }
 };
 
-// 4. 🏠 منطق العقارات المشابهة
-async function loadSimilarProperties(currentType, currentId) {
+/// 4. 🏠 منطق العقارات المشابهة (الجديد والمربوط بـ Supabase)
+async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if(!container) return;
 
     try {
-        // جلب العقارات التي لها نفس النوع (بيع/إيجار)
-        // ملاحظة: في التطبيقات الكبيرة، الفلترة تتم في السيرفر (?type=buy&limit=3)
-        const response = await fetch(`/api/properties?type=${currentType === 'buy' || currentType === 'شراء' ? 'buy' : 'rent'}`);
-        const allProperties = await response.json();
+        // استدعاء الدالة الذكية من Supabase
+        const { data: similar, error } = await supabase
+            .rpc('get_similar_properties', {
+                p_id: currentProperty.id,
+                p_type: currentProperty.type,
+                p_price: currentProperty.price,
+                p_rooms: currentProperty.rooms,
+                p_bathrooms: currentProperty.bathrooms,
+                p_area: currentProperty.area
+            });
 
-        // استبعاد العقار الحالي + أخذ أول 3 عقارات فقط
-        const similar = allProperties
-            .filter(p => p.id != currentId)
-            .slice(0, 3);
+        if (error) throw error;
 
-        if (similar.length === 0) {
+        if (!similar || similar.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد عقارات مشابهة حالياً.</p>';
             return;
         }
 
-        container.innerHTML = ''; // تفريغ الانتظار
+        container.innerHTML = ''; 
         
         similar.forEach(prop => {
             const price = window.formatPrice(prop.price, prop.type);
@@ -112,7 +126,6 @@ async function loadSimilarProperties(currentType, currentId) {
         container.innerHTML = '<p>خطأ في تحميل الاقتراحات.</p>';
     }
 }
-
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
@@ -257,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('favoriteBtn').onclick = () => window.toggleFavorite(property.id);
 
         // ✅ استدعاء دالة العقارات المشابهة
-        loadSimilarProperties(property.type, property.id);
+        loadSimilarProperties(property);
 
         // Lightbox
         if(window.setupLightbox) window.setupLightbox(imageUrls);
