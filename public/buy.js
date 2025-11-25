@@ -68,7 +68,7 @@ function renderProperties(properties) {
     properties.forEach(property => {
         const formattedPrice = property.price ? parseInt(property.price).toLocaleString() : '0';
         // بما أننا في صفحة إيجار، التاج دائماً للإيجار
-        const typeTag = '<span style="color: #ffc107;">(للإيجار)</span>';
+        const typeTag = '<span style="color: #0ce642ff;">(للبيع)</span>';
         const detailsUrl = `property-details.html?id=${property.id}`;
 
         const cardHTML = `
