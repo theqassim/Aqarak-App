@@ -1506,3 +1506,185 @@ a:hover {
 .similar-properties-section .property-card img {
     height: 180px; /* تصغير الصورة قليلاً */
 }
+
+/* --- إعدادات الحاوية الرئيسية --- */
+.seller-form-container {
+    background: rgba(255, 255, 255, 0.05); /* خلفية شفافة داكنة */
+    backdrop-filter: blur(15px); /* تأثير الزجاج الضبابي */
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    margin: 50px auto;
+    font-family: 'Tajawal', sans-serif; /* تأكد من استدعاء الخط */
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+/* عنوان النموذج */
+.seller-form-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, #00f260, #0575e6); /* تدرج لوني للنص */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.seller-form-container p {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+/* --- تنسيق الشبكة (Grid System) --- */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* عمودين */
+    gap: 20px; /* مسافة بين الحقول */
+}
+
+/* في الشاشات الصغيرة، اجعلها عمود واحد */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- مجموعات الإدخال --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+/* الحقول التي تأخذ العرض الكامل */
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- التسميات (Labels) --- */
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ddd;
+    transition: all 0.3s ease;
+}
+
+/* --- حقول الإدخال (Inputs) --- */
+.neon-input-white {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 15px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* تأثير التركيز (Focus) على الحقول */
+.neon-input-white:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #00f260; /* لون أخضر نيون */
+    box-shadow: 0 0 10px rgba(0, 242, 96, 0.2);
+    transform: translateY(-2px);
+}
+
+/* تنسيق القائمة المنسدلة */
+select.neon-input-white {
+    cursor: pointer;
+    appearance: none; /* إخفاء السهم الافتراضي */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300f260%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: left 15px top 50%;
+    background-size: 12px auto;
+}
+select.neon-input-white option {
+    background-color: #333; /* لون خلفية الخيارات */
+    color: #fff;
+}
+
+/* --- منطقة رفع الصور --- */
+.file-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(0, 242, 96, 0.1);
+    border: 2px dashed rgba(0, 242, 96, 0.4);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #00f260;
+    font-weight: bold;
+}
+
+.file-upload-label:hover {
+    background: rgba(0, 242, 96, 0.2);
+    border-color: #00f260;
+    transform: scale(1.01);
+}
+
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* --- زر الإرسال --- */
+.btn-neon-large-green {
+    width: 100%;
+    margin-top: 30px;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #00f260, #0575e6);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 242, 96, 0.4);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.btn-neon-large-green:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 242, 96, 0.6);
+    background: linear-gradient(45deg, #0575e6, #00f260); /* عكس التدرج عند التحويم */
+}
+
+.btn-neon-large-green:active {
+    transform: translateY(1px);
+}
+
+/* --- رسائل الخطأ والملاحظات --- */
+small {
+    opacity: 0.8;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 8px;
+    transition: opacity 0.3s;
+}
+
+.message.success {
+    background-color: rgba(0, 242, 96, 0.2);
+    color: #00f260;
+    border: 1px solid #00f260;
+}
+
+.message.error {
+    background-color: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+    border: 1px solid #ff4444;
+}
