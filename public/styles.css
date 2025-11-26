@@ -3222,7 +3222,7 @@ a[href="seller-dashboard.html"]:hover {
     justify-content: center;
     align-items: center;
     margin-bottom: 30px;
-    background: transparent; /* إلغاء الخلفية القديمة */
+    background: linear-gradient(90deg, #00f260, #0575e6);
     border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* خط فاصل */
     padding-bottom: 0;
     box-shadow: none;
@@ -3251,7 +3251,7 @@ a[href="seller-dashboard.html"]:hover {
     left: 0;
     width: 0;
     height: 3px;
-    background-color: var(--main-secondary); /* لون النيون */
+    background: linear-gradient(90deg, #00f260, #0575e6);
     transition: width 0.3s ease;
 }
 
@@ -3302,7 +3302,7 @@ a[href="seller-dashboard.html"]:hover {
 .btn-neon-auth {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, var(--main-secondary), var(--main-title)); /* تدرج أزرق */
+    background: linear-gradient(90deg, #00f260, #0575e6);
     color: white;
     border: none;
     border-radius: 10px; /* حواف ناعمة */
