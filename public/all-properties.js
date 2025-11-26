@@ -98,7 +98,7 @@ function renderProperties(properties) {
         const typeTag = property.type === 'rent' || property.type === 'إيجار' 
             ? '<span style="color: #ffc107;">(للإيجار)</span>' 
             : '<span style="color: #28a745;">(للبيع)</span>';
-        const detailsUrl = `property-details.html?id=${property.id}`;
+        const detailsUrl = `property-details?id=${property.id}`;
 
         const cardHTML = `
             <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'">

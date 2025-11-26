@@ -221,7 +221,7 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         notifyAllUsers(
             `عقار جديد لل${sub.propertyType === 'بيع' || sub.propertyType === 'buy' ? 'بيع' : 'إيجار'}! 🏠`,
             `${sub.propertyTitle} بسعر ${sub.propertyPrice} ج.م`,
-            `/property-details.html?id=${result.rows[0].id}`
+            `/property-details?id=${result.rows[0].id}`
         );
 
         res.status(201).json({ success: true, message: 'تم النشر', id: result.rows[0].id });
@@ -240,7 +240,7 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
 
     try {
         const result = await pgQuery(sql, params);
-        notifyAllUsers(`عقار جديد! 🏠`, `${data.title} - ${data.price} ج.م`, `/property-details.html?id=${result.rows[0].id}`);
+        notifyAllUsers(`عقار جديد! 🏠`, `${data.title} - ${data.price} ج.م`, `/property-details?id=${result.rows[0].id}`);
         res.status(201).json({ success: true, message: 'تم النشر', id: result.rows[0].id });
     } catch (err) { if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم.` }); throw err; }
 });
