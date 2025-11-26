@@ -3197,3 +3197,133 @@ a[href="seller-dashboard.html"]:hover {
         margin-bottom: 10px !important; /* مسافة سفلية عشان الفوتر */
         width: 95% !important;          /* عرض مناسب */
     }
+
+    /* ==========================================================================
+   4. نظام تسجيل الدخول وإنشاء الحساب (Modern Dark UI)
+   ========================================================================== */
+
+/* الصندوق الرئيسي */
+.auth-frame {
+    width: 95%;
+    max-width: 500px; /* عرض مناسب للعين */
+    background: rgba(42, 56, 71, 0.7); /* شفافية خفيفة لدمجها مع الخلفية */
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); /* ظل ناعم وقوي */
+    margin: 50px auto;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* حدود زجاجية */
+    backdrop-filter: blur(10px); /* تأثير الزجاج */
+}
+
+/* شريط التنقل (Tabs) - التصميم الجديد */
+.auth-tabs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    background: transparent; /* إلغاء الخلفية القديمة */
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* خط فاصل */
+    padding-bottom: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: transparent;
+    color: #888; /* لون رمادي للزر غير النشط */
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    outline: none;
+}
+
+/* الخط المتحرك تحت الزر النشط */
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; /* على الخط الفاصل بالضبط */
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: var(--main-secondary); /* لون النيون */
+    transition: width 0.3s ease;
+}
+
+.tab-btn.active {
+    color: #fff; /* لون أبيض للنشط */
+    background: transparent; /* إلغاء الخلفية البيضاء القديمة */
+    box-shadow: none;
+    transform: none;
+}
+
+.tab-btn.active::after {
+    width: 100%; /* الخط يملأ العرض */
+}
+
+/* حقول الإدخال (Inputs) */
+.input-group { 
+    margin-bottom: 20px; 
+    text-align: right; 
+}
+
+.input-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+    color: #ddd; 
+    font-size: 0.9rem;
+}
+
+.neon-input-white {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    outline: none;
+    background: rgba(0, 0, 0, 0.2); /* خلفية غامقة شفافة */
+    color: #fff;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+.neon-input-white:focus {
+    border-color: var(--main-secondary);
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* زر الدخول (Gradient Button) */
+.btn-neon-auth {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--main-secondary), var(--main-title)); /* تدرج أزرق */
+    color: white;
+    border: none;
+    border-radius: 10px; /* حواف ناعمة */
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3);
+}
+
+.btn-neon-auth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 114, 255, 0.5);
+}
+
+/* رسائل الخطأ */
+.message {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    padding: 10px;
+    border-radius: 8px;
+}
