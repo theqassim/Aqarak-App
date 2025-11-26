@@ -27,6 +27,17 @@ const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
+const publicVapidKey = 'BABE4bntVm_6RWE3zuv305i65FfcTN8xd6C3d4jdEwML8d7yLwoVywbgvhS7U-q2KE3cmKqDbgvZ8rK97C3gKp4';
+const privateVapidKey = 'cFJCSJoigPkZb-y4CxPsY9ffahOTxdlxAec3FVC3aKI';
+
+// إعداد مكتبة الإشعارات
+webPush.setVapidDetails(
+    'mailto:aqarakproperty@gmail.com',
+    publicVapidKey,
+    privateVapidKey
+);
+
+
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
     console.error("❌ CRITICAL ERROR: Cloudinary keys are missing!");
 }
@@ -91,6 +102,32 @@ async function sendDiscordNotification(title, fields, color = 3447003, imageUrl 
     }
 }
 
+// 🔔 دالة إرسال إشعارات المتصفح (Push Notification) للمستخدمين
+async function notifyAllUsers(title, body, url) {
+    try {
+        const result = await pgQuery('SELECT * FROM subscriptions');
+        const subscriptions = result.rows;
+
+        const notificationPayload = JSON.stringify({ 
+            title: title, body: body, url: url, icon: '/logo.jpg'
+        });
+
+        subscriptions.forEach(sub => {
+            const pushSubscription = {
+                endpoint: sub.endpoint,
+                keys: JSON.parse(sub.keys)
+            };
+            webPush.sendNotification(pushSubscription, notificationPayload)
+                .catch(err => {
+                    if (err.statusCode === 410 || err.statusCode === 404) {
+                        pgQuery('DELETE FROM subscriptions WHERE id = $1', [sub.id]);
+                    }
+                });
+        });
+        console.log(`📢 Web Push sent to ${subscriptions.length} users.`);
+    } catch (err) { console.error("Web Push Error:", err); }
+}
+
 // إنشاء الجداول
 async function createTables() {
     const queries = [
@@ -104,6 +141,7 @@ async function createTables() {
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`,
+        `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`,
         `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`
     ];
 
@@ -151,7 +189,22 @@ app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 // 4. مسارات API
 // -----------------------------------------------------
 
-// نشر الطلب (Admin)
+// ✅ مسار الاشتراك في الإشعارات (جديد)
+app.post('/api/subscribe', async (req, res) => {
+    const subscription = req.body;
+    const endpoint = subscription.endpoint;
+    const keys = JSON.stringify(subscription.keys);
+
+    try {
+        await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [endpoint, keys]);
+        res.status(201).json({});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to subscribe' });
+    }
+});
+
+// نشر الطلب (Admin) - مع إرسال إشعار للمستخدمين
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
     if (!submissionId || !hiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
@@ -159,70 +212,45 @@ app.post('/api/admin/publish-submission', async (req, res) => {
     try {
         const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]);
         const sub = subRes.rows[0];
-        
         if (!sub) return res.status(404).json({ message: 'الطلب غير موجود' });
 
         const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean);
-        if (!imageUrls.length) return res.status(400).json({ message: 'لا توجد صور' });
+        if (!imageUrls.length) return res.status(400).json({ message: 'لا صور' });
 
-        const sql = `INSERT INTO properties (
-            title, price, "numericPrice", rooms, bathrooms, area, description, 
-            "imageUrl", "imageUrls", type, "hiddenCode", 
-            "sellerName", "sellerPhone"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`;
-        
-        const params = [
-            sub.propertyTitle, sub.propertyPrice, 
-            parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), 
-            safeInt(sub.propertyRooms), safeInt(sub.propertyBathrooms), safeInt(sub.propertyArea), 
-            sub.propertyDescription, imageUrls[0], JSON.stringify(imageUrls), 
-            sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone
-        ];
+        const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`;
+        const params = [sub.propertyTitle, sub.propertyPrice, parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), safeInt(sub.propertyRooms), safeInt(sub.propertyBathrooms), safeInt(sub.propertyArea), sub.propertyDescription, imageUrls[0], JSON.stringify(imageUrls), sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone];
         
         const result = await pgQuery(sql, params);
         await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
 
-        res.status(201).json({ success: true, message: 'تم النشر بنجاح', id: result.rows[0].id });
+        // 🔔📢 إرسال إشعار Push لكل المستخدمين
+        notifyAllUsers(
+            `تم إضافة عقار جديد لل${sub.propertyType === 'بيع' || sub.propertyType === 'buy' ? 'بيع' : 'إيجار'}! 🏠`,
+            `${sub.propertyTitle} بسعر ${sub.propertyPrice} ج.م. اضغط للتفاصيل.`,
+            `/property-details.html?id=${result.rows[0].id}`
+        );
 
-    } catch (err) { 
-        if (err.code === '23505') return res.status(400).json({ message: `الكود السري "${hiddenCode}" مستخدم بالفعل.` });
-        throw err; 
-    }
+        res.status(201).json({ success: true, message: 'تم النشر', id: result.rows[0].id });
+    } catch (err) { if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم بالفعل.` }); throw err; }
 });
 
-// إضافة عقار (Admin)
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const files = req.files || [];
     const data = req.body;
     const cleanHiddenCode = data.hiddenCode ? data.hiddenCode.trim() : '';
-
     if (!data.title || !cleanHiddenCode) return res.status(400).json({ message: 'بيانات ناقصة' });
-    if (!files.length) return res.status(400).json({ message: 'يجب رفع صورة' });
-
     const urls = files.map(f => f.path);
     
-    const sql = `INSERT INTO properties (
-        title, price, "numericPrice", rooms, bathrooms, area, description, 
-        "imageUrl", "imageUrls", type, "hiddenCode",
-        "sellerName", "sellerPhone"
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`;
-    
-    const params = [
-        data.title, data.price, parseFloat((data.price || '0').replace(/[^0-9.]/g, '')), 
-        safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), 
-        data.description, urls[0], JSON.stringify(urls), data.type, cleanHiddenCode,
-        "الإدارة (يدوي)", ADMIN_EMAIL      
-    ];
+    const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`;
+    const params = [data.title, data.price, parseFloat((data.price || '0').replace(/[^0-9.]/g, '')), safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), data.description, urls[0], JSON.stringify(urls), data.type, cleanHiddenCode, "الإدارة (يدوي)", ADMIN_EMAIL];
 
     try {
         const result = await pgQuery(sql, params);
+        // 🔔 إشعار عند الإضافة اليدوية أيضاً
+        notifyAllUsers(`عقار جديد! 🏠`, `${data.title} - ${data.price} ج.م`, `/property-details.html?id=${result.rows[0].id}`);
         res.status(201).json({ success: true, message: 'تم النشر', id: result.rows[0].id });
-    } catch (err) { 
-        if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم بالفعل.` });
-        throw err; 
-    }
+    } catch (err) { if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم.` }); throw err; }
 });
-
 // تحديث عقار (Admin)
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
