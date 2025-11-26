@@ -3125,3 +3125,56 @@ a[href="seller-dashboard.html"]:hover {
         transform: translateY(-20px); /* رفع الصندوق قليلاً للأعلى ليكون في مستوى العين */
     }
 }
+
+
+
+
+
+/* =========================================
+   تخصيص الـ Padding للصفحات الخاصة (Dashboards & Request)
+   ========================================= */
+/* 2. في الموبايل (الضبط الدقيق) */
+@media (max-width: 768px) {
+    
+    .custom-body {
+        /* ✅ هنا التظبيطة اللي زي صفحة الدخول */
+        
+        /* مسافة عشان الهيدر (ضروري عشان مياكلش المحتوى) */
+        padding-top: 100px !important; 
+        
+        /* توسيط المحتوى في نص الشاشة (عمودياً) */
+        justify-content: center; 
+        min-height: 100vh;
+    }
+
+    /* تعديل الصناديق (الفريمات) داخل هذه الصفحات */
+    .custom-body .auth-frame, 
+    .custom-body .centered-page-content {
+        margin-top: 10px !important;    /* تقليل الهامش العلوي */
+        margin-bottom: 30px !important; /* مسافة سفلية عشان الفوتر */
+        width: 95% !important;          /* عرض مناسب */
+    }
+}
+
+/* 2. في الموبايل (الضبط الدقيق) */
+@media (max-width: 768px) {
+    
+    .custom-body1 {
+        /* ✅ هنا التظبيطة اللي زي صفحة الدخول */
+        
+        /* مسافة عشان الهيدر (ضروري عشان مياكلش المحتوى) */
+        padding-top: 100px !important; 
+        
+        /* توسيط المحتوى في نص الشاشة (عمودياً) */
+        justify-content: center; 
+        min-height: 100vh;
+    }
+
+    /* تعديل الصناديق (الفريمات) داخل هذه الصفحات */
+    .custom-body1 .auth-frame, 
+    .custom-body1 .centered-page-content {
+        margin-top: 10px !important;    /* تقليل الهامش العلوي */
+        margin-bottom: 30px !important; /* مسافة سفلية عشان الفوتر */
+        width: 95% !important;          /* عرض مناسب */
+    }
+}
