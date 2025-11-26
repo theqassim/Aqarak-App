@@ -36,7 +36,7 @@ body {
     direction: rtl; 
     text-align: right;
     /* الإزاحة القياسية للشاشات الكبيرة */
-    padding-top: 80px; 
+    padding-top: 150px; 
 }
 
 h1, h2, h3 {
