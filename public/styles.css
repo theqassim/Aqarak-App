@@ -3330,9 +3330,8 @@ a[href="seller-dashboard.html"]:hover {
 
 
 .sell-btn {
-     padding: 8px 12px !important;
-        font-size: 0.85rem !important;
-        width: auto !important; /* على قد الكلام */
+        font-size: 0.8rem;
+        padding: 6px 12px;
         min-width: 110px;
         height: 40px;
         white-space: nowrap;
