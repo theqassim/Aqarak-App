@@ -95,14 +95,37 @@ function renderProperties(properties) {
 
     properties.forEach(property => {
         const formattedPrice = property.price ? parseInt(property.price).toLocaleString() : '0';
+        
+        // تحديد نوع التاج (بيع/إيجار)
         const typeTag = property.type === 'rent' || property.type === 'إيجار' 
             ? '<span style="color: #ffc107;">(للإيجار)</span>' 
             : '<span style="color: #28a745;">(للبيع)</span>';
-        const detailsUrl = `property-details?id=${property.id}`;
+            
+        const detailsUrl = `property-details.html?id=${property.id}`;
+
+        // ✅✅✅ 1. تجهيز الشارات (الجزء الجديد) ✅✅✅
+        let badgesHTML = '<div class="card-badges-container">';
+        
+        // شارة مميز
+        if (property.isFeatured) {
+            badgesHTML += `<span class="badge-card badge-featured-small"><i class="fas fa-star"></i> مميز</span>`;
+        }
+        
+        // شارة قانوني
+        if (property.isLegal) {
+            badgesHTML += `<span class="badge-card badge-legal-small"><i class="fas fa-shield-alt"></i> قانوني</span>`;
+        }
+        
+        badgesHTML += '</div>';
+        // ✅✅✅ نهاية الجزء الجديد ✅✅✅
 
         const cardHTML = `
-            <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'">
+            <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'" style="cursor: pointer; position: relative;">
+                
+                ${badgesHTML}
+                
                 <img src="${property.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${property.title}">
+                
                 <div class="card-content">
                     <h3>${property.title} ${typeTag}</h3>
                     <p class="price">${formattedPrice} ج.م</p>

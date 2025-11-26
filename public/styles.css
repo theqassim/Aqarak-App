@@ -3607,3 +3607,44 @@ a[href="seller-dashboard.html"]:hover {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* =========================================
+   تنسيق شارات الكروت (Card Badges)
+   ========================================= */
+
+/* الحاوية التي تمسك الشارات فوق الصورة */
+.card-badges-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column; /* الشارات تحت بعضها */
+    gap: 5px;
+    z-index: 5; /* لتظهر فوق الصورة */
+}
+
+/* شكل الشارة الصغيرة */
+.badge-card {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    width: fit-content;
+}
+
+/* ألوان الشارات */
+.badge-legal-small {
+    background: #28a745; /* أخضر للقانوني */
+    border: 1px solid #218838;
+}
+
+.badge-featured-small {
+    background: #ffc107; /* ذهبي للمميز */
+    color: #000;
+    border: 1px solid #e0a800;
+}
