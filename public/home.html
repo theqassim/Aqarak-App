@@ -4,6 +4,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>عقارك - الرئيسية</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c2630">
+<link rel="apple-touch-icon" href="logo.jpg">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -12,6 +15,9 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
+                <button id="install-btn" class="btn-neon-auth" style="display: none; margin: 10px auto; background: #28a745;">
+    <i class="fas fa-download"></i> تثبيت التطبيق
+</button>
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
@@ -208,8 +214,37 @@
     <script src="logout.js"></script> 
     <script src="search-handler.js"></script>
     <script src="utils.js"></script>
+    <script src="app.js"></script>
     <a href="#" id="help-btn" class="floating-help-btn" title="كيف يعمل الموقع؟">
     <i class="fas fa-question"></i>
     <span class="ripple"></span> </a>
+    <script>
+        let deferredPrompt;
+const installBtn = document.getElementById('install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // 1. منع ظهور النافذة التلقائية القديمة
+    e.preventDefault();
+    // 2. حفظ الحدث لاستخدامه لاحقاً
+    deferredPrompt = e;
+    // 3. إظهار زر التثبيت الخاص بنا
+    if(installBtn) installBtn.style.display = 'block';
+});
+
+if(installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // 4. إظهار نافذة التثبيت الأصلية
+            deferredPrompt.prompt();
+            // 5. انتظار رد المستخدم
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response: ${outcome}`);
+            // 6. إخفاء الزر وتصفير الحدث
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+    });
+}
+    </script>
 </body>
 </html>
