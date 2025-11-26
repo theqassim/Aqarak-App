@@ -3163,7 +3163,7 @@ a[href="seller-dashboard.html"]:hover {
         /* ✅ هنا التظبيطة اللي زي صفحة الدخول */
         
         /* مسافة عشان الهيدر (ضروري عشان مياكلش المحتوى) */
-        padding-top: 100px !important; 
+        padding-top: 120px !important; 
         
         /* توسيط المحتوى في نص الشاشة (عمودياً) */
         justify-content: center; 
@@ -3174,7 +3174,26 @@ a[href="seller-dashboard.html"]:hover {
     .custom-body1 .auth-frame, 
     .custom-body1 .centered-page-content {
         margin-top: 10px !important;    /* تقليل الهامش العلوي */
-        margin-bottom: 30px !important; /* مسافة سفلية عشان الفوتر */
+        margin-bottom: 10px !important; /* مسافة سفلية عشان الفوتر */
         width: 95% !important;          /* عرض مناسب */
     }
 }
+
+ .custom-body2 {
+        /* ✅ هنا التظبيطة اللي زي صفحة الدخول */
+        
+        /* مسافة عشان الهيدر (ضروري عشان مياكلش المحتوى) */
+        padding-top: 150px !important; 
+        
+        /* توسيط المحتوى في نص الشاشة (عمودياً) */
+        justify-content: center; 
+        min-height: 100vh;
+    }
+
+    /* تعديل الصناديق (الفريمات) داخل هذه الصفحات */
+    .custom-body2 .auth-frame, 
+    .custom-body2 .centered-page-content {
+        margin-top: 10px !important;    /* تقليل الهامش العلوي */
+        margin-bottom: 10px !important; /* مسافة سفلية عشان الفوتر */
+        width: 95% !important;          /* عرض مناسب */
+    }
