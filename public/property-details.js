@@ -248,7 +248,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('favoriteBtn').onclick = () => window.toggleFavorite(property.id);
 
         loadSimilarProperties(property);
-        
+
+        // ✅ تشغيل Lightbox
+        if(window.setupLightbox) window.setupLightbox(imageUrls);
+
         // ✅ تشغيل فورم "قدم عرضك"
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
@@ -296,3 +299,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadingMessage.style.display = 'none';
     }
 });
+
+// --- دالة Lightbox ---
+window.setupLightbox = (images) => {
+    const lightbox = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const counter = document.querySelector('.lightbox-counter');
+    const closeBtn = document.querySelector('.close-lightbox');
+    const nextBtn = document.querySelector('.next-lightbox');
+    const prevBtn = document.querySelector('.prev-lightbox');
+    const mainImage = document.getElementById('property-main-image');
+
+    if (!lightbox) return;
+    let currentIndex = 0;
+
+    const open = (index) => { currentIndex = index; update(); lightbox.style.display = 'flex'; };
+    const update = () => { lightboxImg.src = images[currentIndex]; counter.textContent = `${currentIndex + 1} / ${images.length}`; };
+    const close = () => { lightbox.style.display = 'none'; };
+
+    if (mainImage) {
+        mainImage.style.cursor = 'zoom-in';
+        mainImage.addEventListener('click', () => open(images.findIndex(img => img === mainImage.src) || 0));
+    }
+
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = (currentIndex + 1) % images.length; update(); });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = (currentIndex - 1 + images.length) % images.length; update(); });
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
+};

@@ -37,41 +37,51 @@
         </div>
     </main>
 
-   <div id="offer-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content neon-glow" style="max-width: 500px;">
-        
-        <span class="close-modal" onclick="closeOfferModal()">&times;</span>
-        
-        <h3 style="color: var(--text-main); text-align: center; margin-bottom: 20px;">
-            <i class="fas fa-money-bill-wave" style="color: #ff9800;"></i> قدم عرض سعر
-        </h3>
-        
-        <p style="text-align: center; color: #888; margin-bottom: 20px; font-size: 0.9rem;">
-            أدخل السعر المناسب لك وسنقوم بعرضه على المالك مباشرة.
-        </p>
-        
-        <form id="offer-form">
-            <div class="input-group">
-                <label>اسمك</label>
-                <input type="text" id="offer-name" class="neon-input-white" required>
-            </div>
-            
-            <div class="input-group">
-                <label>رقم تليفونك</label>
-                <input type="tel" id="offer-phone" class="neon-input-white" required>
-            </div>
-            
-            <div class="input-group">
-                <label>سعر العرض (ج.م)</label>
-                <input type="number" id="offer-price" class="neon-input-white" placeholder="مثال: 1500000" required>
-            </div>
-            
-            <button type="submit" class="btn-offer-submit">
-                إرسال العرض <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
+   <div id="lightbox-modal" class="lightbox-overlay">
+        <span class="close-lightbox">&times;</span>
+        <button class="lightbox-btn prev-lightbox"><i class="fas fa-chevron-right"></i></button>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="صورة مكبرة">
+            <div class="lightbox-counter">1 / 1</div>
+        </div>
+        <button class="lightbox-btn next-lightbox"><i class="fas fa-chevron-left"></i></button>
     </div>
-</div>
+
+    <div id="offer-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content neon-glow" style="max-width: 500px;">
+            
+            <span class="close-modal" onclick="closeOfferModal()">&times;</span>
+            
+            <h3 style="color: var(--main-title); text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-money-bill-wave" style="color: #ff9800;"></i> قدم عرض سعر
+            </h3>
+            
+            <p style="text-align: center; color: #888; margin-bottom: 20px; font-size: 0.9rem;">
+                أدخل السعر المناسب لك وسنقوم بعرضه على المالك مباشرة.
+            </p>
+            
+            <form id="offer-form">
+                <div class="input-group">
+                    <label>اسمك</label>
+                    <input type="text" id="offer-name" class="neon-input-white" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>رقم تليفونك</label>
+                    <input type="tel" id="offer-phone" class="neon-input-white" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>سعر العرض (ج.م)</label>
+                    <input type="number" id="offer-price" class="neon-input-white" placeholder="مثال: 1500000" required>
+                </div>
+                
+                <button type="submit" class="btn-offer-submit">
+                    إرسال العرض <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
     <footer class="main-footer">
         <div class="footer-content">
             <div class="social-links">
