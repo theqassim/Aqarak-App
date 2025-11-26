@@ -2954,3 +2954,105 @@ a[href="seller-dashboard.html"]:hover {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(5px); }
 }
+
+/* =========================================
+   تحسينات الموبايل النهائية (Mobile Layout Fixes)
+   ========================================= */
+@media (max-width: 768px) {
+
+    /* 1. إصلاح منطقة السعر وزر العرض */
+    .price-type-info {
+        display: flex;
+        flex-direction: row-reverse; /* عشان السعر يجي يمين والزرار شمال */
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .detail-price {
+        font-size: 1.3rem; /* تصغير السعر سنة بسيطة */
+        margin: 0;
+        white-space: nowrap; /* منع نزول السعر لسطرين */
+    }
+
+    /* تنسيق زر "قدم عرضك" ليكون مضغوطاً وشيك */
+    .btn-offer {
+        padding: 8px 12px !important;
+        font-size: 0.85rem !important;
+        width: auto !important; /* على قد الكلام */
+        min-width: 110px;
+        height: 40px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin: 0 !important;
+    }
+
+    /* 2. إصلاح أيقونات المواصفات (غرف - حمامات) */
+    .property-specs .specs-list {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 5px;
+        gap: 5px;
+    }
+
+    .specs-list li {
+        font-size: 0.85rem; /* تصغير الخط عشان يسيع */
+        display: flex;
+        flex-direction: column; /* الأيقونة فوق والرقم تحت (أشيك في الموبايل) */
+        align-items: center;
+        gap: 5px;
+    }
+
+    .specs-list li i {
+        font-size: 1.2rem;
+        margin: 0;
+        color: var(--main-secondary);
+    }
+
+    /* 3. تنظيم أزرار التواصل (واتساب - مشاركة - مفضلة) */
+    .action-buttons-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* عمودين */
+        gap: 10px;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    /* زر الواتساب ياخد العرض كله (لأنه الأهم) */
+    .whatsapp-btn {
+        grid-column: span 2; 
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* زر المشاركة والمفضلة جنب بعض */
+    .action-buttons-group button {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+    
+    /* إصلاح زر المفضلة (عشان الأيقونة تبقى في النص) */
+    #favoriteBtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* تحسينات عامة */
+    .property-detail-container {
+        padding: 0 10px;
+    }
+    
+    .details-info-frame {
+        padding: 20px 15px; /* تقليل الحواف الداخلية */
+    }
+}
