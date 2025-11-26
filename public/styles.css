@@ -3450,3 +3450,105 @@ a[href="seller-dashboard.html"]:hover {
         font-size: 1rem;
     }
 }
+
+/* =========================================
+   تصميم حاسبة التوفير العصرية (Modern Savings)
+   ========================================= */
+.savings-box-modern {
+    background: linear-gradient(145deg, #1e2a36, #16202a); /* خلفية متدرجة داكنة */
+    border: 1px solid rgba(46, 204, 113, 0.3); /* حدود خضراء خفيفة */
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 25px 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+/* العنوان */
+.savings-header-modern {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    padding: 12px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-bottom: 1px solid rgba(46, 204, 113, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.savings-body {
+    padding: 15px;
+}
+
+/* صفوف المقارنة */
+.compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.compare-row:last-child {
+    border-bottom: none;
+}
+
+.label-col {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.value-col {
+    font-weight: bold;
+    font-size: 1rem;
+    font-family: sans-serif; /* للأرقام */
+}
+
+/* تنسيق الخسارة (السماسرة) */
+.compare-row.bad .text { color: #e74c3c; } /* أحمر */
+.compare-row.bad .value-col { 
+    color: #e74c3c; 
+    text-decoration: line-through; 
+    opacity: 0.8;
+}
+
+/* تنسيق المكسب (عقارك) */
+.compare-row.good .text { color: #2ecc71; } /* أخضر */
+.compare-row.good .value-col { color: #2ecc71; font-size: 1.1rem; }
+
+/* الفوتر (المبلغ الموفر) */
+.savings-footer {
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    animation: pulseGlow 2s infinite;
+}
+
+.saved-label {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    opacity: 0.9;
+}
+
+.saved-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5) inset; }
+    50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.8) inset; }
+    100% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5) inset; }
+}
