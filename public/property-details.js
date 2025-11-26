@@ -1,17 +1,11 @@
-// property-details.js
-
-// 1. دوال مساعدة
-// 1. استدعاء مكتبة Supabase
+// 1. استدعاء مكتبة Supabase (للعقارات المشابهة فقط)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-// 2. إعدادات الاتصال (هاتهم من لوحة تحكم Supabase)
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
-
-// 3. إنشاء المتغير اللي هنستخدمه في الكود تحت
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// ... (بعد كده ييجي باقي الكود بتاعك زي window.formatPrice وغيره)
+// --- دوال مساعدة ---
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -24,7 +18,15 @@ window.getTypeTag = (type) => {
     return '';
 };
 
-// 2. منطق المفضلة
+// --- دوال نافذة العرض (Make Offer) ---
+window.openOfferModal = () => {
+    document.getElementById('offer-modal').style.display = 'flex';
+};
+window.closeOfferModal = () => {
+    document.getElementById('offer-modal').style.display = 'none';
+};
+
+// --- منطق المفضلة ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
@@ -34,7 +36,6 @@ window.toggleFavorite = async (propertyId) => {
         alert('يرجى تسجيل الدخول أولاً.');
         return;
     }
-
     const isFavorite = btn.classList.contains('is-favorite');
     const method = isFavorite ? 'DELETE' : 'POST';
     const url = isFavorite ? `/api/favorites/${propertyId}?userEmail=${encodeURIComponent(userEmail)}` : `/api/favorites`;
@@ -56,54 +57,37 @@ window.toggleFavorite = async (propertyId) => {
     } catch (error) { console.error('Favorite Error:', error); }
 };
 
-// 3. 📤 منطق المشاركة (Share)
+// --- منطق المشاركة ---
 window.shareProperty = async (title) => {
     const shareData = {
         title: `عقارك - ${title}`,
         text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`,
         url: window.location.href
     };
-
     try {
-        // للموبايل (قائمة المشاركة الأصلية)
-        if (navigator.share) {
-            await navigator.share(shareData);
-        } else {
-            // للكمبيوتر (نسخ الرابط)
+        if (navigator.share) await navigator.share(shareData);
+        else {
             await navigator.clipboard.writeText(window.location.href);
-            alert('تم نسخ رابط العقار! يمكنك إرساله لأصدقائك الآن. 📋');
+            alert('تم نسخ الرابط!');
         }
-    } catch (err) {
-        console.error('Error sharing:', err);
-    }
+    } catch (err) { console.error('Error sharing:', err); }
 };
 
-/// 4. 🏠 منطق العقارات المشابهة (الجديد والمربوط بـ Supabase)
+// --- منطق العقارات المشابهة ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if(!container) return;
-
     try {
-        // استدعاء الدالة الذكية من Supabase
-        const { data: similar, error } = await supabase
-            .rpc('get_similar_properties', {
-                p_id: currentProperty.id,
-                p_type: currentProperty.type,
-                p_price: currentProperty.price,
-                p_rooms: currentProperty.rooms,
-                p_bathrooms: currentProperty.bathrooms,
-                p_area: currentProperty.area
-            });
-
+        const { data: similar, error } = await supabase.rpc('get_similar_properties', {
+            p_id: currentProperty.id, p_type: currentProperty.type, p_price: currentProperty.price,
+            p_rooms: currentProperty.rooms, p_bathrooms: currentProperty.bathrooms, p_area: currentProperty.area
+        });
         if (error) throw error;
-
         if (!similar || similar.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد عقارات مشابهة حالياً.</p>';
             return;
         }
-
         container.innerHTML = ''; 
-        
         similar.forEach(prop => {
             const price = window.formatPrice(prop.price, prop.type);
             const card = `
@@ -116,29 +100,24 @@ async function loadSimilarProperties(currentProperty) {
                             <i class="fas fa-bed"></i> ${prop.rooms} | <i class="fas fa-bath"></i> ${prop.bathrooms} | ${prop.area} م²
                         </p>
                     </div>
-                </div>
-            `;
+                </div>`;
             container.innerHTML += card;
         });
-
-    } catch (e) {
-        console.error("Error loading similar:", e);
-        container.innerHTML = '<p>خطأ في تحميل الاقتراحات.</p>';
-    }
+    } catch (e) { console.error("Error loading similar:", e); }
 }
+
+// --- التحميل الرئيسي ---
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
     let currentImageIndex = 0;
     let imageUrls = [];
 
-    // --- دوال الصور ---
     const updateMainImage = (mainImage) => {
         mainImage.src = imageUrls[currentImageIndex];
         document.querySelectorAll('.thumbnail-image').forEach((thumb, index) => thumb.classList.toggle('active', index === currentImageIndex));
     };
 
-    // --- الجلب والتشغيل ---
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
@@ -160,25 +139,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // تجهيز الصور
+        // الصور
         try { imageUrls = JSON.parse(property.imageUrls || '[]'); } catch { imageUrls = [property.imageUrl]; }
         if (!imageUrls.length) imageUrls = ['https://via.placeholder.com/800x500'];
 
         loadingMessage.style.display = 'none';
         
-        // روابط وأزرار
         const whatsappLink = `https://wa.me/201008102237?text=${encodeURIComponent(`مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
         const favClass = isFav ? 'is-favorite' : '';
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
-        // ✅ حقن HTML (تمت إضافة زر المشاركة وقسم المشابهة)
+        // HTML
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
 
                 <div class="details-layout">
                     <div class="details-info-frame neon-glow">
-                        <div class="price-type-info"><p class="detail-price">${window.formatPrice(property.price, property.type)}</p></div>
+                        <div class="price-type-info">
+                            <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
+                            
+                            <button onclick="openOfferModal()" class="btn-neon-auth" style="background: linear-gradient(45deg, #ff9800, #ff5722); color: white; font-size: 0.9rem; padding: 8px 15px; width: auto; margin-right: auto;">
+                                <i class="fas fa-hand-holding-usd"></i> قدم عرضك
+                            </button>
+                        </div>
 
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#000000; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
@@ -205,11 +189,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="flex:2;">
                                 <i class="fab fa-whatsapp"></i> تواصل معنا للمعاينة
                             </a>
-                            
                             <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
                                 <i class="fas fa-share-alt"></i> مشاركة
                             </button>
-
                             <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
                                 <i class="${favIcon}"></i>
                             </button>
@@ -236,17 +218,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <p>جاري البحث عن مقترحات...</p>
                     </div>
                 </div>
-
             </div>
         `;
 
-        // تفعيل الأدمن
         if (localStorage.getItem('userRole') === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) box.style.display = 'block';
         }
 
-        // تفعيل الصور والمفضلة
         const mainImg = document.getElementById('property-main-image');
         const thumbsContainer = document.getElementById('image-thumbnails');
         const update = () => updateMainImage(mainImg);
@@ -258,7 +237,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.gallery-nav-btn').forEach(b => b.style.display = 'none');
         }
 
-        // رسم المصغرات
         imageUrls.forEach((url, i) => {
             const img = document.createElement('img');
             img.src = url;
@@ -269,11 +247,51 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('favoriteBtn').onclick = () => window.toggleFavorite(property.id);
 
-        // ✅ استدعاء دالة العقارات المشابهة
         loadSimilarProperties(property);
 
-        // Lightbox
+        // ✅ تشغيل Lightbox
         if(window.setupLightbox) window.setupLightbox(imageUrls);
+
+        // ✅ تشغيل فورم "قدم عرضك"
+        const offerForm = document.getElementById('offer-form');
+        if (offerForm) {
+            offerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const btn = offerForm.querySelector('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+                btn.disabled = true;
+
+                const data = {
+                    propertyId: property.id,
+                    buyerName: document.getElementById('offer-name').value,
+                    buyerPhone: document.getElementById('offer-phone').value,
+                    offerPrice: document.getElementById('offer-price').value
+                };
+
+                try {
+                    const res = await fetch('/api/make-offer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const resData = await res.json();
+                    if (res.ok) {
+                        alert('✅ ' + resData.message);
+                        window.closeOfferModal();
+                        offerForm.reset();
+                    } else {
+                        throw new Error(resData.message);
+                    }
+                } catch (error) {
+                    alert('❌ خطأ: ' + error.message);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
+        }
 
     } catch (error) {
         console.error(error);
@@ -281,3 +299,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadingMessage.style.display = 'none';
     }
 });
+
+// --- دالة Lightbox ---
+window.setupLightbox = (images) => {
+    const lightbox = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const counter = document.querySelector('.lightbox-counter');
+    const closeBtn = document.querySelector('.close-lightbox');
+    const nextBtn = document.querySelector('.next-lightbox');
+    const prevBtn = document.querySelector('.prev-lightbox');
+    const mainImage = document.getElementById('property-main-image');
+
+    if (!lightbox) return;
+    let currentIndex = 0;
+
+    const open = (index) => { currentIndex = index; update(); lightbox.style.display = 'flex'; };
+    const update = () => { lightboxImg.src = images[currentIndex]; counter.textContent = `${currentIndex + 1} / ${images.length}`; };
+    const close = () => { lightbox.style.display = 'none'; };
+
+    if (mainImage) {
+        mainImage.style.cursor = 'zoom-in';
+        mainImage.addEventListener('click', () => open(images.findIndex(img => img === mainImage.src) || 0));
+    }
+
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = (currentIndex + 1) % images.length; update(); });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = (currentIndex - 1 + images.length) % images.length; update(); });
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
+};

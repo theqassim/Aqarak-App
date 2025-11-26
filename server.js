@@ -104,6 +104,7 @@ async function createTables() {
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`
+        `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`
     ];
 
     try {
@@ -333,6 +334,46 @@ app.use((err, req, res, next) => {
     if (res.headersSent) return next(err);
     if (err instanceof multer.MulterError) return res.status(500).json({ success: false, message: `فشل الرفع: ${err.code}` });
     res.status(500).json({ success: false, message: 'خطأ داخلي', error: err.message });
+});
+
+// ✅ مسار تقديم عرض سعر (Make an Offer)
+app.post('/api/make-offer', async (req, res) => {
+    const { propertyId, buyerName, buyerPhone, offerPrice } = req.body;
+
+    if (!propertyId || !buyerName || !buyerPhone || !offerPrice) {
+        return res.status(400).json({ message: 'البيانات ناقصة' });
+    }
+
+    try {
+        // 1. حفظ العرض في قاعدة البيانات (للتوثيق)
+        await pgQuery(
+            `INSERT INTO property_offers (property_id, buyer_name, buyer_phone, offer_price, created_at) VALUES ($1, $2, $3, $4, $5)`,
+            [propertyId, buyerName, buyerPhone, offerPrice, new Date().toISOString()]
+        );
+
+        // 2. جلب تفاصيل العقار (عشان نعرف اسمه وسعره الأصلي في الإشعار)
+        const propRes = await pgQuery('SELECT title, price, "hiddenCode" FROM properties WHERE id = $1', [propertyId]);
+        const property = propRes.rows[0] || { title: 'عقار غير معروف', price: 'غير معروف', hiddenCode: '-' };
+
+        // 3. إرسال إشعار ديسكورد
+        await sendDiscordNotification(
+            "💰 عرض سعر جديد (Make an Offer)",
+            [
+                { name: "🏠 العقار", value: `${property.title} (كود: ${property.hiddenCode})` },
+                { name: "💵 السعر المطلوب", value: property.price, inline: true },
+                { name: "📉 العرض المقدم", value: `${offerPrice} ج.م`, inline: true },
+                { name: "👤 المشتري", value: buyerName, inline: true },
+                { name: "📞 تليفونه", value: buyerPhone, inline: true }
+            ],
+            16753920 // لون برتقالي (Orange) للتمييز
+        );
+
+        res.status(200).json({ success: true, message: 'تم إرسال عرضك للمالك بنجاح!' });
+
+    } catch (error) {
+        console.error("Offer Error:", error);
+        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+    }
 });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
