@@ -246,5 +246,45 @@ if(installBtn) {
     });
 }
     </script>
+
+    <script>
+        // --- كود خاص لأجهزة الآيفون (iOS Install Prompt) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. هل الجهاز iOS؟
+    const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // 2. هل التطبيق مثبت بالفعل (Standalone)؟
+    const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+
+    // لو كان آيفون ومش مثبت التطبيق، اظهر الرسالة
+    if (isIos && !isStandalone) {
+        const iosPrompt = document.getElementById('ios-install-prompt');
+        if (iosPrompt) {
+            // إظهار الرسالة بعد ثانيتين عشان متبقاش مزعجة أول ما يفتح
+            setTimeout(() => {
+                iosPrompt.style.display = 'flex';
+            }, 2000);
+        }
+    }
+});
+
+// دالة إغلاق رسالة الآيفون
+window.closeIosPrompt = () => {
+    document.getElementById('ios-install-prompt').style.display = 'none';
+};
+    </script>
+
+    <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
+    <div class="ios-prompt-content">
+        <span class="close-ios" onclick="closeIosPrompt()">&times;</span>
+        <p style="margin: 0; font-weight: bold; font-size: 0.9rem;">تثبيت تطبيق عقارك 📱</p>
+        <p style="margin: 5px 0 0; font-size: 0.85rem; color: #ddd;">
+            لتثبيت التطبيق على الآيفون:<br>
+            1. اضغط على زر <strong>مشاركة</strong> <i class="fas fa-share-square" style="color: #007aff;"></i> بالأسفل.<br>
+            2. اختر <strong>"إضافة إلى الصفحة الرئيسية"</strong> <i class="fas fa-plus-square"></i>.
+        </p>
+    </div>
+    <div class="ios-arrow"></div>
+</div>
 </body>
 </html>

@@ -2896,3 +2896,61 @@ a[href="seller-dashboard.html"]:hover {
         height: 300px;
     }
 }
+
+/* =========================================
+   تنسيق رسالة تثبيت الآيفون (iOS Prompt)
+   ========================================= */
+.ios-prompt {
+    position: fixed;
+    bottom: 20px; /* يظهر أسفل الشاشة */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: rgba(28, 38, 48, 0.95); /* لون داكن */
+    border: 1px solid var(--secondary-color);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    animation: slideUpIOS 0.5s ease-out;
+}
+
+.ios-prompt-content {
+    position: relative;
+    width: 100%;
+}
+
+.close-ios {
+    position: absolute;
+    top: -10px;
+    left: 0;
+    font-size: 20px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+/* السهم اللي بيشاور لتحت */
+.ios-arrow {
+    width: 0; 
+    height: 0; 
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid var(--secondary-color);
+    margin-top: 10px;
+    animation: bounceArrow 1.5s infinite;
+}
+
+@keyframes slideUpIOS {
+    from { bottom: -100px; opacity: 0; }
+    to { bottom: 20px; opacity: 1; }
+}
+
+@keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+}
