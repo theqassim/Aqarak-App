@@ -3552,3 +3552,58 @@ a[href="seller-dashboard.html"]:hover {
     50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.8) inset; }
     100% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5) inset; }
 }
+
+/* =========================================
+   تصميم صندوق الأمان القانوني (Legal Trust Box)
+   ========================================= */
+.legal-trust-box {
+    background: linear-gradient(135deg, #1c2630, #2c3e50); /* خلفية داكنة فخمة */
+    border: 1px solid #00c6ff; /* حدود نيون زرقاء */
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 25px; /* مسافة تحته */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.15);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.legal-icon {
+    font-size: 2.5rem;
+    color: #00c6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legal-content h4 {
+    color: #00c6ff;
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.legal-content p {
+    color: #ddd;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* للموبايل */
+@media (max-width: 768px) {
+    .legal-trust-box {
+        flex-direction: row; 
+        padding: 15px;
+        gap: 15px;
+    }
+    .legal-icon {
+        font-size: 2rem;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
