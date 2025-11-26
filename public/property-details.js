@@ -66,7 +66,7 @@ async function loadSimilarProperties(currentProperty) {
         similar.forEach(prop => {
             const price = window.formatPrice(prop.price, prop.type);
             container.innerHTML += `
-                <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'">
+                <div class="property-card neon-glow" onclick="window.location.href='property-details?id=${prop.id}'">
                     <img src="${prop.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${prop.title}">
                     <div class="card-content">
                         <h4>${prop.title}</h4> <p class="price">${price}</p>

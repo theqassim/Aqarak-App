@@ -3,6 +3,6 @@
 
     if (!userRole) {
         alert('يجب عليك تسجيل الدخول أولاً للوصول لهذه الصفحة.');
-        window.location.href = 'index.html';
+        window.location.href = 'index';
     }
 })();

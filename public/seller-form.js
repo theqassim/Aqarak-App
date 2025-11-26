@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(data.message || 'فشل في إرسال البيانات.');
                 }
                 
-                window.location.href = 'thank-you.html';
+                window.location.href = 'thank-you';
 
             } catch (error) {
                 messageEl.textContent = `فشل الإرسال: ${error.message}`;

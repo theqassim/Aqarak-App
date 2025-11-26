@@ -35,7 +35,7 @@ function getTypeTag(type) {
     }
 }
     // ✅ نضع رابط التفاصيل هنا عشان نستخدمه في الكارت وفي الزرار
-    const detailsUrl = `property-details.html?id=${property.id}`;
+    const detailsUrl = `property-details?id=${property.id}`;
 
     const cardHTML = `
         <div class="property-card" onclick="window.location.href='${detailsUrl}'">

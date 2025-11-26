@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. التحقق الفوري: هل المستخدم مسجل دخول بالفعل؟
     const savedRole = localStorage.getItem('userRole');
     if (savedRole) {
-        if (savedRole === 'admin') window.location.href = 'admin-home.html';
-        else window.location.href = 'home.html';
+        if (savedRole === 'admin') window.location.href = 'admin-home';
+        else window.location.href = 'home';
         return;
     }
 
@@ -91,8 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('userRole', data.role);
                     localStorage.setItem('userEmail', email);
                     
-                    if (data.role === 'admin') window.location.href = 'admin-home.html';
-                    else window.location.href = 'home.html';
+                    if (data.role === 'admin') window.location.href = 'admin-home';
+                    else window.location.href = 'home';
                 }
 
             } catch (error) {

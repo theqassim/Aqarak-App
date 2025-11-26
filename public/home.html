@@ -24,17 +24,17 @@
 
             <nav class="main-nav">
             <div id="guest-nav" style="display: none;">
-                <a href="index.html?mode=login" class="nav-button neon-button-white">تسجيل الدخول</a>
-                <a href="index.html" class="nav-button neon-button-white">إنشاء حساب</a>
+                <a href="index?mode=login" class="nav-button neon-button-white">تسجيل الدخول</a>
+                <a href="index" class="nav-button neon-button-white">إنشاء حساب</a>
             </div>
 
             <div id="user-nav" style="display: none;">
             <nav class="main-nav">
-                <a href="all-properties.html" class="nav-button neon-button-white">جميع العقارات</a>
-                <a href="buy.html" class="nav-button neon-button-white">شراء</a>
-                <a href="rent.html" class="nav-button neon-button-white">ايجار</a>
-                <a href="seller-dashboard.html" class="nav-button neon-button-white">اعرض عقار للبيع!</a>
-                <a href="user-dashboard.html" class="nav-button neon-button-white">حسابي</a> 
+                <a href="all-properties" class="nav-button neon-button-white">جميع العقارات</a>
+                <a href="buy" class="nav-button neon-button-white">شراء</a>
+                <a href="rent" class="nav-button neon-button-white">ايجار</a>
+                <a href="seller-dashboard" class="nav-button neon-button-white">اعرض عقار للبيع!</a>
+                <a href="user-dashboard" class="nav-button neon-button-white">حسابي</a> 
                 </nav>
             </div>
 
@@ -58,7 +58,7 @@
         <section class="request-property-section">
             <div class="request-box neon-glow centered-page-content">
                 <p class="request-text">لم تجد العقار الذي تبحث عنه؟</p>
-                <a href="request-property.html" class="btn-neon-large">احجز عقارك الآن!</a>
+                <a href="request-property" class="btn-neon-large">احجز عقارك الآن!</a>
             </div>
         </section>
 
@@ -173,7 +173,7 @@
                     
                     // رسالة توجيه
                     if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً لعرض تفاصيل العقار والتواصل مع البائع.\nهل تريد الانتقال لصفحة التسجيل؟')) {
-                        window.location.href = 'index.html';
+                        window.location.href = 'index';
                     }
                 }
             }
@@ -211,7 +211,6 @@
 });
     </script>
     <script src="home.js"></script>
-    <script src="logout.js"></script> 
     <script src="search-handler.js"></script>
     <script src="utils.js"></script>
     <script src="app.js"></script>

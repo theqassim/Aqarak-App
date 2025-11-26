@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <script src="auth-guard.js"></script>
+     <script src="admin-auth.js"></script>
     <title>عقارك - لوحة تحكم الأدمن</title>
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1c2630">
@@ -20,7 +21,7 @@
                 <span class="logo-text">عقارك مضمون! (Admin)</span>
             </div>
             <nav class="main-nav">
-                <a href="home.html" class="nav-button neon-button-white">عرض الموقع</a> 
+                <a href="home" class="nav-button neon-button-white">عرض الموقع</a> 
                 <a href="#" class="nav-button neon-button-white logout-btn">تسجيل خروج</a>
             </nav>
         </div>
@@ -35,28 +36,28 @@
                 <i class="fas fa-file-invoice icon-large"></i>
                 <h2 class="card-title">طلبات عرض العقارات</h2>
                 <p id="seller-count">يوجد عدد <span class="count-number">0</span> طلبات عرض</p>
-                <a href="admin-submissions.html" class="btn-neon-auth btn-full">مراجعة الطلبات</a>
+                <a href="admin-submissions" class="btn-neon-auth btn-full">مراجعة الطلبات</a>
             </div>
 
             <div class="dashboard-card neon-glow" id="property-requests-box">
                 <i class="fas fa-user-tag icon-large"></i>
                 <h2 class="card-title">طلبات العقارات المخصصة</h2>
                 <p id="request-count">يوجد عدد <span class="count-number">0</span> طلبات عقار</p>
-                <a href="admin-requests.html" class="btn-neon-auth btn-full">مراجعة الطلبات</a>
+                <a href="admin-requests" class="btn-neon-auth btn-full">مراجعة الطلبات</a>
             </div>
 
             <div class="dashboard-card neon-glow">
                 <i class="fas fa-plus-circle icon-large"></i>
                 <h2 class="card-title">نشر عقار يدوياً</h2>
                 <p>إضافة عقار جديد مباشرة للموقع.</p>
-                <a href="admin-add-property.html" class="btn-neon-auth btn-full">نشر عقار</a>
+                <a href="admin-add-property" class="btn-neon-auth btn-full">نشر عقار</a>
             </div>
             
             <div class="dashboard-card neon-glow">
                 <i class="fas fa-edit icon-large"></i>
                 <h2 class="card-title">مسح وتعديل العقارات</h2>
                 <p>البحث وتعديل العقارات المنشورة بالكود السري.</p>
-                <a href="admin-edit-property.html" class="btn-neon-auth btn-full">بحث وتعديل</a>
+                <a href="admin-edit-property" class="btn-neon-auth btn-full">بحث وتعديل</a>
             </div>
 
         </div>
