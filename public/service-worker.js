@@ -7,27 +7,30 @@ self.addEventListener('fetch', (e) => {
 
 });
 
+// public/service-worker.js
+
 self.addEventListener('push', function(event) {
-    const data = event.data.json();
+    console.log('[Service Worker] Push Received.');
     
+    const data = event.data.json();
+    const title = data.title || 'عقارك';
     const options = {
-        body: data.body,
-        icon: data.icon || '/logo.jpg',
-        badge: '/logo.jpg', // أيقونة صغيرة تظهر في شريط الحالة (للأندرويد)
+        body: data.body || 'إشعار جديد من عقارك',
+        icon: data.icon || '/logo.jpg', // تأكد من مسار اللوجو
+        badge: '/logo.jpg',
         data: {
-            url: data.url // نحفظ الرابط عشان نفتحه لما يضغط
+            url: data.url || '/'
         }
     };
 
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+    event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // اقفل الإشعار لما يضغط عليه
+    console.log('[Service Worker] Notification click received.');
 
-    // افتح الرابط
+    event.notification.close();
+
     event.waitUntil(
         clients.openWindow(event.notification.data.url)
     );

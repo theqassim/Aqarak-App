@@ -286,48 +286,70 @@ window.closeIosPrompt = () => {
     </script>
 
     <script>
-        // 🛑 ضع الـ Public Key بتاعك هنا (نفس اللي في السيرفر)
-const PUBLIC_VAPID_KEY = 'BABE4bntVm_6RWE3zuv305i65FfcTN8xd6C3d4jdEwML8d7yLwoVywbgvhS7U-q2KE3cmKqDbgvZ8rK97C3gKp4';
+    const PUBLIC_VAPID_KEY = 'BABE4bntVm_6RWE3zuv305i65FfcTN8xd6C3d4jdEwML8d7yLwoVywbgvhS7U-q2KE3cmKqDbgvZ8rK97C3gKp4';
 
-// دالة تحويل المفتاح (مهمة جداً للمتصفح)
+// دالة تحويل المفتاح (مهمة للمتصفح)
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
+
     for (let i = 0; i < rawData.length; ++i) {
         outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
 }
 
-// تسجيل السيرفس وركر والاشتراك
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js').then(async register => {
-        console.log('Service Worker Registered');
-
-        // طلب الإذن من المستخدم
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            console.log('Notification permission granted.');
-
-            // الاشتراك في خدمة الدفع (Push)
-            const subscription = await register.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+// وظيفة التسجيل والاشتراك
+async function triggerPushSubscription() {
+    if ('serviceWorker' in navigator) {
+        try {
+            // 1. تسجيل الـ Service Worker
+            const register = await navigator.serviceWorker.register('/service-worker.js', {
+                scope: '/'
             });
+            console.log('✅ Service Worker Registered');
 
-            // إرسال الاشتراك للسيرفر
-            await fetch('/api/subscribe', {
-                method: 'POST',
-                body: JSON.stringify(subscription),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            // 2. طلب الإذن من المستخدم
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                console.log('✅ Notification permission granted.');
+
+                // 3. الاشتراك الفعلي (توليد الرابط الخاص بجهاز المستخدم)
+                const subscription = await register.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+                });
+
+                // 4. إرسال الاشتراك للسيرفر ليحفظه
+                await fetch('/api/subscribe', {
+                    method: 'POST',
+                    body: JSON.stringify(subscription),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('✅ User Subscribed to Server');
+            } else {
+                console.log('❌ Notification permission denied.');
+            }
+        } catch (err) {
+            console.error('❌ Service Worker/Push Error:', err);
         }
-    }).catch(err => console.error('Service Worker Error:', err));
+    } else {
+        console.log('⚠️ Service Workers not supported in this browser.');
+    }
 }
+
+// تشغيل الوظيفة عند فتح الموقع
+document.addEventListener('DOMContentLoaded', () => {
+    triggerPushSubscription();
+});
     </script>
 
     <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
