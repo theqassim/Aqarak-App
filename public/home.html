@@ -248,7 +248,7 @@ if(installBtn) {
     </script>
 
     <script>
-        // --- كود خاص لأجهزة الآيفون (iOS Install Prompt) ---
+     // --- كود خاص لأجهزة الآيفون (iOS Install Prompt) ---
 document.addEventListener('DOMContentLoaded', () => {
     // 1. هل الجهاز iOS؟
     const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -256,21 +256,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. هل التطبيق مثبت بالفعل (Standalone)؟
     const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
 
-    // لو كان آيفون ومش مثبت التطبيق، اظهر الرسالة
-    if (isIos && !isStandalone) {
+    // 3. ✅ هل المستخدم أغلق الرسالة قريباً؟ (فحص الذاكرة)
+    const lastDismissed = localStorage.getItem('iosPromptDismissed');
+    const now = Date.now();
+    // مدة الإخفاء: 7 أيام (بالمللي ثانية)
+    const hideDuration = 7 * 24 * 60 * 60 * 1000; 
+
+    // الشرط الكامل للظهور:
+    // (هو آيفون) و (مش مثبت التطبيق) و (معداش 7 أيام على آخر مرة قفل الرسالة)
+    if (isIos && !isStandalone && (!lastDismissed || (now - lastDismissed > hideDuration))) {
+        
         const iosPrompt = document.getElementById('ios-install-prompt');
         if (iosPrompt) {
-            // إظهار الرسالة بعد ثانيتين عشان متبقاش مزعجة أول ما يفتح
+            // إظهار الرسالة بعد 3 ثواني عشان يلحق يشوف الموقع الأول
             setTimeout(() => {
                 iosPrompt.style.display = 'flex';
-            }, 2000);
+            }, 3000);
         }
     }
 });
 
-// دالة إغلاق رسالة الآيفون
+// دالة إغلاق رسالة الآيفون (مع الحفظ في الذاكرة)
 window.closeIosPrompt = () => {
     document.getElementById('ios-install-prompt').style.display = 'none';
+    
+    // ✅ تسجيل وقت الإغلاق الحالي
+    localStorage.setItem('iosPromptDismissed', Date.now());
 };
     </script>
 
