@@ -129,6 +129,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         imageUrls = imageUrls.filter(url => url && url.trim() !== '');
 
         loadingMessage.style.display = 'none';
+
+        // ... (الكود السابق) ...
+        loadingMessage.style.display = 'none';
+
+        // ✅✅✅ كود حاسبة التوفير الجديد ✅✅✅
+        const savingsBox = document.getElementById('savings-calculator');
+        
+        // 1. تحويل السعر لرقم صافي (إزالة الفواصل والنصوص)
+        // مثال: "2,000,000 ج.م" -> 2000000
+        const rawPrice = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
+
+        // نتأكد إن السعر رقم صحيح وأكبر من صفر (عشان لو السعر "للاتصال" مثلاً)
+        if (!isNaN(rawPrice) && rawPrice > 0) {
+            // 2. الحسابات
+            const brokerCommission = rawPrice * 0.025; // عمولة السماسرة 2.5%
+            const aqarakCommission = rawPrice * 0.01;  // عمولة عقارك 1%
+            const totalSaved = brokerCommission - aqarakCommission; // المبلغ الموفر
+
+            // 3. عرض الأرقام (مع الفواصل للألوف)
+            document.getElementById('broker-fee').textContent = Math.round(brokerCommission).toLocaleString() + ' ج.م';
+            document.getElementById('aqarak-fee').textContent = Math.round(aqarakCommission).toLocaleString() + ' ج.م';
+            document.getElementById('saved-amount').textContent = Math.round(totalSaved).toLocaleString();
+
+            // 4. إظهار الصندوق
+            savingsBox.style.display = 'block';
+        } else {
+            // لو السعر مش واضح، نخفي الحاسبة
+            savingsBox.style.display = 'none';
+        }
+        // ✅✅✅ نهاية كود الحاسبة ✅✅✅
+        
+        // ... (باقي الكود) ...
         
         const whatsappLink = `https://wa.me/201008102237?text=${encodeURIComponent(`مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
         const favClass = (localStorage.getItem('userEmail')) ? '' : ''; // سيتم تحديثها لاحقاً
@@ -143,6 +175,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
                             <button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>
                         </div>
+
+                        </div> <div id="savings-calculator" class="savings-box" style="display: none;">
+    <div class="savings-header">
+        <i class="fas fa-piggy-bank"></i> وفر فلوسك مع عقارك!
+    </div>
+    
+    <div class="savings-comparison">
+        <div class="saving-row broker">
+            <span class="label">سماسرة (2.5%)</span>
+            <span class="value old-price" id="broker-fee">0 ج.م</span>
+        </div>
+
+        <div class="saving-row aqarak">
+            <span class="label">عقارك (1% فقط)</span>
+            <span class="value new-price" id="aqarak-fee">0 ج.م</span>
+        </div>
+    </div>
+
+    <div class="total-saved-banner">
+        🎉 أنت وفرت <span id="saved-amount">0</span> جنيه!
+    </div>
+</div>
 
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#000000; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
