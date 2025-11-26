@@ -67,21 +67,45 @@ function renderProperties(properties) {
 
     properties.forEach(property => {
         const formattedPrice = property.price ? parseInt(property.price).toLocaleString() : '0';
-        // بما أننا في صفحة إيجار، التاج دائماً للإيجار
-        const typeTag = '<span style="color: #0ce642ff;">(للبيع)</span>';
+        
+        // 1. تجهيز الشارات (Badges) - الجزء الجديد ✅
+        let badgesHTML = '<div class="card-badges-container">';
+        
+        // شارة مميز
+        if (property.isFeatured) {
+            badgesHTML += `<span class="badge-card badge-featured-small"><i class="fas fa-star"></i> مميز</span>`;
+        }
+        
+        // شارة قانوني
+        if (property.isLegal) {
+            badgesHTML += `<span class="badge-card badge-legal-small"><i class="fas fa-shield-alt"></i> قانوني</span>`;
+        }
+        
+        badgesHTML += '</div>';
+
+        // 2. ضبط التاج ولونه (للبيع)
+        const typeTag = '<span style="color: #28a745;">(للبيع)</span>'; // استخدمت الأخضر القياسي للبيع
+        
         const detailsUrl = `property-details?id=${property.id}`;
 
         const cardHTML = `
-            <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'">
-                <img src="${property.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${property.title}">
+            <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'" style="cursor: pointer; position: relative;">
+                
+                ${badgesHTML}
+                
+                <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=Aqarak'}" alt="${property.title}">
+                
                 <div class="card-content">
                     <h3>${property.title} ${typeTag}</h3>
-                    <p class="price">${formattedPrice} ج.م / شهرياً</p>
+                    
+                    <p class="price">${formattedPrice} ج.م</p>
+                    
                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
                         <i class="fas fa-bed"></i> ${property.rooms} غرف | 
                         <i class="fas fa-bath"></i> ${property.bathrooms} حمام | 
                         <i class="fas fa-ruler-combined"></i> ${property.area} م²
                     </p>
+                    
                     <a href="${detailsUrl}" class="btn-details-pro" onclick="event.stopPropagation()">
                         عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right: 5px;"></i>
                     </a>

@@ -22,30 +22,38 @@ async function fetchLatestProperties() {
             return;
         }
 
-      properties.forEach(property => {
-    const formattedPrice = formatPrice(property.price, property.type);
-    const typeTag = getTypeTag(property.type);
+     properties.forEach(property => {
+    const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
+    
+    // تحديد التاج (بيع/إيجار)
+    const typeTag = (property.type === 'buy' || property.type === 'بيع') 
+        ? '<span class="property-type sale">بيع</span>' 
+        : '<span class="property-type rent">إيجار</span>';
 
-    // تأكد ان الدالة دي عندك بالشكل ده
-function getTypeTag(type) {
-    if (type === 'buy' || type === 'بيع') {
-        return '<span class="property-type sale">بيع</span>';
-    } else {
-        return '<span class="property-type rent">إيجار</span>';
+    // ✅ 1. تجهيز الشارات (Badges)
+    let badgesHTML = '<div class="badge-container">';
+    if (property.isFeatured) {
+        badgesHTML += `<div class="badge badge-featured"><i class="fas fa-star"></i> مميز</div>`;
     }
-}
-    // ✅ نضع رابط التفاصيل هنا عشان نستخدمه في الكارت وفي الزرار
-    const detailsUrl = `property-details?id=${property.id}`;
+    if (property.isLegal) {
+        badgesHTML += `<div class="badge badge-legal"><i class="fas fa-shield-alt"></i> قانوني</div>`;
+    }
+    badgesHTML += '</div>';
+
+    const detailsUrl = `property-details.html?id=${property.id}`;
 
     const cardHTML = `
-        <div class="property-card" onclick="window.location.href='${detailsUrl}'">
+        <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'">
             
-            <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=صورة+العقار'}" alt="${property.title}">
+            ${badgesHTML}
+            
+            <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=Aqarak'}" alt="${property.title}">
             
             <div class="card-content">
                 <h3>${property.title} ${typeTag}</h3>
                 <p class="price">${formattedPrice}</p>
-                <p style="color: #666; margin: 10px 0;">
+                
+                <p style="color: var(--text-secondary); margin: 10px 0;">
                     <i class="fas fa-bed"></i> ${property.rooms} غرف | 
                     <i class="fas fa-bath"></i> ${property.bathrooms} حمام | 
                     <i class="fas fa-ruler-combined"></i> ${property.area} م²
