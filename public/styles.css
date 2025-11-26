@@ -3056,3 +3056,37 @@ a[href="seller-dashboard.html"]:hover {
         padding: 20px 15px; /* تقليل الحواف الداخلية */
     }
 }
+/* =========================================
+   إصلاح عرض الفريم في الموبايل (Full Width Frame)
+   ========================================= */
+@media (max-width: 768px) {
+    
+    /* 1. توسيع الحاوية الرئيسية للصفحة */
+    .centered-page-content {
+        width: 98% !important;      /* تجعل العرض 98% من الشاشة */
+        max-width: 100% !important; /* إلغاء أي حد أقصى قديم */
+        padding: 0 5px !important;  /* تقليل الهوامش الجانبية جداً */
+        margin: 10px auto !important; /* توسيط */
+    }
+
+    /* 2. توسيع فريم التفاصيل (الصندوق الغامق) */
+    .details-info-frame {
+        width: 100% !important;
+        margin: 0 !important;      /* إزالة الهوامش الخارجية */
+        box-sizing: border-box;    /* لضمان حساب الحواف داخل العرض */
+        padding: 20px 15px !important; /* ضبط الحشو الداخلي ليكون مريحاً */
+    }
+
+    /* 3. توسيع فريم الصورة أيضاً ليتناسق مع التفاصيل */
+    .image-gallery-frame {
+        width: 100% !important;
+    }
+
+    /* 4. التأكد من أن العنوان (التجمع الخامس) في المنتصف تماماً */
+    .page-title {
+        text-align: center;
+        width: 100%;
+        font-size: 1.8rem; /* تكبير العنوان قليلاً */
+        margin-bottom: 15px;
+    }
+}
