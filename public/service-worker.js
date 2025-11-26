@@ -7,16 +7,18 @@ self.addEventListener('fetch', (e) => {
 
 });
 
-// public/service-worker.js
-
 self.addEventListener('push', function(event) {
     console.log('[Service Worker] Push Received.');
     
-    const data = event.data.json();
+    let data = {};
+    if (event.data) {
+        data = event.data.json();
+    }
+
     const title = data.title || 'عقارك';
     const options = {
         body: data.body || 'إشعار جديد من عقارك',
-        icon: data.icon || '/logo.jpg', // تأكد من مسار اللوجو
+        icon: '/logo.jpg', // تأكد إن اللوجو موجود في public
         badge: '/logo.jpg',
         data: {
             url: data.url || '/'
