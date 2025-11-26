@@ -2744,24 +2744,31 @@ a[href="seller-dashboard.html"]:hover {
     font-size: 0.9rem;
 }
 
+/* =========================================
+   🔥 إصلاح حقول نافذة العرض (Make Offer Inputs Fix)
+   ========================================= */
+
+/* 1. الحالة العادية (قبل الضغط) */
 #offer-form input {
-    width: 100%;
-    padding: 12px 15px;
-    background: rgba(0, 0, 0, 0.03); /* خلفية خفيفة جداً */
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-main);
-    font-size: 1rem;
-    transition: 0.3s;
+    background-color: rgba(255, 255, 255, 0.1) !important; /* خلفية رمادية شفافة واضحة */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; /* حدود فاتحة */
+    color: #ffffff !important; /* الكتابة باللون الأبيض */
+    caret-color: #00c6ff; /* لون مؤشر الكتابة أزرق نيون */
+    font-weight: bold;
 }
 
+/* 2. لون النص الإرشادي (Placeholder) */
+#offer-form input::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important; /* رمادي فاتح */
+}
+
+/* 3. عند الضغط (Focus) - الحل هنا */
 #offer-form input:focus {
-    border-color: #ff9800; /* حدود برتقالي عند الكتابة */
-    box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
-    outline: none;
-    background: #fff;
+    background-color: rgba(255, 255, 255, 0.2) !important; /* تفتيح الخلفية قليلاً (ليس أبيض) */
+    border-color: #ff9800 !important; /* حدود برتقالي (لون العرض) */
+    color: #ffffff !important; /* النص يظل أبيض */
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4) !important; /* توهج برتقالي */
 }
-
 /* 4. زر الإغلاق (X) */
 .close-modal {
     position: absolute;
