@@ -125,6 +125,32 @@
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
+    <div id="install-toast" class="install-toast" style="display: none;">
+        <div class="install-content">
+            <img src="logo.jpg" alt="Aqarak Logo" class="install-logo">
+            <div class="install-text">
+                <span class="app-name">تطبيق عقارك</span>
+                <span class="app-desc">تجربة أسرع وأسهل</span>
+            </div>
+        </div>
+        <div class="install-actions">
+            <button id="install-btn-action" class="btn-install-mini">تثبيت</button>
+            <button id="close-install" class="btn-close-mini"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
+        <div class="ios-prompt-content">
+            <span class="close-ios" onclick="closeIosPrompt()">&times;</span>
+            <p style="margin: 0; font-weight: bold; font-size: 0.9rem;">تثبيت تطبيق عقارك 📱</p>
+            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #ddd;">
+                لتثبيت التطبيق على الآيفون:<br>
+                1. اضغط على زر <strong>مشاركة</strong> <i class="fas fa-share-square" style="color: #007aff;"></i> بالأسفل.<br>
+                2. اختر <strong>"إضافة إلى الصفحة الرئيسية"</strong> <i class="fas fa-plus-square"></i>.
+            </p>
+        </div>
+        <div class="ios-arrow"></div>
+    </div>
    <script>
     document.addEventListener('DOMContentLoaded', () => {
         // 1. فحص حالة المستخدم
