@@ -7,6 +7,22 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // --- دوال مساعدة (Global) ---
+// ✅ دالة حماية زر الواتساب
+window.handleWhatsappClick = (link) => {
+    const userEmail = localStorage.getItem('userEmail');
+    
+    // لو مش مسجل دخول
+    if (!userEmail) {
+        if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً للتواصل.\nهل تريد الانتقال لصفحة الدخول؟')) {
+            window.location.href = 'index?mode=login'; // توجيه لصفحة الدخول
+        }
+        return; // وقف العملية
+    }
+
+    // لو مسجل، افتح الرابط
+    window.open(link, '_blank');
+};
+
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -237,9 +253,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         
                         <div class="action-buttons-group">
-                            <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="flex:2;">
-                                <i class="fab fa-whatsapp"></i> تواصل واتساب
-                            </a>
+                           <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
+    <i class="fab fa-whatsapp"></i> تواصل واتساب
+</button>
                             <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
                                 <i class="fas fa-share-alt"></i> مشاركة
                             </button>
