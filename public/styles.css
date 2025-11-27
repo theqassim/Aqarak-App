@@ -3897,7 +3897,7 @@ a[href="seller-dashboard.html"]:hover {
 }
 
 .btn-login-prompt:hover {
-    background: #fff;
+    background: #131010;
     color: var(--main-primary);
     box-shadow: 0 0 25px #fff;
     transform: translateY(-3px);

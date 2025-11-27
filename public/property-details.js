@@ -236,16 +236,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="lock-icon"><i class="fas fa-lock"></i></div>
                         <h3 class="prompt-title">هذه الميزات حصرية للأعضاء</h3>
                         <p class="prompt-text">
-                            للتواصل مع المالك، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
+                            للتواصل ، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
                         </p>
                         <a href="index?mode=login" class="btn-login-prompt">
                             <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
                         </a>
                     </div>
                     <div style="margin-top:15px;">
-                        <button onclick="window.shareProperty('${property.title}')" style="background:none; border:none; color:#888; cursor:pointer; text-decoration:underline;">
-                            مشاركة هذا العقار مع صديق
-                        </button>
+                        <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
+                        <i class="fas fa-share-alt"></i> مشاركة
+                    </button>
                     </div>
                 </div>
             `;
