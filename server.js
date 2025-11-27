@@ -73,11 +73,31 @@ function safeInt(value) {
 
 // الدوال المساعدة للإشعارات
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
-    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("")) return;
-    const embed = { title: title, color: color, fields: fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) {
+        console.log("⚠️ Discord Webhook URL is missing.");
+        return;
+    }
+
+    const embed = {
+        title: title,
+        color: color,
+        fields: fields,
+        footer: { text: "Aqarak Bot 🏠" },
+        timestamp: new Date().toISOString()
+    };
+
     if (imageUrl) embed.image = { url: imageUrl };
-    try { await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ embeds: [embed] }) }); } 
-    catch (error) { console.error("Discord Error:", error.message); }
+
+    try {
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] })
+        });
+        console.log("✅ Discord notification sent!");
+    } catch (error) {
+        console.error("❌ Failed to send Discord notification:", error.message);
+    }
 }
 
 async function notifyAllUsers(title, body, url) {
