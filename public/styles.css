@@ -3648,3 +3648,14 @@ a[href="seller-dashboard.html"]:hover {
     color: #000;
     border: 1px solid #e0a800;
 }
+
+.badge-legal {
+    background: #28a745; /* أخضر للقانوني */
+    border: 1px solid #218838;
+}
+
+.badge-featured {
+    background: #ffc107; /* ذهبي للمميز */
+    color: #000;
+    border: 1px solid #e0a800;
+}

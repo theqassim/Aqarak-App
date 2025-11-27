@@ -101,7 +101,7 @@ async function loadSimilarProperties(currentProperty) {
             if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">مميز</span>';
 
             const card = `
-                <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'" style="position:relative; cursor:pointer;">
+                <div class="property-card neon-glow" onclick="window.location.href='property-details?id=${prop.id}'" style="position:relative; cursor:pointer;">
                     ${badges}
                     <img src="${prop.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${prop.title}">
                     <div class="card-content">
