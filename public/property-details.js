@@ -242,11 +242,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
                         </a>
                     </div>
-                    <div style="margin-top:15px;">
-                        <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
-                        <i class="fas fa-share-alt"></i> مشاركة
-                    </button>
-                    </div>
                 </div>
             `;
         }
