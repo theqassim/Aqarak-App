@@ -13,11 +13,6 @@
 <body>
 
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <button id="install-btn" class="btn-neon-auth" style="display: none; margin: 10px auto; background: #28a745;">
-    <i class="fas fa-download"></i> تثبيت التطبيق
-</button>
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
@@ -218,30 +213,42 @@
     <i class="fas fa-question"></i>
     <span class="ripple"></span> </a>
     <script>
-        let deferredPrompt;
-const installBtn = document.getElementById('install-btn');
+       // متغيرات التثبيت
+let deferredPrompt;
+const installToast = document.getElementById('install-toast');
+const installBtnAction = document.getElementById('install-btn-action');
+const closeInstallBtn = document.getElementById('close-install');
 
+// 1. التقاط حدث التثبيت
 window.addEventListener('beforeinstallprompt', (e) => {
-    // 1. منع ظهور النافذة التلقائية القديمة
     e.preventDefault();
-    // 2. حفظ الحدث لاستخدامه لاحقاً
     deferredPrompt = e;
-    // 3. إظهار زر التثبيت الخاص بنا
-    if(installBtn) installBtn.style.display = 'block';
+    
+    // إظهار الشريط فقط لو لم يقم المستخدم بإغلاقه سابقاً
+    if (!localStorage.getItem('installPromptDismissed')) {
+        if(installToast) installToast.style.display = 'flex';
+    }
 });
 
-if(installBtn) {
-    installBtn.addEventListener('click', async () => {
+// 2. عند الضغط على زر "تثبيت"
+if(installBtnAction) {
+    installBtnAction.addEventListener('click', async () => {
         if (deferredPrompt) {
-            // 4. إظهار نافذة التثبيت الأصلية
             deferredPrompt.prompt();
-            // 5. انتظار رد المستخدم
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`User response: ${outcome}`);
-            // 6. إخفاء الزر وتصفير الحدث
             deferredPrompt = null;
-            installBtn.style.display = 'none';
+            installToast.style.display = 'none';
         }
+    });
+}
+
+// 3. عند الضغط على زر الإغلاق (X)
+if(closeInstallBtn) {
+    closeInstallBtn.addEventListener('click', () => {
+        installToast.style.display = 'none';
+        // حفظ الإغلاق في الذاكرة عشان ميزهقش المستخدم كل شوية
+        localStorage.setItem('installPromptDismissed', 'true');
     });
 }
     </script>
@@ -295,6 +302,19 @@ window.closeIosPrompt = () => {
         </p>
     </div>
     <div class="ios-arrow"></div>
+</div>
+<div id="install-toast" class="install-toast" style="display: none;">
+    <div class="install-content">
+        <img src="logo.jpg" alt="Aqarak Logo" class="install-logo">
+        <div class="install-text">
+            <span class="app-name">تطبيق عقارك</span>
+            <span class="app-desc">تجربة أسرع وأسهل</span>
+        </div>
+    </div>
+    <div class="install-actions">
+        <button id="install-btn-action" class="btn-install-mini">تثبيت</button>
+        <button id="close-install" class="btn-close-mini"><i class="fas fa-times"></i></button>
+    </div>
 </div>
 </body>
 </html>
