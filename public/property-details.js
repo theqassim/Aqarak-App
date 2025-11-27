@@ -201,6 +201,59 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
         // رسم محتوى الصفحة
+        // ✅ 1. تحديد محتوى الأزرار بناءً على حالة التسجيل
+        let actionSectionHTML = '';
+        let makeOfferButtonHTML = '';
+
+        if (userEmail) {
+            // 🔓 حالة: مسجل دخول (عرض الأزرار الطبيعية)
+            
+            // زر قدم عرضك
+            makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
+            
+            // أزرار التواصل والمفضلة
+            actionSectionHTML = `
+                <div class="action-buttons-group">
+                    <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="flex:2;">
+                        <i class="fab fa-whatsapp"></i> تواصل واتساب
+                    </a>
+                    <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
+                        <i class="fas fa-share-alt"></i> مشاركة
+                    </button>
+                    <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
+                        <i id="favIcon" class="${favIcon}"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            // 🔒 حالة: زائر (إخفاء الأزرار وعرض الصندوق المقفول)
+            
+            // زر قدم عرضك لن يظهر (متغير فارغ)
+            
+            // صندوق القفل العصري
+            actionSectionHTML = `
+                <div class="login-prompt-box">
+                    <div class="prompt-content">
+                        <div class="lock-icon"><i class="fas fa-lock"></i></div>
+                        <h3 class="prompt-title">هذه الميزات حصرية للأعضاء</h3>
+                        <p class="prompt-text">
+                            للتواصل مع المالك، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
+                        </p>
+                        <a href="index?mode=login" class="btn-login-prompt">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
+                        </a>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <button onclick="window.shareProperty('${property.title}')" style="background:none; border:none; color:#888; cursor:pointer; text-decoration:underline;">
+                            مشاركة هذا العقار مع صديق
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // ✅ 2. رسم الصفحة (استخدام المتغيرات الجديدة)
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -218,7 +271,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info">
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
-                            <button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>
+                            
+                            ${makeOfferButtonHTML}
                         </div>
 
                         <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
@@ -232,10 +286,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
-                            <div style="color:#333; font-size:0.95rem;">
+                             <div style="color:#333; font-size:0.95rem;">
                                 <p><strong>المالك:</strong> <span id="admin-owner-name">${property.sellerName || property.ownerName || '-'}</span></p>
                                 <p><strong>الهاتف:</strong> <span id="admin-owner-phone">${property.sellerPhone || property.ownerPhone || '-'}</span></p>
-                                <p><strong>الكود:</strong> <span style="background:#333; color:#fff; padding:2px 5px; border-radius:3px;">${property.hiddenCode}</span></p>
+                                <p><strong>الكود:</strong> ${property.hiddenCode}</p>
                             </div>
                         </div>
 
@@ -252,17 +306,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p>${property.description || 'لا يوجد وصف.'}</p>
                         </div>
                         
-                        <div class="action-buttons-group">
-                           <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
-    <i class="fab fa-whatsapp"></i> تواصل واتساب
-</button>
-                            <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
-                                <i class="fas fa-share-alt"></i> مشاركة
-                            </button>
-                            <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
-                                <i id="favIcon" class="${favIcon}"></i>
-                            </button>
-                        </div>
+                        ${actionSectionHTML}
+
                     </div>
                     
                     <div class="image-gallery-frame neon-glow">
@@ -276,8 +321,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 </div>
-
-                <div class="similar-properties-section" style="margin-top: 50px;">
+                
+                 <div class="similar-properties-section" style="margin-top: 50px;">
                     <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--main-secondary); display:inline-block; padding-bottom:5px;">
                         <i class="fas fa-home"></i> عقارات مشابهة
                     </h2>
@@ -287,7 +332,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </div>
         `;
-
         // تشغيل الحاسبة
         const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
         if (!isNaN(priceNum) && priceNum > 0) {
