@@ -7,22 +7,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // --- دوال مساعدة (Global) ---
-// ✅ دالة حماية زر الواتساب
-window.handleWhatsappClick = (link) => {
-    const userEmail = localStorage.getItem('userEmail');
-    
-    // لو مش مسجل دخول
-    if (!userEmail) {
-        if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً للتواصل.\nهل تريد الانتقال لصفحة الدخول؟')) {
-            window.location.href = 'index?mode=login'; // توجيه لصفحة الدخول
-        }
-        return; // وقف العملية
-    }
-
-    // لو مسجل، افتح الرابط
-    window.open(link, '_blank');
-};
-
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -43,9 +27,12 @@ window.closeOfferModal = () => { document.getElementById('offer-modal').style.di
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
+    
+    // قراءة الإيميل مباشرة
     const userEmail = localStorage.getItem('userEmail');
 
     if (!userEmail) {
+        // حماية إضافية (لن يصل لها المستخدم العادي لأن الزر مخفي، لكن للأمان)
         alert('يرجى تسجيل الدخول أولاً.');
         return;
     }
@@ -75,7 +62,7 @@ window.toggleFavorite = async (propertyId) => {
 window.shareProperty = async (title) => {
     const shareData = {
         title: `عقارك - ${title}`,
-        text: `شاهد هذا العقار على موقع عقارك: ${title}`,
+        text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`,
         url: window.location.href
     };
     try {
@@ -87,7 +74,17 @@ window.shareProperty = async (title) => {
     } catch (err) { console.error('Error sharing:', err); }
 };
 
-// --- عقارات مشابهة (باستخدام Supabase) ---
+// --- زر الواتساب (محمي) ---
+window.handleWhatsappClick = (link) => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+        alert('يجب تسجيل الدخول أولاً.');
+        return;
+    }
+    window.open(link, '_blank');
+};
+
+// --- عقارات مشابهة (Supabase) ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if(!container) return;
@@ -117,7 +114,7 @@ async function loadSimilarProperties(currentProperty) {
             if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">مميز</span>';
 
             const card = `
-                <div class="property-card neon-glow" onclick="window.location.href='property-details?id=${prop.id}'" style="position:relative; cursor:pointer;">
+                <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'" style="position:relative; cursor:pointer;">
                     ${badges}
                     <img src="${prop.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${prop.title}">
                     <div class="card-content">
@@ -155,13 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
+        // 1. التحقق من المستخدم
+        const userEmail = localStorage.getItem('userEmail');
+        const isLoggedIn = userEmail !== null;
+
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
         if (!propertyId) throw new Error('رابط غير صالح.');
         
-        // ✅ تعريف userEmail في البداية لتجنب الخطأ
-        const userEmail = localStorage.getItem('userEmail');
-
         const response = await fetch(`/api/property/${propertyId}`);
         if (!response.ok) throw new Error('العقار غير موجود.');
         
@@ -187,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // التحقق من المفضلة
         let isFav = false;
-        if (userEmail) {
+        if (isLoggedIn) {
             try {
                 const favRes = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
                 if(favRes.ok) {
@@ -200,37 +198,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favClass = isFav ? 'is-favorite' : '';
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
-        // رسم محتوى الصفحة
-        // ✅ 1. تحديد محتوى الأزرار بناءً على حالة التسجيل
+
+        // 🔥🔥🔥 2. تجهيز الأزرار (المنطق الجديد) 🔥🔥🔥
+        
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
-        if (userEmail) {
-            // 🔓 حالة: مسجل دخول (عرض الأزرار الطبيعية)
+        if (isLoggedIn) {
+            // ✅ حالة: مسجل دخول (عرض الأزرار كاملة)
             
-            // زر قدم عرضك
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
-            // أزرار التواصل والمفضلة
             actionSectionHTML = `
                 <div class="action-buttons-group">
-                    <a href="${whatsappLink}" target="_blank" class="whatsapp-btn btn-neon-auth" style="flex:2;">
+                    <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
                         <i class="fab fa-whatsapp"></i> تواصل واتساب
-                    </a>
+                    </button>
+                    
                     <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
                         <i class="fas fa-share-alt"></i> مشاركة
                     </button>
+                    
                     <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
                         <i id="favIcon" class="${favIcon}"></i>
                     </button>
                 </div>
             `;
         } else {
-            // 🔒 حالة: زائر (إخفاء الأزرار وعرض الصندوق المقفول)
+            // 🔒 حالة: زائر (إخفاء الأزرار وعرض القفل)
             
-            // زر قدم عرضك لن يظهر (متغير فارغ)
+            // لا يوجد زر "قدم عرضك"
+            makeOfferButtonHTML = ''; 
             
-            // صندوق القفل العصري
             actionSectionHTML = `
                 <div class="login-prompt-box">
                     <div class="prompt-content">
@@ -252,8 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
 
-
-        // ✅ 2. رسم الصفحة (استخدام المتغيرات الجديدة)
+        // رسم الصفحة
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -271,7 +269,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info">
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
-                            
                             ${makeOfferButtonHTML}
                         </div>
 
@@ -286,10 +283,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
-                             <div style="color:#333; font-size:0.95rem;">
+                            <div style="color:#333; font-size:0.95rem;">
                                 <p><strong>المالك:</strong> <span id="admin-owner-name">${property.sellerName || property.ownerName || '-'}</span></p>
                                 <p><strong>الهاتف:</strong> <span id="admin-owner-phone">${property.sellerPhone || property.ownerPhone || '-'}</span></p>
-                                <p><strong>الكود:</strong> ${property.hiddenCode}</p>
+                                <p><strong>الكود:</strong> <span style="background:#333; color:#fff; padding:2px 5px; border-radius:3px;">${property.hiddenCode}</span></p>
                             </div>
                         </div>
 
@@ -321,8 +318,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 </div>
-                
-                 <div class="similar-properties-section" style="margin-top: 50px;">
+
+                <div class="similar-properties-section" style="margin-top: 50px;">
                     <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--main-secondary); display:inline-block; padding-bottom:5px;">
                         <i class="fas fa-home"></i> عقارات مشابهة
                     </h2>
@@ -332,6 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </div>
         `;
+
         // تشغيل الحاسبة
         const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
         if (!isNaN(priceNum) && priceNum > 0) {
@@ -350,17 +348,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(box) {
                 box.style.display = 'block';
                 
-                // أزرار التحكم في الشارات
                 const controlsDiv = document.createElement('div');
-                controlsDiv.style.marginTop = '10px';
-                controlsDiv.style.display = 'flex';
-                controlsDiv.style.gap = '10px';
+                controlsDiv.style.marginTop = '10px'; controlsDiv.style.display = 'flex'; controlsDiv.style.gap = '10px';
                 
                 const createBadgeBtn = (text, isActive, color, onClick) => {
                     const btn = document.createElement('button');
                     btn.className = 'btn-neon-auth';
-                    btn.style.fontSize = '0.7rem';
-                    btn.style.padding = '5px 10px';
+                    btn.style.fontSize = '0.7rem'; btn.style.padding = '5px 10px';
                     btn.style.background = isActive ? color : '#555';
                     btn.innerHTML = isActive ? `<i class="fas fa-check"></i> ${text}` : `تفعيل ${text}`;
                     btn.onclick = onClick;
@@ -403,12 +397,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             thumbsContainer.appendChild(img);
         });
 
-        document.getElementById('favoriteBtn').onclick = () => window.toggleFavorite(property.id);
+        // تشغيل زر المفضلة (إذا كان موجوداً)
+        const favBtn = document.getElementById('favoriteBtn');
+        if (favBtn) {
+            favBtn.onclick = () => window.toggleFavorite(property.id);
+        }
 
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // تشغيل فورم العرض
+        // تشغيل فورم العرض (إذا كان موجوداً)
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
