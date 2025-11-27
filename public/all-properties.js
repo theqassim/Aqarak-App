@@ -101,7 +101,7 @@ function renderProperties(properties) {
             ? '<span style="color: #ffc107;">(للإيجار)</span>' 
             : '<span style="color: #28a745;">(للبيع)</span>';
             
-        const detailsUrl = `property-details.html?id=${property.id}`;
+        const detailsUrl = `property-details?id=${property.id}`;
 
         // ✅✅✅ 1. تجهيز الشارات (الجزء الجديد) ✅✅✅
         let badgesHTML = '<div class="card-badges-container">';

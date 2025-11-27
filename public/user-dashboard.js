@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="price">${formattedPrice}</p> 
                             <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
                             
-                            <a href="property-details.html?id=${property.id}" class="btn">عرض التفاصيل</a>
+                            <a href="property-details?id=${property.id}" class="btn">عرض التفاصيل</a>
                             <button class="btn-neon-red remove-favorite-btn" data-id="${property.id}" style="margin-top: 10px;">
                                 <i class="fas fa-trash"></i> إزالة من المفضلة
                             </button>
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(data.message);
                 localStorage.removeItem('userRole');
                 localStorage.removeItem('userEmail'); 
-                window.location.href = 'index.html';
+                window.location.href = 'index';
 
             } catch (error) {
                 alert(`خطأ في الحذف: ${error.message}`);

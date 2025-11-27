@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('userRole');
-            window.location.href = 'index.html';
+            window.location.href = 'index';
         });
     });
 });

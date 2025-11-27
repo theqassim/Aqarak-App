@@ -75,7 +75,7 @@ window.toggleFavorite = async (propertyId) => {
 window.shareProperty = async (title) => {
     const shareData = {
         title: `عقارك - ${title}`,
-        text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`,
+        text: `شاهد هذا العقار على موقع عقارك: ${title}`,
         url: window.location.href
     };
     try {
