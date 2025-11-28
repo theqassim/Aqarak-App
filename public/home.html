@@ -3,12 +3,44 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
+     <meta name="description" content="أفضل منصة عقارية في مصر لعرض وطلب العقارات مجاناً. شقق للبيع، إيجار، أراضي، وفيلات بأقل نسبة سمسرة. موقع عقارك يسهل عليك البحث عن سكن." />
+    <meta name="keywords" content="عقارات مصر, شقق للبيع, ايجار شقق, عقارك, سمسرة, بيع عقار, موقع عقارات مجاني" />
     <title>عقارك - الرئيسية</title>
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1c2630">
 <link rel="apple-touch-icon" href="logo.jpg">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+     <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "RealEstateAgent",
+  "name": "منصة عقارك - Aqarak",
+  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+  "url": "https://aqarakeg.com",
+  "logo": "https://aqarakeg.com/logo.jpg",
+  "image": "https://aqarakeg.com/logo.jpg",
+  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Cairo",
+    "addressCountry": "EG"
+  },
+  "priceRange": "$",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+201008102237",
+    "contactType": "customer service",
+    "areaServed": "EG",
+    "availableLanguage": ["Arabic"]
+  },
+  "sameAs": [
+    "https://www.facebook.com/share/1ADgNDLXc6/",
+    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
+    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -153,46 +185,41 @@
     </div>
    <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // 1. فحص حالة المستخدم
         const userRole = localStorage.getItem('userRole');
-        const isLoggedIn = userRole !== null; // true لو مسجل، false لو زائر
+        const isLoggedIn = userRole !== null; 
 
-        // 2. التحكم في الهيدر (إظهار/إخفاء القوائم)
         const guestNav = document.getElementById('guest-nav');
         const userNav = document.getElementById('user-nav');
 
         if (isLoggedIn) {
-            // حالة: مسجل دخول
+            
             if (userNav) userNav.style.display = 'flex';
             if (guestNav) guestNav.style.display = 'none';
         } else {
-            // حالة: زائر (Guest)
+            
             if (userNav) userNav.style.display = 'none';
             if (guestNav) guestNav.style.display = 'flex';
         }
 
-        // 3. منطق تسجيل الخروج (Logout)
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (confirm('هل تريد تسجيل الخروج؟')) {
-                    localStorage.clear(); // مسح البيانات
-                    window.location.reload(); // إعادة تحميل الصفحة (سيتحول لزائر)
+                    localStorage.clear(); 
+                    window.location.reload(); 
                 }
             });
         }
 
-        // 4. حماية أزرار "عرض التفاصيل" (تتطلب تسجيل)
-        // نستخدم Event Delegation عشان يشتغل حتى لو العناصر اترسمت بعدين
         document.body.addEventListener('click', (e) => {
-            // لو ضغط على زرار واخد كلاس view-details-btn
+          
             if (e.target.closest('.view-details-btn')) {
                 if (!isLoggedIn) {
-                    e.preventDefault(); // منع فتح الصفحة
+                    e.preventDefault(); 
                     e.stopPropagation();
                     
-                    // رسالة توجيه
+                    
                     if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً لعرض تفاصيل العقار والتواصل مع البائع.\nهل تريد الانتقال لصفحة التسجيل؟')) {
                         window.location.href = 'index';
                     }
@@ -203,12 +230,12 @@
 </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-    // تعريف العناصر
+    
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('help-modal');
     const closeModal = document.querySelector('.close-modal');
 
-    // فتح النافذة
+    
     if (helpBtn) {
         helpBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -216,14 +243,14 @@
         });
     }
 
-    // إغلاق النافذة عند الضغط على X
+    
     if (closeModal) {
         closeModal.addEventListener('click', () => {
             helpModal.style.display = 'none';
         });
     }
 
-    // إغلاق النافذة عند الضغط في أي مكان خارج الصندوق
+   
     window.addEventListener('click', (e) => {
         if (e.target === helpModal) {
             helpModal.style.display = 'none';
@@ -240,24 +267,24 @@
     <i class="fas fa-question"></i>
     <span class="ripple"></span> </a>
     <script>
-       // متغيرات التثبيت
+    
 let deferredPrompt;
 const installToast = document.getElementById('install-toast');
 const installBtnAction = document.getElementById('install-btn-action');
 const closeInstallBtn = document.getElementById('close-install');
 
-// 1. التقاط حدث التثبيت
+
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     
-    // إظهار الشريط فقط لو لم يقم المستخدم بإغلاقه سابقاً
+   
     if (!localStorage.getItem('installPromptDismissed')) {
         if(installToast) installToast.style.display = 'flex';
     }
 });
 
-// 2. عند الضغط على زر "تثبيت"
+
 if(installBtnAction) {
     installBtnAction.addEventListener('click', async () => {
         if (deferredPrompt) {
@@ -270,38 +297,38 @@ if(installBtnAction) {
     });
 }
 
-// 3. عند الضغط على زر الإغلاق (X)
+
 if(closeInstallBtn) {
     closeInstallBtn.addEventListener('click', () => {
         installToast.style.display = 'none';
-        // حفظ الإغلاق في الذاكرة عشان ميزهقش المستخدم كل شوية
+       
         localStorage.setItem('installPromptDismissed', 'true');
     });
 }
     </script>
 
     <script>
-     // --- كود خاص لأجهزة الآيفون (iOS Install Prompt) ---
+    
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. هل الجهاز iOS؟
+    
     const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
     
-    // 2. هل التطبيق مثبت بالفعل (Standalone)؟
+  
     const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
 
-    // 3. ✅ هل المستخدم أغلق الرسالة قريباً؟ (فحص الذاكرة)
+ 
     const lastDismissed = localStorage.getItem('iosPromptDismissed');
     const now = Date.now();
-    // مدة الإخفاء: 7 أيام (بالمللي ثانية)
+    
     const hideDuration = 7 * 24 * 60 * 60 * 1000; 
 
-    // الشرط الكامل للظهور:
-    // (هو آيفون) و (مش مثبت التطبيق) و (معداش 7 أيام على آخر مرة قفل الرسالة)
+
+    
     if (isIos && !isStandalone && (!lastDismissed || (now - lastDismissed > hideDuration))) {
         
         const iosPrompt = document.getElementById('ios-install-prompt');
         if (iosPrompt) {
-            // إظهار الرسالة بعد 3 ثواني عشان يلحق يشوف الموقع الأول
+         
             setTimeout(() => {
                 iosPrompt.style.display = 'flex';
             }, 3000);
@@ -309,11 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// دالة إغلاق رسالة الآيفون (مع الحفظ في الذاكرة)
+
 window.closeIosPrompt = () => {
     document.getElementById('ios-install-prompt').style.display = 'none';
     
-    // ✅ تسجيل وقت الإغلاق الحالي
+ 
     localStorage.setItem('iosPromptDismissed', Date.now());
 };
     </script>
