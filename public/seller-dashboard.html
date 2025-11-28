@@ -50,8 +50,6 @@
                     <i class="fas fa-arrow-right"></i> تغيير النوع
                 </button>
 
-                <p id="seller-form-message" class="message"></p> 
-                
                 <form id="seller-form" enctype="multipart/form-data" class="auth-form"> 
                     <input type="hidden" id="property-category" name="propertyType" value="">
 
@@ -82,12 +80,12 @@
                             <input type="number" id="property-area" name="propertyArea" class="neon-input-white" required>
                         </div>
 
-                        <div class="input-group dynamic-field" id="field-rooms">
+                        <div class="input-group" id="container-rooms">
                             <label>عدد الغرف</label>
                             <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white">
                         </div>
                         
-                        <div class="input-group dynamic-field" id="field-bathrooms">
+                        <div class="input-group" id="container-bathrooms">
                             <label>عدد الحمامات</label>
                             <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white">
                         </div>
@@ -96,21 +94,31 @@
 
                     <div class="input-group full-width" style="margin-top: 20px;">
                         <label>وصف تفصيلي للعقار</label>
-                        <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب التفاصيل هنا (التشطيب، الدور، المميزات...)"></textarea>
+                        <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب التفاصيل هنا..."></textarea>
                     </div>
 
                     <div class="input-group full-width" style="margin-top: 20px;">
-                        <label>صور العقار (الحد الأقصى 10MB)</label>
+                        <label>صور العقار</label>
+                        
                         <label for="property-images" class="btn-neon-auth" style="background: #555; width: auto; display: inline-block; margin-bottom: 10px;">
                             <i class="fas fa-upload"></i> اختر الصور
                         </label>
+                        
+                        <span style="color: #ff4444; font-weight: bold; font-size: 0.9rem; margin-right: 10px;">
+                            (الحد الأقصى 10MB للصورة الواحدة) ⚠️
+                        </span>
+                        
                         <input type="file" id="property-images" name="images[]" multiple accept="image/*" style="display:none;"> 
+                        
                         <div class="image-preview-container" id="image-preview-container"></div>
                     </div>
                     
                     <button type="submit" class="btn-neon-large-green">
                         <i class="fas fa-paper-plane"></i> تأكيد وإرسال للمراجعة
                     </button>
+
+                    <p id="seller-form-message" class="message" style="margin-top: 20px; font-weight: bold;"></p> 
+
                 </form>
             </div>
         </div>
