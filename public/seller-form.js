@@ -10,6 +10,68 @@ document.addEventListener('DOMContentLoaded', () => {
     // مصفوفة لتخزين كل الملفات المختارة
     let allSelectedFiles = []; 
 
+    // --- منطق اختيار الفئة (Category Logic) ---
+    window.selectCategory = (type) => {
+        const selectionDiv = document.getElementById('category-selection');
+        const formDiv = document.getElementById('form-container');
+        const typeInput = document.getElementById('property-type'); // الحقل المخفي
+
+        // 1. إخفاء الاختيار وإظهار الفورم
+        selectionDiv.style.display = 'none';
+        formDiv.style.display = 'block';
+        formDiv.classList.add('fade-in'); // أنيميشن بسيط لو حابب
+
+        // 2. ضبط القيمة المخفية
+        // سنستخدم الأسماء العربية المتوافقة مع قاعدة البيانات
+        let dbType = 'بيع'; // افتراضي
+        if (type === 'residential') dbType = 'سكني (شقة/فيلا)';
+        if (type === 'commercial') dbType = 'تجاري (محل/مخزن)';
+        if (type === 'land') dbType = 'أرض';
+        
+        typeInput.value = dbType;
+
+        // 3. إظهار/إخفاء الحقول حسب النوع
+        const roomsField = document.getElementById('field-rooms');
+        const bathsField = document.getElementById('field-bathrooms');
+        const roomsInput = document.getElementById('property-rooms');
+        const bathsInput = document.getElementById('property-bathrooms');
+
+        if (type === 'land') {
+            // لو أرض: اخفي الغرف والحمامات
+            roomsField.style.display = 'none';
+            bathsField.style.display = 'none';
+            // إزالة شرط required وتصفير القيمة عشان السيرفر ميضربش
+            roomsInput.removeAttribute('required');
+            bathsInput.removeAttribute('required');
+            roomsInput.value = 0;
+            bathsInput.value = 0;
+        } else if (type === 'commercial') {
+            // لو تجاري: ممكن نخلي الغرف (كـ عدد الغرف/المكاتب) ونخفي الحمامات أو نسيبها
+            roomsField.style.display = 'block';
+            bathsField.style.display = 'block'; // المحلات غالباً فيها حمام
+            
+            // تغيير الليبل (Label) ليناسب المحلات
+            roomsField.querySelector('label').innerText = 'عدد الغرف / المكاتب';
+        } else {
+            // سكني: اظهر كل حاجة ورجع required
+            roomsField.style.display = 'block';
+            bathsField.style.display = 'block';
+            roomsField.querySelector('label').innerText = 'عدد الغرف';
+            
+            roomsInput.setAttribute('required', 'true');
+            bathsInput.setAttribute('required', 'true');
+            // تفريغ القيم لو كانت صفر
+            if(roomsInput.value == 0) roomsInput.value = '';
+            if(bathsInput.value == 0) bathsInput.value = '';
+        }
+    };
+
+    // زر العودة
+    window.resetSelection = () => {
+        document.getElementById('form-container').style.display = 'none';
+        document.getElementById('category-selection').style.display = 'grid';
+    };
+
     // --- دالة عرض المعاينة ---
     function renderPreviews() {
         previewContainer.innerHTML = ''; 
