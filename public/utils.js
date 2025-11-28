@@ -25,7 +25,6 @@ function getTypeTag(type) {
 
 const PUBLIC_VAPID_KEY = 'BABE4bntVm_6RWE3zuv305i65FfcTN8xd6C3d4jdEwML8d7yLwoVywbgvhS7U-q2KE3cmKqDbgvZ8rK97C3gKp4';
 
-// دالة تحويل المفتاح (مهمة للمتصفح)
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -41,29 +40,26 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-// وظيفة التسجيل والاشتراك
+
 async function triggerPushSubscription() {
     if ('serviceWorker' in navigator) {
         try {
-            // 1. تسجيل الـ Service Worker
+         
             const register = await navigator.serviceWorker.register('/service-worker.js', {
                 scope: '/'
             });
             console.log('✅ Service Worker Registered');
 
-            // 2. طلب الإذن من المستخدم
             const permission = await Notification.requestPermission();
             
             if (permission === 'granted') {
                 console.log('✅ Notification permission granted.');
 
-                // 3. الاشتراك الفعلي (توليد الرابط الخاص بجهاز المستخدم)
                 const subscription = await register.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
                 });
 
-                // 4. إرسال الاشتراك للسيرفر ليحفظه
                 await fetch('/api/subscribe', {
                     method: 'POST',
                     body: JSON.stringify(subscription),
@@ -83,7 +79,6 @@ async function triggerPushSubscription() {
     }
 }
 
-// تشغيل الوظيفة عند فتح الموقع
 document.addEventListener('DOMContentLoaded', () => {
     triggerPushSubscription();
 });
