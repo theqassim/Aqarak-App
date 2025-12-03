@@ -2532,7 +2532,7 @@ body, html {
 
 /* --- 1. حاوية الهيدر الرئيسية (الثبات والزجاج) --- */
 .main-header {
-    position: fixed; /* هذا ما يجعله ثابتاً لا يتحرك */
+    position: absolute; /* هذا ما يجعله ثابتاً لا يتحرك */
     top: 0;
     left: 0;
     width: 100%;
@@ -2634,14 +2634,14 @@ body, html {
 
 /* --- 6. تمييز زر "اعرض عقار" --- */
 /* لجعله مميزاً عن باقي الأزرار */
-a[href="seller-dashboard.html"] {
+a[href="seller-dashboard"] {
     background: linear-gradient(45deg, #00f260, #0575e6);
     color: #fff;
     border: none;
     box-shadow: 0 0 10px rgba(0, 242, 96, 0.3);
 }
 
-a[href="seller-dashboard.html"]:hover {
+a[href="seller-dashboard"]:hover {
     box-shadow: 0 0 20px rgba(0, 242, 96, 0.6);
     background: linear-gradient(45deg, #0575e6, #00f260);
     color: #fff;
