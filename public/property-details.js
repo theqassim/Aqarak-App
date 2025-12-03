@@ -267,15 +267,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${makeOfferButtonHTML}
                         </div>
 
-                        <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
-                            <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
-                            <div class="savings-body">
-                                <div class="compare-row bad"><div class="label-col"><span class="icon">❌</span><span class="text id="aqarak-label">عمولة المكاتب العادية (2.5%)</span></div><div class="value-col" id="broker-fee">0 ج.م</div></div>
-                                <div class="compare-row good"><div class="label-col"><span class="icon">✅</span> span class="text">عمولة موقع عقارك (1%)</span></div><div class="value-col" id="aqarak-fee">0 ج.م</div></div>
-                            </div>
-                            <div class="savings-footer"><span class="saved-label">💰 إجمالي توفيرك معنا:</span><span class="saved-value" id="total-saved-amount">0 ج.م</span></div>
-                        </div>
+                       <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
+    <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
+    <div class="savings-body">
+        
+        <div class="compare-row bad">
+            <div class="label-col">
+                <span class="icon">❌</span>
+                <span class="text">عمولة المكاتب العادية (2.5%)</span>
+            </div>
+            <div class="value-col" id="broker-fee">0 ج.م</div>
+        </div>
 
+        <div class="compare-row good">
+            <div class="label-col">
+                <span class="icon">✅</span>
+                <span class="text" id="aqarak-label">عمولة موقع عقارك (1%)</span>
+            </div>
+            <div class="value-col" id="aqarak-fee">0 ج.م</div>
+        </div>
+
+    </div>
+    <div class="savings-footer">
+        <span class="saved-label">💰 إجمالي توفيرك معنا:</span>
+        <span class="saved-value" id="total-saved-amount">0 ج.م</span>
+    </div>
+</div>
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <div style="color:#333; font-size:0.95rem;">
