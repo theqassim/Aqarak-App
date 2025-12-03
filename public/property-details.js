@@ -270,8 +270,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
                             <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
                             <div class="savings-body">
-                                <div class="compare-row bad"><div class="label-col"><span class="icon">❌</span><span class="text">عمولة المكاتب العادية (2.5%)</span></div><div class="value-col" id="broker-fee">0 ج.م</div></div>
-                                <div class="compare-row good"><div class="label-col"><span class="icon">✅</span><span class="text">عمولة موقع عقارك (1%)</span></div><div class="value-col" id="aqarak-fee">0 ج.م</div></div>
+                                <div class="compare-row bad"><div class="label-col"><span class="icon">❌</span><span class="text id="aqarak-label">عمولة المكاتب العادية (2.5%)</span></div><div class="value-col" id="broker-fee">0 ج.م</div></div>
+                                <div class="compare-row good"><div class="label-col"><span class="icon">✅</span> span class="text">عمولة موقع عقارك (1%)</span></div><div class="value-col" id="aqarak-fee">0 ج.م</div></div>
                             </div>
                             <div class="savings-footer"><span class="saved-label">💰 إجمالي توفيرك معنا:</span><span class="saved-value" id="total-saved-amount">0 ج.م</span></div>
                         </div>
@@ -327,16 +327,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // تشغيل الحاسبة
         const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
-        if (!isNaN(priceNum) && priceNum > 0) {
-            const broker = priceNum * 0.025;
-            const aqarak = priceNum * 0.01;
-            const saved = broker - aqarak;
-            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-            document.getElementById('savings-calculator-box').style.display = 'block';
-        }
 
+if (!isNaN(priceNum) && priceNum > 0) {
+    
+    // 1. تحديد تاريخ انتهاء العرض (نفس تاريخ النافذة المنبثقة)
+    const expiryDate = new Date('2026-03-03');
+    const today = new Date();
+    
+    // متغيرات لتخزين النسبة والنص
+    let aqarakRate;
+    let labelText;
+
+    // 2. التحقق من صلاحية العرض
+    if (today < expiryDate) {
+        // العرض ساري: النسبة صفر
+        aqarakRate = 0;
+        labelText = 'عمولة موقع عقارك (0%) 🔥'; // إضافة علامة نار للعرض
+    } else {
+        // انتهى العرض: النسبة تعود 1%
+        aqarakRate = 0.01;
+        labelText = 'عمولة موقع عقارك (1%)';
+    }
+
+    // 3. الحسابات
+    const broker = priceNum * 0.025;       // عمولة السوق (2.5%)
+    const aqarak = priceNum * aqarakRate;  // عمولة عقارك (متغيرة حسب التاريخ)
+    const saved = broker - aqarak;         // التوفير
+
+    // 4. عرض النتائج
+    document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
+    document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
+    document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
+    
+    // تحديث نص النسبة المئوية (ليظهر 0% أو 1% حسب التاريخ)
+    const labelElement = document.getElementById('aqarak-label');
+    if (labelElement) {
+        labelElement.textContent = labelText;
+    }
+
+    // إظهار الصندوق
+    document.getElementById('savings-calculator-box').style.display = 'block';
+}
         // تشغيل الأدمن
         if (localStorage.getItem('userRole') === 'admin') {
             const box = document.getElementById('admin-secret-box');
