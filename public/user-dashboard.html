@@ -16,7 +16,7 @@
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">حسابي</span>
+                <span class="logo-text">القائمة</span>
             </div>
             <nav class="main-nav">
                 <a href="home" class="nav-button neon-button-white">الرئيسية للموقع</a>
@@ -30,46 +30,20 @@
         <div class="admin-dashboard-grid">
             
             <div class="dashboard-card neon-glow">
-                <i class="fas fa-lock icon-large"></i>
-                <h2 class="card-title">تغيير كلمة المرور</h2>
-                <p>قم بتحديث كلمة المرور الخاصة بحسابك.</p>
-                <a href="#" class="btn-neon-auth btn-full" id="show-change-password">تغيير الباسورد</a>
+                <i class="fas fa-briefcase icon-large"></i>
+                <h2 class="card-title">الخدمات</h2>
+                <p>تصفح الخدمات التي تحتاجها لعقارك!</p>
+                <a href="service" class="btn-neon-auth btn-full" id="show-change-password">الذهاب لقائمة الخدمات</a>
             </div>
 
             <div class="dashboard-card neon-glow">
                 <i class="fas fa-heart icon-large"></i>
                 <h2 class="card-title">عقاراتي المفضلة</h2>
                 <p>عرض قائمة العقارات التي قمت بحفظها.</p>
-                <a href="#" class="btn-neon-auth btn-full" id="show-favorites">عرض المفضلة</a>
+                <a href="#favorites-area" class="btn-neon-auth btn-full" id="show-favorites">عرض المفضلة</a>
             </div>
 
-            <div class="dashboard-card neon-glow">
-                <i class="fas fa-user-times icon-large"></i>
-                <h2 class="card-title">مسح الحساب</h2>
-                <p>حذف حسابك نهائياً من النظام.</p>
-                <button class="btn-neon-red btn-full" id="delete-account-btn">حذف الحساب</button>
-            </div>
         </div>
-
-        <section class="change-password-section centered-page-content" style="max-width: 500px; display: none;" id="change-password-area">
-            <h2 class="page-title">تغيير كلمة المرور</h2>
-            <p id="password-message" class="message"></p>
-            <form id="change-password-form" class="auth-form neon-glow">
-                <div class="input-group">
-                    <label for="current-password">كلمة المرور الحالية</label>
-                    <input type="password" id="current-password" class="neon-input-white" required>
-                </div>
-                <div class="input-group">
-                    <label for="new-password">كلمة المرور الجديدة</label>
-                    <input type="password" id="new-password" class="neon-input-white" required>
-                </div>
-                <div class="input-group">
-                    <label for="confirm-new-password">تأكيد كلمة المرور الجديدة</label>
-                    <input type="password" id="confirm-new-password" class="neon-input-white" required>
-                </div>
-                <button type="submit" class="btn-neon-auth">حفظ التغييرات</button>
-            </form>
-        </section>
 
         <section class="favorites-section" style="display: none;" id="favorites-area">
             <h2 class="page-title">العقارات المفضلة</h2>
@@ -79,9 +53,7 @@
         </section>
 
     </main>
-     <script src="guest.js"></script>
-    <script src="global-nav.js"></script> 
-    <script src="logout.js"></script>
+    <script src="guest.js"></script>
     <script src="user-dashboard.js"></script>
     <script src="dash.js"></script> 
     <script src="app.js"></script>
