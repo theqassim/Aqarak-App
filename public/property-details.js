@@ -216,14 +216,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
 
                         <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
-                            <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
-                            <div class="savings-body">
-                                <div class="compare-row bad"><div class="label-col"><span class="icon">❌</span><span class="text">عمولة المكاتب العادية (2.5%)</span></div><div class="value-col" id="broker-fee">0 ج.م</div></div>
-                                <div class="compare-row good"><div class="label-col"><span class="icon">✅</span><span class="text">عمولة موقع عقارك (1%)</span></div><div class="value-col" id="aqarak-fee">0 ج.م</div></div>
-                            </div>
-                            <div class="savings-footer"><span class="saved-label">💰 إجمالي توفيرك معنا:</span><span class="saved-value" id="total-saved-amount">0 ج.م</span></div>
-                        </div>
+    <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
+    <div class="savings-body">
+        
+        <div class="compare-row bad">
+            <div class="label-col">
+                <span class="icon">❌</span>
+                <span class="text">عمولة المكاتب العادية (2.5%)</span>
+            </div>
+            <div class="value-col" id="broker-fee">0 ج.م</div>
+        </div>
 
+        <div class="compare-row good">
+            <div class="label-col">
+                <span class="icon">✅</span>
+                <span class="text" id="aqarak-label">عمولة موقع عقارك (1%)</span>
+            </div>
+            <div class="value-col" id="aqarak-fee">0 ج.م</div>
+        </div>
+
+    </div>
+    <div class="savings-footer">
+        <span class="saved-label">💰 إجمالي توفيرك معنا:</span>
+        <span class="saved-value" id="total-saved-amount">0 ج.م</span>
+    </div>
+</div>
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <div style="color:#333; font-size:0.95rem;">
@@ -286,16 +303,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         // تشغيل الحاسبة
-        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
-        if (!isNaN(priceNum) && priceNum > 0) {
-            const broker = priceNum * 0.025;
-            const aqarak = priceNum * 0.01;
-            const saved = broker - aqarak;
-            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-            document.getElementById('savings-calculator-box').style.display = 'block';
-        }
+        // 1. تنظيف الرقم من أي نصوص
+const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
+
+if (!isNaN(priceNum) && priceNum > 0) {
+    
+    // 2. تحديد تاريخ انتهاء العرض (3 مارس 2026)
+    const expiryDate = new Date('2026-03-03');
+    const today = new Date();
+    
+    let aqarakRate;
+    let labelText;
+
+    // 3. فحص التاريخ لتحديد النسبة
+    if (today < expiryDate) {
+        // العرض ساري: النسبة 0%
+        aqarakRate = 0;
+        labelText = 'عمولة موقع عقارك (0%) 🔥'; 
+    } else {
+        // انتهى العرض: النسبة 1%
+        aqarakRate = 0.01;
+        labelText = 'عمولة موقع عقارك (1%)';
+    }
+
+    // 4. إجراء الحسابات
+    const broker = priceNum * 0.025;       // 2.5%
+    const aqarak = priceNum * aqarakRate;  // النسبة المتغيرة
+    const saved = broker - aqarak;         // الفرق
+
+    // 5. عرض الأرقام في HTML
+    document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
+    document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
+    document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
+    
+    // 6. تحديث النص المكتوب (من 1% إلى 0%)
+    const labelElement = document.getElementById('aqarak-label');
+    if (labelElement) {
+        labelElement.textContent = labelText;
+    }
+
+    // إظهار الصندوق
+    document.getElementById('savings-calculator-box').style.display = 'block';
+}
 
         // تشغيل الأدمن
         if (localStorage.getItem('userRole') === 'admin') {
