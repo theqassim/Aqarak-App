@@ -3907,3 +3907,15 @@ a[href="seller-dashboard"]:hover {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+/* إخفاء أزرار تسجيل الدخول لأننا فعلنا نظام الضيف التلقائي */
+#guest-nav {
+    display: none !important;
+}
+
+/* إجبار ظهور قائمة المستخدم (حسابي، اعرض عقارك) */
+#user-nav {
+    display: flex !important;
+}
+
+/* لو عايز تخفي زر الخروج للضيف بس، عملناها بالـ JS، لكن ده تأكيد */
+/* (اختياري) */
