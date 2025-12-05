@@ -1,78 +1,35 @@
-// user-dashboard.js
+// user-dashboard.js المعدل ليتناسب مع الـ HTML الحالي
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    const changePasswordBtn = document.getElementById('show-change-password');
+    // تعريف العناصر الموجودة فعلياً في الـ HTML
     const favoritesBtn = document.getElementById('show-favorites');
-    const deleteAccountBtn = document.getElementById('delete-account-btn');
-    const changePasswordArea = document.getElementById('change-password-area');
     const favoritesArea = document.getElementById('favorites-area');
-    const changePasswordForm = document.getElementById('change-password-form');
-    const passwordMessageEl = document.getElementById('password-message');
     const favoritesContainer = document.getElementById('favorites-listings');
+    
+    // ملاحظة: الزر id="show-change-password" في الـ HTML هو رابط عادي لصفحة الخدمات
+    // لذلك لن نتحكم فيه بالجافاسكريبت وسنتركه يعمل بشكل طبيعي
 
     const userEmail = localStorage.getItem('userEmail'); 
     
-    // --- منطق تبديل الأقسام ---
-    changePasswordBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        changePasswordArea.style.display = 'block';
-        favoritesArea.style.display = 'none';
-        passwordMessageEl.textContent = '';
-    });
-
-    favoritesBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        changePasswordArea.style.display = 'none';
-        favoritesArea.style.display = 'block';
-        fetchFavorites();
-    });
-
-    // --- 1. منطق تغيير كلمة المرور (بلا تغيير) ---
-    changePasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        passwordMessageEl.textContent = 'جاري التحديث...';
-        passwordMessageEl.className = 'info';
-
-        const currentPassword = document.getElementById('current-password').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
-
-        if (newPassword !== confirmNewPassword) {
-            passwordMessageEl.textContent = 'كلمتا المرور الجديدتان غير متطابقتين.';
-            passwordMessageEl.className = 'error';
-            return;
-        }
-        if (!userEmail) {
-            passwordMessageEl.textContent = 'خطأ: لم يتم العثور على إيميل المستخدم.';
-            passwordMessageEl.className = 'error';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/user/change-password', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: userEmail, currentPassword, newPassword }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'فشل تغيير كلمة المرور.');
+    // --- منطق عرض المفضلة ---
+    if (favoritesBtn) {
+        favoritesBtn.addEventListener('click', (e) => {
+            // لا نستخدم preventDefault هنا لكي ينزل الموقع للأسفل (Scroll)
+            // لكن نتأكد من إظهار القسم
+            if (favoritesArea) {
+                favoritesArea.style.display = 'block';
+                // تفعيل انسيابية الحركة لو أردت
+                favoritesArea.scrollIntoView({ behavior: 'smooth' });
             }
+            fetchFavorites();
+        });
+    }
 
-            passwordMessageEl.textContent = data.message;
-            passwordMessageEl.className = 'success';
-            changePasswordForm.reset();
-
-        } catch (error) {
-            passwordMessageEl.textContent = `خطأ: ${error.message}`;
-            passwordMessageEl.className = 'error';
-        }
-    });
-
-    // --- 2. منطق عرض المفضلة (تم إضافة تحسينات للـ Console) ---
+    // --- دالة جلب المفضلة ---
     async function fetchFavorites() {
+        if (!favoritesContainer) return; // حماية في حال عدم وجود الكونتينر
+
         if (!userEmail) {
             favoritesContainer.innerHTML = '<p class="empty-message error">يجب تسجيل الدخول لعرض المفضلة. الإيميل مفقود.</p>';
             return;
@@ -80,19 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         favoritesContainer.innerHTML = '<p class="empty-message info">جاري تحميل المفضلة...</p>';
 
         try {
-            // 🚨 يتم تمرير الإيميل كـ Query Parameter
             const response = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
             
             if (!response.ok) {
-                // محاولة قراءة رسالة الخطأ من الخادم
                 let errorDetails = await response.text();
                 console.error("Server Response Error:", errorDetails);
-                
-                // إذا كان الخطأ 400 (Bad Request)، فهذا يعني أن الإيميل لم يصل بشكل صحيح
-                if (response.status === 400) {
-                     throw new Error('فشل التحقق من الإيميل (تأكد من تسجيل الدخول).');
-                }
-                throw new Error('فشل جلب المفضلة من الخادم. (راجع Console)');
+                throw new Error('فشل جلب المفضلة من الخادم.');
             }
 
             const properties = await response.json();
@@ -107,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             properties.forEach(property => {
-                // يفترض أن الدوال المساعدة (formatPrice, getTypeTag) موجودة في utils.js
+                // دوال التنسيق (تأكد أن ملف utils.js أو ما يشابهه مضمن، وإلا استخدم القيم الخام)
                 const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
                 const typeTag = window.getTypeTag ? window.getTypeTag(property.type) : '';
 
@@ -137,11 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. منطق إزالة المفضلة (بلا تغيير)
+    // --- منطق إزالة المفضلة ---
     function addRemoveFavoriteListeners() {
         document.querySelectorAll('.remove-favorite-btn').forEach(button => {
             button.addEventListener('click', async (e) => {
-                const propertyId = e.target.dataset.id;
+                // نستخدم currentTarget لضمان الإمساك بالزر حتى لو ضغطنا على الأيقونة بداخله
+                const btn = e.currentTarget; 
+                const propertyId = btn.dataset.id;
+                
                 if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
 
                 try {
@@ -152,44 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!response.ok) throw new Error('فشل الإزالة من المفضلة.');
                     
                     alert('تمت الإزالة بنجاح.');
-                    fetchFavorites(); 
+                    fetchFavorites(); // إعادة تحميل القائمة
                 } catch (error) {
                     alert(`خطأ: ${error.message}`);
                 }
             });
         });
     }
-
-
-    // 4. منطق حذف الحساب (بلا تغيير)
-    deleteAccountBtn.addEventListener('click', async () => {
-        if (!userEmail) {
-            alert('لا يمكن حذف الحساب. الإيميل غير متوفر.');
-            return;
-        }
-
-        if (confirm('تحذير: هل أنت متأكد من حذف حسابك نهائياً؟ هذا الإجراء لا رجعة فيه.')) {
-            try {
-                const response = await fetch('/api/user/delete-account', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail }),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'فشل في حذف الحساب.');
-                }
-
-                alert(data.message);
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('userEmail'); 
-                window.location.href = 'index';
-
-            } catch (error) {
-                alert(`خطأ في الحذف: ${error.message}`);
-            }
-        }
-    });
 });
