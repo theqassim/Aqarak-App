@@ -23,23 +23,17 @@ window.getTypeTag = (type) => {
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
-// --- زر الواتساب ---
-window.handleWhatsappClick = (link) => {
-    // يفتح الرابط مباشرة لأن الضيف يعتبر مستخدماً الآن
-    window.open(link, '_blank');
-};
-
 // --- منطق المفضلة ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
     
-    // قراءة هوية المستخدم (سواء كان مسجلاً أو ضيفاً)
+    // قراءة الإيميل مباشرة
     const userEmail = localStorage.getItem('userEmail');
 
     if (!userEmail) {
-        // هذا الشرط لن يتحقق غالباً لأن utils.js ينشئ هوية للضيف، لكن للأمان
-        alert('جاري تهيئة حساب الضيف... حاول مرة أخرى.');
+        // حماية إضافية (لن يصل لها المستخدم العادي لأن الزر مخفي، لكن للأمان)
+        alert('يرجى تسجيل الدخول أولاً.');
         return;
     }
 
@@ -80,7 +74,17 @@ window.shareProperty = async (title) => {
     } catch (err) { console.error('Error sharing:', err); }
 };
 
-// --- عقارات مشابهة (باستخدام Supabase) ---
+// --- زر الواتساب (محمي) ---
+window.handleWhatsappClick = (link) => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+        alert('يجب تسجيل الدخول أولاً.');
+        return;
+    }
+    window.open(link, '_blank');
+};
+
+// --- عقارات مشابهة (Supabase) ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if(!container) return;
@@ -148,13 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
+        // 1. التحقق من المستخدم
+        const userEmail = localStorage.getItem('userEmail');
+        const isLoggedIn = userEmail !== null;
+
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
         if (!propertyId) throw new Error('رابط غير صالح.');
         
-        // جلب هوية المستخدم (ضيف أو مسجل)
-        const userEmail = localStorage.getItem('userEmail');
-
         const response = await fetch(`/api/property/${propertyId}`);
         if (!response.ok) throw new Error('العقار غير موجود.');
         
@@ -180,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // التحقق من المفضلة
         let isFav = false;
-        if (userEmail) {
+        if (isLoggedIn) {
             try {
                 const favRes = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
                 if(favRes.ok) {
@@ -193,7 +198,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favClass = isFav ? 'is-favorite' : '';
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
-        // رسم الصفحة (إظهار الأزرار للجميع)
+
+        // 🔥🔥🔥 2. تجهيز الأزرار (المنطق الجديد) 🔥🔥🔥
+        
+        let actionSectionHTML = '';
+        let makeOfferButtonHTML = '';
+
+        if (isLoggedIn) {
+            // ✅ حالة: مسجل دخول (عرض الأزرار كاملة)
+            
+            makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
+            
+            actionSectionHTML = `
+                <div class="action-buttons-group">
+                    <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
+                        <i class="fab fa-whatsapp"></i> تواصل واتساب
+                    </button>
+                    
+                    <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
+                        <i class="fas fa-share-alt"></i> مشاركة
+                    </button>
+                    
+                    <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
+                        <i id="favIcon" class="${favIcon}"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            // 🔒 حالة: زائر (إخفاء الأزرار وعرض القفل)
+            
+            // لا يوجد زر "قدم عرضك"
+            makeOfferButtonHTML = ''; 
+            
+            actionSectionHTML = `
+                <div class="login-prompt-box">
+                    <div class="prompt-content">
+                        <div class="lock-icon"><i class="fas fa-lock"></i></div>
+                        <h3 class="prompt-title">هذه الميزات حصرية للأعضاء</h3>
+                        <p class="prompt-text">
+                            للتواصل ، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
+                        </p>
+                        <a href="index?mode=login" class="btn-login-prompt">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // رسم الصفحة
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -211,11 +264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info">
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
-                            
-                            <button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>
+                            ${makeOfferButtonHTML}
                         </div>
 
-                        <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
+                       <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
     <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
     <div class="savings-body">
         
@@ -263,19 +315,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p>${property.description || 'لا يوجد وصف.'}</p>
                         </div>
                         
-                        <div class="action-buttons-group">
-                            <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
-                                <i class="fab fa-whatsapp"></i> تواصل واتساب
-                            </button>
-                            
-                            <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
-                                <i class="fas fa-share-alt"></i> مشاركة
-                            </button>
-                            
-                            <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
-                                <i id="favIcon" class="${favIcon}"></i>
-                            </button>
-                        </div>
+                        ${actionSectionHTML}
 
                     </div>
                     
@@ -303,40 +343,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         // تشغيل الحاسبة
-        // 1. تنظيف الرقم من أي نصوص
-const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
+        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
 
 if (!isNaN(priceNum) && priceNum > 0) {
     
-    // 2. تحديد تاريخ انتهاء العرض (3 مارس 2026)
+    // 1. تحديد تاريخ انتهاء العرض (نفس تاريخ النافذة المنبثقة)
     const expiryDate = new Date('2026-03-03');
     const today = new Date();
     
+    // متغيرات لتخزين النسبة والنص
     let aqarakRate;
     let labelText;
 
-    // 3. فحص التاريخ لتحديد النسبة
+    // 2. التحقق من صلاحية العرض
     if (today < expiryDate) {
-        // العرض ساري: النسبة 0%
+        // العرض ساري: النسبة صفر
         aqarakRate = 0;
-        labelText = 'عمولة موقع عقارك (0%) 🔥'; 
+        labelText = 'عمولة موقع عقارك (0%) 🔥'; // إضافة علامة نار للعرض
     } else {
-        // انتهى العرض: النسبة 1%
+        // انتهى العرض: النسبة تعود 1%
         aqarakRate = 0.01;
         labelText = 'عمولة موقع عقارك (1%)';
     }
 
-    // 4. إجراء الحسابات
-    const broker = priceNum * 0.025;       // 2.5%
-    const aqarak = priceNum * aqarakRate;  // النسبة المتغيرة
-    const saved = broker - aqarak;         // الفرق
+    // 3. الحسابات
+    const broker = priceNum * 0.025;       // عمولة السوق (2.5%)
+    const aqarak = priceNum * aqarakRate;  // عمولة عقارك (متغيرة حسب التاريخ)
+    const saved = broker - aqarak;         // التوفير
 
-    // 5. عرض الأرقام في HTML
+    // 4. عرض النتائج
     document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
     document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
     document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
     
-    // 6. تحديث النص المكتوب (من 1% إلى 0%)
+    // تحديث نص النسبة المئوية (ليظهر 0% أو 1% حسب التاريخ)
     const labelElement = document.getElementById('aqarak-label');
     if (labelElement) {
         labelElement.textContent = labelText;
@@ -345,7 +385,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
     // إظهار الصندوق
     document.getElementById('savings-calculator-box').style.display = 'block';
 }
-
         // تشغيل الأدمن
         if (localStorage.getItem('userRole') === 'admin') {
             const box = document.getElementById('admin-secret-box');
@@ -401,19 +440,16 @@ if (!isNaN(priceNum) && priceNum > 0) {
             thumbsContainer.appendChild(img);
         });
 
-        // تشغيل زر المفضلة (للجميع)
+        // تشغيل زر المفضلة (إذا كان موجوداً)
         const favBtn = document.getElementById('favoriteBtn');
         if (favBtn) {
             favBtn.onclick = () => window.toggleFavorite(property.id);
         }
-        
-        // تشغيل حفظ المشاهدة (لو موجودة الدالة في utils)
-        if(typeof saveRecentlyViewed === 'function') saveRecentlyViewed(propertyId);
 
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // تشغيل فورم العرض (للجميع)
+        // تشغيل فورم العرض (إذا كان موجوداً)
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
