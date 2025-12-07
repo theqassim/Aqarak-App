@@ -1,5 +1,5 @@
 // 1. استدعاء مكتبة Supabase
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // 2. إعدادات الاتصال
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
-        if (isLoggedIn) {
+        if (isLoggedIn || isGuest) {
             // ✅ حالة: مسجل دخول (عرض الأزرار كاملة)
             
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
