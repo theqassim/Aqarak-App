@@ -1,11 +1,6 @@
 // admin-home.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // التأكد من أن المستخدم أدمن
-    if (localStorage.getItem('userRole') !== 'admin') {
-        window.location.href = 'index';
-        return;
-    }
     fetchAdminCounts();
 });
 

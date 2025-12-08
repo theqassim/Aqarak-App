@@ -1,11 +1,6 @@
 // admin-edit.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // التحقق من صلاحية الأدمن
-    if (localStorage.getItem('userRole') !== 'admin') {
-        window.location.href = 'index';
-        return;
-    }
 
     const searchForm = document.getElementById('search-property-form');
     const editArea = document.getElementById('property-edit-area');
