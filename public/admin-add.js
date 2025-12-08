@@ -1,10 +1,7 @@
 // admin-add.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('userRole') !== 'admin') {
-        window.location.href = 'index';
-        return;
-    }
+   
     
     const form = document.getElementById('add-property-form');
     const messageEl = document.getElementById('add-form-message');

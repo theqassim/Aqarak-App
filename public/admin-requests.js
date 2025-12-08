@@ -1,10 +1,7 @@
 // admin-requests.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('userRole') !== 'admin') {
-        window.location.href = 'index';
-        return;
-    }
+    
     fetchRequests();
 });
 

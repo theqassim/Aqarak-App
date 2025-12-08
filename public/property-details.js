@@ -28,11 +28,17 @@ window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
     
-    // قراءة الإيميل مباشرة
-    const userEmail = localStorage.getItem('userEmail');
+    // التحقق الآمن: نسأل السيرفر عن حالة المستخدم
+    let userEmail = null;
+    try {
+        const authRes = await fetch('/api/auth/me');
+        const authData = await authRes.json();
+        if (authData.isAuthenticated) {
+            userEmail = authData.email;
+        }
+    } catch (e) { console.error('Auth Check Failed', e); }
 
     if (!userEmail) {
-        // حماية إضافية (لن يصل لها المستخدم العادي لأن الزر مخفي، لكن للأمان)
         alert('يرجى تسجيل الدخول أولاً.');
         return;
     }
@@ -75,13 +81,20 @@ window.shareProperty = async (title) => {
 };
 
 // --- زر الواتساب (محمي) ---
-window.handleWhatsappClick = (link) => {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
-        alert('يجب تسجيل الدخول أولاً.');
-        return;
+window.handleWhatsappClick = async (link) => {
+    // التحقق من السيرفر قبل السماح بالتواصل
+    try {
+        const authRes = await fetch('/api/auth/me');
+        const authData = await authRes.json();
+        
+        if (!authData.isAuthenticated) {
+            alert('يجب تسجيل الدخول أولاً.');
+            return;
+        }
+        window.open(link, '_blank');
+    } catch(e) {
+        alert('حدث خطأ في التحقق من الدخول');
     }
-    window.open(link, '_blank');
 };
 
 // --- عقارات مشابهة (Supabase) ---
@@ -152,9 +165,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        // 1. التحقق من المستخدم
-        const userEmail = localStorage.getItem('userEmail');
-        const isLoggedIn = userEmail !== null;
+        // 🔥🔥🔥 1. التحقق من المستخدم عبر السيرفر (بدلاً من LocalStorage) 🔥🔥🔥
+        let isLoggedIn = false;
+        let userRole = 'guest';
+        let userEmail = null;
+
+        try {
+            const authRes = await fetch('/api/auth/me');
+            const authData = await authRes.json();
+            if (authData.isAuthenticated) {
+                isLoggedIn = true;
+                userRole = authData.role; // نأخذ الرتبة من السيرفر الموثوق
+                userEmail = authData.email;
+            }
+        } catch (e) {
+            console.log("زائر غير مسجل");
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
@@ -238,7 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <p class="prompt-text">
                             للتواصل ، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
                         </p>
-                        <a href="index?mode=login" class="btn-login-prompt">
+                        <a href="login.html" class="btn-login-prompt">
                             <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
                         </a>
                     </div>
@@ -267,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${makeOfferButtonHTML}
                         </div>
 
-                       <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
+                        <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
     <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
     <div class="savings-body">
         
@@ -385,8 +411,8 @@ if (!isNaN(priceNum) && priceNum > 0) {
     // إظهار الصندوق
     document.getElementById('savings-calculator-box').style.display = 'block';
 }
-        // تشغيل الأدمن
-        if (localStorage.getItem('userRole') === 'admin') {
+        // 🔥🔥🔥 3. تشغيل الأدمن (منطق السيرفر) 🔥🔥🔥
+        if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
                 box.style.display = 'block';
