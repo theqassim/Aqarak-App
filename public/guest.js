@@ -1,16 +1,18 @@
-// guest.js - إنشاء هوية الضيف التلقائية
+// guest.js - النسخة المعدلة (متوافقة مع النظام الآمن)
 (function() {
-    // التحقق: هل يوجد أي مستخدم (حقيقي أو ضيف)؟
-    const currentUser = localStorage.getItem('userEmail');
+    // 1. هل المستخدم عنده إيميل أو هوية محفوظة؟
+    const currentEmail = localStorage.getItem('userEmail');
 
-    if (!currentUser) {
-        // إنشاء ID عشوائي للضيف
+    if (!currentEmail) {
+        // لو لأ.. نعم له هوية ضيف عشوائية (عشان يقدر يستخدم المفضلة مثلاً)
         const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
         
-        // حفظ البيانات
         localStorage.setItem('userEmail', guestId);
-        localStorage.setItem('userRole', 'guest');
-        
         console.log('✅ Guest Mode Activated:', guestId);
     }
+
+    // 2. تنظيف مهم جداً:
+    // بنمسح أي "رتبة" محفوظة في المتصفح عشان نضمن إن الموقع 
+    // يعتمد فقط على السيرفر (Cookies) في تحديد الصلاحيات
+    localStorage.removeItem('userRole'); 
 })();
