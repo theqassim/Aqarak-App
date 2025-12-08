@@ -23,23 +23,17 @@ window.getTypeTag = (type) => {
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
-// --- منطق المفضلة ---
+// --- منطق المفضلة (معدل للضيوف) ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
     
-    // التحقق الآمن: نسأل السيرفر عن حالة المستخدم
-    let userEmail = null;
-    try {
-        const authRes = await fetch('/api/auth/me');
-        const authData = await authRes.json();
-        if (authData.isAuthenticated) {
-            userEmail = authData.email;
-        }
-    } catch (e) { console.error('Auth Check Failed', e); }
+    // ✅ التعديل: نعتمد على الإيميل المحفوظ محلياً (سواء كان ضيف أو عضو)
+    const userEmail = localStorage.getItem('userEmail');
 
+    // إذا لم يكن هناك هوية ضيف حتى (نادرة الحدوث بسبب guest.js)
     if (!userEmail) {
-        alert('يرجى تسجيل الدخول أولاً.');
+        alert('حدث خطأ في التعرف على هويتك، قم بتحديث الصفحة.');
         return;
     }
 
@@ -80,21 +74,10 @@ window.shareProperty = async (title) => {
     } catch (err) { console.error('Error sharing:', err); }
 };
 
-// --- زر الواتساب (محمي) ---
+// --- زر الواتساب (مفتوح للجميع) ---
 window.handleWhatsappClick = async (link) => {
-    // التحقق من السيرفر قبل السماح بالتواصل
-    try {
-        const authRes = await fetch('/api/auth/me');
-        const authData = await authRes.json();
-        
-        if (!authData.isAuthenticated) {
-            alert('يجب تسجيل الدخول أولاً.');
-            return;
-        }
-        window.open(link, '_blank');
-    } catch(e) {
-        alert('حدث خطأ في التحقق من الدخول');
-    }
+    // ✅ التعديل: السماح للجميع بفتح الواتساب
+    window.open(link, '_blank');
 };
 
 // --- عقارات مشابهة (Supabase) ---
@@ -165,22 +148,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        // 🔥🔥🔥 1. التحقق من المستخدم عبر السيرفر (بدلاً من LocalStorage) 🔥🔥🔥
-        let isLoggedIn = false;
+        // 🔥🔥🔥 1. التحقق من الهوية (معدل ليقبل الضيف) 🔥🔥🔥
         let userRole = 'guest';
-        let userEmail = null;
-
+        
+        // نحاول نجيب الرتبة الحقيقية من السيرفر (عشان لو كان أدمن)
         try {
             const authRes = await fetch('/api/auth/me');
             const authData = await authRes.json();
             if (authData.isAuthenticated) {
-                isLoggedIn = true;
-                userRole = authData.role; // نأخذ الرتبة من السيرفر الموثوق
-                userEmail = authData.email;
+                userRole = authData.role; 
             }
         } catch (e) {
-            console.log("زائر غير مسجل");
+            console.log("زائر يعمل بنظام الضيف");
         }
+
+        // ✅ أهم تعديل: نعتمد على userEmail المحلي كإثبات هوية (للضيف والعضو)
+        const userEmail = localStorage.getItem('userEmail');
+        
+        // المتغير الذي يحدد هل نظهر الأزرار أم لا؟ (دائماً نعم طالما هناك هوية)
+        const canViewDetails = !!userEmail; 
 
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
@@ -209,9 +195,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const whatsappLink = `https://wa.me/201008102237?text=${encodeURIComponent(`مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
         
-        // التحقق من المفضلة
+        // التحقق من المفضلة (للجميع)
         let isFav = false;
-        if (isLoggedIn) {
+        if (canViewDetails) {
             try {
                 const favRes = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
                 if(favRes.ok) {
@@ -225,13 +211,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
 
-        // 🔥🔥🔥 2. تجهيز الأزرار (المنطق الجديد) 🔥🔥🔥
+        // 🔥🔥🔥 2. تجهيز الأزرار (مفتوحة للجميع) 🔥🔥🔥
         
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
-        if (isLoggedIn || isGuest) {
-            // ✅ حالة: مسجل دخول (عرض الأزرار كاملة)
+        if (canViewDetails) {
+            // ✅ الحالة: إظهار الأزرار للجميع (ضيف أو عضو)
             
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
@@ -251,23 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         } else {
-            // 🔒 حالة: زائر (إخفاء الأزرار وعرض القفل)
-            
-            // لا يوجد زر "قدم عرضك"
-            makeOfferButtonHTML = ''; 
-            
+            // 🔒 حالة احتياطية فقط (لو ملف guest.js مش شغال)
             actionSectionHTML = `
                 <div class="login-prompt-box">
-                    <div class="prompt-content">
-                        <div class="lock-icon"><i class="fas fa-lock"></i></div>
-                        <h3 class="prompt-title">هذه الميزات حصرية للأعضاء</h3>
-                        <p class="prompt-text">
-                            للتواصل ، معرفة السعر النهائي، أو إضافة العقار للمفضلة، يرجى تسجيل الدخول.
-                        </p>
-                        <a href="login.html" class="btn-login-prompt">
-                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول / حساب جديد
-                        </a>
-                    </div>
+                    <p>جاري تحميل الصلاحيات...</p>
                 </div>
             `;
         }
@@ -294,31 +267,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
 
                         <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
-    <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
-    <div class="savings-body">
-        
-        <div class="compare-row bad">
-            <div class="label-col">
-                <span class="icon">❌</span>
-                <span class="text">عمولة المكاتب العادية (2.5%)</span>
-            </div>
-            <div class="value-col" id="broker-fee">0 ج.م</div>
-        </div>
+                            <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
+                            <div class="savings-body">
+                                
+                                <div class="compare-row bad">
+                                    <div class="label-col">
+                                        <span class="icon">❌</span>
+                                        <span class="text">عمولة المكاتب العادية (2.5%)</span>
+                                    </div>
+                                    <div class="value-col" id="broker-fee">0 ج.م</div>
+                                </div>
 
-        <div class="compare-row good">
-            <div class="label-col">
-                <span class="icon">✅</span>
-                <span class="text" id="aqarak-label">عمولة موقع عقارك (1%)</span>
-            </div>
-            <div class="value-col" id="aqarak-fee">0 ج.م</div>
-        </div>
+                                <div class="compare-row good">
+                                    <div class="label-col">
+                                        <span class="icon">✅</span>
+                                        <span class="text" id="aqarak-label">عمولة موقع عقارك (1%)</span>
+                                    </div>
+                                    <div class="value-col" id="aqarak-fee">0 ج.م</div>
+                                </div>
 
-    </div>
-    <div class="savings-footer">
-        <span class="saved-label">💰 إجمالي توفيرك معنا:</span>
-        <span class="saved-value" id="total-saved-amount">0 ج.م</span>
-    </div>
-</div>
+                            </div>
+                            <div class="savings-footer">
+                                <span class="saved-label">💰 إجمالي توفيرك معنا:</span>
+                                <span class="saved-value" id="total-saved-amount">0 ج.م</span>
+                            </div>
+                        </div>
+
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <div style="color:#333; font-size:0.95rem;">
@@ -371,47 +345,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         // تشغيل الحاسبة
         const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
 
-if (!isNaN(priceNum) && priceNum > 0) {
-    
-    // 1. تحديد تاريخ انتهاء العرض (نفس تاريخ النافذة المنبثقة)
-    const expiryDate = new Date('2026-03-03');
-    const today = new Date();
-    
-    // متغيرات لتخزين النسبة والنص
-    let aqarakRate;
-    let labelText;
+        if (!isNaN(priceNum) && priceNum > 0) {
+            const expiryDate = new Date('2026-03-03');
+            const today = new Date();
+            let aqarakRate;
+            let labelText;
 
-    // 2. التحقق من صلاحية العرض
-    if (today < expiryDate) {
-        // العرض ساري: النسبة صفر
-        aqarakRate = 0;
-        labelText = 'عمولة موقع عقارك (0%) 🔥'; // إضافة علامة نار للعرض
-    } else {
-        // انتهى العرض: النسبة تعود 1%
-        aqarakRate = 0.01;
-        labelText = 'عمولة موقع عقارك (1%)';
-    }
+            if (today < expiryDate) {
+                aqarakRate = 0;
+                labelText = 'عمولة موقع عقارك (0%) 🔥'; 
+            } else {
+                aqarakRate = 0.01;
+                labelText = 'عمولة موقع عقارك (1%)';
+            }
 
-    // 3. الحسابات
-    const broker = priceNum * 0.025;       // عمولة السوق (2.5%)
-    const aqarak = priceNum * aqarakRate;  // عمولة عقارك (متغيرة حسب التاريخ)
-    const saved = broker - aqarak;         // التوفير
+            const broker = priceNum * 0.025;       
+            const aqarak = priceNum * aqarakRate;  
+            const saved = broker - aqarak;         
 
-    // 4. عرض النتائج
-    document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-    document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-    document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-    
-    // تحديث نص النسبة المئوية (ليظهر 0% أو 1% حسب التاريخ)
-    const labelElement = document.getElementById('aqarak-label');
-    if (labelElement) {
-        labelElement.textContent = labelText;
-    }
+            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
+            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
+            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
+            
+            const labelElement = document.getElementById('aqarak-label');
+            if (labelElement) {
+                labelElement.textContent = labelText;
+            }
+            document.getElementById('savings-calculator-box').style.display = 'block';
+        }
 
-    // إظهار الصندوق
-    document.getElementById('savings-calculator-box').style.display = 'block';
-}
-        // 🔥🔥🔥 3. تشغيل الأدمن (منطق السيرفر) 🔥🔥🔥
+        // 🔥🔥🔥 3. تشغيل الأدمن (ما زال محمي بالسيرفر) 🔥🔥🔥
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
@@ -466,7 +429,7 @@ if (!isNaN(priceNum) && priceNum > 0) {
             thumbsContainer.appendChild(img);
         });
 
-        // تشغيل زر المفضلة (إذا كان موجوداً)
+        // تشغيل زر المفضلة
         const favBtn = document.getElementById('favoriteBtn');
         if (favBtn) {
             favBtn.onclick = () => window.toggleFavorite(property.id);
@@ -475,7 +438,7 @@ if (!isNaN(priceNum) && priceNum > 0) {
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // تشغيل فورم العرض (إذا كان موجوداً)
+        // تشغيل فورم العرض
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
