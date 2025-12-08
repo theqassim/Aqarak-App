@@ -6,8 +6,8 @@ const { Pool } = require('pg');
 const multer = require('multer');
 const fs = require('fs');
 const webPush = require('web-push');
-const cookieParser = require('cookie-parser'); // مكتبة جديدة
-const jwt = require('jsonwebtoken'); // مكتبة جديدة
+const cookieParser = require('cookie-parser'); // مكتبة جديدة للأمان
+const jwt = require('jsonwebtoken'); // مكتبة جديدة للتشفير
 
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -15,7 +15,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// مفتاح سري لتشفير التوكن (مهم جداً)
+// مفتاح سري لتشفير التوكن
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 
 // -----------------------------------------------------
@@ -76,7 +76,7 @@ function safeInt(value) {
     return num > MAX_INT ? MAX_INT : num;
 }
 
-// الدوال المساعدة للإشعارات (كما هي)
+// الدوال المساعدة للإشعارات
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) return;
     const embed = { title, color, fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
@@ -104,7 +104,7 @@ async function notifyAllUsers(title, body, url) {
     } catch (err) { console.error("Web Push Error:", err); }
 }
 
-// إنشاء الجداول (كما هي)
+// إنشاء الجداول
 async function createTables() {
     const queries = [
         `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE)`,
@@ -126,7 +126,7 @@ async function createTables() {
 }
 createTables();
 
-// إعدادات الرفع (كما هي)
+// إعدادات الرفع
 const MAX_FILE_SIZE = 10 * 1024 * 1024; 
 const storageSeller = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: 'aqarak_submissions', format: async () => 'webp', public_id: (req, file) => `seller-${Date.now()}-${Math.round(Math.random() * 1E9)}` } });
 const uploadSeller = multer({ storage: storageSeller, limits: { fileSize: MAX_FILE_SIZE } });
@@ -148,21 +148,19 @@ app.use(cookieParser()); // ✅ تفعيل الكوكيز
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // -----------------------------------------------------
-// 🔥 تعديلات الأمان (Authentication) 🔥
+// 🔥 1. نظام الأمان الجديد (Authentication) 🔥
 // -----------------------------------------------------
 
-// 1. تسجيل الدخول الآمن (Login)
+// تسجيل الدخول الآمن
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     let user = null;
     let role = 'user';
 
-    // التحقق من الأدمن
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         user = { id: 0, name: 'Admin', email: email };
         role = 'admin';
     } else {
-        // التحقق من المستخدم العادي
         try {
             const r = await pgQuery(`SELECT * FROM users WHERE email=$1`, [email]);
             if (!r.rows[0]) return res.status(401).json({ message: 'بيانات خاطئة' });
@@ -175,20 +173,19 @@ app.post('/api/login', async (req, res) => {
         } catch (e) { return res.status(500).json({ error: e.message }); }
     }
 
-    // ✅ إنشاء التوكن المشفر (JWT)
     const token = jwt.sign({ id: user.id, email: user.email, role: role }, JWT_SECRET, { expiresIn: '7d' });
 
-    // ✅ وضع التوكن في كوكي محمي (لا يمكن للكونسول الوصول إليه)
     res.cookie('auth_token', token, {
-        httpOnly: true, // يمنع JavaScript من قراءته
-        secure: process.env.NODE_ENV === 'production', // يشتغل HTTPS فقط عند الرفع
-        maxAge: 7 * 24 * 60 * 60 * 1000 // أسبوع
+        httpOnly: true,
+        secure: true,
+        sameSite:'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 
     });
 
     res.json({ success: true, role: role, message: 'تم الدخول بنجاح' });
 });
 
-// 2. التحقق من الهوية (Who am I?)
+// التحقق من الهوية
 app.get('/api/auth/me', (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
@@ -201,18 +198,18 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
-// 3. تسجيل الخروج
+// تسجيل الخروج
 app.post('/api/logout', (req, res) => {
     res.clearCookie('auth_token');
     res.json({ success: true, message: 'تم الخروج' });
 });
 
 // -----------------------------------------------------
-// باقي المسارات (كما هي)
+// 🔥 2. باقي وظائف الموقع (مدمجة بالكامل) 🔥
 // -----------------------------------------------------
 
+// تعديل الشارات (Featured / Legal)
 app.put('/api/admin/toggle-badge/:id', async (req, res) => {
-    // يمكنك إضافة حماية هنا للتأكد أنه أدمن فعلاً
     const token = req.cookies.auth_token;
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -274,35 +271,93 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
     } catch (err) { res.status(400).json({ message: 'Error' }); }
 });
 
-// باقي الـ API كما هي، سأختصرها لعدم الإطالة (لكن احتفظ بها في ملفك)
-// تأكد من نسخ باقي الـ Endpoints مثل update-property, delete, favorites, register...
-// ... (ضع هنا باقي الكود القديم الخاص بـ API Properties و Favorites و Register) ...
+// ✅ تم استعادة دالة التحديث المفقودة
+app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
+    const propertyId = req.params.id;
+    const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages } = req.body;
+    const cleanHiddenCode = hiddenCode ? hiddenCode.trim() : '';
+    let rawImages = existingImages; if (Array.isArray(rawImages)) rawImages = rawImages[0];
+    let oldUrls = []; try { oldUrls = JSON.parse(rawImages || '[]'); } catch(e) {}
+    const newUrls = req.files ? req.files.map(f => f.path) : [];
+    const allUrls = [...oldUrls, ...newUrls]; const mainUrl = allUrls.length ? allUrls[0] : null;
 
-// ملاحظة: endpoint register لا يحتاج تعديل لأنه ينشئ يوزر عادي
-app.post('/api/register', async (req, res) => { 
-    const { name, email, password } = req.body; 
-    try { 
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS); 
-        await pgQuery(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)`, [name, email, hashedPassword, 'user']); 
-        res.status(201).json({ success: true }); 
-    } catch (error) { res.status(400).json({ message: 'Error' }); } 
+    const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11 WHERE id=$12`;
+    const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), safeInt(rooms), safeInt(bathrooms), safeInt(area), description, mainUrl, JSON.stringify(allUrls), type, cleanHiddenCode, propertyId];
+    try { const result = await pgQuery(sql, params); if (result.rowCount === 0) return res.status(404).json({ message: 'غير موجود' }); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم.` }); throw err; }
 });
 
+// ✅ تم استعادة طلبات المالكين
+app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
+    const data = req.body;
+    const files = req.files || [];
+    if (!data.sellerName || !data.sellerPhone) return res.status(400).json({ message: 'بيانات ناقصة' });
+    const paths = files.map(f => f.path).join(' | ');
+    const mainImage = files.length > 0 ? files[0].path : null;
+    const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
+    const params = [data.sellerName, data.sellerPhone, data.propertyTitle, data.propertyType, data.propertyPrice, safeInt(data.propertyArea), safeInt(data.propertyRooms), safeInt(data.propertyBathrooms), data.propertyDescription, paths, new Date().toISOString()];
+    try {
+        await pgQuery(sql, params);
+        await sendDiscordNotification("📢 طلب عرض عقار جديد!", [{ name: "👤 المالك", value: data.sellerName }, { name: "📞 الهاتف", value: data.sellerPhone }, { name: "🏠 العنوان", value: data.propertyTitle }, { name: "💰 السعر", value: `${data.propertyPrice} ج.م` }], 3066993, mainImage);
+        res.status(200).json({ success: true, message: 'تم الاستلام' });
+    } catch (err) { throw err; }
+});
+
+// ✅ تم استعادة طلبات العقارات المخصصة
+app.post('/api/request-property', async (req, res) => {
+    const { name, phone, email, specifications } = req.body;
+    if (!name || !phone) return res.status(400).json({ message: 'بيانات ناقصة' });
+    try {
+        await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]);
+        await sendDiscordNotification("📩 طلب عقار مخصص جديد", [{ name: "👤 الاسم", value: name }, { name: "📞 الهاتف", value: phone }, { name: "📝 المواصفات", value: specifications }], 15158332);
+        res.status(200).json({ success: true, message: 'تم الاستلام' });
+    } catch (err) { throw err; }
+});
+
+app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
+app.get('/api/admin/property-requests', async (req, res) => { try { const r = await pgQuery("SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
+app.delete('/api/admin/seller-submission/:id', async (req, res) => { try { const r = await pgQuery(`SELECT "imagePaths" FROM seller_submissions WHERE id = $1`, [req.params.id]); if (r.rows[0]) { const urls = (r.rows[0].imagePaths || '').split(' | ').filter(Boolean); await deleteCloudinaryImages(urls); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } else res.status(404).json({ message: 'غير موجود' }); } catch (err) { throw err; } });
+app.delete('/api/admin/property-request/:id', async (req, res) => { try { await pgQuery(`DELETE FROM property_requests WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { throw err; } });
+
+// ✅ تم استعادة كود البحث والفلترة بالكامل
 app.get('/api/properties', async (req, res) => { 
     let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type, \"isFeatured\", \"isLegal\" FROM properties"; 
-    // ... (باقي كود البحث والفلترة كما هو) ...
-    // اختصاراً للرد، استخدم الكود القديم هنا
-    const result = await pgQuery(sql + " ORDER BY id DESC LIMIT 50"); // مثال مبسط
-    res.json(result.rows);
+    const params = []; let idx = 1; const filters = []; const { type, limit, keyword, minPrice, maxPrice, rooms, sort } = req.query; 
+    if (type) { filters.push(`type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } 
+    if (keyword) { filters.push(`(title ILIKE $${idx} OR description ILIKE $${idx} OR "hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } 
+    if (minPrice) { filters.push(`"numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } 
+    if (maxPrice) { filters.push(`"numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } 
+    if (rooms) { if (rooms === '4+') { filters.push(`rooms >= $${idx++}`); params.push(4); } else { filters.push(`rooms = $${idx++}`); params.push(Number(rooms)); } } 
+    if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); 
+    let orderBy = "ORDER BY id DESC"; 
+    if (sort === 'price_asc') orderBy = 'ORDER BY "numericPrice" ASC'; 
+    else if (sort === 'price_desc') orderBy = 'ORDER BY "numericPrice" DESC'; 
+    else if (sort === 'oldest') orderBy = 'ORDER BY id ASC'; 
+    sql += ` ${orderBy}`; 
+    if (limit) { sql += ` LIMIT $${idx++}`; params.push(parseInt(limit)); } 
+    try { const result = await pgQuery(sql, params); res.json(result.rows); } catch (err) { throw err; } 
 });
-// (انسخ باقي الدوال القديمة هنا)
+
+// باقي الدوال (Get Single, Delete, Favorites, Register, User Mgmt)
+app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery(`SELECT * FROM properties WHERE id=$1`, [req.params.id]); if(r.rows[0]) { try { r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); } catch(e){ r.rows[0].imageUrls=[]; } res.json(r.rows[0]); } else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
+app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
+app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) { try { await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); } catch(e){} await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } else res.status(404).json({message: 'غير موجود'}); } catch (e) { throw e; } });
+app.post('/api/favorites', async (req, res) => { const { userEmail, propertyId } = req.body; if (!userEmail || !propertyId) return res.status(400).json({ message: 'بيانات ناقصة' }); try { await pgQuery(`INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`, [userEmail, propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة' }); throw err; } });
+app.delete('/api/favorites/:propertyId', async (req, res) => { const { userEmail } = req.query; if (!userEmail) return res.status(400).json({ message: 'الإيميل مطلوب' }); try { const result = await pgQuery(`DELETE FROM favorites WHERE user_email = $1 AND property_id = $2`, [userEmail, req.params.propertyId]); res.json({ success: true }); } catch (err) { throw err; } });
+app.get('/api/favorites', async (req, res) => { const { userEmail } = req.query; if (!userEmail) return res.status(400).json({ message: 'الإيميل مطلوب' }); const sql = `SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id FROM properties p JOIN favorites f ON p.id = f.property_id WHERE f.user_email = $1 ORDER BY f.id DESC`; try { const result = await pgQuery(sql, [userEmail]); res.json(result.rows); } catch (err) { throw err; } });
+
+// ✅ تم استعادة التسجيل
+app.post('/api/register', async (req, res) => { const { name, email, password } = req.body; if (!name || !email || !password) return res.status(400).json({ message: 'بيانات ناقصة' }); try { const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS); await pgQuery(`INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)`, [name, email, hashedPassword, 'user']); res.status(201).json({ success: true, message: 'تم التسجيل' }); } catch (error) { if (error.message.includes('unique constraint')) return res.status(400).json({ message: 'مسجل مسبقاً' }); throw error; } });
+app.put('/api/user/change-password', async (req, res) => { const { email, currentPassword, newPassword } = req.body; if (!email || !currentPassword || !newPassword) return res.status(400).json({ message: 'بيانات ناقصة' }); try { const r = await pgQuery(`SELECT * FROM users WHERE email=$1`, [email]); if (!r.rows[0]) return res.status(404).json({ message: 'غير موجود' }); if (!(await bcrypt.compare(currentPassword, r.rows[0].password))) return res.status(401).json({ message: 'كلمة المرور خطأ' }); const hash = await bcrypt.hash(newPassword, SALT_ROUNDS); await pgQuery(`UPDATE users SET password = $1 WHERE id = $2`, [hash, r.rows[0].id]); res.json({ success: true, message: 'تم التغيير' }); } catch (err) { throw err; } });
+app.delete('/api/user/delete-account', async (req, res) => { const { email } = req.body; if (!email) return res.status(400).json({ message: 'الإيميل مطلوب' }); try { const r = await pgQuery(`DELETE FROM users WHERE email = $1`, [email]); if (r.rowCount === 0) return res.status(404).json({ message: 'غير موجود' }); res.json({ success: true, message: 'تم الحذف' }); } catch (err) { throw err; } });
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'home.html')); });
 app.get('/api/ping', (req, res) => res.json({status: "OK"}));
 
 app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'خطأ داخلي' });
+    console.log("🔥 ERROR CAUGHT:"); console.error(err);
+    if (res.headersSent) return next(err);
+    if (err instanceof multer.MulterError) return res.status(500).json({ success: false, message: `فشل الرفع: ${err.code}` });
+    res.status(500).json({ success: false, message: 'خطأ داخلي', error: err.message });
 });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
