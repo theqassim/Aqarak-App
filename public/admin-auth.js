@@ -1,21 +1,28 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 1. الاتصال بالسيرفر للتحقق من التوكن (الكوكي المشفر)
+        // نطلب من السيرفر التحقق من الكوكيز
         const response = await fetch('/api/auth/me');
+        
+        // إذا كان السيرفر لا يعمل أو الرابط خطأ
+        if (!response.ok) {
+            throw new Error('Server validation failed');
+        }
+
         const data = await response.json();
 
-        // 2. فحص رد السيرفر
-        // إذا لم يكن مسجلاً، أو إذا كانت رتبته ليست "admin"
+        // الشرط الحاسم: هل أنت مسجل؟ وهل أنت أدمن؟
         if (!data.isAuthenticated || data.role !== 'admin') {
-            alert('هذه الصفحة خاصة بالادارة فقط!');
-            window.location.href = 'home'; // طرده للصفحة الرئيسية
+            // إذا لم تكن أدمن، سيتم توجيهك لصفحة الدخول فوراً
+            console.warn("محاولة دخول غير مصرح بها. جاري التوجيه...");
+            window.location.href = '/home.html'; // أو صفحة login.html
+        } else {
+            // إذا كنت أدمن، نظهر المحتوى (لو كنت تخفيه افتراضياً)
+            document.body.style.display = 'block';
         }
-        
-        // إذا كان أدمن حقيقي، الكود سينتهي هنا والصفحة ستفتح بسلام
-        
+
     } catch (error) {
-        // في حالة حدوث أي خطأ في الاتصال، نطرده للأمان
-        console.error("فشل التحقق من الصلاحيات");
-        window.location.href = 'home';
+        console.error("فشل التحقق من الصلاحيات:", error);
+        // في حالة الخطأ، للأمان نعيدك للصفحة الرئيسية
+        window.location.href = '/home.html';
     }
 });
