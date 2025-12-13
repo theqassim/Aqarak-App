@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <div class="compare-row bad">
                                     <div class="label-col">
                                         <span class="icon">❌</span>
-                                        <span class="text">عمولة المكاتب العادية (2.5%)</span>
+                                       <span class="text" id="broker-label">عمولة المكاتب العادية (2.5%)</span>
                                     </div>
                                     <div class="value-col" id="broker-fee">0 ج.م</div>
                                 </div>
@@ -343,37 +343,68 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         // تشغيل الحاسبة
-        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
+       const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
 
-        if (!isNaN(priceNum) && priceNum > 0) {
-            const expiryDate = new Date('2026-03-03');
-            const today = new Date();
-            let aqarakRate;
-            let labelText;
+if (!isNaN(priceNum) && priceNum > 0) {
+    
+    // 1. حساب نسبة موقع "عقارك" (بناءً على تاريخ العرض)
+    const expiryDate = new Date('2026-03-03');
+    const today = new Date();
+    let aqarakRate;
+    let aqarakLabelText;
 
-            if (today < expiryDate) {
-                aqarakRate = 0;
-                labelText = 'عمولة موقع عقارك (0%) 🔥'; 
-            } else {
-                aqarakRate = 0.01;
-                labelText = 'عمولة موقع عقارك (1%)';
-            }
+    if (today < expiryDate) {
+        aqarakRate = 0;
+        aqarakLabelText = 'عمولة موقع عقارك (0%) 🔥'; 
+    } else {
+        aqarakRate = 0.01;
+        aqarakLabelText = 'عمولة موقع عقارك (1%)';
+    }
 
-            const broker = priceNum * 0.025;       
-            const aqarak = priceNum * aqarakRate;  
-            const saved = broker - aqarak;         
+    // 2. التحقق من نوع العقار (هل هو إيجار أم بيع؟)
+    // بنحول النص لحروف صغيرة ونتأكد إنه string عشان نتجنب الأخطاء
+    const propType = String(property.type || "").toLowerCase(); 
+    const isRent = propType.includes('ايجار') || propType.includes('إيجار') || propType.includes('rent');
 
-            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-            
-            const labelElement = document.getElementById('aqarak-label');
-            if (labelElement) {
-                labelElement.textContent = labelText;
-            }
-            document.getElementById('savings-calculator-box').style.display = 'block';
-        }
+    let broker;
+    let brokerLabelText;
 
+    if (isRent) {
+        // --- حالة الإيجار ---
+        // عمولة السمسار = شهر كامل (نفس قيمة الإيجار)
+        broker = priceNum; 
+        brokerLabelText = "عمولة السماسرة (شهر كامل)";
+    } else {
+        // --- حالة البيع ---
+        // عمولة السمسار = 2.5%
+        broker = priceNum * 0.025; 
+        brokerLabelText = "عمولة المكاتب العادية (2.5%)";
+    }
+
+    // 3. الحسابات النهائية
+    const aqarak = priceNum * aqarakRate;  
+    const saved = broker - aqarak;         
+
+    // 4. تحديث الأرقام في الشاشة
+    document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
+    document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
+    document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
+    
+    // تحديث نص "عمولة عقارك"
+    const labelElement = document.getElementById('aqarak-label');
+    if (labelElement) {
+        labelElement.textContent = aqarakLabelText;
+    }
+
+    // تحديث نص "عمولة السماسرة" (عشان يكتب شهر كامل أو 2.5%)
+    // تأكد إنك ضفت id="broker-label" في ملف HTML زي ما اتفقنا
+    const brokerLabelElement = document.getElementById('broker-label');
+    if (brokerLabelElement) {
+        brokerLabelElement.textContent = brokerLabelText;
+    }
+
+    document.getElementById('savings-calculator-box').style.display = 'block';
+}
         // 🔥🔥🔥 3. تشغيل الأدمن (ما زال محمي بالسيرفر) 🔥🔥🔥
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
