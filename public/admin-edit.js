@@ -6,7 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const editForm = document.getElementById('edit-property-form');
     const deleteBtn = document.getElementById('delete-property-btn');
     const editMessageEl = document.getElementById('edit-form-message');
+    
+    // متغيرات الفيديوهات
+    const addVideoBtn = document.getElementById('add-video-btn');
+    const videoInput = document.getElementById('video-url-input');
+    const videoListContainer = document.getElementById('video-list-container');
+    const hiddenVideoInput = document.getElementById('hidden-video-urls-input');
+    
     let currentPropertyId = null; 
+    let currentVideoList = []; // مصفوفة لتخزين الفيديوهات حالياً
 
     async function safeFetchJson(url, options = {}) {
         const response = await fetch(url, options);
@@ -72,8 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('edit-bathrooms').value = property.bathrooms;
             document.getElementById('edit-description').value = property.description;
 
+            // 1. التعامل مع الصور القديمة
             renderExistingImages(property.imageUrls || []);
-            
+
+            // 2. التعامل مع الفيديوهات (التعديل الجديد) 🎥
+            // نتأكد إنها مصفوفة، لو جاية null نخليها فاضية
+            currentVideoList = Array.isArray(property.video_urls) ? property.video_urls : [];
+            renderVideoListUI(); // رسم القائمة
+
         } catch (error) {
             console.error("Load Details Error:", error);
             editMessageEl.textContent = 'فشل في تحميل تفاصيل العقار للتعديل.';
@@ -81,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // --- دوال الصور ---
     function renderExistingImages(imageUrls) {
         const container = document.getElementById('existing-images-container');
         const hiddenInput = document.getElementById('existing-images-data');
@@ -115,12 +130,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- دوال الفيديوهات (الجديدة) 🎥 ---
+
+    // دالة لرسم قائمة الفيديوهات في الشاشة
+    function renderVideoListUI() {
+        videoListContainer.innerHTML = ''; // تفريغ القائمة
+        
+        currentVideoList.forEach((link, index) => {
+            const li = document.createElement('li');
+            li.style.cssText = "background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;";
+            
+            li.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                    <span style="color: #e74c3c;"><i class="fab fa-youtube"></i></span>
+                    <a href="${link}" target="_blank" style="font-size: 13px; color: #333; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${link}</a>
+                </div>
+                <button type="button" class="remove-video-btn" data-index="${index}" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            videoListContainer.appendChild(li);
+        });
+
+        // تحديث الحقل المخفي اللي هيروح للداتابيز
+        // بنحول المصفوفة لنص JSON عشان تتبعت صح
+        hiddenVideoInput.value = JSON.stringify(currentVideoList);
+
+        // تفعيل زرار الحذف لكل فيديو
+        document.querySelectorAll('.remove-video-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = this.getAttribute('data-index');
+                removeVideo(index);
+            });
+        });
+    }
+
+    // إضافة فيديو جديد
+    if(addVideoBtn) {
+        addVideoBtn.addEventListener('click', () => {
+            const url = videoInput.value.trim();
+            if (url) {
+                currentVideoList.push(url); // إضافة للمصفوفة
+                renderVideoListUI(); // تحديث الشاشة
+                videoInput.value = ''; // تنظيف الخانة
+            }
+        });
+    }
+
+    // حذف فيديو
+    function removeVideo(index) {
+        currentVideoList.splice(index, 1); // حذف من المصفوفة
+        renderVideoListUI(); // تحديث الشاشة
+    }
+
+
+    // --- إرسال الفورم وحفظ التعديلات ---
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const propertyId = document.getElementById('edit-property-id').value;
         editMessageEl.textContent = 'جاري حفظ التعديلات...';
         editMessageEl.className = '';
+        
         const formData = new FormData(editForm);
+
+        // ملحوظة: formData هيسحب قيمة hidden-video-urls-input أوتوماتيك
+        // لأننا اديناه name="video_urls"
 
         try {
             const response = await fetch(`/api/update-property/${propertyId}`, {
@@ -139,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editMessageEl.textContent = data.message;
             editMessageEl.className = 'success';
             
+            // إعادة تحميل البيانات للتأكيد
             loadPropertyDetailsForEdit(propertyId);
 
         } catch (error) {

@@ -96,6 +96,23 @@
                         <label for="edit-images" class="file-upload-label btn-neon-auth" style="margin-top: 15px;">
                             <i class="fas fa-upload"></i> إضافة صور جديدة
                         </label>
+
+                        <div class="form-group" style="background: #f1f1f1; padding: 15px; border-radius: 8px; margin-top: 20px;">
+    <label style="font-weight: bold; margin-bottom: 10px; display: block;">🎥 فيديوهات العقار (YouTube)</label>
+    
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <input type="text" id="video-url-input" placeholder="https://www.youtube.com/watch?v=..." class="form-control" style="flex: 1;">
+        <button type="button" id="add-video-btn" style="background: #27ae60; color: white; border: none; padding: 0 20px; border-radius: 4px; cursor: pointer;">
+            <i class="fas fa-plus"></i> إضافة
+        </button>
+    </div>
+
+    <ul id="video-list-container" style="list-style: none; padding: 0; margin: 0;">
+        </ul>
+
+    <input type="hidden" name="video_urls" id="hidden-video-urls-input">
+</div>
+
                         <input type="file" id="edit-images" name="propertyImages" multiple accept="image/*" style="display:none;">
                     </div>
                     

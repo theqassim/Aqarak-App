@@ -4,6 +4,58 @@ const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// --- 1. إضافة ستايل الزرار العصري ديناميكياً ---
+const style = document.createElement('style');
+style.innerHTML = `
+    .video-btn-modern {
+        background: linear-gradient(135deg, #ff0000, #c0392b);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        box-shadow: 0 10px 20px rgba(192, 57, 43, 0.4);
+        transition: all 0.3s ease;
+        margin: 20px auto;
+        width: fit-content;
+        text-decoration: none;
+    }
+    .video-btn-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(192, 57, 43, 0.6);
+    }
+    .video-btn-modern .icon-pulse {
+        background: white;
+        color: #c0392b;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        animation: pulse-glow 2s infinite;
+    }
+    .video-btn-modern .badge {
+        background: rgba(0,0,0,0.2);
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+    }
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+`;
+document.head.appendChild(style);
+// ------------------------------------------------
+
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -149,7 +201,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const userEmail = localStorage.getItem('userEmail');
-
         const canViewDetails = !!userEmail; 
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -191,14 +242,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const favClass = isFav ? 'is-favorite' : '';
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
-
-
         
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (canViewDetails) {
-            
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
             actionSectionHTML = `
@@ -223,6 +271,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         }
+
+        // --- 🎥 منطق الفيديو الجديد ---
+        let videoSectionHTML = '';
+        const videoList = Array.isArray(property.video_urls) ? property.video_urls : [];
+        
+        if (videoList.length > 0) {
+            videoSectionHTML = `
+                <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 20px;">
+                    <button onclick="goToCinemaMode()" class="video-btn-modern">
+                        <div class="icon-pulse">▶</div>
+                        <span>شاهد جولة الفيديو</span>
+                        <span class="badge">${videoList.length}</span>
+                    </button>
+                </div>
+            `;
+            // دالة التحويل لصفحة المشاهدة
+            window.goToCinemaMode = () => {
+                localStorage.setItem('activePropertyVideos', JSON.stringify(videoList));
+                window.location.href = 'video-player';
+            };
+        }
+        // ------------------------------
 
         container.innerHTML = `
             <div class="property-detail-content">
@@ -251,7 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <div class="compare-row bad">
                                     <div class="label-col">
                                         <span class="icon">❌</span>
-                                       <span class="text" id="broker-label">عمولة المكاتب العادية (2.5%)</span>
+                                        <span class="text" id="broker-label">عمولة المكاتب العادية (2.5%)</span>
                                     </div>
                                     <div class="value-col" id="broker-fee">0 ج.م</div>
                                 </div>
@@ -288,6 +358,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </ul>
                         </div>
                         
+                        ${videoSectionHTML}
+
                         <div class="property-description-box">
                             <h3>الوصف</h3>
                             <p>${property.description || 'لا يوجد وصف.'}</p>
@@ -322,54 +394,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
 
-if (!isNaN(priceNum) && priceNum > 0) {
-    
-    const expiryDate = new Date('2026-03-03');
-    const today = new Date();
-    let aqarakRate;
-    let aqarakLabelText;
+        if (!isNaN(priceNum) && priceNum > 0) {
+            
+            const expiryDate = new Date('2026-03-03');
+            const today = new Date();
+            let aqarakRate;
+            let aqarakLabelText;
 
-    if (today < expiryDate) {
-        aqarakRate = 0;
-        aqarakLabelText = 'عمولة موقع عقارك (0%) 🔥'; 
-    } else {
-        aqarakRate = 0.01;
-        aqarakLabelText = 'عمولة موقع عقارك (1%)';
-    }
+            if (today < expiryDate) {
+                aqarakRate = 0;
+                aqarakLabelText = 'عمولة موقع عقارك (0%) 🔥'; 
+            } else {
+                aqarakRate = 0.01;
+                aqarakLabelText = 'عمولة موقع عقارك (1%)';
+            }
 
-    const propType = String(property.type || "").toLowerCase(); 
-    const isRent = propType.includes('ايجار') || propType.includes('إيجار') || propType.includes('rent');
+            const propType = String(property.type || "").toLowerCase(); 
+            const isRent = propType.includes('ايجار') || propType.includes('إيجار') || propType.includes('rent');
 
-    let broker;
-    let brokerLabelText;
+            let broker;
+            let brokerLabelText;
 
-    if (isRent) {
-        broker = priceNum; 
-        brokerLabelText = "عمولة السماسرة (شهر كامل)";
-    } else {
-        broker = priceNum * 0.025; 
-        brokerLabelText = "عمولة المكاتب العادية (2.5%)";
-    }
+            if (isRent) {
+                broker = priceNum; 
+                brokerLabelText = "عمولة السماسرة (شهر كامل)";
+            } else {
+                broker = priceNum * 0.025; 
+                brokerLabelText = "عمولة المكاتب العادية (2.5%)";
+            }
 
-    const aqarak = priceNum * aqarakRate;  
-    const saved = broker - aqarak;         
+            const aqarak = priceNum * aqarakRate;  
+            const saved = broker - aqarak;        
 
-    document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-    document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-    document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-    
-    const labelElement = document.getElementById('aqarak-label');
-    if (labelElement) {
-        labelElement.textContent = aqarakLabelText;
-    }
+            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
+            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
+            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
+            
+            const labelElement = document.getElementById('aqarak-label');
+            if (labelElement) {
+                labelElement.textContent = aqarakLabelText;
+            }
 
-    const brokerLabelElement = document.getElementById('broker-label');
-    if (brokerLabelElement) {
-        brokerLabelElement.textContent = brokerLabelText;
-    }
+            const brokerLabelElement = document.getElementById('broker-label');
+            if (brokerLabelElement) {
+                brokerLabelElement.textContent = brokerLabelText;
+            }
 
-    document.getElementById('savings-calculator-box').style.display = 'block';
-}
+            document.getElementById('savings-calculator-box').style.display = 'block';
+        }
+
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
