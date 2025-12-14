@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 20px;">
                     <button onclick="goToCinemaMode()" class="video-btn-modern">
                         <div class="icon-pulse">▶</div>
-                        <span>شاهد جولة الفيديو</span>
+                        <span>مشاهدة فيديو العقار</span>
                         <span class="badge">${videoList.length}</span>
                     </button>
                 </div>
