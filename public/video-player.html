@@ -3,71 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جولة الفيديو | عقارك</title>
+    <title>مشاهدة الفيديو | عقارك</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { margin: 0; background: #0f172a; color: white; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .close-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        /* إعدادات الصفحة العامة ومنع السكرول */
+        body { 
+            margin: 0; 
+            background: #0f172a; 
+            color: white; 
+            font-family: 'Cairo', sans-serif; 
+            height: 100vh; 
+            overflow: hidden; /* منع السكرول نهائياً */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* زرار الإغلاق في الركن */
+        .close-btn { 
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1); 
+            border: none; 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            transition: 0.3s; 
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
         .close-btn:hover { background: #e74c3c; }
-        
-        .player-wrapper { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .video-box { width: 90%; max-width: 900px; aspect-ratio: 16/9; background: black; border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); position: relative; }
+
+        /* العداد فوق الفيديو */
+        .video-counter {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* حاوية الفيديو */
+        .video-box { 
+            width: 80%; 
+            max-width: 900px; 
+            aspect-ratio: 16/9; /* الوضع الافتراضي (عريض) */
+            background: black; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            position: relative;
+            transition: all 0.5s ease; /* تنعيم التحويل بين الأوضاع */
+            z-index: 10;
+        }
+
+        /* وضع الشورتس (طولي) */
+        .video-box.shorts-mode {
+            aspect-ratio: 9/16; 
+            width: auto;
+            height: 80vh; /* يملأ 80% من طول الشاشة */
+            max-width: 100%;
+        }
+
         iframe { width: 100%; height: 100%; border: none; }
 
-        .controls { margin-top: 20px; display: flex; gap: 20px; align-items: center; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 50px; backdrop-filter: blur(10px); }
-        .nav-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .nav-btn:hover { background: white; color: #0f172a; }
-        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; color: white; }
-        .counter { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; }
+        /* أزرار التنقل الجانبية */
+        .nav-btn { 
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            color: white; 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.3s; 
+            z-index: 20;
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn:hover { 
+            background: white; 
+            color: #0f172a; 
+            transform: translateY(-50%) scale(1.1); /* تكبير بسيط عند اللمس */
+        }
+
+        .nav-btn:disabled { 
+            opacity: 0.2; 
+            cursor: not-allowed; 
+            background: transparent;
+            border-color: transparent;
+        }
+
+        /* أماكن الأزرار */
+        .prev-btn { right: 30px; } /* السابق على اليمين (عشان عربي) */
+        .next-btn { left: 30px; }  /* التالي على الشمال */
+
+        /* تحسينات للموبايل */
+        @media (max-width: 768px) {
+            .video-box { width: 100%; border-radius: 0; border: none; }
+            .video-box.shorts-mode { height: 100vh; border-radius: 0; }
+            .nav-btn { width: 40px; height: 40px; font-size: 1rem; background: rgba(0,0,0,0.3); }
+            .prev-btn { right: 10px; }
+            .next-btn { left: 10px; }
+            .close-btn { top: 10px; right: 10px; padding: 5px 15px; font-size: 0.9rem; }
+            .video-counter { top: 60px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h3>🎥 جولة في العقار</h3>
-        <button class="close-btn" onclick="history.back()">إغلاق ✕</button>
+    <button class="close-btn" onclick="history.back()">إغلاق ✕</button>
+
+    <div class="video-counter">
+        <span id="current">1</span> / <span id="total">1</span>
     </div>
 
-    <div class="player-wrapper">
-        <div class="video-box">
-            <iframe id="youtube-frame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
+    <button class="nav-btn prev-btn" id="prev-btn" onclick="changeVideo(-1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <button class="nav-btn next-btn" id="next-btn" onclick="changeVideo(1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
 
-        <div class="controls">
-            <button class="nav-btn" id="prev-btn" onclick="changeVideo(-1)"><i class="fas fa-chevron-right"></i></button>
-            <div class="counter"><span id="current">1</span> / <span id="total">1</span></div>
-            <button class="nav-btn" id="next-btn" onclick="changeVideo(1)"><i class="fas fa-chevron-left"></i></button>
+    <div class="video-box">
         </div>
-    </div>
 
     <script>
         const videos = JSON.parse(localStorage.getItem('activePropertyVideos') || "[]");
         let currentIndex = 0;
 
-        const frame = document.getElementById('youtube-frame');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const currentSpan = document.getElementById('current');
         const totalSpan = document.getElementById('total');
+        const videoBox = document.querySelector('.video-box');
 
+        // دالة لاستخراج ID الفيديو
         function getYouTubeID(url) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-}
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
 
         function loadVideo(index) {
             if (videos.length === 0) return;
             
-            const videoId = getYouTubeID(videos[index]);
-            if (videoId) {
-                frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+            const url = videos[index];
+            const videoId = getYouTubeID(url);
+
+            // 1. تحديد الوضع (شورتس ولا فيديو عادي)
+            const isShorts = url.includes('shorts');
+            if (isShorts) {
+                videoBox.classList.add('shorts-mode');
+            } else {
+                videoBox.classList.remove('shorts-mode');
             }
 
+            // 2. الحل السحري: حذف الـ iframe القديم وبناء واحد جديد
+            // ده بيمنع المتصفح إنه يسجل الخطوة دي في الـ History
+            videoBox.innerHTML = ''; 
+
+            if (videoId) {
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+                iframe.allow = "autoplay; encrypted-media";
+                iframe.allowFullscreen = true;
+                
+                videoBox.appendChild(iframe);
+            }
+
+            // 3. تحديث العداد
             currentSpan.innerText = index + 1;
             totalSpan.innerText = videos.length;
             
+            // 4. تحديث حالة الأزرار
             prevBtn.disabled = (index === 0);
             nextBtn.disabled = (index === videos.length - 1);
         }
@@ -80,12 +211,20 @@
             }
         }
 
+        // التحقق من وجود فيديوهات عند الفتح
         if (videos.length > 0) {
             loadVideo(0);
         } else {
             alert("لا توجد فيديوهات للعرض");
             history.back();
         }
+
+        // دعم أزرار الكيبورد
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') changeVideo(-1); // التالي
+            if (e.key === 'ArrowLeft') changeVideo(1);   // السابق
+            if (e.key === 'Escape') history.back();      // خروج
+        });
     </script>
 </body>
 </html>
