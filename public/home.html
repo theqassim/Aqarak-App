@@ -93,19 +93,8 @@
             
             <div class="gallery-card">
                 <div class="image-box">
-                    <img src="auth.png" alt="إنشاء حساب">
-                    <div class="step-number">1</div>
-                </div>
-                <div class="text-box">
-                    <h3>أنشئ حسابك</h3>
-                    <p>سجل دخولك مجاناً لتتمكن من عرض تفاصيل البائعين والتواصل معهم.</p>
-                </div>
-            </div>
-
-            <div class="gallery-card">
-                <div class="image-box">
                     <img src="book.png" alt="حجز عقار">
-                    <div class="step-number">2</div>
+                    <div class="step-number">1</div>
                 </div>
                 <div class="text-box">
                     <h3>احجز عقارك</h3>
@@ -116,7 +105,7 @@
             <div class="gallery-card">
                 <div class="image-box">
                     <img src="details.png" alt="تفاصيل العقار">
-                    <div class="step-number">3</div>
+                    <div class="step-number">2</div>
                 </div>
                 <div class="text-box">
                     <h3>شاهد تفاصيل العقار</h3>
@@ -127,7 +116,7 @@
             <div class="gallery-card">
                 <div class="image-box">
                     <img src="sell.png" alt="بيع عقار">
-                    <div class="step-number">4</div>
+                    <div class="step-number">3</div>
                 </div>
                 <div class="text-box">
                     <h3>اعرض عقارك</h3>
@@ -368,7 +357,6 @@ window.closeIosPrompt = () => {
 </div>
 
 <style>
-  /* نفس التنسيقات السابقة مع إضافة تنسيق الـ Checkbox */
   
   .popup-overlay {
     display: none;
@@ -451,7 +439,7 @@ window.closeIosPrompt = () => {
     margin-top: 10px;
     box-shadow: 0 5px 15px rgba(0, 140, 255, 0.4);
     display: block;
-    width: 100%; /* جعل الزر عريضاً */
+    width: 100%; 
   }
 
   .action-btn:hover {
@@ -459,7 +447,6 @@ window.closeIosPrompt = () => {
     box-shadow: 0 10px 20px rgba(0, 255, 65, 0.5);
   }
 
-  /* تنسيق خيار عدم العرض مرة أخرى */
   .checkbox-container {
     margin-top: 15px;
     font-size: 14px;
@@ -475,7 +462,7 @@ window.closeIosPrompt = () => {
     cursor: pointer;
     width: 16px;
     height: 16px;
-    accent-color: #00ff41; /* لون العلامة أخضر */
+    accent-color: #00ff41; 
   }
 
   @keyframes popIn {
@@ -508,11 +495,6 @@ window.closeIosPrompt = () => {
   window.onload = function() {
     var expiryDate = new Date('2026-03-03'); 
     var today = new Date();
-
-    // التحقق:
-    // 1. هل المستخدم اختار "عدم العرض للأبد" سابقاً؟ (localStorage)
-    // 2. هل رآه في هذه الجلسة الحالية؟ (sessionStorage)
-    // 3. هل التاريخ ما زال سارياً؟
     var isForeverHidden = localStorage.getItem('hidePromoForever');
     var isSessionHidden = sessionStorage.getItem('hidePromoSession');
 
@@ -522,17 +504,12 @@ window.closeIosPrompt = () => {
   };
 
   function closePopup() {
-    // إخفاء النافذة أولاً
     document.getElementById('promoPopup').style.display = 'none';
-    
-    // التحقق هل وضع علامة "صح" على الصندوق؟
     var checkBox = document.getElementById('dontShowAgain');
     
     if (checkBox.checked) {
-      // إذا اختار عدم العرض: نحفظ في الذاكرة الدائمة
       localStorage.setItem('hidePromoForever', 'true');
     } else {
-      // إذا لم يختر: نحفظ في ذاكرة الجلسة فقط (يختفي الآن لكن يظهر لو فتح الموقع بكرة)
       sessionStorage.setItem('hidePromoSession', 'true');
     }
   }

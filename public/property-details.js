@@ -1,12 +1,9 @@
-// 1. استدعاء مكتبة Supabase
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// 2. إعدادات الاتصال
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// --- دوال مساعدة (Global) ---
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -19,19 +16,15 @@ window.getTypeTag = (type) => {
     return '';
 };
 
-// --- نوافذ العرض (Modal) ---
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
-// --- منطق المفضلة (معدل للضيوف) ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
     
-    // ✅ التعديل: نعتمد على الإيميل المحفوظ محلياً (سواء كان ضيف أو عضو)
     const userEmail = localStorage.getItem('userEmail');
 
-    // إذا لم يكن هناك هوية ضيف حتى (نادرة الحدوث بسبب guest.js)
     if (!userEmail) {
         alert('حدث خطأ في التعرف على هويتك، قم بتحديث الصفحة.');
         return;
@@ -58,7 +51,6 @@ window.toggleFavorite = async (propertyId) => {
     } catch (error) { console.error('Favorite Error:', error); }
 };
 
-// --- منطق المشاركة ---
 window.shareProperty = async (title) => {
     const shareData = {
         title: `عقارك - ${title}`,
@@ -74,13 +66,10 @@ window.shareProperty = async (title) => {
     } catch (err) { console.error('Error sharing:', err); }
 };
 
-// --- زر الواتساب (مفتوح للجميع) ---
 window.handleWhatsappClick = async (link) => {
-    // ✅ التعديل: السماح للجميع بفتح الواتساب
     window.open(link, '_blank');
 };
 
-// --- عقارات مشابهة (Supabase) ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if(!container) return;
@@ -131,7 +120,6 @@ async function loadSimilarProperties(currentProperty) {
     }
 }
 
-// --- التحميل الرئيسي للصفحة ---
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
@@ -148,10 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        // 🔥🔥🔥 1. التحقق من الهوية (معدل ليقبل الضيف) 🔥🔥🔥
         let userRole = 'guest';
         
-        // نحاول نجيب الرتبة الحقيقية من السيرفر (عشان لو كان أدمن)
         try {
             const authRes = await fetch('/api/auth/me');
             const authData = await authRes.json();
@@ -162,10 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log("زائر يعمل بنظام الضيف");
         }
 
-        // ✅ أهم تعديل: نعتمد على userEmail المحلي كإثبات هوية (للضيف والعضو)
         const userEmail = localStorage.getItem('userEmail');
-        
-        // المتغير الذي يحدد هل نظهر الأزرار أم لا؟ (دائماً نعم طالما هناك هوية)
+
         const canViewDetails = !!userEmail; 
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -177,7 +161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const property = await response.json(); 
 
-        // معالجة الصور
         imageUrls = [];
         if (property.imageUrls) {
             if (Array.isArray(property.imageUrls)) imageUrls = property.imageUrls;
@@ -195,7 +178,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const whatsappLink = `https://wa.me/201008102237?text=${encodeURIComponent(`مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
         
-        // التحقق من المفضلة (للجميع)
         let isFav = false;
         if (canViewDetails) {
             try {
@@ -211,13 +193,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
 
-        // 🔥🔥🔥 2. تجهيز الأزرار (مفتوحة للجميع) 🔥🔥🔥
         
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (canViewDetails) {
-            // ✅ الحالة: إظهار الأزرار للجميع (ضيف أو عضو)
             
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
@@ -237,7 +217,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         } else {
-            // 🔒 حالة احتياطية فقط (لو ملف guest.js مش شغال)
             actionSectionHTML = `
                 <div class="login-prompt-box">
                     <p>جاري تحميل الصلاحيات...</p>
@@ -245,7 +224,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
 
-        // رسم الصفحة
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -342,12 +320,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        // تشغيل الحاسبة
        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
 
 if (!isNaN(priceNum) && priceNum > 0) {
     
-    // 1. حساب نسبة موقع "عقارك" (بناءً على تاريخ العرض)
     const expiryDate = new Date('2026-03-03');
     const today = new Date();
     let aqarakRate;
@@ -361,8 +337,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
         aqarakLabelText = 'عمولة موقع عقارك (1%)';
     }
 
-    // 2. التحقق من نوع العقار (هل هو إيجار أم بيع؟)
-    // بنحول النص لحروف صغيرة ونتأكد إنه string عشان نتجنب الأخطاء
     const propType = String(property.type || "").toLowerCase(); 
     const isRent = propType.includes('ايجار') || propType.includes('إيجار') || propType.includes('rent');
 
@@ -370,34 +344,25 @@ if (!isNaN(priceNum) && priceNum > 0) {
     let brokerLabelText;
 
     if (isRent) {
-        // --- حالة الإيجار ---
-        // عمولة السمسار = شهر كامل (نفس قيمة الإيجار)
         broker = priceNum; 
         brokerLabelText = "عمولة السماسرة (شهر كامل)";
     } else {
-        // --- حالة البيع ---
-        // عمولة السمسار = 2.5%
         broker = priceNum * 0.025; 
         brokerLabelText = "عمولة المكاتب العادية (2.5%)";
     }
 
-    // 3. الحسابات النهائية
     const aqarak = priceNum * aqarakRate;  
     const saved = broker - aqarak;         
 
-    // 4. تحديث الأرقام في الشاشة
     document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
     document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
     document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
     
-    // تحديث نص "عمولة عقارك"
     const labelElement = document.getElementById('aqarak-label');
     if (labelElement) {
         labelElement.textContent = aqarakLabelText;
     }
 
-    // تحديث نص "عمولة السماسرة" (عشان يكتب شهر كامل أو 2.5%)
-    // تأكد إنك ضفت id="broker-label" في ملف HTML زي ما اتفقنا
     const brokerLabelElement = document.getElementById('broker-label');
     if (brokerLabelElement) {
         brokerLabelElement.textContent = brokerLabelText;
@@ -405,7 +370,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
 
     document.getElementById('savings-calculator-box').style.display = 'block';
 }
-        // 🔥🔥🔥 3. تشغيل الأدمن (ما زال محمي بالسيرفر) 🔥🔥🔥
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
@@ -440,7 +404,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
             }
         }
 
-        // تشغيل الصور
         const mainImg = document.getElementById('property-main-image');
         const thumbsContainer = document.getElementById('image-thumbnails');
         const update = () => updateMainImage(mainImg);
@@ -460,7 +423,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
             thumbsContainer.appendChild(img);
         });
 
-        // تشغيل زر المفضلة
         const favBtn = document.getElementById('favoriteBtn');
         if (favBtn) {
             favBtn.onclick = () => window.toggleFavorite(property.id);
@@ -469,7 +431,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // تشغيل فورم العرض
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
@@ -503,7 +464,6 @@ if (!isNaN(priceNum) && priceNum > 0) {
     }
 });
 
-// --- Lightbox Function ---
 window.setupLightbox = (images) => {
     const lightbox = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');

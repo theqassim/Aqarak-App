@@ -68,17 +68,14 @@
 
             if (secretLogo) {
                 secretLogo.addEventListener('click', function(e) {
-                    // منع أي سلوك افتراضي للصورة لو موجود
                     e.preventDefault();
                     
                     clicks++;
                     console.log("عدد الضغطات: " + clicks);
 
                     if (clicks === 5) {
-                        // !!! هام: غير الرابط التالي للصفحة التي تريد الذهاب إليها !!!
                         window.location.href = "index"; 
                         
-                        // تصفير العداد
                         clicks = 0;
                     }
                 });

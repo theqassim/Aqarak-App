@@ -1,5 +1,3 @@
-// admin-requests.js
-
 document.addEventListener('DOMContentLoaded', () => {
     
     fetchRequests();

@@ -1,5 +1,3 @@
-// admin-add.js
-
 document.addEventListener('DOMContentLoaded', () => {
    
     
@@ -8,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageInput = document.getElementById('property-images');
     const previewContainer = document.getElementById('image-preview-container');
     
-    // 🚨 منطق تحميل البيانات المؤقتة (تم إبقاؤه لمرونة الكود)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('load') === 'true') {
         const tempSubmissionData = localStorage.getItem('tempSubmissionData');
@@ -29,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // منطق معاينة الصور
     imageInput.addEventListener('change', (event) => {
         const files = event.target.files;
         previewContainer.innerHTML = ''; 
@@ -48,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // منطق إرسال النموذج
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         messageEl.textContent = 'جاري نشر العقار...';

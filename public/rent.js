@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // تحميل عقارات الإيجار فقط عند البدء
     fetchProperties();
 
     const filterForm = document.getElementById('filter-form');
@@ -16,7 +15,6 @@ async function fetchProperties(queryParams = '') {
     if (container) container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
 
     try {
-        // ✅ إجبار النوع على "إيجار" دائماً
         let url = `/api/properties?type=rent`;
         if (queryParams) url += `&${queryParams}`;
         
@@ -44,17 +42,15 @@ function applyFilter() {
 
     fetchProperties(params.toString());
 
-    // ✅✅✅ الكود السحري لإغلاق القائمة بعد التطبيق ✅✅✅
     const filterBody = document.getElementById('filter-body');
     const filterContainer = document.querySelector('.filter-container');
     
     if (filterBody) {
-        filterBody.style.display = 'none'; // إخفاء القائمة
-        if(filterContainer) filterContainer.classList.remove('active'); // إرجاع السهم لوضعه الطبيعي
+        filterBody.style.display = 'none';
+        if(filterContainer) filterContainer.classList.remove('active');
     }
 }
 
-// دالة الرسم (نفس الدالة الموحدة)
 function renderProperties(properties) {
     const container = document.querySelector('.properties-grid');
     if (!container) return;
@@ -68,27 +64,21 @@ function renderProperties(properties) {
     properties.forEach(property => {
         const formattedPrice = property.price ? parseInt(property.price).toLocaleString() : '0';
         
-        // بما أننا في صفحة إيجار، التاج دائماً للإيجار (أصفر)
-        const typeTag = '<span style="color: #ffc107;">(للإيجار)</span>';
+        const typeTag = '<span class="property-type rent">إيجار</span>';
         
-        // رابط نظيف (بدون .html)
         const detailsUrl = `property-details?id=${property.id}`;
 
-        // ✅✅✅ 1. تجهيز الشارات (الجزء الجديد) ✅✅✅
         let badgesHTML = '<div class="card-badges-container">';
         
-        // شارة مميز
         if (property.isFeatured) {
             badgesHTML += `<span class="badge-card badge-featured-small"><i class="fas fa-star"></i> مميز</span>`;
         }
         
-        // شارة قانوني
         if (property.isLegal) {
             badgesHTML += `<span class="badge-card badge-legal-small"><i class="fas fa-shield-alt"></i> قانوني</span>`;
         }
         
         badgesHTML += '</div>';
-        // ✅✅✅ نهاية الجزء الجديد ✅✅✅
 
         const cardHTML = `
             <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'" style="cursor: pointer; position: relative;">

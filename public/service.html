@@ -8,7 +8,6 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
     <style>
-        /* تنسيقات خاصة بصفحة الخدمات فقط */
         .services-container {
             max-width: 1200px;
             margin: 40px auto;
@@ -32,7 +31,6 @@
             font-size: 1.1rem;
         }
 
-        /* شبكة الخدمات */
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -40,9 +38,8 @@
             justify-content: center;
         }
 
-        /* تصميم الكارد */
         .service-card {
-            background: rgba(30, 41, 59, 0.7); /* خلفية شفافة غامقة */
+            background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 30px;
@@ -50,19 +47,17 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            text-decoration: none; /* عشان ده رابط */
+            text-decoration: none;
             display: block;
             backdrop-filter: blur(10px);
         }
 
-        /* تأثير الهوفر */
         .service-card:hover {
-            transform: translateY(-10px); /* يرتفع لفوق */
+            transform: translateY(-10px);
             border-color: #00bcd4;
             box-shadow: 0 10px 30px rgba(0, 188, 212, 0.2);
         }
 
-        /* مكان اللوجو */
         .card-logo-wrapper {
             width: 120px;
             height: 120px;
@@ -78,7 +73,7 @@
         }
 
         .service-card:hover .card-logo-wrapper {
-            box-shadow: 0 0 20px #00bcd4; /* توهج اللوجو عند اللمس */
+            box-shadow: 0 0 20px #00bcd4;
         }
 
         .card-logo-wrapper img {
@@ -117,7 +112,6 @@
             color: #fff;
         }
 
-        /* كارد "قريباً" */
         .coming-soon {
             filter: grayscale(100%);
             opacity: 0.6;

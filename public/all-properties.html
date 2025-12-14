@@ -120,10 +120,8 @@
         filterToggle.addEventListener('click', () => {
             const isHidden = filterBody.style.display === 'none';
             
-            // التبديل
             filterBody.style.display = isHidden ? 'block' : 'none';
-            
-            // إضافة كلاس لتغيير شكل السهم
+
             if (filterContainer) {
                 filterContainer.classList.toggle('active');
             }

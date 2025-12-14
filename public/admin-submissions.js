@@ -1,5 +1,3 @@
-// admin-submissions.js
-
 document.addEventListener('DOMContentLoaded', () => {
    
     fetchSubmissions();
@@ -97,7 +95,6 @@ function addSubmissionListeners() {
         });
     });
 
-    // 🚨 منطق النشر الفوري المعدل
     document.querySelectorAll('.publish-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
             const submissionId = e.target.dataset.id || e.target.closest('button').dataset.id;
@@ -112,7 +109,6 @@ function addSubmissionListeners() {
             if (confirm(`هل أنت متأكد من نشر العقار رقم ${submissionId} بالكود السري: ${hiddenCode}؟`)) {
                 
                 try {
-                    // 1. إرسال طلب النشر إلى المسار الجديد
                     const response = await fetch('/api/admin/publish-submission', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -122,12 +118,11 @@ function addSubmissionListeners() {
                     const data = await response.json();
 
                     if (!response.ok) {
-                         // إذا فشل النشر بسبب تكرار الكود السري أو أي سبب آخر
                         throw new Error(data.message || 'فشل في عملية النشر.');
                     }
                     
                     alert(data.message);
-                    fetchSubmissions(); // إعادة تحميل القائمة
+                    fetchSubmissions();
 
                 } catch (error) {
                     alert(`خطأ في النشر: ${error.message}`);

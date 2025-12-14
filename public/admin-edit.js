@@ -1,5 +1,3 @@
-// admin-edit.js
-
 document.addEventListener('DOMContentLoaded', () => {
 
     const searchForm = document.getElementById('search-property-form');
@@ -10,14 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMessageEl = document.getElementById('edit-form-message');
     let currentPropertyId = null; 
 
-    // --- دالة مساعدة لجلب البيانات بأمان (تمنع خطأ JSON input) ---
     async function safeFetchJson(url, options = {}) {
         const response = await fetch(url, options);
-        const text = await response.text(); // قراءة الرد كنص أولاً
+        const text = await response.text(); 
         
         let data;
         try {
-            data = text ? JSON.parse(text) : {}; // محاولة التحويل لـ JSON
+            data = text ? JSON.parse(text) : {};
         } catch (err) {
             console.error("Non-JSON response:", text);
             throw new Error(`خطأ في استجابة السيرفر: لم يتم إرجاع بيانات JSON صالحة.`);
@@ -30,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
-    // 1. منطق البحث بالكود السري
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const code = document.getElementById('search-code').value.trim();
@@ -60,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. دالة جلب البيانات وملء حقول التعديل
     async function loadPropertyDetailsForEdit(id) {
         currentPropertyId = id;
         try {
@@ -86,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // 3. عرض الصور الحالية مع خيار الحذف
     function renderExistingImages(imageUrls) {
         const container = document.getElementById('existing-images-container');
         const hiddenInput = document.getElementById('existing-images-data');
@@ -102,10 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(imgWrapper);
         });
 
-        // تحديث الحقل المخفي بالصور الحالية
         hiddenInput.value = JSON.stringify(imageUrls);
-
-        // إضافة مستمعين لزر الحذف
         container.querySelectorAll('.remove-image-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -114,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 btn.closest('.existing-image-wrapper').remove();
                 
-                // تحديث قائمة الصور المخفية
                 let updatedUrls = JSON.parse(hiddenInput.value);
                 updatedUrls = updatedUrls.filter(url => url !== urlToRemove);
                 hiddenInput.value = JSON.stringify(updatedUrls);
@@ -125,17 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. منطق حفظ التعديلات (PUT) - **تم التصحيح هنا**
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const propertyId = document.getElementById('edit-property-id').value;
         editMessageEl.textContent = 'جاري حفظ التعديلات...';
         editMessageEl.className = '';
-
-        // ✅ التصحيح: نكتفي بإنشاء FormData من النموذج لأن الحقل المخفي موجود داخله
         const formData = new FormData(editForm);
-        
-        // ❌ تمت إزالة سطر الـ append المكرر لمنع الخطأ
 
         try {
             const response = await fetch(`/api/update-property/${propertyId}`, {
@@ -154,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
             editMessageEl.textContent = data.message;
             editMessageEl.className = 'success';
             
-            // إعادة تحميل البيانات لتحديث الواجهة
             loadPropertyDetailsForEdit(propertyId);
 
         } catch (error) {
@@ -164,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 5. منطق مسح العقار (DELETE)
     deleteBtn.addEventListener('click', async () => {
         const propertyId = document.getElementById('edit-property-id').value;
         if (!confirm(`تحذير: هل أنت متأكد من مسح العقار رقم ${propertyId} نهائياً؟`)) {

@@ -4,13 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sellerForm = document.getElementById('seller-form');
     const messageEl = document.getElementById('seller-form-message');
 
-    // الحد الأقصى: 10 ميجابايت
     const MAX_SIZE = 10 * 1024 * 1024;
 
-    // مصفوفة لتخزين كل الملفات المختارة
     let allSelectedFiles = []; 
 
-    // --- دالة عرض المعاينة ---
     function renderPreviews() {
         previewContainer.innerHTML = ''; 
         if (allSelectedFiles.length === 0) {
@@ -26,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const imgWrapper = document.createElement('div');
                 imgWrapper.className = 'preview-image-wrapper';
                 
-                // فحص الحجم وتظليل الصورة
                 if (file.size > MAX_SIZE) {
                     imgWrapper.classList.add('invalid-file');
                     const errorOverlay = document.createElement('div');
@@ -60,13 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- دالة حذف ملف ---
     function removeFileByIndex(indexToRemove) {
         allSelectedFiles = allSelectedFiles.filter((_, index) => index !== indexToRemove);
         renderPreviews(); 
     }
 
-    // --- عند اختيار صور جديدة ---
     if (imageInput) {
         imageInput.addEventListener('change', (event) => {
             const newFiles = Array.from(event.target.files);
@@ -76,17 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- عند إرسال النموذج ---
     if (sellerForm) {
         sellerForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             
-            // إعادة تعيين الرسالة في البداية
             messageEl.textContent = 'جاري التحقق من الملفات...';
-            messageEl.style.color = ''; // إعادة اللون للافتراضي
+            messageEl.style.color = '';
             messageEl.className = 'info';
 
-            // 1. التحقق من الصور الكبيرة
             const hasLargeFiles = allSelectedFiles.some(file => file.size > MAX_SIZE);
             if (hasLargeFiles) {
                 messageEl.textContent = '⚠️ لا يمكن الإرسال: يوجد صور تتخطى 10 ميجابايت (المظللة بالأحمر). يرجى حذفها.';
@@ -95,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. التحقق من وجود صور
             if (allSelectedFiles.length === 0) {
                 messageEl.textContent = 'يرجى اختيار صورة واحدة على الأقل.';
                 messageEl.className = 'error';
@@ -103,10 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ✅ التغيير المطلوب: رسالة الانتظار باللون الأخضر
             messageEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> برجاء الانتظار جاري ارسال البيانات...';
             messageEl.className = 'info';
-            messageEl.style.color = '#28a745'; // اللون الأخضر
+            messageEl.style.color = '#28a745';
 
             
             const formData = new FormData(sellerForm);
@@ -133,12 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 messageEl.textContent = `فشل الإرسال: ${error.message}`;
                 messageEl.className = 'error';
-                messageEl.style.color = '#ff4444'; // إعادة اللون للأحمر عند الخطأ
+                messageEl.style.color = '#ff4444';
             }
         });
     }
 
-    // CSS Styles
     const style = document.createElement('style');
     style.innerHTML = `
         .image-preview-container {

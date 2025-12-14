@@ -25,12 +25,10 @@ async function fetchLatestProperties() {
      properties.forEach(property => {
     const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
     
-    // تحديد التاج (بيع/إيجار)
     const typeTag = (property.type === 'buy' || property.type === 'بيع') 
         ? '<span class="property-type sale">بيع</span>' 
         : '<span class="property-type rent">إيجار</span>';
 
-    // ✅ 1. تجهيز الشارات (Badges)
     let badgesHTML = '<div class="badge-container">';
     if (property.isFeatured) {
         badgesHTML += `<div class="badge badge-featured"><i class="fas fa-star"></i> مميز</div>`;

@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(responseData.message || 'فشل إرسال الطلب.');
                 }
 
-                window.location.href = 'thank-you-request'; // سيتم إنشاء هذه الصفحة لاحقًا
+                window.location.href = 'thank-you-request';
 
             } catch (error) {
                 messageEl.textContent = `فشل الإرسال: ${error.message}`;

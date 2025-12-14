@@ -1,34 +1,22 @@
-// user-dashboard.js المعدل ليتناسب مع الـ HTML الحالي
-
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // تعريف العناصر الموجودة فعلياً في الـ HTML
+
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
     const favoritesContainer = document.getElementById('favorites-listings');
-    
-    // ملاحظة: الزر id="show-change-password" في الـ HTML هو رابط عادي لصفحة الخدمات
-    // لذلك لن نتحكم فيه بالجافاسكريبت وسنتركه يعمل بشكل طبيعي
-
     const userEmail = localStorage.getItem('userEmail'); 
     
-    // --- منطق عرض المفضلة ---
     if (favoritesBtn) {
         favoritesBtn.addEventListener('click', (e) => {
-            // لا نستخدم preventDefault هنا لكي ينزل الموقع للأسفل (Scroll)
-            // لكن نتأكد من إظهار القسم
             if (favoritesArea) {
                 favoritesArea.style.display = 'block';
-                // تفعيل انسيابية الحركة لو أردت
                 favoritesArea.scrollIntoView({ behavior: 'smooth' });
             }
             fetchFavorites();
         });
     }
 
-    // --- دالة جلب المفضلة ---
     async function fetchFavorites() {
-        if (!favoritesContainer) return; // حماية في حال عدم وجود الكونتينر
+        if (!favoritesContainer) return;
 
         if (!userEmail) {
             favoritesContainer.innerHTML = '<p class="empty-message error">يجب تسجيل الدخول لعرض المفضلة. الإيميل مفقود.</p>';
@@ -57,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             properties.forEach(property => {
-                // دوال التنسيق (تأكد أن ملف utils.js أو ما يشابهه مضمن، وإلا استخدم القيم الخام)
                 const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
                 const typeTag = window.getTypeTag ? window.getTypeTag(property.type) : '';
 
@@ -87,11 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- منطق إزالة المفضلة ---
     function addRemoveFavoriteListeners() {
         document.querySelectorAll('.remove-favorite-btn').forEach(button => {
             button.addEventListener('click', async (e) => {
-                // نستخدم currentTarget لضمان الإمساك بالزر حتى لو ضغطنا على الأيقونة بداخله
                 const btn = e.currentTarget; 
                 const propertyId = btn.dataset.id;
                 
@@ -105,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!response.ok) throw new Error('فشل الإزالة من المفضلة.');
                     
                     alert('تمت الإزالة بنجاح.');
-                    fetchFavorites(); // إعادة تحميل القائمة
+                    fetchFavorites();
                 } catch (error) {
                     alert(`خطأ: ${error.message}`);
                 }

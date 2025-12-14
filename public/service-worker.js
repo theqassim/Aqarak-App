@@ -17,7 +17,7 @@ self.addEventListener('push', function(event) {
     const title = data.title || 'عقارك';
     const options = {
         body: data.body || 'إشعار جديد من عقارك',
-        icon: '/logo.jpg', // تأكد إن اللوجو موجود في public
+        icon: '/logo.jpg',
         badge: '/logo.jpg',
         data: {
             url: data.url || '/'
