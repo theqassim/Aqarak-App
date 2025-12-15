@@ -9,7 +9,7 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
-// --- (جديد) استدعاء مكتبة الذكاء الاصطناعي ---
+// 1. استدعاء مكتبة الذكاء الاصطناعي
 const { NlpManager } = require('node-nlp');
 
 const cloudinary = require('cloudinary').v2;
@@ -139,40 +139,68 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🤖 قسم الذكاء الاصطناعي (AI Chatbot Logic)
+// 🤖 2. إعدادات الذكاء الاصطناعي (تم التحديث)
 // ==========================================================
+
+// قائمة الكلمات المحظورة (Profanity Filter)
+const BAD_WORDS = [
+    "كسمك", "متناك", "بضان", "خول", "معرص", "شرموط", "عرص", 
+    "ابن متناكة", "ابن وسخة", "لبوة", "كسم", "نيك"
+];
+
 const manager = new NlpManager({ languages: ['ar'], forceNER: true });
 
 async function setupAI() {
-    console.log("⏳ جارٍ تجهيز المساعد الذكي لموقع عقارك...");
+    console.log("⏳ جارٍ تجهيز المساعد الذكي لموقع عقارك (AI Setup)...");
+
+    // --- (أ) الدردشة العامة والبديهية (Small Talk) ---
+    manager.addDocument('ar', 'عامل ايه', 'smalltalk.greetings');
+    manager.addDocument('ar', 'اخبارك', 'smalltalk.greetings');
+    manager.addDocument('ar', 'كيف الحال', 'smalltalk.greetings');
+    manager.addDocument('ar', 'ازيك', 'smalltalk.greetings');
+    manager.addAnswer('ar', 'smalltalk.greetings', 'أنا بخير، شكراً لسؤالك! 🦾 جاهز لمساعدتك في إيجاد عقارك.');
+
+    manager.addDocument('ar', 'انت مين', 'agent.who');
+    manager.addDocument('ar', 'عرف نفسك', 'agent.who');
+    manager.addDocument('ar', 'هل انت انسان', 'agent.who');
+    manager.addDocument('ar', 'انت بني ادم', 'agent.who');
+    manager.addAnswer('ar', 'agent.who', 'أنا "مساعد عقارك" الذكي 🤖. لست بشراً، لكني هنا لمساعدتك في تصفح الموقع والوصول لما تريد بسرعة.');
+
+    manager.addDocument('ar', 'شكرا', 'smalltalk.thanks');
+    manager.addDocument('ar', 'تسلم', 'smalltalk.thanks');
+    manager.addDocument('ar', 'متشكر', 'smalltalk.thanks');
+    manager.addAnswer('ar', 'smalltalk.thanks', 'العفو! أنا في الخدمة دائماً. 😊');
+
+    // --- (ب) سيناريوهات الموقع (Business Logic) ---
 
     // 1. الحسابات وتسجيل الدخول
     manager.addDocument('ar', 'ازاي اعمل حساب', 'site.auth');
     manager.addDocument('ar', 'تسجيل دخول', 'site.auth');
     manager.addDocument('ar', 'نسيت كلمة السر', 'site.auth');
     manager.addDocument('ar', 'انشاء حساب جديد', 'site.auth');
-    manager.addAnswer('ar', 'site.auth', 'موقع "عقارك" يعمل بميزة الدخول السريع ولا يحتاج لإنشاء حسابات تقليدية معقدة. يمكنك الاستمتاع بكل المميزات فور دخولك!');
+    manager.addAnswer('ar', 'site.auth', 'موقع "عقارك" يعمل بميزة الدخول السريع ولا يحتاج لإنشاء حسابات معقدة. يمكنك الاستمتاع بكل المميزات فور دخولك!');
 
     // 2. إضافة الإعلانات
     manager.addDocument('ar', 'ازاي انزل اعلان', 'listing.add');
     manager.addDocument('ar', 'عايز ابيع شقتي', 'listing.add');
     manager.addDocument('ar', 'اضافة عقار', 'listing.add');
     manager.addDocument('ar', 'بكام الاعلان', 'listing.add');
+    manager.addDocument('ar', 'انشر شقة', 'listing.add');
     manager.addAnswer('ar', 'listing.add', 'لإضافة إعلان: اضغط على زر "اعرض عقارك للبيع"، املأ البيانات، واضغط "إرسال للمراجعة". الخدمة مجانية، وسيظهر الإعلان فور الموافقة عليه.');
 
-    // 3. تعديل وحذف الإعلانات (مع رابط الواتساب)
+    // 3. تعديل وحذف الإعلانات (مع رابط الواتساب HTML)
     manager.addDocument('ar', 'عايز اعدل الاعلان', 'listing.edit');
     manager.addDocument('ar', 'حذف شقة', 'listing.edit');
     manager.addDocument('ar', 'مسح عقار', 'listing.edit');
     manager.addDocument('ar', 'تغيير السعر', 'listing.edit');
-    // 👇 هنا تم إضافة الرابط بتنسيق HTML
+    manager.addDocument('ar', 'تعديل البيانات', 'listing.edit');
     manager.addAnswer('ar', 'listing.edit', 'لتعديل أو حذف إعلان، يرجى التواصل معنا مباشرة عبر واتساب:<br><a href="https://wa.me/201008102237" target="_blank" style="display:inline-block; margin-top:5px; padding:5px 10px; background:#25D366; color:white; border-radius:5px; text-decoration:none;">📲 اضغط هنا للمراسلة</a>');
 
     // 4. البحث
     manager.addDocument('ar', 'ازاي ابحث عن شقة', 'site.search');
     manager.addDocument('ar', 'فين البحث', 'site.search');
     manager.addDocument('ar', 'مش لاقي عقار', 'site.search');
-    manager.addAnswer('ar', 'site.search', 'يمكنك استخدام شريط البحث الموجود في الصفحة الرئيسية للوصول للعقار المناسب بسهولة.');
+    manager.addAnswer('ar', 'site.search', 'يمكنك استخدام شريط البحث الموجود في الصفحة الرئيسية للوصول للعقار المناسب بسهولة (ابحث بالمنطقة أو السعر).');
 
     // 5. التواصل مع البائع
     manager.addDocument('ar', 'عايز اكلم صاحب الشقة', 'contact.process');
@@ -201,32 +229,49 @@ async function setupAI() {
 
     await manager.train();
     manager.save();
-    console.log("✅ تم تدريب البوت وجاهز للعمل!");
+    console.log("✅ تم تدريب البوت وجاهز للعمل! (Protection Level: High)");
 }
 
-// تشغيل البوت مرة واحدة عند بدء السيرفر
 setupAI();
 
 // ==========================================================
 
-// --- API الخاص بالشات (Route) ---
+// --- 3. نقطة الاتصال (Chat API) ---
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
+        
+        if (!message) return res.json({ reply: "" });
+
+        // أ. فحص الشتائم (Filter)
+        const containsBadWord = BAD_WORDS.some(word => message.includes(word));
+        if (containsBadWord) {
+            console.log(`🚫 تم حظر رسالة مسيئة: ${message}`);
+            return res.json({ reply: "عذراً، يرجى الالتزام بآداب الحوار وعدم استخدام ألفاظ مسيئة. أنا هنا للمساعدة في العقارات فقط. ⛔" });
+        }
+
+        // ب. معالجة الرسالة
         const response = await manager.process('ar', message);
         
-        // التحقق من نسبة الثقة
-        if (response.intent === 'None' || response.score < 0.6) {
-            res.json({ reply: 'عذراً، أنا بوت للإجابة عن خدمات موقع "عقارك". يمكنك سؤالي عن طريقة البحث، إضافة إعلان، أو الخدمات المتاحة.' });
+        // ج. التحقق من الفهم (Confidence Check)
+        // حددنا 0.5 عشان يكون مرن مع الأخطاء الإملائية
+        if (response.intent === 'None' || response.score < 0.5) {
+            
+            // تسجيل السؤال الغريب للتعلم الذاتي (Manual Learning Log)
+            console.log(`⚠️ سؤال لم يفهمه البوت: "${message}"`);
+            
+            res.json({ reply: 'عذراً، لم أفهم تماماً. 😅\nهل تقصد البحث عن شقة، أو طريقة إضافة إعلان؟\n(حاول صياغة سؤالك بكلمات بسيطة).' });
         } else {
             res.json({ reply: response.answer });
         }
+
     } catch (error) {
         console.error("AI Chat Error:", error);
-        res.status(500).json({ reply: "حدث خطأ بسيط، حاول مرة أخرى." });
+        res.status(500).json({ reply: "حدث خطأ بسيط في النظام، حاول مرة أخرى." });
     }
 });
 // ==========================================================
+
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
