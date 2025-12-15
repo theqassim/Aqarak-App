@@ -9,6 +9,9 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
+// --- (جديد) استدعاء مكتبة الذكاء الاصطناعي ---
+const { NlpManager } = require('node-nlp');
+
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -110,7 +113,6 @@ async function createTables() {
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "sellerPhone" TEXT`);
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "isFeatured" BOOLEAN DEFAULT FALSE`);
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "isLegal" BOOLEAN DEFAULT FALSE`);
-        // إضافة عمود الفيديو لو مش موجود
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "video_urls" TEXT[] DEFAULT '{}'`);
         console.log('✅ Tables synced successfully.');
     } catch (err) { console.error('❌ Table Sync Error:', err); }
@@ -135,6 +137,96 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
+
+// ==========================================================
+// 🤖 قسم الذكاء الاصطناعي (AI Chatbot Logic)
+// ==========================================================
+const manager = new NlpManager({ languages: ['ar'], forceNER: true });
+
+async function setupAI() {
+    console.log("⏳ جارٍ تجهيز المساعد الذكي لموقع عقارك...");
+
+    // 1. الحسابات وتسجيل الدخول
+    manager.addDocument('ar', 'ازاي اعمل حساب', 'site.auth');
+    manager.addDocument('ar', 'تسجيل دخول', 'site.auth');
+    manager.addDocument('ar', 'نسيت كلمة السر', 'site.auth');
+    manager.addDocument('ar', 'انشاء حساب جديد', 'site.auth');
+    manager.addAnswer('ar', 'site.auth', 'موقع "عقارك" يعمل بميزة الدخول السريع ولا يحتاج لإنشاء حسابات تقليدية معقدة. يمكنك الاستمتاع بكل المميزات فور دخولك!');
+
+    // 2. إضافة الإعلانات
+    manager.addDocument('ar', 'ازاي انزل اعلان', 'listing.add');
+    manager.addDocument('ar', 'عايز ابيع شقتي', 'listing.add');
+    manager.addDocument('ar', 'اضافة عقار', 'listing.add');
+    manager.addDocument('ar', 'بكام الاعلان', 'listing.add');
+    manager.addAnswer('ar', 'listing.add', 'لإضافة إعلان: اضغط على زر "اعرض عقارك للبيع"، املأ البيانات، واضغط "إرسال للمراجعة". الخدمة مجانية، وسيظهر الإعلان فور الموافقة عليه.');
+
+    // 3. تعديل وحذف الإعلانات (مع رابط الواتساب)
+    manager.addDocument('ar', 'عايز اعدل الاعلان', 'listing.edit');
+    manager.addDocument('ar', 'حذف شقة', 'listing.edit');
+    manager.addDocument('ar', 'مسح عقار', 'listing.edit');
+    manager.addDocument('ar', 'تغيير السعر', 'listing.edit');
+    // 👇 هنا تم إضافة الرابط بتنسيق HTML
+    manager.addAnswer('ar', 'listing.edit', 'لتعديل أو حذف إعلان، يرجى التواصل معنا مباشرة عبر واتساب:<br><a href="https://wa.me/201008102237" target="_blank" style="display:inline-block; margin-top:5px; padding:5px 10px; background:#25D366; color:white; border-radius:5px; text-decoration:none;">📲 اضغط هنا للمراسلة</a>');
+
+    // 4. البحث
+    manager.addDocument('ar', 'ازاي ابحث عن شقة', 'site.search');
+    manager.addDocument('ar', 'فين البحث', 'site.search');
+    manager.addDocument('ar', 'مش لاقي عقار', 'site.search');
+    manager.addAnswer('ar', 'site.search', 'يمكنك استخدام شريط البحث الموجود في الصفحة الرئيسية للوصول للعقار المناسب بسهولة.');
+
+    // 5. التواصل مع البائع
+    manager.addDocument('ar', 'عايز اكلم صاحب الشقة', 'contact.process');
+    manager.addDocument('ar', 'رقم البائع كام', 'contact.process');
+    manager.addDocument('ar', 'اتواصل ازاي', 'contact.process');
+    manager.addAnswer('ar', 'contact.process', 'التواصل يتم عن طريق فريق "عقارك" لضمان الأمان والمصداقية. نحن سنقوم بالربط بينك وبين البائع.');
+
+    // 6. المفضلة
+    manager.addDocument('ar', 'ايه هي المفضلة', 'feature.fav');
+    manager.addDocument('ar', 'حفظ العقار', 'feature.fav');
+    manager.addDocument('ar', 'ارجع للشقة ازاي', 'feature.fav');
+    manager.addAnswer('ar', 'feature.fav', 'ميزة "المفضلة" تمكنك من حفظ العقارات التي تعجبك في القائمة الجانبية للرجوع إليها في أي وقت.');
+
+    // 7. الخدمات
+    manager.addDocument('ar', 'عندكم تشطيب؟', 'feature.services');
+    manager.addDocument('ar', 'محتاج نجار', 'feature.services');
+    manager.addDocument('ar', 'خدمات ديكور', 'feature.services');
+    manager.addDocument('ar', 'الوميتال ورخام', 'feature.services');
+    manager.addAnswer('ar', 'feature.services', 'نعم، يوفر قسم "الخدمات" كل ما تحتاجه للعقار مثل: ألوميتال، نجارة، رخام، ديكور، وتشطيبات متكاملة.');
+
+    // 8. احجز عقارك
+    manager.addDocument('ar', 'مش لاقي اللي انا عايزه', 'feature.request');
+    manager.addDocument('ar', 'ممكن توفرولي شقة بمواصفات خاصة', 'feature.request');
+    manager.addDocument('ar', 'احجز عقارك', 'feature.request');
+    manager.addAnswer('ar', 'feature.request', 'إذا لم تجد العقار المناسب، استخدم ميزة "احجز عقارك". اكتب التفاصيل التي تحتاجها، وفريقنا سيتواصل معك فور توفره.');
+
+    await manager.train();
+    manager.save();
+    console.log("✅ تم تدريب البوت وجاهز للعمل!");
+}
+
+// تشغيل البوت مرة واحدة عند بدء السيرفر
+setupAI();
+
+// ==========================================================
+
+// --- API الخاص بالشات (Route) ---
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message } = req.body;
+        const response = await manager.process('ar', message);
+        
+        // التحقق من نسبة الثقة
+        if (response.intent === 'None' || response.score < 0.6) {
+            res.json({ reply: 'عذراً، أنا بوت للإجابة عن خدمات موقع "عقارك". يمكنك سؤالي عن طريقة البحث، إضافة إعلان، أو الخدمات المتاحة.' });
+        } else {
+            res.json({ reply: response.answer });
+        }
+    } catch (error) {
+        console.error("AI Chat Error:", error);
+        res.status(500).json({ reply: "حدث خطأ بسيط، حاول مرة أخرى." });
+    }
+});
+// ==========================================================
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
@@ -236,13 +328,11 @@ app.post('/api/admin/publish-submission', async (req, res) => {
     } catch (err) { res.status(400).json({ message: 'Error' }); }
 });
 
-// =================== تعديل إضافة العقار ===================
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const files = req.files || [];
     const data = req.body;
     const urls = files.map(f => f.path);
     
-    // استقبال الفيديوهات
     let videoUrls = [];
     if (data.video_urls) {
         try { videoUrls = JSON.parse(data.video_urls); } catch(e) { videoUrls = []; }
@@ -256,7 +346,6 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
     } catch (err) { res.status(400).json({ message: 'Error' }); }
 });
 
-// =================== تعديل تحديث العقار ===================
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => {
     const propertyId = req.params.id;
     const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages, video_urls } = req.body;
@@ -267,7 +356,6 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     const newUrls = req.files ? req.files.map(f => f.path) : [];
     const allUrls = [...oldUrls, ...newUrls]; const mainUrl = allUrls.length ? allUrls[0] : null;
 
-    // استقبال الفيديوهات
     let videoUrlsArr = [];
     if (video_urls) {
         try { videoUrlsArr = JSON.parse(video_urls); } catch(e) { videoUrlsArr = []; }
@@ -278,7 +366,6 @@ app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10)
     
     try { const result = await pgQuery(sql, params); if (result.rowCount === 0) return res.status(404).json({ message: 'غير موجود' }); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { if (err.code === '23505') return res.status(400).json({ message: `الكود السري مستخدم.` }); throw err; }
 });
-// ========================================================
 
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const data = req.body;
