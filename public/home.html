@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604"
-     crossorigin="anonymous"></script>
+      crossorigin="anonymous"></script>
      <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -83,8 +83,6 @@
                 <a href="request-property" class="btn-neon-large">احجز عقارك الآن!</a>
             </div>
         </section>
-
-
     </main>
 
     <footer class="main-footer">
@@ -98,6 +96,7 @@
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
+
     <div id="install-toast" class="install-toast" style="display: none;">
         <div class="install-content">
             <img src="logo.jpg" alt="Aqarak Logo" class="install-logo">
@@ -124,24 +123,343 @@
         </div>
         <div class="ios-arrow"></div>
     </div>
-   <script>
+
+    <div id="promoPopup" class="popup-overlay">
+      <div class="popup-content">
+        <div class="news-header">⚠️ خبر عاجل</div>
+        <div class="sub-text">استمتع بتجربة بيع وشراء عقارية مختلفة</div>
+        <div class="glowing-box">
+          <h3>0% عمولة</h3>
+          <p>بدون رسوم | بدون وسطاء</p>
+        </div>
+        <button class="action-btn" onclick="closePopup()">تصفح الموقع الآن</button>
+        <label class="checkbox-container">
+          <input type="checkbox" id="dontShowAgain">
+          عدم عرض هذا الإعلان مرة أخرى
+        </label>
+      </div>
+    </div>
+
+    <button class="chatbot-toggler" onclick="toggleChat()">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">
+            <div class="header-info">
+                <img src="logo.png" alt="Logo" style="width: 30px; border-radius: 50%;">
+                <div class="header-text">
+                    <h4>مساعد عقارك 🏠</h4>
+                    <p>متاح الآن للمساعدة</p>
+                </div>
+            </div>
+            <span class="close-btn" onclick="toggleChat()">×</span>
+        </div>
+        
+        <ul class="chatbox" id="chatbox">
+            <li class="chat incoming">
+                <span class="bot-icon"><i class="fas fa-robot"></i></span>
+                <p>مرحباً بك في منصة عقارك! 👋<br>أنا هنا لمساعدتك.. اسألني أو اختر من الاقتراحات 👇</p>
+            </li>
+        </ul>
+        
+        <div class="suggestions-container">
+            <button class="suggestion-chip" onclick="sendSuggestion('كيف يعمل الموقع؟')">كيف يعمل الموقع؟</button>
+            <button class="suggestion-chip" onclick="sendSuggestion('ايه الشقق المتاحة؟')">ايه الشقق المتاحة؟</button>
+            <button class="suggestion-chip" onclick="sendSuggestion('ازاي اتواصل مع المالك؟')">طريقة التواصل مع المالك</button>
+        </div>
+
+        <div class="chat-input">
+            <textarea id="userMessage" placeholder="اكتب سؤالك هنا..." required></textarea>
+            <span id="micBtn" onclick="startVoiceInput()"><i class="fas fa-microphone"></i></span>
+            <span id="sendBtn"><i class="fas fa-paper-plane"></i></span>
+        </div>
+    </div>
+
+    <style>
+        /* أنماط الـ Popup والـ Install (من الكود القديم) */
+        .popup-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); z-index: 99999;
+            justify-content: center; align-items: center; backdrop-filter: blur(4px);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .popup-content {
+            background-color: #121212; padding: 40px; border-radius: 20px; text-align: center;
+            width: 90%; max-width: 450px; position: relative; border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #fff;
+        }
+        .news-header {
+            color: #00ff41; font-size: 32px; font-weight: 900; margin-bottom: 15px;
+            text-transform: uppercase; text-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+        }
+        .sub-text { font-size: 18px; color: #cccccc; margin-bottom: 20px; }
+        .glowing-box {
+            border: 2px solid #00e5ff; padding: 25px; margin: 20px 0; border-radius: 12px;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, rgba(0,0,0,0) 70%);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+        .glowing-box h3 { margin: 0; font-size: 42px; color: #ffffff; font-weight: bold; line-height: 1.2; }
+        .glowing-box p { margin: 5px 0 0; color: #00e5ff; font-size: 16px; font-weight: bold; }
+        .action-btn {
+            background: linear-gradient(135deg, #00ff41 0%, #008cff 100%); color: white; border: none;
+            padding: 15px 50px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 10px; box-shadow: 0 5px 15px rgba(0, 140, 255, 0.4);
+            display: block; width: 100%;
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 255, 65, 0.5); }
+        .checkbox-container {
+            margin-top: 15px; font-size: 14px; color: #aaa; display: flex;
+            align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+        }
+        .checkbox-container input { cursor: pointer; width: 16px; height: 16px; accent-color: #00ff41; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+        /* === أنماط الشات (محدثة) === */
+        
+        /* زر العائم */
+        .chatbot-toggler {
+            position: fixed; bottom: 85px; left: 25px;
+            height: 60px; width: 60px; border-radius: 50%;
+            background: #007bff; color: #fff; border: none; outline: none;
+            font-size: 28px; cursor: pointer; z-index: 99999;
+            transition: transform 0.3s ease; box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+        }
+        .chatbot-toggler:hover { transform: scale(1.1); background: #0056b3; }
+
+        /* نافذة الشات (كبيرة وثابتة) */
+        .chatbot-window {
+            position: fixed; left: 25px; bottom: 155px;
+            width: 90%; max-width: 450px; height: 75vh; max-height: 650px;
+            background: #1c2630; border: 1px solid #333; border-radius: 15px;
+            overflow: hidden; opacity: 0; pointer-events: none;
+            transform: scale(0.5); transform-origin: bottom left;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: all 0.3s ease;
+            z-index: 100000; font-family: 'Cairo', sans-serif;
+            display: flex; flex-direction: column;
+        }
+        .chatbot-window.show-chat { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        /* رأس النافذة */
+        .chatbot-header {
+            background: #0d141b; padding: 15px; display: flex;
+            justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; flex-shrink: 0;
+        }
+        .header-info { display: flex; align-items: center; gap: 10px; }
+        .header-text h4 { margin: 0; font-size: 1rem; color: #fff; }
+        .header-text p { margin: 0; font-size: 0.7rem; color: #00ff41; }
+        .chatbot-header .close-btn { cursor: pointer; color: #fff; font-size: 1.5rem; }
+
+        /* صندوق الرسائل */
+        .chatbox {
+            flex-grow: 1; overflow-y: auto; padding: 20px;
+            list-style: none; margin: 0; background: #1c2630;
+        }
+        .chatbox .chat { display: flex; list-style: none; margin-bottom: 20px; }
+        .chatbox .chat p {
+            padding: 12px 16px; border-radius: 15px; max-width: 80%;
+            font-size: 0.95rem; margin: 0; word-wrap: break-word; line-height: 1.6;
+        }
+        .chatbox .incoming .bot-icon {
+            width: 32px; height: 32px; background: #007bff; color: #fff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin-left: 10px; font-size: 0.8rem; flex-shrink: 0;
+        }
+        .chatbox .incoming p { background: #2c3e50; color: #fff; border-radius: 15px 0 15px 15px; }
+        .chatbox .outgoing { justify-content: flex-end; }
+        .chatbox .outgoing p { background: #007bff; color: #fff; border-radius: 0 15px 15px 15px; box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2); }
+
+        /* 🔥 الجديد: تنسيق أزرار الاقتراحات */
+        .suggestions-container {
+            display: flex; gap: 8px; padding: 10px 15px;
+            overflow-x: auto; background: #1c2630; border-top: 1px solid #333;
+            white-space: nowrap; scrollbar-width: thin;
+        }
+        .suggestions-container::-webkit-scrollbar { height: 4px; }
+        .suggestions-container::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+        .suggestion-chip {
+            background: rgba(0, 123, 255, 0.1); color: #007bff;
+            border: 1px solid #007bff; border-radius: 20px;
+            padding: 8px 15px; font-size: 0.85rem; cursor: pointer;
+            transition: 0.2s; white-space: nowrap;
+        }
+        .suggestion-chip:hover { background: #007bff; color: #fff; }
+
+        /* منطقة الكتابة (محدثة للميكروفون) */
+        .chat-input {
+            display: flex; gap: 10px; padding: 15px;
+            background: #0d141b; border-top: 1px solid #333; flex-shrink: 0; align-items: center;
+        }
+        .chat-input textarea {
+            height: 50px; width: 100%; border: none; outline: none;
+            resize: none; background: #2c3e50; color: #fff; padding: 12px;
+            border-radius: 10px; font-family: inherit; font-size: 0.95rem;
+        }
+        .chat-input span {
+            color: #007bff; cursor: pointer; font-size: 1.3rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; width: 40px; height: 40px;
+        }
+        .chat-input span:hover { color: #fff; }
+
+        /* أنيميشن التسجيل */
+        .recording { color: #ff0000 !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* منع السكرول */
+        body.no-scroll { overflow: hidden !important; height: 100vh; }
+        .chatbox a { color: #4facfe; text-decoration: underline; font-weight: bold; word-break: break-all; }
+
+        @media (max-width: 450px) {
+            .chatbot-window { width: 95%; left: 2.5%; bottom: 20px; height: 80vh; }
+            .chatbot-toggler { bottom: 20px; left: 20px; }
+        }
+    </style>
+
+    <script>
+        // سكربت الـ Promo Popup
+        window.onload = function() {
+            var expiryDate = new Date('2026-03-03'); 
+            var today = new Date();
+            var isForeverHidden = localStorage.getItem('hidePromoForever');
+            var isSessionHidden = sessionStorage.getItem('hidePromoSession');
+            if (!isForeverHidden && !isSessionHidden && today < expiryDate) {
+                document.getElementById('promoPopup').style.display = 'flex';
+            }
+        };
+        function closePopup() {
+            document.getElementById('promoPopup').style.display = 'none';
+            var checkBox = document.getElementById('dontShowAgain');
+            if (checkBox.checked) {
+                localStorage.setItem('hidePromoForever', 'true');
+            } else {
+                sessionStorage.setItem('hidePromoSession', 'true');
+            }
+        }
+    </script>
+
+    <script>
+        // سكربت الشات المطور (الذكاء + الصوت + الاقتراحات)
+        const chatInput = document.querySelector("#userMessage");
+        const sendChatBtn = document.querySelector("#sendBtn");
+        const chatbox = document.querySelector(".chatbox");
+        const chatbotWindow = document.querySelector("#chatbotWindow");
+        const micBtn = document.querySelector("#micBtn");
+        let userMessage;
+
+        // دالة فتح/غلق الشات
+        const toggleChat = () => {
+            chatbotWindow.classList.toggle("show-chat");
+            document.body.classList.toggle("no-scroll");
+        }
+
+        // 🔥 دالة الكتابة بالصوت
+        const startVoiceInput = () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("عذراً، متصفحك لا يدعم الكتابة بالصوت.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ar-EG';
+            recognition.interimResults = false;
+            recognition.onstart = () => {
+                micBtn.classList.add("recording");
+                chatInput.placeholder = "تحدث الآن...";
+            };
+            recognition.onend = () => {
+                micBtn.classList.remove("recording");
+                chatInput.placeholder = "اكتب سؤالك هنا...";
+            };
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value = transcript;
+            };
+            recognition.start();
+        }
+
+        // 🔥 دالة الاقتراحات
+        const sendSuggestion = (text) => {
+            chatInput.value = text;
+            handleChat();
+        }
+
+        // تنسيق الرسالة
+        const formatMessage = (text) => {
+            let formatted = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            return formatted;
+        }
+
+        const createChatLi = (message, className) => {
+            const chatLi = document.createElement("li");
+            chatLi.classList.add("chat", className);
+            let chatContent = className === "incoming" ? `<span class="bot-icon"><i class="fas fa-robot"></i></span><p></p>` : `<p></p>`;
+            chatLi.innerHTML = chatContent;
+            if(className === "outgoing") {
+                chatLi.querySelector("p").textContent = message;
+            } else {
+                chatLi.querySelector("p").innerHTML = formatMessage(message);
+            }
+            return chatLi;
+        }
+
+        const generateResponse = async (incomingChatLi) => {
+            const messageElement = incomingChatLi.querySelector("p");
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                const data = await response.json();
+                messageElement.innerHTML = formatMessage(data.reply);
+            } catch (error) {
+                messageElement.textContent = "عذراً، حدث خطأ في الاتصال.";
+                console.error(error);
+            }
+            chatbox.scrollTo(0, chatbox.scrollHeight);
+        }
+
+        const handleChat = () => {
+            userMessage = chatInput.value.trim();
+            if(!userMessage) return;
+            chatbox.appendChild(createChatLi(userMessage, "outgoing"));
+            chatbox.scrollTo(0, chatbox.scrollHeight);
+            chatInput.value = "";
+            setTimeout(() => {
+                const incomingChatLi = createChatLi("...", "incoming");
+                chatbox.appendChild(incomingChatLi);
+                chatbox.scrollTo(0, chatbox.scrollHeight);
+                generateResponse(incomingChatLi);
+            }, 600);
+        }
+
+        sendChatBtn.addEventListener("click", handleChat);
+        chatInput.addEventListener("keydown", (e) => {
+            if(e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleChat();
+            }
+        });
+    </script>
+
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
         const userRole = localStorage.getItem('userRole');
         const isLoggedIn = userRole !== null; 
-
         const guestNav = document.getElementById('guest-nav');
         const userNav = document.getElementById('user-nav');
-
         if (isLoggedIn) {
-            
             if (userNav) userNav.style.display = 'flex';
             if (guestNav) guestNav.style.display = 'none';
         } else {
-            
             if (userNav) userNav.style.display = 'none';
             if (guestNav) guestNav.style.display = 'flex';
         }
-
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
@@ -152,568 +470,74 @@
                 }
             });
         }
-
         document.body.addEventListener('click', (e) => {
-          
             if (e.target.closest('.view-details-btn')) {
                 if (!isLoggedIn) {
                     e.preventDefault(); 
                     e.stopPropagation();
-                    
-                    
-                    if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً لعرض تفاصيل العقار والتواصل مع البائع.\nهل تريد الانتقال لصفحة التسجيل؟')) {
+                    if(confirm('عفواً، يجب عليك تسجيل الدخول أولاً لعرض تفاصيل العقار.\nهل تريد الانتقال لصفحة التسجيل؟')) {
                         window.location.href = 'index';
                     }
                 }
             }
         });
     });
-</script>
+    </script>
     <script src="home.js"></script>
     <script src="search-handler.js"></script>
     <script src="guest.js"></script>
     <script src="utils.js"></script>
     <script src="app.js"></script>
     <script src="reload.js"></script>
+    
     <script>
-    
-let deferredPrompt;
-const installToast = document.getElementById('install-toast');
-const installBtnAction = document.getElementById('install-btn-action');
-const closeInstallBtn = document.getElementById('close-install');
-
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-   
-    if (!localStorage.getItem('installPromptDismissed')) {
-        if(installToast) installToast.style.display = 'flex';
-    }
-});
-
-
-if(installBtnAction) {
-    installBtnAction.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response: ${outcome}`);
-            deferredPrompt = null;
-            installToast.style.display = 'none';
-        }
-    });
-}
-
-
-if(closeInstallBtn) {
-    closeInstallBtn.addEventListener('click', () => {
-        installToast.style.display = 'none';
-       
-        localStorage.setItem('installPromptDismissed', 'true');
-    });
-}
-    </script>
-
-    <script>
-    
-document.addEventListener('DOMContentLoaded', () => {
-    
-    const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-  
-    const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
-
- 
-    const lastDismissed = localStorage.getItem('iosPromptDismissed');
-    const now = Date.now();
-    
-    const hideDuration = 7 * 24 * 60 * 60 * 1000; 
-
-
-    
-    if (isIos && !isStandalone && (!lastDismissed || (now - lastDismissed > hideDuration))) {
-        
-        const iosPrompt = document.getElementById('ios-install-prompt');
-        if (iosPrompt) {
-         
-            setTimeout(() => {
-                iosPrompt.style.display = 'flex';
-            }, 3000);
-        }
-    }
-});
-
-
-window.closeIosPrompt = () => {
-    document.getElementById('ios-install-prompt').style.display = 'none';
-    
- 
-    localStorage.setItem('iosPromptDismissed', Date.now());
-};
-    </script>
-
-    <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
-    <div class="ios-prompt-content">
-        <span class="close-ios" onclick="closeIosPrompt()">&times;</span>
-        <p style="margin: 0; font-weight: bold; font-size: 0.9rem;">تثبيت تطبيق عقارك 📱</p>
-        <p style="margin: 5px 0 0; font-size: 0.85rem; color: #ddd;">
-            لتثبيت التطبيق على الآيفون:<br>
-            1. اضغط على زر <strong>مشاركة</strong> <i class="fas fa-share-square" style="color: #007aff;"></i> بالأسفل.<br>
-            2. اختر <strong>"إضافة إلى الصفحة الرئيسية"</strong> <i class="fas fa-plus-square"></i>.
-        </p>
-    </div>
-    <div class="ios-arrow"></div>
-</div>
-<div id="install-toast" class="install-toast" style="display: none;">
-    <div class="install-content">
-        <img src="logo.jpg" alt="Aqarak Logo" class="install-logo">
-        <div class="install-text">
-            <span class="app-name">تطبيق عقارك</span>
-            <span class="app-desc">تجربة أسرع وأسهل</span>
-        </div>
-    </div>
-    <div class="install-actions">
-        <button id="install-btn-action" class="btn-install-mini">تثبيت</button>
-        <button id="close-install" class="btn-close-mini"><i class="fas fa-times"></i></button>
-    </div>
-</div>
-
-<style>
-  
-  .popup-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 99999;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(4px);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  .popup-content {
-    background-color: #121212;
-    padding: 40px;
-    border-radius: 20px;
-    text-align: center;
-    width: 90%;
-    max-width: 450px;
-    position: relative;
-    border: 1px solid #333;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    color: #fff;
-  }
-
-  .news-header {
-    color: #00ff41;
-    font-size: 32px;
-    font-weight: 900;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    text-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
-  }
-
-  .sub-text {
-    font-size: 18px;
-    color: #cccccc;
-    margin-bottom: 20px;
-  }
-
-  .glowing-box {
-    border: 2px solid #00e5ff;
-    padding: 25px;
-    margin: 20px 0;
-    border-radius: 12px;
-    background: radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, rgba(0,0,0,0) 70%);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
-  }
-
-  .glowing-box h3 {
-    margin: 0;
-    font-size: 42px;
-    color: #ffffff;
-    font-weight: bold;
-    line-height: 1.2;
-  }
-  
-  .glowing-box p {
-    margin: 5px 0 0;
-    color: #00e5ff;
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .action-btn {
-    background: linear-gradient(135deg, #00ff41 0%, #008cff 100%);
-    color: white;
-    border: none;
-    padding: 15px 50px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-    box-shadow: 0 5px 15px rgba(0, 140, 255, 0.4);
-    display: block;
-    width: 100%; 
-  }
-
-  .action-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 255, 65, 0.5);
-  }
-
-  .checkbox-container {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-  
-  .checkbox-container input {
-    cursor: pointer;
-    width: 16px;
-    height: 16px;
-    accent-color: #00ff41; 
-  }
-
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.5); }
-    to { opacity: 1; transform: scale(1); }
-  }
-</style>
-
-<div id="promoPopup" class="popup-overlay">
-  <div class="popup-content">
-    <div class="news-header">⚠️ خبر عاجل</div>
-    <div class="sub-text">استمتع بتجربة بيع وشراء عقارية مختلفة</div>
-    
-    <div class="glowing-box">
-      <h3>0% عمولة</h3>
-      <p>بدون رسوم | بدون وسطاء</p>
-    </div>
-
-    <button class="action-btn" onclick="closePopup()">تصفح الموقع الآن</button>
-    
-    <label class="checkbox-container">
-      <input type="checkbox" id="dontShowAgain">
-      عدم عرض هذا الإعلان مرة أخرى
-    </label>
-
-  </div>
-</div>
-
-<script>
-  window.onload = function() {
-    var expiryDate = new Date('2026-03-03'); 
-    var today = new Date();
-    var isForeverHidden = localStorage.getItem('hidePromoForever');
-    var isSessionHidden = sessionStorage.getItem('hidePromoSession');
-
-    if (!isForeverHidden && !isSessionHidden && today < expiryDate) {
-      document.getElementById('promoPopup').style.display = 'flex';
-    }
-  };
-
-  function closePopup() {
-    document.getElementById('promoPopup').style.display = 'none';
-    var checkBox = document.getElementById('dontShowAgain');
-    
-    if (checkBox.checked) {
-      localStorage.setItem('hidePromoForever', 'true');
-    } else {
-      sessionStorage.setItem('hidePromoSession', 'true');
-    }
-  }
-</script>
-
-<button class="chatbot-toggler" onclick="toggleChat()">
-    <i class="fas fa-robot"></i>
-</button>
-
-<div class="chatbot-window" id="chatbotWindow">
-    <div class="chatbot-header">
-        <div class="header-info">
-            <img src="logo.png" alt="Logo" style="width: 30px; border-radius: 50%;">
-            <div class="header-text">
-                <h4>مساعد عقارك 🏠</h4>
-                <p>متاح الآن للمساعدة</p>
-            </div>
-        </div>
-        <span class="close-btn" onclick="toggleChat()">×</span>
-    </div>
-    
-    <ul class="chatbox" id="chatbox">
-        <li class="chat incoming">
-            <span class="bot-icon"><i class="fas fa-robot"></i></span>
-            <p>مرحباً بك في منصة عقارك! 👋<br>أنا هنا لمساعدتك.. اسألني عن كيفية إضافة إعلان، البحث عن شقة، أو الخدمات المتاحة.</p>
-        </li>
-    </ul>
-    
-    <div class="chat-input">
-        <textarea id="userMessage" placeholder="اكتب سؤالك هنا..." required></textarea>
-        <span id="sendBtn"><i class="fas fa-paper-plane"></i></span>
-    </div>
-</div>
-
-<style>
-    /* زر العائم */
-    .chatbot-toggler {
-        position: fixed;
-        bottom: 85px; /* رفعته قليلاً عشان ما يغطي على زر التثبيت */
-        left: 25px; /* خليته شمال عشان زر المساعدة والواتساب يمين */
-        outline: none;
-        border: none;
-        height: 60px;
-        width: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: #007bff; /* لون البراند */
-        color: #fff;
-        font-size: 28px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
-        z-index: 99999;
-    }
-
-    .chatbot-toggler:hover {
-        transform: scale(1.1);
-        background: #0056b3;
-    }
-
-    /* نافذة الشات */
-    .chatbot-window {
-        position: fixed;
-        left: 25px;
-        bottom: 155px;
-        width: 350px;
-        background: #1c2630; /* نفس لون خلفية الموقع */
-        border: 1px solid #333;
-        border-radius: 15px;
-        overflow: hidden;
-        opacity: 0;
-        pointer-events: none;
-        transform: scale(0.5);
-        transform-origin: bottom left;
-        box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        transition: all 0.3s ease;
-        z-index: 99999;
-        font-family: 'Cairo', sans-serif;
-    }
-
-    .chatbot-window.show-chat {
-        opacity: 1;
-        pointer-events: auto;
-        transform: scale(1);
-    }
-
-    /* رأس النافذة */
-    .chatbot-header {
-        background: #0d141b;
-        padding: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #333;
-    }
-
-    .header-info { display: flex; align-items: center; gap: 10px; }
-    .header-text h4 { margin: 0; font-size: 1rem; color: #fff; }
-    .header-text p { margin: 0; font-size: 0.7rem; color: #00ff41; } /* لون أخضر للحالة */
-    .chatbot-header .close-btn { cursor: pointer; color: #fff; font-size: 1.5rem; }
-
-    /* صندوق الرسائل */
-    .chatbox {
-        height: 350px;
-        overflow-y: auto;
-        padding: 20px;
-        list-style: none;
-        margin: 0;
-        background: #1c2630;
-    }
-
-    .chatbox .chat { display: flex; list-style: none; margin-bottom: 20px; }
-    
-    .chatbox .chat p {
-        padding: 12px 16px;
-        border-radius: 15px;
-        max-width: 80%;
-        font-size: 0.9rem;
-        margin: 0;
-        word-wrap: break-word;
-        line-height: 1.5;
-    }
-
-    /* رسائل البوت */
-    .chatbox .incoming { justify-content: flex-start; }
-    .chatbox .incoming .bot-icon {
-        width: 32px; height: 32px;
-        background: #007bff;
-        color: #fff;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin-left: 10px;
-        font-size: 0.8rem;
-    }
-    .chatbox .incoming p {
-        background: #2c3e50;
-        color: #fff;
-        border-radius: 15px 0 15px 15px;
-    }
-
-    /* رسائل المستخدم */
-    .chatbox .outgoing { justify-content: flex-end; }
-    .chatbox .outgoing p {
-        background: #007bff;
-        color: #fff;
-        border-radius: 0 15px 15px 15px;
-        box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2);
-    }
-
-    /* منطقة الكتابة */
-    .chat-input {
-        display: flex;
-        gap: 10px;
-        padding: 15px;
-        background: #0d141b;
-        border-top: 1px solid #333;
-    }
-
-    .chat-input textarea {
-        height: 45px;
-        width: 100%;
-        border: none;
-        outline: none;
-        resize: none;
-        background: #2c3e50;
-        color: #fff;
-        padding: 10px;
-        border-radius: 10px;
-        font-family: inherit;
-    }
-
-    .chat-input span {
-        color: #007bff;
-        cursor: pointer;
-        font-size: 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.2s;
-    }
-    .chat-input span:hover { color: #fff; }
-
-    /* تجاوب مع الموبايل */
-    @media (max-width: 450px) {
-        .chatbot-window {
-            width: 90%;
-            left: 5%;
-            bottom: 100px;
-        }
-    }
-</style>
-
-<script>
-    const chatInput = document.querySelector("#userMessage");
-    const sendChatBtn = document.querySelector("#sendBtn");
-    const chatbox = document.querySelector(".chatbox");
-    const chatbotWindow = document.querySelector("#chatbotWindow");
-
-    let userMessage;
-
-    // دالة فتح/غلق الشات
-    const toggleChat = () => {
-        chatbotWindow.classList.toggle("show-chat");
-    }
-
-    // إنشاء عنصر الرسالة
-    const createChatLi = (message, className) => {
-        const chatLi = document.createElement("li");
-        chatLi.classList.add("chat", className);
-        
-        let chatContent;
-        if(className === "incoming") {
-            chatContent = `<span class="bot-icon"><i class="fas fa-robot"></i></span><p></p>`;
-        } else {
-            chatContent = `<p></p>`;
-        }
-        
-        chatLi.innerHTML = chatContent;
-        // هنا نستخدم innerHTML عشان الروابط تشتغل (مهم جداً للواتساب)
-        chatLi.querySelector("p").innerHTML = message;
-        return chatLi;
-    }
-
-    // دالة الاتصال بالسيرفر (API)
-    const generateResponse = async (incomingChatLi) => {
-        const messageElement = incomingChatLi.querySelector("p");
-        
-        try {
-            // الاتصال بـ Backend الموقع
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage })
-            });
-            
-            const data = await response.json();
-            
-            // عرض رد البوت
-            messageElement.innerHTML = data.reply;
-            
-        } catch (error) {
-            messageElement.textContent = "عذراً، حدث خطأ في الاتصال. حاول مرة أخرى.";
-            console.error(error);
-        }
-        
-        // نزول الشات لآخر رسالة
-        chatbox.scrollTo(0, chatbox.scrollHeight);
-    }
-
-    const handleChat = () => {
-        userMessage = chatInput.value.trim();
-        if(!userMessage) return;
-
-        // إضافة رسالة المستخدم
-        chatbox.appendChild(createChatLi(userMessage, "outgoing"));
-        chatbox.scrollTo(0, chatbox.scrollHeight);
-        chatInput.value = "";
-
-        // إضافة رسالة "جار الكتابة..."
-        setTimeout(() => {
-            const incomingChatLi = createChatLi("...", "incoming");
-            chatbox.appendChild(incomingChatLi);
-            chatbox.scrollTo(0, chatbox.scrollHeight);
-            
-            // استدعاء الرد الحقيقي
-            generateResponse(incomingChatLi);
-        }, 600);
-    }
-
-    // تشغيل عند الضغط على زر إرسال أو Enter
-    sendChatBtn.addEventListener("click", handleChat);
-    chatInput.addEventListener("keydown", (e) => {
-        if(e.key === "Enter" && !e.shiftKey) {
+        let deferredPrompt;
+        const installToast = document.getElementById('install-toast');
+        const installBtnAction = document.getElementById('install-btn-action');
+        const closeInstallBtn = document.getElementById('close-install');
+        window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            handleChat();
+            deferredPrompt = e;
+            if (!localStorage.getItem('installPromptDismissed')) {
+                if(installToast) installToast.style.display = 'flex';
+            }
+        });
+        if(installBtnAction) {
+            installBtnAction.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installToast.style.display = 'none';
+                }
+            });
         }
-    });
-</script>
+        if(closeInstallBtn) {
+            closeInstallBtn.addEventListener('click', () => {
+                installToast.style.display = 'none';
+                localStorage.setItem('installPromptDismissed', 'true');
+            });
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+            const lastDismissed = localStorage.getItem('iosPromptDismissed');
+            const now = Date.now();
+            const hideDuration = 7 * 24 * 60 * 60 * 1000; 
+            if (isIos && !isStandalone && (!lastDismissed || (now - lastDismissed > hideDuration))) {
+                const iosPrompt = document.getElementById('ios-install-prompt');
+                if (iosPrompt) {
+                    setTimeout(() => { iosPrompt.style.display = 'flex'; }, 3000);
+                }
+            }
+        });
+        window.closeIosPrompt = () => {
+            document.getElementById('ios-install-prompt').style.display = 'none';
+            localStorage.setItem('iosPromptDismissed', Date.now());
+        };
+    </script>
 
 </body>
 </html>
