@@ -20,13 +20,27 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 
-// ⚠️ ضع مفتاح Gemini الجديد هنا
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+// ⚠️ هام: ضع المفتاح الجديد هنا
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "ضع_مفتاح_API_الجديد_هنا"; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// استخدام gemini-pro لضمان التوافق مع سيرفرك الحالي
-// التعديل: استخدم gemini-1.5-flash
+// استخدام موديل Flash (الأسرع والأذكى)
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// 🔥 كود فحص الاتصال (Debug) - هيطبعلك في الـ Logs الموديلات المتاحة
+async function testGeminiConnection() {
+    try {
+        console.log("🔄 Testing Gemini Connection...");
+        // محاولة استدعاء بسيط للتأكد من المفتاح والموديل
+        const result = await model.generateContent("Test connection");
+        console.log("✅ Gemini Connected Successfully! Response:", result.response.text());
+    } catch (error) {
+        console.error("❌ Gemini Connection Failed:", error.message);
+        console.log("⚠️ Tips: تأكد أن المفتاح جديد، وأن المشروع في Google AI Studio مفعل.");
+    }
+}
+// تشغيل الفحص عند بدء السيرفر
+testGeminiConnection();
 
 // ... إعدادات السيرفر وقاعدة البيانات ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -101,7 +115,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 العقل المدبر (Gemini AI Logic) - تم دمج معلومات الموقع الكاملة
+// 🧠 العقل المدبر (Gemini AI Logic)
 // ==========================================================
 
 const SYSTEM_INSTRUCTION = `
@@ -127,8 +141,7 @@ const SYSTEM_INSTRUCTION = `
 3️⃣ **للمشتري/المستأجر (بتدور على شقة؟):**
 * ابحث في شريط البحث بالرئيسية (بالمنطقة أو السعر).
 * فلتر النتائج بأزرار: "جميع العقارات"، "شراء"، "إيجار" (حسب الغرف، السعر، النوع).
-* **تفاصيل العقار:** تحتوي على السعر، المساحة، الغرف، حاسبة السمسرة، وزر فيديو (لو متاح).
-* **التواصل:** اضغط زر **"واتساب"** في صفحة العقار -> سيحولك لشات عقارك بالكود السري -> فريقنا سيرد في دقائق وينسق معاينة مع المالك.
+* **تفاصيل العقار:** تحتوي على السعر، المساحة، الغرف، حاسبة السمسرة، وزر فيديو (لو متاح)، وزر واتساب (يحولك للشات بكود العقار للرد الفوري وتحديد المعاينة).
 * **المفضلة:** اضغط رمز القلب لحفظ العقار. للوصول إليها: اضغط زر "القائمة" بالرئيسية -> "العقارات المفضلة".
 * **لو مش لاقي عقار مناسب:** استخدم زر **"احجز عقارك"** أسفل الرئيسية، وسنبلغك فور توفره.
 
@@ -144,10 +157,8 @@ const SYSTEM_INSTRUCTION = `
 * قدم نصائح قانونية وعقارية (مثل أهمية صحة التوقيع، كيفية المعاينة).
 `;
 
-// ذاكرة المحادثة
 const chatHistories = {};
 
-// دالة البحث في قاعدة البيانات
 async function searchPropertiesInDB(query) {
     const keywords = query.replace(/[^\u0621-\u064A\s]/g, '').split(' ').filter(w => w.length > 3);
     if (keywords.length === 0) return null;
@@ -184,7 +195,6 @@ app.post('/api/chat', async (req, res) => {
             ];
         }
 
-        // 1. البحث في قاعدة البيانات (للعقارات)
         let dbContext = "";
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ")) {
             const searchResult = await searchPropertiesInDB(message);
@@ -195,17 +205,15 @@ app.post('/api/chat', async (req, res) => {
             }
         }
 
-        // 2. المحادثة مع Gemini
         const chatSession = model.startChat({
             history: chatHistories[sessionId],
-            generationConfig: { maxOutputTokens: 500 }, // زيادة المساحة للإجابات المفصلة
+            generationConfig: { maxOutputTokens: 500 },
         });
 
         const finalPrompt = message + dbContext;
         const result = await chatSession.sendMessage(finalPrompt);
         const reply = result.response.text();
 
-        // 3. تحديث الذاكرة
         chatHistories[sessionId].push({ role: "user", parts: [{ text: finalPrompt }] });
         chatHistories[sessionId].push({ role: "model", parts: [{ text: reply }] });
         
@@ -228,6 +236,7 @@ app.post('/api/chat', async (req, res) => {
 // ==========================================================
 // (باقي كود الـ API Routes - Login, Register, etc.)
 // ==========================================================
+// ... (انسخ باقي الدوال من Login و Register و Add Property كما كانت سابقاً) ...
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
