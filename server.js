@@ -4,7 +4,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg'); 
 const multer = require('multer');
-const fs = require('fs');
+const fs = require('fs'); // مهم لتسجيل الأسئلة
 const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
@@ -105,7 +105,9 @@ async function createTables() {
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`,
         `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`,
-        `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`
+        `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`,
+        // 👇 جدول الذاكرة للتعليم الذاتي 👇
+        `CREATE TABLE IF NOT EXISTS bot_learning (id SERIAL PRIMARY KEY, question TEXT NOT NULL, answer TEXT NOT NULL, created_at TEXT)`
     ];
     try {
         for (const query of queries) await pgQuery(query);
@@ -118,6 +120,7 @@ async function createTables() {
     } catch (err) { console.error('❌ Table Sync Error:', err); }
 }
 createTables();
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; 
 const storageSeller = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: 'aqarak_submissions', format: async () => 'webp', public_id: (req, file) => `seller-${Date.now()}-${Math.round(Math.random() * 1E9)}` } });
 const uploadSeller = multer({ storage: storageSeller, limits: { fileSize: MAX_FILE_SIZE } });
@@ -160,7 +163,7 @@ const SMART_FALLBACKS = [
 const manager = new NlpManager({ languages: ['ar'], forceNER: true });
 
 async function setupAI() {
-    console.log("⏳ جارٍ تجهيز المساعد الذكي (تم إضافة قنوات التواصل وفلتر النوع)...");
+    console.log("⏳ جارٍ تجهيز المساعد الذكي وتدريب الأسئلة الجديدة...");
 
     // أ. التحية والتعريف
     manager.addDocument('ar', 'عامل ايه', 'smalltalk.greetings');
@@ -170,12 +173,10 @@ async function setupAI() {
 
     manager.addDocument('ar', 'انت مين', 'agent.who');
     manager.addDocument('ar', 'عرف نفسك', 'agent.who');
-    manager.addAnswer('ar', 'agent.who', 'أنا "مساعد عقارك" الذكي 🏠🤖. وظيفتي مساعدتك في تصفح الموقع والبحث عن شقق.');
+    manager.addDocument('ar', 'هل انت انسان', 'agent.who');
+    manager.addAnswer('ar', 'agent.who', 'أنا "مساعد عقارك" الذكي 🏠🤖. لست إنساناً، لكني هنا لمساعدتك في تصفح الموقع والبحث عن شقتك المثالية!');
 
-    manager.addDocument('ar', 'الساعة كام', 'smalltalk.time');
-    manager.addAnswer('ar', 'smalltalk.time', 'أنا بوت لا أرتدي ساعة 😅، لكن لا تقلق، موقعنا يعمل 24 ساعة لخدمتك!');
-
-    // ب. قنوات التواصل (الميزة الجديدة 🆕)
+    // ب. قنوات التواصل
     manager.addDocument('ar', 'تواصل', 'site.contact_channels');
     manager.addDocument('ar', 'طرق التواصل', 'site.contact_channels');
     manager.addDocument('ar', 'السوشيال ميديا', 'site.contact_channels');
@@ -183,10 +184,6 @@ async function setupAI() {
     manager.addDocument('ar', 'انستجرام', 'site.contact_channels');
     manager.addDocument('ar', 'واتساب', 'site.contact_channels');
     manager.addDocument('ar', 'ازاي اوصل لكم', 'site.contact_channels');
-    manager.addDocument('ar', 'كلمونا', 'site.contact_channels');
-    manager.addDocument('ar', 'صفحة الفيسبوك', 'site.contact_channels');
-    
-    // الرد يحتوي على الروابط HTML كما طلبت
     manager.addAnswer('ar', 'site.contact_channels', `
         يمكنك التواصل معنا ومتابعتنا عبر القنوات التالية:<br><br>
         <a href="https://wa.me/201008102237" target="_blank" style="text-decoration:none; color:#25D366; font-weight:bold;">🟢 واتساب: 01008102237</a><br>
@@ -194,43 +191,48 @@ async function setupAI() {
         <a href="https://www.facebook.com/share/1NWyyuHwiD/" target="_blank" style="text-decoration:none; color:#1877F2; font-weight:bold;">🔵 فيسبوك: Aqarak - عقارك</a>
     `);
 
-    // ج. سيناريوهات الموقع (الردود التفصيلية)
-    manager.addDocument('ar', 'ازاي اعمل حساب', 'site.auth');
-    manager.addDocument('ar', 'تسجيل دخول', 'site.auth');
-    manager.addDocument('ar', 'دخول', 'site.auth'); 
-    manager.addAnswer('ar', 'site.auth', 'موقع "عقارك" يعمل بميزة الدخول السريع ولا يحتاج لخطوات تسجيل معقدة. ابدأ فوراً!');
+    // ج. سؤال "ازاي استخدم الموقع؟" الشامل (المضاف حديثاً ✅)
+    manager.addDocument('ar', 'ازاي استخدم الموقع', 'site.how_to_use');
+    manager.addDocument('ar', 'كيف استخدم الموقع', 'site.how_to_use');
+    manager.addDocument('ar', 'شرح الموقع', 'site.how_to_use');
+    manager.addDocument('ar', 'ايه طريقة الاستخدام', 'site.how_to_use');
 
-    // تفاصيل البيع
+    const howToUseAnswer = `
+    <strong>إليك دليل استخدام موقع "عقارك" بسهولة:</strong><br><br>
+    🟢 <strong>للبائع/المؤجر:</strong> اضغط على "اعرض عقار للبيع"، املأ البيانات والصور، ثم اضغط على "إرسال للمراجعة". سيتم نشره فوراً بمجرد الموافقة عليه من الإدارة.<br><br>
+    🔵 <strong>للمشتري/المستأجر:</strong> ابحث عن العقار الذي تريده عن طريق اسم المنطقة أو السعر في صفحة البحث.<br>
+    - إذا لم تجد العقار المناسب، يمكنك حجزه عن طريق زر <strong>"احجز عقارك"</strong>، املأ البيانات واضغط إرسال، وفريقنا سيتواصل معك فور توفره.<br><br>
+    ❤️ <strong>المفضلة:</strong> إذا كنت محتاراً بين أكثر من عقار، أضفهم للمفضلة لتقارن بينهم وترجع لهم في أي وقت.<br><br>
+    🛠️ <strong>الخدمات:</strong> إذا كان عقارك يحتاج ألوميتال، نجارة، أو تشطيب، يمكنك زيارة قسم "الخدمات" من القائمة.
+    `;
+    manager.addAnswer('ar', 'site.how_to_use', howToUseAnswer);
+
+    // د. التواصل بين البائع والمشتري (التأكيد على الوسيط)
+    manager.addDocument('ar', 'عايز اكلم البائع', 'listing.contact_seller');
+    manager.addDocument('ar', 'رقم صاحب الشقة', 'listing.contact_seller');
+    manager.addDocument('ar', 'تواصل مع المالك', 'listing.contact_seller');
+    manager.addDocument('ar', 'رقم المالك', 'listing.contact_seller');
+    manager.addAnswer('ar', 'listing.contact_seller', 'حرصاً على أمانك وضمان الجدية، التواصل وإتمام الصفقة يتم حصرياً عن طريق <strong>فريق عقارك</strong>. نحن حلقة الوصل بينك وبين المالك لضمان حقوق الطرفين.');
+
+    // هـ. نية البحث وسيناريوهات البيع
     manager.addDocument('ar', 'ازاي ابيع شقة', 'listing.add');
     manager.addDocument('ar', 'اضافة عقار', 'listing.add');
     manager.addDocument('ar', 'عايز ابيع', 'listing.add');
-    manager.addDocument('ar', 'بيع شقة', 'listing.add');
-    manager.addDocument('ar', 'بيع شقة في', 'listing.add'); 
-    manager.addAnswer('ar', 'listing.add', 'لبيع عقارك مجاناً، اتبع الخطوات:\n1. اضغط "اعرض عقارك للبيع" في القائمة.\n2. املأ بيانات العقار وارفع الصور.\n3. اضغط "إرسال"، وسيتم مراجعته وعرضه فوراً! 🏠💰');
-
-    // التعديل
-    manager.addDocument('ar', 'عايز اعدل الاعلان', 'listing.edit');
-    manager.addDocument('ar', 'حذف اعلان', 'listing.edit');
-    manager.addAnswer('ar', 'listing.edit', 'للتعديل أو الحذف، تواصل معنا واتساب: <a href="https://wa.me/201008102237" target="_blank" style="color:#00ff41">اضغط هنا</a>');
-
-    // د. نية البحث
     manager.addDocument('ar', 'في شقق في المعادي', 'db.search');
     manager.addDocument('ar', 'عندكم حاجة في التجمع', 'db.search');
     manager.addDocument('ar', 'عايز شقة', 'db.search');
     manager.addDocument('ar', 'ابحث عن شقة', 'db.search');
-    manager.addDocument('ar', 'عندك شقة في', 'db.search');
-    manager.addDocument('ar', 'شقة للايجار', 'db.search'); // تدريب على الإيجار
-    manager.addDocument('ar', 'شقة تمليك', 'db.search');  // تدريب على التمليك
+    manager.addAnswer('ar', 'listing.add', 'لبيع عقارك مجاناً، اتبع الخطوات:\n1. اضغط "اعرض عقارك للبيع" في القائمة.\n2. املأ بيانات العقار وارفع الصور.\n3. اضغط "إرسال"، وسيتم مراجعته وعرضه فوراً! 🏠💰');
 
     await manager.train();
     manager.save();
-    console.log("✅ تم تدريب البوت (النسخة الكاملة)");
+    console.log("✅ تم تدريب البوت (النسخة المحدثة)");
 }
 
 setupAI();
 
 // ==========================================================
-// --- API الشات (المنطق المحسن للبحث عن النوع والمنطقة) ---
+// --- API الشات (مع ميزة التعليم + تسجيل الأسئلة) ---
 // ==========================================================
 app.post('/api/chat', async (req, res) => {
     try {
@@ -246,33 +248,57 @@ app.post('/api/chat', async (req, res) => {
             return res.json({ reply: "⛔ عذراً، يرجى الالتزام بآداب الحديث." });
         }
 
+        // ==================================================
+        // 🆕 ميزة التعلم الذاتي (تعليم البوت)
+        // ==================================================
+        if (message.startsWith('تعلم:')) {
+            const content = message.replace('تعلم:', '').trim();
+            const parts = content.split('=');
+
+            if (parts.length < 2) {
+                return res.json({ reply: "⚠️ الصيغة خاطئة.\nاكتب: `تعلم: السؤال؟ = الإجابة`" });
+            }
+
+            const newQuestion = parts[0].trim();
+            const newAnswer = parts.slice(1).join('=').trim(); 
+
+            await pgQuery(`INSERT INTO bot_learning (question, answer, created_at) VALUES ($1, $2, $3)`, 
+                [newQuestion, newAnswer, new Date().toISOString()]);
+
+            return res.json({ reply: `✅ **تم الحفظ يا مدير!**\nعندما يسأل أحد: "${newQuestion}"\nسأرد بـ: "${newAnswer}"` });
+        }
+
+        // ==================================================
+        // 🆕 البحث في الذاكرة المتعلمة (قبل الـ NLP)
+        // ==================================================
+        const learnedCheck = await pgQuery(`SELECT answer FROM bot_learning WHERE $1 LIKE '%' || question || '%' LIMIT 1`, [message]);
+        if (learnedCheck.rows.length > 0) {
+            return res.json({ reply: learnedCheck.rows[0].answer });
+        }
+
         // 2. معالجة الرسالة (NLP)
         const response = await manager.process('ar', message);
 
-        // استثناء: لو المستخدم عايز يبيع (Listing Add)، نرد بخطوات البيع فوراً
         if (response.intent === 'listing.add' && response.score > 0.7) {
             return res.json({ reply: response.answer });
         }
 
-        // 3. البحث في قاعدة البيانات (Logic متطور للنوع والمنطقة)
+        // 3. البحث في قاعدة البيانات العقارية
         const isSearchIntent = 
             response.intent === 'db.search' || 
             message.includes('عندك') || 
             message.includes('شقة') || 
             message.includes('عقار') || 
-            (message.includes('في') && !message.includes('بيع') && !message.includes('تواصل'));
+            (message.includes('في') && !message.includes('بيع') && !message.includes('تواصل') && !message.includes('استخدم') && !message.includes('شرح'));
 
         if (isSearchIntent) {
-            
-            // أ. تحديد نوع العقار (إيجار أم بيع)
-            let searchType = null; // افتراضياً يبحث في الكل
+             let searchType = null;
             if (message.includes('ايجار') || message.includes('إيجار') || message.includes('مفروش')) {
                 searchType = 'إيجار';
             } else if (message.includes('بيع') || message.includes('تمليك') || message.includes('شراء')) {
                 searchType = 'بيع';
             }
 
-            // ب. تنظيف الرسالة لاستخراج اسم المنطقة
             let cleanMessage = message;
             const removeWords = [
                 'عايز', 'اريد', 'محتاج', 'ابحث', 'عن', 'في', 'شقة', 'عقار', 'محل', 'ارض', 'بكام', 'سعر', 'كام', 'موجود', 
@@ -284,22 +310,17 @@ app.post('/api/chat', async (req, res) => {
             });
             cleanMessage = cleanMessage.trim(); 
             
-            // شرط البحث: وجود اسم منطقة واضح
             if (cleanMessage.length > 2 && !cleanMessage.includes('الساعة') && !cleanMessage.includes('وقت')) {
-                
-                // بناء جملة الـ SQL ديناميكياً
                 let sqlQuery = `SELECT count(*) as count, min("numericPrice") as min_price FROM properties 
                                 WHERE (title ILIKE $1 OR description ILIKE $1 OR "hiddenCode" ILIKE $1)`;
                 const queryParams = [`%${cleanMessage}%`];
 
-                // إضافة فلتر النوع إذا وجد
                 if (searchType) {
                     sqlQuery += ` AND type = $2`;
                     queryParams.push(searchType);
                 }
 
                 const dbResult = await pgQuery(sqlQuery, queryParams);
-
                 const count = parseInt(dbResult.rows[0].count);
                 const minPrice = dbResult.rows[0].min_price;
 
@@ -317,7 +338,7 @@ app.post('/api/chat', async (req, res) => {
             }
         }
 
-        // 4. الرد المباشر (لأي سؤال تاني فهمه البوت)
+        // 4. الرد المباشر (NLP Response)
         if (response.intent !== 'None' && response.score > 0.6 && response.answer) {
             return res.json({ reply: response.answer });
         }
@@ -329,8 +350,15 @@ app.post('/api/chat', async (req, res) => {
             }
         }
 
-        // 6. الرد النهائي
+        // 6. الرد النهائي + 🆕 تسجيل السؤال غير المعروف
         console.log(`⚠️ سؤال غير مفهوم: "${message}"`);
+        
+        // تسجيل السؤال في ملف خارجي
+        const logEntry = `[${new Date().toLocaleString('en-EG')}] سؤال: ${message}\n`;
+        fs.appendFile('unanswered_questions.txt', logEntry, (err) => {
+             if (err) console.error("❌ Log Error:", err);
+        });
+
         res.json({ reply: "عذراً، لم أفهم سؤالك بدقة. 😅\nيمكنك البحث عن العقارات باسم المنطقة، أو التواصل معنا واتساب." });
 
     } catch (error) {
@@ -340,7 +368,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ==========================================================
-// (باقي كود السيرفر كما هو)
+// (باقي كود السيرفر كما هو دون تغيير)
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
