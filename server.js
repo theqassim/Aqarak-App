@@ -9,9 +9,7 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
-// 1. استدعاء مكتبة Gemini
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -20,14 +18,11 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 
-// ⚠️ مفتاح API (تأكد من استخدام المفتاح الجديد)
+// ⚠️ مفتاح API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE"; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-// استخدام موديل Gemma 3 القوي والسريع
 const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
-// ... إعدادات السيرفر وقاعدة البيانات ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SALT_ROUNDS = 10;
@@ -55,7 +50,6 @@ const dbPool = new Pool({
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
-// ... دوال الإشعارات ...
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) return;
     const embed = { title, color, fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
@@ -101,44 +95,35 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 العقل المدبر (Gemini AI Logic) - التحديث الأخير للعمولة
+// 🧠 العقل المدبر (Gemini AI Logic) - تحديث الروابط
 // ==========================================================
 
 const SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠. 
 تتحدث باللهجة المصرية الودودة والمحترفة.
-صفتك الأساسية: أنت "مستشار صبور" يحب الشرح والتوضيح بدقة.
 
-🚨 **قواعد أسلوب الرد:**
+🚨 **قواعد الرد:**
 1. **الشرح التفصيلي:** اشرح للمستخدم الخطوات والمميزات بوضوح.
-2. **الترحيب والاحتواء:** ابدأ كلامك بعبارات ترحيبية ودودة.
-3. **سياسة التواصل (صارمة):** وضح دائماً وبشكل قاطع أن التواصل مع المالك يتم حصراً عن طريق فريق "عقارك" لضمان الأمان والجدية، ونحن من نقوم بترتيب المعاينة.
-4. **الروابط:** استخدم الروابط التالية بذكاء:
-   * **واتساب:** https://wa.me/201008102237
-   * **فيسبوك:** https://www.facebook.com/share/17b14ZTvd9/
-   * **انستجرام:** https://instagram.com/aqarak.eg
-5. **التنسيق:** استخدم القوائم والنجوم (**) لتنظيم الشرح.
+2. **الترحيب:** ابدأ كلامك بعبارات ترحيبية ودودة.
+3. **التواصل:** وضح أن التواصل مع المالك يتم حصراً عبر فريق "عقارك".
+4. **الروابط (هام جداً):** عند إرسال الروابط، اكتب الرابط مباشرة **بدون أي أقواس أو تنسيق Markdown**.
+   * ✅ صحيح: https://wa.me/201008102237
+   * ❌ خطأ: [واتساب](https://wa.me/201008102237)
+   
+   استخدم هذه الروابط الخام:
+   * واتساب: https://wa.me/201008102237
+   * فيسبوك: https://www.facebook.com/share/17b14ZTvd9/
+   * انستجرام: https://instagram.com/aqarak.eg
 
-📘 **دليل المعلومات (اشرح منه باستفاضة):**
-
-**1️⃣ عن الموقع:**
-* الموقع مجاني ولا يحتاج لتسجيل دخول للتصفح.
-
-**2️⃣ للبائع (هام جداً - توضيح المصاريف):**
-* **عرض الإعلان:** مجاني تماماً (ببلاش). تقدر تعرض عقارك فوراً بدون أي رسوم.
-* **عمولة البيع:** * حالياً: **0% (مجاناً)** حتى يوم 3 مارس 2026.
-    * بعد 3 مارس 2026: العمولة هتكون **1% فقط**، وتدفع **بعد إتمام عملية البيع** وليس عند عرض الإعلان.
-* اشرح خطوات البيع: "اضغط زر اعرض عقار للبيع في الرئيسية -> املأ البيانات -> دوس إرسال".
-* **الفيديو:** ابعته واتساب (01008102237) وهنرفعه مجاناً.
-* **الشعارات:** "قانوني" (ورق سليم ومراجع) و "مميز" (بيظهر في الأول بـ 50 جنيه).
-
-**3️⃣ للمشتري (لو العميل بيدور على شقة):**
-* اشرح استخدام الفلتر (شراء/إيجار - السعر).
-* اشرح "زر الواتساب" في صفحة العقار للتواصل وتحديد معاينة.
-* كلمهم عن "العقارات المفضلة" وزر "احجز عقارك" لو ملقاش طلبه.
-
-**4️⃣ الخدمات الإضافية:**
-* خدمات التشطيب والنقل موجودة في "القائمة -> الخدمات".
+📘 **دليل المعلومات:**
+**1️⃣ عن الموقع:** مجاني ولا يحتاج تسجيل دخول.
+**2️⃣ للبائع:**
+* **عرض الإعلان:** مجاني تماماً.
+* **العمولة:** 0% (مجاناً) حتى 3 مارس 2026. بعدها 1% تُدفع **بعد البيع فقط**.
+* **الفيديو:** ابعته واتساب (01008102237) ونرفعه مجاناً.
+**3️⃣ للمشتري:**
+* استخدم زر الواتساب في صفحة العقار للتواصل.
+* استخدم زر "احجز عقارك" لو ملقتش طلبك.
 `;
 
 const chatHistories = {};
@@ -146,78 +131,52 @@ const chatHistories = {};
 async function searchPropertiesInDB(query) {
     const keywords = query.replace(/[^\u0621-\u064A\s]/g, '').split(' ').filter(w => w.length > 3);
     if (keywords.length === 0) return null;
-
     const conditions = keywords.map((_, i) => `(title ILIKE $${i+1} OR description ILIKE $${i+1})`).join(' OR ');
     const params = keywords.map(k => `%${k}%`);
-    
     try {
         const result = await pgQuery(`SELECT title, price, type, rooms, area, "hiddenCode" FROM properties WHERE ${conditions} LIMIT 4`, params);
         if (result.rows.length === 0) return null;
-        
-        let textResult = "العقارات المتاحة في قاعدة البيانات:\n";
-        result.rows.forEach(p => {
-            textResult += `- ${p.title} (${p.type})، ${p.price} ج.م، كود: ${p.hiddenCode}\n`;
-        });
+        let textResult = "العقارات المتاحة:\n";
+        result.rows.forEach(p => { textResult += `- ${p.title} (${p.type})، ${p.price} ج.م، كود: ${p.hiddenCode}\n`; });
         return textResult;
     } catch (e) { return null; }
 }
 
-// ==========================================================
-// --- API الشات ---
-// ==========================================================
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
         const sessionId = req.cookies.auth_token || 'guest_' + (req.headers['x-forwarded-for'] || req.socket.remoteAddress);
-
         if (!message) return res.json({ reply: "" });
-
         if (!chatHistories[sessionId]) {
             chatHistories[sessionId] = [
                 { role: "user", parts: [{ text: SYSTEM_INSTRUCTION }] },
-                { role: "model", parts: [{ text: "تمام يا هندسة، أنا جاهز للشرح بالتفصيل." }] }
+                { role: "model", parts: [{ text: "تمام يا هندسة، الروابط هتكون سليمة." }] }
             ];
         }
-
         let dbContext = "";
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ")) {
             const searchResult = await searchPropertiesInDB(message);
-            if (searchResult) {
-                dbContext = `\n[استخدم هذه البيانات في الشرح: ${searchResult}]`;
-            } else {
-                dbContext = `\n[لم أجد عقارات حالياً، اشرح له بالتفصيل كيف يستخدم زر "احجز عقارك".]`;
-            }
+            if (searchResult) dbContext = `\n[استخدم هذه البيانات: ${searchResult}]`;
+            else dbContext = `\n[لم أجد عقارات، وجهه لزر "احجز عقارك".]`;
         }
-
         const chatSession = model.startChat({
             history: chatHistories[sessionId],
             generationConfig: { maxOutputTokens: 1000 }, 
         });
-
         const finalPrompt = message + dbContext;
         const result = await chatSession.sendMessage(finalPrompt);
         const reply = result.response.text();
-
         chatHistories[sessionId].push({ role: "user", parts: [{ text: finalPrompt }] });
         chatHistories[sessionId].push({ role: "model", parts: [{ text: reply }] });
-        
         if (chatHistories[sessionId].length > 12) { 
-            chatHistories[sessionId] = [
-                chatHistories[sessionId][0], 
-                chatHistories[sessionId][1], 
-                ...chatHistories[sessionId].slice(-10)
-            ];
+            chatHistories[sessionId] = [chatHistories[sessionId][0], chatHistories[sessionId][1], ...chatHistories[sessionId].slice(-10)];
         }
-
         res.json({ reply: reply });
-
     } catch (error) {
         console.error("Gemini Error:", error);
-        res.status(500).json({ reply: "معلش يا هندسة، حصل مشكلة في الاتصال. ممكن تحاول تاني؟" });
+        res.status(500).json({ reply: "معلش يا هندسة، النت تقيل. جرب تاني!" });
     }
 });
-
-// ... (باقي كود السيرفر: Login, Register, CRUD كما هو بدون تغيير) ...
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
