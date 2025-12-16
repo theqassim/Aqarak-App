@@ -25,7 +25,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "ضع_مفتاح_API_الج
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // استخدام موديل Flash (الأسرع والأذكى)
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-native-audio-dialog" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 // 🔥 كود فحص الاتصال (Debug) - هيطبعلك في الـ Logs الموديلات المتاحة
 async function testGeminiConnection() {
