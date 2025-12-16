@@ -23,7 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 // ⚠️ مفتاح Gemini فقط هو المطلوب الآن
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // ... إعدادات السيرفر وقاعدة البيانات ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
