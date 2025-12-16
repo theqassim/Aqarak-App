@@ -9,7 +9,9 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
+// 1. استدعاء مكتبة Gemini
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -21,8 +23,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 // ⚠️ مفتاح API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE"; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+// استخدام موديل Gemma 3
 const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
+// ... إعدادات السيرفر وقاعدة البيانات ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SALT_ROUNDS = 10;
@@ -95,35 +100,33 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 العقل المدبر (Gemini AI Logic) - تحديث الروابط
+// 🧠 العقل المدبر (Gemini AI Logic) - التحديث الصارم (Anti-Hallucination)
 // ==========================================================
 
 const SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠. 
-تتحدث باللهجة المصرية الودودة والمحترفة.
+وظيفتك الوحيدة والحصرية هي: مساعدة المستخدمين في بيع، شراء، أو تأجير العقارات، وشرح خدمات الموقع.
 
-🚨 **قواعد الرد:**
-1. **الشرح التفصيلي:** اشرح للمستخدم الخطوات والمميزات بوضوح.
-2. **الترحيب:** ابدأ كلامك بعبارات ترحيبية ودودة.
-3. **التواصل:** وضح أن التواصل مع المالك يتم حصراً عبر فريق "عقارك".
-4. **الروابط (هام جداً):** عند إرسال الروابط، اكتب الرابط مباشرة **بدون أي أقواس أو تنسيق Markdown**.
-   * ✅ صحيح: https://wa.me/201008102237
-   * ❌ خطأ: [واتساب](https://wa.me/201008102237)
-   
-   استخدم هذه الروابط الخام:
-   * واتساب: https://wa.me/201008102237
+⛔ **قائمة الممنوعات الصارمة (Strict Guidelines):**
+1. **ممنوع منعاً باتاً** الإجابة على أي سؤال خارج مجال العقارات.
+2. إذا سألك المستخدم عن (طبخ، رياضة، دين، سياسة، برمجة، نكت، أخبار، حالة الطقس، أو أي شيء غير عقاري)، **ارفض الإجابة فوراً**.
+3. ردك الموحد في حالة الخروج عن النص هو: "معلش يا هندسة، أنا متخصص بس في العقارات وخدمات موقع عقارك، مقدرش أفيدك في الموضوع ده 😅".
+
+✅ **مجال تخصصك المسموح به فقط:**
+1. شرح كيفية استخدام الموقع (بيع، شراء، إيجار).
+2. تفاصيل العقارات المتاحة (أسعار، مساحات، أماكن).
+3. سياسات الموقع (العمولة، الشعارات، التواصل).
+4. خدمات التشطيب والنقل المتاحة على الموقع.
+
+📘 **معلوماتك العقارية المسموح لك التحدث عنها:**
+* **البائع:** عرض الإعلان مجاني تماماً. العمولة 0% (مجاناً) لحد 3 مارس 2026. بعدها العمولة 1% تدفع *بعد إتمام البيع*.
+* **المشتري:** البحث بالفلتر، التواصل عبر زر الواتساب، حجز العقارات.
+* **التواصل:** يتم حصراً عبر فريق عقارك، لا يوجد تواصل مباشر مع المالك.
+* **الروابط:** * واتساب: https://wa.me/201008102237
    * فيسبوك: https://www.facebook.com/share/17b14ZTvd9/
    * انستجرام: https://instagram.com/aqarak.eg
 
-📘 **دليل المعلومات:**
-**1️⃣ عن الموقع:** مجاني ولا يحتاج تسجيل دخول.
-**2️⃣ للبائع:**
-* **عرض الإعلان:** مجاني تماماً.
-* **العمولة:** 0% (مجاناً) حتى 3 مارس 2026. بعدها 1% تُدفع **بعد البيع فقط**.
-* **الفيديو:** ابعته واتساب (01008102237) ونرفعه مجاناً.
-**3️⃣ للمشتري:**
-* استخدم زر الواتساب في صفحة العقار للتواصل.
-* استخدم زر "احجز عقارك" لو ملقتش طلبك.
+🚨 **تذكير:** أنت خبير عقاري ولست شيف مطبخ أو مدرب كرة قدم. التزم دورك.
 `;
 
 const chatHistories = {};
@@ -131,13 +134,18 @@ const chatHistories = {};
 async function searchPropertiesInDB(query) {
     const keywords = query.replace(/[^\u0621-\u064A\s]/g, '').split(' ').filter(w => w.length > 3);
     if (keywords.length === 0) return null;
+
     const conditions = keywords.map((_, i) => `(title ILIKE $${i+1} OR description ILIKE $${i+1})`).join(' OR ');
     const params = keywords.map(k => `%${k}%`);
+    
     try {
         const result = await pgQuery(`SELECT title, price, type, rooms, area, "hiddenCode" FROM properties WHERE ${conditions} LIMIT 4`, params);
         if (result.rows.length === 0) return null;
-        let textResult = "العقارات المتاحة:\n";
-        result.rows.forEach(p => { textResult += `- ${p.title} (${p.type})، ${p.price} ج.م، كود: ${p.hiddenCode}\n`; });
+        
+        let textResult = "العقارات المتاحة في قاعدة البيانات:\n";
+        result.rows.forEach(p => {
+            textResult += `- ${p.title} (${p.type})، ${p.price} ج.م، كود: ${p.hiddenCode}\n`;
+        });
         return textResult;
     } catch (e) { return null; }
 }
@@ -146,37 +154,57 @@ app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
         const sessionId = req.cookies.auth_token || 'guest_' + (req.headers['x-forwarded-for'] || req.socket.remoteAddress);
+
         if (!message) return res.json({ reply: "" });
+
         if (!chatHistories[sessionId]) {
             chatHistories[sessionId] = [
                 { role: "user", parts: [{ text: SYSTEM_INSTRUCTION }] },
-                { role: "model", parts: [{ text: "تمام يا هندسة، الروابط هتكون سليمة." }] }
+                { role: "model", parts: [{ text: "تمام، أنا عقاري فقط." }] }
             ];
         }
+
         let dbContext = "";
+        // البحث فقط لو الكلمات تدل على عقارات
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ")) {
             const searchResult = await searchPropertiesInDB(message);
-            if (searchResult) dbContext = `\n[استخدم هذه البيانات: ${searchResult}]`;
-            else dbContext = `\n[لم أجد عقارات، وجهه لزر "احجز عقارك".]`;
+            if (searchResult) {
+                dbContext = `\n[بيانات العقارات: ${searchResult}]`;
+            }
         }
+
         const chatSession = model.startChat({
             history: chatHistories[sessionId],
-            generationConfig: { maxOutputTokens: 1000 }, 
+            generationConfig: { 
+                maxOutputTokens: 1000,
+                temperature: 0.5 // تقليل الإبداع عشان يلتزم بالتعليمات أكتر
+            }, 
         });
+
         const finalPrompt = message + dbContext;
         const result = await chatSession.sendMessage(finalPrompt);
         const reply = result.response.text();
+
         chatHistories[sessionId].push({ role: "user", parts: [{ text: finalPrompt }] });
         chatHistories[sessionId].push({ role: "model", parts: [{ text: reply }] });
+        
         if (chatHistories[sessionId].length > 12) { 
-            chatHistories[sessionId] = [chatHistories[sessionId][0], chatHistories[sessionId][1], ...chatHistories[sessionId].slice(-10)];
+            chatHistories[sessionId] = [
+                chatHistories[sessionId][0], 
+                chatHistories[sessionId][1], 
+                ...chatHistories[sessionId].slice(-10)
+            ];
         }
+
         res.json({ reply: reply });
+
     } catch (error) {
         console.error("Gemini Error:", error);
         res.status(500).json({ reply: "معلش يا هندسة، النت تقيل. جرب تاني!" });
     }
 });
+
+// ... (Login, Register, CRUD Routes remain unchanged) ...
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
