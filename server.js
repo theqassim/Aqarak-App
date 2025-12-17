@@ -23,7 +23,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE";
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
-// ... إعدادات السيرفر ...
+// إعدادات السيرفر
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SALT_ROUNDS = 10;
@@ -51,7 +51,6 @@ const dbPool = new Pool({
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
-// ... دوال الإشعارات ...
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) return;
     const embed = { title, color, fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
@@ -97,7 +96,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 قاعدة بيانات المدن والمحافظات (الموسعة) 🗺️
+// 🧠 منطق البحث الذكي (محافظات ومدن)
 // ==========================================================
 
 function expandSearchKeywords(message) {
@@ -162,12 +161,13 @@ async function searchPropertiesInDB(query) {
                 image: p.imageUrl || 'logo.png' 
             });
         });
-        return JSON.stringify(propertiesData);
+        // نرجع البيانات ومعاها العدد عشان البوت يعرفه
+        return { count: propertiesData.length, data: JSON.stringify(propertiesData) };
     } catch (e) { return null; }
 }
 
 // ==========================================================
-// 🧠 تعليمات البوت (تعديل: البوكس أصبح رابط بالكامل)
+// 🧠 تعليمات البوت (تعديل القالب لاستخدام img tag)
 // ==========================================================
 
 const SYSTEM_INSTRUCTION = `
@@ -177,20 +177,21 @@ const SYSTEM_INSTRUCTION = `
 ⛔ **قواعد صارمة:**
 1. **لا تتحدث عن أي شيء غير العقارات**.
 2. **الموقع لا يحتاج تسجيل دخول**.
-3. **الروابط:** اكتبها نصاً فقط (مثل: https://wa.me/201008102237).
-4. **عرض العقارات (The Clickable Box):**
-   عندما تجد عقارات، اعرض كل عقار باستخدام كود HTML التالي (اجعل العنصر كله رابط <a>):
+3. **عرض العقارات (The Clickable Box):**
+   عندما تجد عقارات، ابدأ ردك بجملة: "لقيت لك [العدد] عقارات يا هندسة: 👇"
+   ثم اعرض كل عقار باستخدام كود HTML التالي (بالحرف):
 
    \`\`\`html
    <a href="property-details?id={ID}" class="chat-property-box">
-       <div class="chat-box-img" style="background-image: url('{IMAGE}');">
+       <div class="chat-box-img-container">
+           <img src="{IMAGE}" alt="صورة العقار" class="chat-box-img-element">
            <span class="chat-box-tag">{TYPE}</span>
        </div>
        <div class="chat-box-content">
            <h4 class="chat-box-title">{TITLE}</h4>
            <div class="chat-box-price">{PRICE} ج.م</div>
            <div class="chat-box-details">
-               <span>🛏️ {ROOMS} غرف</span> • <span>🛁 {BATHS} حمام</span> • <span>📏 {AREA} م²</span>
+               <span>🛏️ {ROOMS}</span> • <span>🛁 {BATHS}</span> • <span>📏 {AREA}م²</span>
            </div>
            <span class="chat-box-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></span>
        </div>
@@ -220,11 +221,12 @@ app.post('/api/chat', async (req, res) => {
 
         let dbContext = "";
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ")) {
-            const searchJson = await searchPropertiesInDB(message);
-            if (searchJson) {
-                dbContext = `\n[نتائج البحث: ${searchJson}. اعرضها فوراً كـ HTML Box.]`;
+            const searchResult = await searchPropertiesInDB(message);
+            if (searchResult) {
+                // بنعرف البوت العدد هنا عشان يقوله
+                dbContext = `\n[وجدت ${searchResult.count} عقارات: ${searchResult.data}. اعرضهم فوراً مستخدماً HTML Box وقل له العدد.]`;
             } else {
-                dbContext = `\n[لا توجد نتائج. اقترح "احجز عقارك".]`;
+                dbContext = `\n[لا توجد نتائج في القاعدة. اقترح "احجز عقارك".]`;
             }
         }
 
@@ -245,6 +247,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+// ... (Login/Register/CRUD - انسخهم من الملف السابق كما هم) ...
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     let user = null; let role = 'user';

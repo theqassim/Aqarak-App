@@ -14,33 +14,60 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604" crossorigin="anonymous"></script>
     <script type="application/ld+json">
-  {
+    {
+
   "@context": "https://schema.org",
+
   "@type": "RealEstateAgent",
+
   "name": "منصة عقارك - Aqarak",
+
   "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+
   "url": "https://aqarakeg.com",
+
   "logo": "https://aqarakeg.com/logo.jpg",
+
   "image": "https://aqarakeg.com/logo.jpg",
+
   "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+
   "address": {
+
     "@type": "PostalAddress",
+
     "addressLocality": "Cairo",
+
     "addressCountry": "EG"
+
   },
+
   "priceRange": "$",
+
   "contactPoint": {
+
     "@type": "ContactPoint",
+
     "telephone": "+201008102237",
+
     "contactType": "customer service",
+
     "areaServed": "EG",
+
     "availableLanguage": ["Arabic"]
+
   },
+
   "sameAs": [
+
     "https://www.facebook.com/share/1ADgNDLXc6/",
+
     "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
+
     "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+
   ]
+
 }
     </script>
 </head>
@@ -165,6 +192,7 @@
     </div>
 
     <style>
+        /* === أساسيات === */
         .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
         .popup-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.5s; color: #fff; }
         .news-header { color: #00ff41; font-size: 32px; font-weight: 900; margin-bottom: 15px; }
@@ -175,7 +203,7 @@
         .checkbox-container { margin-top: 15px; font-size: 14px; color: #aaa; display: flex; justify-content: center; gap: 8px; cursor: pointer; }
         @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* شات يمين */
+        /* === شات === */
         .chatbot-toggler { position: fixed; bottom: 85px; right: 25px; left: auto; height: 60px; width: 60px; border-radius: 50%; background: #007bff; color: #fff; border: none; font-size: 28px; cursor: pointer; z-index: 99999; transition: transform 0.3s; box-shadow: 0 0 15px rgba(0,123,255,0.6); }
         .chatbot-toggler:hover { transform: scale(1.1); background: #0056b3; }
         .chatbot-window { position: fixed; right: 25px; left: auto; bottom: 155px; width: 90%; max-width: 450px; height: 75vh; max-height: 650px; background: #1c2630; border: 1px solid #333; border-radius: 15px; overflow: hidden; opacity: 0; pointer-events: none; transform: scale(0.5); transform-origin: bottom right; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: all 0.3s; z-index: 100000; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; }
@@ -204,85 +232,106 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         body.no-scroll { overflow: hidden !important; height: 100vh; }
         @media (max-width: 450px) { .chatbot-window { width: 95%; right: 2.5%; bottom: 20px; height: 80vh; } .chatbot-toggler { bottom: 20px; right: 20px; } }
-        /* === تنسيق بطاقة العقار القابلة للضغط === */
-.chat-property-box {
-    display: block; /* عشان الرابط ياخد شكل البوكس كامل */
-    background: #1c2630;
-    border: 1px solid #333;
-    border-radius: 12px;
-    overflow: hidden;
-    margin: 12px 0;
-    width: 100%;
-    max-width: 280px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    text-decoration: none; /* إخفاء الخط تحت الكلام */
-    color: inherit; /* عشان ياخد لون النص العادي */
-    transition: transform 0.2s;
-}
 
-.chat-property-box:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.7);
-}
+        /* 🔥 تصميم كارت العقار "المحدد والبارز" (Pop-out Card) 🔥 */
+        .chat-property-box {
+            display: block; /* عشان الرابط ياخد شكل البوكس كامل */
+            background: #ffffff; /* خلفية بيضاء عشان تبرز وسط الشات الغامق */
+            border: 1px solid #ddd; /* حدود خفيفة */
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px; /* مسافة تفصله عن الكلام */
+            margin-bottom: 10px;
+            width: 95%; /* عشان ميكونش لازق في الحواف */
+            margin-left: auto; margin-right: auto;
+            max-width: 280px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4); /* ظل قوي للبروز */
+            text-decoration: none; /* إخفاء الخط تحت الكلام */
+            color: #333; /* لون نص غامق للقراءة */
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
 
-.chat-box-img {
-    height: 150px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    background-color: #333;
-}
+        .chat-property-box:hover {
+            transform: translateY(-5px); /* حركة خفيفة عند اللمس */
+            box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+        }
 
-.chat-box-tag {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #FFD700;
-    color: #000;
-    padding: 3px 10px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
+        .chat-box-img-container {
+            width: 100%;
+            height: 160px;
+            position: relative;
+            background-color: #eee;
+        }
 
-.chat-box-content {
-    padding: 15px;
-    text-align: center;
-}
+        .chat-box-img-element {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
-.chat-box-title {
-    color: #4facfe;
-    margin: 0 0 5px;
-    font-size: 1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+        .chat-box-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px; /* خليناها يمين عشان العربي */
+            background: #FFD700;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
 
-.chat-box-price {
-    color: #fff;
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 8px;
-}
+        .chat-box-content {
+            padding: 15px;
+            text-align: right; /* محاذاة يمين للعربي */
+        }
 
-.chat-box-details {
-    color: #aaa;
-    font-size: 0.8rem;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
+        .chat-box-title {
+            color: #2c3e50; /* لون كحلي مميز */
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-.chat-box-btn {
-    display: inline-block; /* بقى مجرد شكل زرار */
-    background: #00e676;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-}
+        .chat-box-price {
+            color: #007bff; /* السعر بالأزرق */
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .chat-box-details {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+
+        /* الزرار الوهمي (الشكل بس) */
+        .chat-box-btn {
+            display: block;
+            background: #28a745; /* أخضر زي الواتساب */
+            color: #fff;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        
+        .chat-property-box:hover .chat-box-btn {
+            background: #218838; /* تغميق اللون عند اللمس */
+        }
     </style>
 
     <script>
@@ -304,7 +353,6 @@
         const chatbox = document.querySelector(".chatbox");
         const chatbotWindow = document.querySelector("#chatbotWindow");
         const micBtn = document.querySelector("#micBtn");
-        // تحديد عنصر الاقتراحات للإخفاء
         const suggestionsBox = document.querySelector(".suggestions-container");
         let userMessage;
 
@@ -342,7 +390,6 @@
         }
 
         const formatMessage = (text) => {
-            // Regex مطور للروابط يتجاهل الأقواس الخارجية
             let formatted = text.replace(/(https?:\/\/[^\s)\]]+)/g, '<a href="$1" target="_blank">$1</a>');
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             formatted = formatted.replace(/\n/g, '<br>');
@@ -376,7 +423,6 @@
             userMessage = chatInput.value.trim();
             if(!userMessage) return;
 
-            // 🔥 إخفاء الاقتراحات عند إرسال أول رسالة
             if(suggestionsBox) suggestionsBox.style.display = "none";
 
             chatbox.appendChild(createChatLi(userMessage, "outgoing"));
@@ -396,6 +442,7 @@
             if(e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChat(); }
         });
 
+        // سكربتات التثبيت
         let deferredPrompt;
         const installToast = document.getElementById('install-toast');
         window.addEventListener('beforeinstallprompt', (e) => {
