@@ -204,6 +204,85 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         body.no-scroll { overflow: hidden !important; height: 100vh; }
         @media (max-width: 450px) { .chatbot-window { width: 95%; right: 2.5%; bottom: 20px; height: 80vh; } .chatbot-toggler { bottom: 20px; right: 20px; } }
+        /* === تنسيق بطاقة العقار القابلة للضغط === */
+.chat-property-box {
+    display: block; /* عشان الرابط ياخد شكل البوكس كامل */
+    background: #1c2630;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 12px 0;
+    width: 100%;
+    max-width: 280px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    text-decoration: none; /* إخفاء الخط تحت الكلام */
+    color: inherit; /* عشان ياخد لون النص العادي */
+    transition: transform 0.2s;
+}
+
+.chat-property-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+}
+
+.chat-box-img {
+    height: 150px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    background-color: #333;
+}
+
+.chat-box-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #FFD700;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.chat-box-content {
+    padding: 15px;
+    text-align: center;
+}
+
+.chat-box-title {
+    color: #4facfe;
+    margin: 0 0 5px;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-box-price {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.chat-box-details {
+    color: #aaa;
+    font-size: 0.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chat-box-btn {
+    display: inline-block; /* بقى مجرد شكل زرار */
+    background: #00e676;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+}
     </style>
 
     <script>
