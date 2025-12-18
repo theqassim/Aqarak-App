@@ -12,12 +12,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         console.log("📦 البيانات المستلمة من السيرفر:", data);
 
-        if (!data.isAuthenticated || data.role !== 'admin') {
+       if (!data.isAuthenticated || data.role !== 'admin') {
             console.warn("⛔ محاولة دخول غير مصرح بها.");
-            console.log("هل أنت مسجل؟", data.isAuthenticated);
-            console.log("رتبتك الحالية:", data.role);
-            
-            alert("أنت لا تملك صلاحية الأدمن، أو لم يتم تسجيل دخولك بنجاح.\n(راجع الكونسول للتفاصيل)");
+            // alert("غير مسموح لك بدخول هذه الصفحة!"); // ممكن تلغي الـ alert عشان ميكونش مزعج
+            window.location.href = '/'; // 👈 طرد المستخدم للصفحة الرئيسية فوراً
         } else {
             console.log("✅ أهلاً بك يا أدمن!");
             document.body.style.display = 'block';
