@@ -51,6 +51,40 @@ const dbPool = new Pool({
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
+// ✅✅✅ دالة حذف الصور (المهمة جداً) ✅✅✅
+async function deleteCloudinaryImages(imageUrls) {
+    if (!imageUrls || imageUrls.length === 0) return;
+    
+    // التعامل مع imageUrls سواء كانت مصفوفة أو نص
+    let urlsArray = [];
+    if (Array.isArray(imageUrls)) {
+        urlsArray = imageUrls;
+    } else if (typeof imageUrls === 'string') {
+        // لو جاية كنص مفصول بـ | أو ,
+        if (imageUrls.includes(' | ')) urlsArray = imageUrls.split(' | ');
+        else urlsArray = [imageUrls];
+    }
+
+    const publicIds = urlsArray.map(url => {
+        try {
+            const parts = url.split('/');
+            const filename = parts.pop();       
+            const folder = parts.pop();         
+            const id = filename.split('.')[0];  
+            return `${folder}/${id}`; 
+        } catch (e) { return null; }
+    }).filter(id => id !== null);
+
+    if (publicIds.length > 0) {
+        try {
+            await cloudinary.api.delete_resources(publicIds);
+            console.log(`🗑️ Deleted from Cloudinary: ${publicIds.join(', ')}`);
+        } catch (error) {
+            console.error("⚠️ Cloudinary Delete Error:", error.message);
+        }
+    }
+}
+
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) return;
     const embed = { title, color, fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
@@ -95,10 +129,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
-// ==========================================================
-// 🧠 خريطة مصر الشاملة
-// ==========================================================
-
+// ... (بحث ودوال البوت كما هي في الكود السابق) ...
 function expandSearchKeywords(message) {
     const locations = {
         "قاهرة": ["القاهرة", "التجمع", "الشروق", "مدينتي", "الرحاب", "المستقبل", "العاصمة الادارية", "مصر الجديدة", "مدينة نصر", "المعادي", "زهراء المعادي", "المقطم", "القطامية", "الزيتون", "عين شمس", "المرج", "السلام", "العباسية", "وسط البلد", "الزمالك", "جاردن سيتي", "شبرا مصر", "حلوان", "المعصرة", "15 مايو", "بدر", "حدائق القبة", "الوايلي", "المنيل", "السيدة زينب", "عابدين", "الازبكية", "بولاق ابو العلا", "الشرابية", "روض الفرج", "الساحل", "شبرا", "المطرية", "المرج", "النزهة", "هليوبوليس", "عين شمس", "الاميرية", "حدائق القبة", "الوايلي", "باب الشعرية", "الموسكي", "الدرب الاحمر", "الخليفة", "مصر القديمة", "البساتين", "دار السلام", "طرة", "المعصرة", "التبين", "حلوان"],
@@ -136,7 +167,6 @@ function expandSearchKeywords(message) {
     return [...new Set(expandedKeywords)];
 }
 
-// 🧠 دالة البحث المعدلة: تجلب أحدث العقارات إذا لم يحدد المستخدم موقعاً
 async function searchPropertiesInDB(query) {
     const keywords = expandSearchKeywords(query);
     
@@ -173,11 +203,6 @@ async function searchPropertiesInDB(query) {
         return { count: propertiesData.length, data: JSON.stringify(propertiesData) };
     } catch (e) { return { count: 0, data: "[]" }; }
 }
-
-// ==========================================================
-// 🧠 دستور البوت (System Prompt)
-// ==========================================================
-
 const SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠.
 تتحدث باللهجة المصرية الودودة.
@@ -187,11 +212,10 @@ const SYSTEM_INSTRUCTION = `
 1. **الالتزام بالبيانات:** ستصلك بيانات من قاعدة البيانات. إذا كان العدد 0، قل "مفيش عقارات متاحة". ممنوع التأليف.
 2. **نطاق العمل:** شقق وفيلات فقط. لا محلات/أراضي/سماسرة.
 3. **الشخصي:** لا تتدخل في الأمور الشخصية (يوتيوب، طبخ..).
-4. **عرض العقارات (تسلسل العرض):**
-   - **إذا سأل "ايه المتاح" (بدون تحديد):** اشرح العقارات الموجودة في البيانات كلامياً باختصار (مثلاً: "متاح شقة في الشروق بكذا، وشقة في التجمع بكذا.."). ثم قل "تحب تشوف الكروت؟".
-   - **إذا بحث عن "محافظة":** اذكر العدد في المدن.
-   - **إذا بحث عن "مدينة":** اشرح ثم اعرض الكروت.
-   - **عند طلب الكروت (أو الموافقة):** استخدم كود HTML التالي فقط:
+4. **عرض العقارات:**
+   - بحث محافظة: اذكر العدد في المدن.
+   - بحث مدينة: اشرح ثم اعرض الكروت.
+   - الكارت: استخدم الكود التالي فقط:
    
    <a href="property-details?id={ID}" class="chat-property-box">
        <div class="chat-box-header">
@@ -256,13 +280,11 @@ app.post('/api/chat', async (req, res) => {
         let dbContext = "";
         let finalPrompt = message;
 
-        // توسيع الشرط ليشمل الأسئلة العامة
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ") || message.includes("محافظة") || message.includes("مدينة") || message.includes("عندك") || message.includes("متاح") || message.includes("ايه") || message.includes("وريني") || message.includes("شوف")) {
             
             const searchResult = await searchPropertiesInDB(message);
             
             if (searchResult && searchResult.count > 0) {
-                // نرسل له البيانات ونقوله دول "أحدث العقارات" أو "العقارات المتاحة"
                 dbContext = `\n[🔴 **بيانات قاعدة البيانات:** وجدت عدد (${searchResult.count}) عقارات. البيانات هي: ${searchResult.data}. هذه هي العقارات المتاحة حالياً، تحدث عنها.]`;
                 finalPrompt = message + dbContext;
             } else {
@@ -293,7 +315,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// ... (باقي كود السيرفر كما هو) ...
+// ... (باقي كود الـ Login و Routes انسخه من الملف السابق كما هو) ...
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     let user = null; let role = 'user';
