@@ -3,46 +3,25 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="6vlh8wl2ZgY_3ZSoahXRAgJc2VxgA9mRumTOljrfH0U" />
-    <meta name="description" content="أفضل منصة عقارية في مصر لعرض وطلب العقارات مجاناً. شقق للبيع، إيجار، أراضي، وفيلات بأقل نسبة سمسرة. موقع عقارك يسهل عليك البحث عن سكن." />
-    <meta name="keywords" content="عقارات مصر, شقق للبيع, ايجار شقق, عقارك, سمسرة, بيع عقار, موقع عقارات مجاني" />
     <title>عقارك - دخول / تسجيل</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1c2630">
-<link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="styles.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "RealEstateAgent",
-  "name": "منصة عقارك - Aqarak",
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
-  "url": "https://aqarakeg.com",
-  "logo": "https://aqarakeg.com/logo.jpg",
-  "image": "https://aqarakeg.com/logo.jpg",
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Cairo",
-    "addressCountry": "EG"
-  },
-  "priceRange": "$",
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+201008102237",
-    "contactType": "customer service",
-    "areaServed": "EG",
-    "availableLanguage": ["Arabic"]
-  },
-  "sameAs": [
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-  ]
-}
-</script>
+    <style>
+        /* ستايل إضافي للنافذة المنبثقة والتبويبات */
+        .auth-tabs { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
+        .tab-btn { background: transparent; border: none; color: #fff; padding: 10px 20px; cursor: pointer; font-size: 1.1rem; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-bottom: 2px solid #00ff88; color: #00ff88; }
+        
+        .otp-group { display: none; margin-top: 15px; }
+        .otp-btn { background: #ffaa00; color: #000; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; margin-top: 5px; }
+        
+        /* Modal for Forgot Password */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #1c2630; margin: 15% auto; padding: 20px; border: 1px solid #00ff88; width: 90%; max-width: 400px; border-radius: 10px; text-align: center; color: white; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: #fff; }
+        .forgot-link { color: #aaa; font-size: 0.9rem; margin-top: 10px; display: block; cursor: pointer; text-decoration: underline; }
+    </style>
 </head>
 <body class="centered-body">
 
@@ -50,28 +29,74 @@
         <div class="auth-frame neon-glow centered-page-content">
             
             <div class="auth-tabs">
-                <button id="tab-login" class="tab-btn">تسجيل الدخول</button>
+                <button class="tab-btn active" onclick="switchTab('login')">تسجيل دخول</button>
+                <button class="tab-btn" onclick="switchTab('register')">حساب جديد</button>
             </div>
-            <div id="login-form-wrapper" style="display:block;">
+
+            <div id="login-form-wrapper">
                 <p id="login-message" class="message"></p>
                 <form id="login-form" class="auth-form">
                     <div class="input-group">
-                        <label for="login-email">البريد الإلكتروني</label>
-                        <input type="email" id="login-email" class="neon-input-white" required>
+                        <label>رقم الواتساب (للتواصل والدخول)</label>
+                        <input type="tel" id="login-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
                     </div>
                     <div class="input-group">
-                        <label for="login-password">كلمة المرور</label>
+                        <label>كلمة المرور</label>
                         <input type="password" id="login-password" class="neon-input-white" required>
                     </div>
                     <button type="submit" class="btn-neon-auth">دخول</button>
+                    <span class="forgot-link" onclick="openForgotModal()">نسيت كلمة المرور؟</span>
+                </form>
+            </div>
+
+            <div id="register-form-wrapper" style="display:none;">
+                <p id="register-message" class="message"></p>
+                <form id="register-form" class="auth-form">
+                    <div class="input-group">
+                        <label>الاسم بالكامل</label>
+                        <input type="text" id="reg-name" class="neon-input-white" required>
+                    </div>
+                    <div class="input-group">
+                        <label>رقم الواتساب</label>
+                        <input type="tel" id="reg-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
+                        <button type="button" id="send-otp-btn" class="otp-btn" onclick="sendRegisterOTP()">أرسل كود التحقق للواتساب</button>
+                    </div>
+                    
+                    <div class="input-group otp-group" id="reg-otp-group">
+                        <label>كود التحقق المرسل</label>
+                        <input type="text" id="reg-otp" class="neon-input-white" placeholder="أدخل الكود المكون من 4 أرقام">
+                    </div>
+
+                    <div class="input-group">
+                        <label>كلمة المرور</label>
+                        <input type="password" id="reg-password" class="neon-input-white" required>
+                    </div>
+                    <button type="submit" class="btn-neon-auth" id="reg-submit-btn" disabled>إنشاء الحساب</button>
                 </form>
             </div>
 
         </div>
     </main>
 
+    <div id="forgotModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeForgotModal()">&times;</span>
+            <h3>استعادة كلمة المرور</h3>
+            <p id="forgot-message" class="message"></p>
+            
+            <div id="forgot-step-1">
+                <input type="tel" id="forgot-phone" class="neon-input-white" placeholder="رقم الواتساب" style="width:90%; margin-bottom:10px;">
+                <button class="btn-neon-auth" onclick="sendForgotOTP()">أرسل الكود</button>
+            </div>
+
+            <div id="forgot-step-2" style="display:none;">
+                <input type="text" id="forgot-otp" class="neon-input-white" placeholder="كود التحقق" style="width:90%; margin-bottom:10px;">
+                <input type="password" id="new-password" class="neon-input-white" placeholder="كلمة المرور الجديدة" style="width:90%; margin-bottom:10px;">
+                <button class="btn-neon-auth" onclick="resetPassword()">تغيير كلمة المرور</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
 </body>
 </html>
