@@ -1,3 +1,4 @@
+if (data.isAuthenticated && data.role === 'user') {
 async function logout() {
     if (!confirm('هل تريد تأكيد تسجيل الخروج؟')) return;
 
@@ -9,7 +10,7 @@ async function logout() {
             localStorage.removeItem('userRole');
             localStorage.clear();
 
-            window.location.href = 'home';
+            window.location.href = 'index';
         } else {
             console.error('Server logout failed');
             alert('حدث خطأ أثناء محاولة الخروج من السيرفر.');
@@ -30,3 +31,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+}
