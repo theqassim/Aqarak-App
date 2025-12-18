@@ -28,7 +28,7 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
 // ... إعدادات السيرفر ...
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL; // يمكن استخدامه كمعرف للأدمن
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PHONE = "01008102237"; // رقم الأدمن
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SALT_ROUNDS = 10;
@@ -62,12 +62,12 @@ function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 const whatsappClient = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: { 
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] // إعدادات هامة لـ Render
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
 
 whatsappClient.on('qr', (qr) => {
-    console.log('📱 امسح كود QR ده عشان تربط الواتساب بالسيرفر:');
+    console.log('📱 QR Code received, scan please:');
     qrcode.generate(qr, { small: true });
 });
 
@@ -77,28 +77,41 @@ whatsappClient.on('ready', () => {
 
 whatsappClient.initialize();
 
-// دالة إرسال الرسالة عبر واتساب
+// ✅ دالة إرسال الرسالة عبر واتساب (النسخة المصححة والمضمونة)
 async function sendWhatsAppMessage(phone, message) {
     try {
-        let formattedNumber = phone.replace(/\D/g, '');
-        if (formattedNumber.startsWith('01')) formattedNumber = '2' + formattedNumber;
-        const chatId = `${formattedNumber}@c.us`;
-        await whatsappClient.sendMessage(chatId, message);
-        return true;
+        // 1. تنظيف الرقم وتنسيقه
+        let formattedNumber = phone.replace(/\D/g, ''); // حذف أي رموز
+        if (formattedNumber.startsWith('01')) {
+            formattedNumber = '2' + formattedNumber; // إضافة كود مصر
+        }
+
+        // 2. الحصول على المعرف الصحيح من واتساب (يمنع خطأ Lid missing)
+        const numberDetails = await whatsappClient.getNumberId(formattedNumber);
+
+        if (numberDetails) {
+            const chatId = numberDetails._serialized; // الـ ID الرسمي
+            await whatsappClient.sendMessage(chatId, message);
+            console.log(`✅ تم إرسال الرسالة بنجاح للرقم: ${formattedNumber}`);
+            return true;
+        } else {
+            console.error(`❌ الرقم غير مسجل في واتساب: ${formattedNumber}`);
+            return false;
+        }
+
     } catch (error) {
         console.error("WhatsApp Send Error:", error);
         return false;
     }
 }
 
-// 🧠 مخزن مؤقت لأكواد التحقق (OTP Store)
-const otpStore = {}; // { "010xxxx": { code: "1234", expires: 123456789 } }
+// 🧠 مخزن مؤقت لأكواد التحقق
+const otpStore = {}; 
 
 // ==========================================================
 // 🧠 دوال المساعدة
 // ==========================================================
 
-// دالة حذف الصور
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) return;
     const publicIds = imageUrls.map(url => {
@@ -183,7 +196,6 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
 async function createTables() {
     const queries = [
         `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE, "video_urls" TEXT[] DEFAULT '{}')`,
-        // 🔴 تعديل جدول المستخدمين لاستخدام الهاتف
         `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
@@ -213,7 +225,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 خريطة مصر الشاملة (للبحث والفرز)
+// 🧠 خريطة مصر الشاملة
 // ==========================================================
 const EGYPT_LOCATIONS = {
     "قاهرة": ["القاهرة", "التجمع", "الشروق", "مدينتي", "الرحاب", "المستقبل", "العاصمة الادارية", "مصر الجديدة", "مدينة نصر", "المعادي", "زهراء المعادي", "المقطم", "القطامية", "الزيتون", "عين شمس", "المرج", "السلام", "العباسية", "وسط البلد", "الزمالك", "جاردن سيتي", "شبرا مصر", "حلوان", "المعصرة", "15 مايو", "بدر", "حدائق القبة", "الوايلي", "المنيل", "السيدة زينب", "الازبكية", "بولاق", "عابدين", "الموسكي", "الخليفة", "المطرية", "النزهة", "شيراتون", "الالف مسكن", "الحلمية", "منشأة ناصر", "طرة", "المعصرة", "التبين"],
@@ -245,7 +257,7 @@ const EGYPT_LOCATIONS = {
     "وادي جديد": ["الوادي الجديد", "الخارجة", "الداخلة", "الفرافرة", "باريس", "بلاط"]
 };
 
-// ... (دوال Levenshtein, normalizeText, expandSearchKeywords كما هي في الكود السابق) ...
+// ... (دوال Levenshtein, normalizeText, expandSearchKeywords كما هي) ...
 function getLevenshteinDistance(a, b) {
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
