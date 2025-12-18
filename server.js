@@ -61,7 +61,9 @@ function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 // ==========================================================
 const whatsappClient = new Client({
     authStrategy: new LocalAuth(),
-    puppeteer: { args: ['--no-sandbox'] }
+    puppeteer: { 
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] // إعدادات هامة لـ Render
+    }
 });
 
 whatsappClient.on('qr', (qr) => {
@@ -139,14 +141,16 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
 تتحدث باللهجة المصرية الودودة.
 خاطب المستخدم دائماً بصيغة المذكر.
 
-⛔ **قواعد صارمة جداً:**
-1. **الالتزام بالبيانات:** ستصلك بيانات. إذا كان العدد 0، رد: "للأسف مفيش عقارات مطابقة حالياً. ممكن تسيب طلبك في زر (احجز عقارك)".
-2. **البحث العام (GENERAL_STATS):** - عندما يسأل المستخدم سؤالاً عاماً (ايه المتاح؟ شيك قاعدة البيانات؟)، ستصلك إحصائيات.
-   - **مهمتك:** عرض الأعداد فقط (مثلاً: "متاح 5 عقارات: 3 في الشروق و 2 في التجمع").
-   - 🛑 **ممنوع نهائياً** عرض أي كروت أو تفاصيل في هذا الرد، حتى لو كان العدد عقار واحد فقط.
-   - اختم بسؤال: "تحب تشوف تفاصيل أنهي منطقة؟".
-3. **البحث المخصص (SPECIFIC_DATA):** عندما يحدد المستخدم مدينة، اشرح التفاصيل واعرض الكروت.
-4. **كود الكارت:**
+⛔ **قواعد صارمة جداً (Zero Tolerance Rules):**
+1. **الالتزام بالبيانات:** ستصلك بيانات حقيقية. إذا كان العدد 0، قل "مفيش عقارات حالياً".
+2. **سيناريو البحث العام (GENERAL_STATS):** - يحدث عندما يسأل المستخدم: "ايه المتاح؟"، "شيك قاعدة البيانات"، "عندك ايه؟".
+   - **التعليمات:** اعرض الأعداد والإحصائيات فقط (نصياً).
+   - **تحذير:** 🚫 **ممنوع منعاً باتاً عرض أي كود HTML أو كروت عقارات في هذا الرد**، حتى لو كان هناك عقار واحد فقط متاح.
+   - مثال للرد الصحيح: "يا باشا متاح حالياً 3 عقارات: 1 في الشروق و 2 في مناطق أخرى. تحب أعرضلك تفاصيل أنهي منطقة؟".
+3. **سيناريو البحث المخصص (SPECIFIC_DATA):**
+   - يحدث فقط عندما يحدد المستخدم مدينة أو يطلب التفاصيل.
+   - هنا فقط يمكنك عرض الشرح وكروت العقارات.
+4. **كود الكارت:** استخدم هذا الكود فقط عند الطلب المخصص:
    <a href="property-details?id={ID}" class="chat-property-box">
        <div class="chat-box-header">
            <span class="title-tag">{TYPE}</span>
@@ -555,8 +559,18 @@ app.delete('/api/property/:id', async (req, res) => { try { const resGet = await
 app.post('/api/favorites', async (req, res) => { try { await pgQuery(`INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`, [req.body.userEmail, req.body.propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة' }); throw err; } });
 app.delete('/api/favorites/:propertyId', async (req, res) => { try { await pgQuery(`DELETE FROM favorites WHERE user_email = $1 AND property_id = $2`, [req.query.userEmail, req.params.propertyId]); res.json({ success: true }); } catch (err) { throw err; } });
 app.get('/api/favorites', async (req, res) => { const sql = `SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id FROM properties p JOIN favorites f ON p.id = f.property_id WHERE f.user_email = $1 ORDER BY f.id DESC`; try { const result = await pgQuery(sql, [req.query.userEmail]); res.json(result.rows); } catch (err) { throw err; } });
-// باقي الـ Routes (تغيير باسورد وحذف حساب) هنخليها تعتمد على Phone بدل Email في المستقبل لو حبيت
 app.delete('/api/user/delete-account', async (req, res) => { try { await pgQuery(`DELETE FROM users WHERE phone = $1`, [req.body.phone]); res.json({ success: true }); } catch (err) { throw err; } });
+
+// 🛑 رابط مؤقت لإصلاح الداتابيز (استخدمه مرة واحدة وامسحه)
+app.get('/fix-db', async (req, res) => {
+    try {
+        await pgQuery('DROP TABLE IF EXISTS users CASCADE');
+        await pgQuery('DROP TABLE IF EXISTS seller_submissions CASCADE');
+        res.send('✅ تم حذف الجداول القديمة. اعمل Restart للسيرفر دلوقتي عشان ينشئ الجداول الجديدة صح.');
+    } catch (error) {
+        res.send('❌ حدث خطأ: ' + error.message);
+    }
+});
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'home.html')); });
 app.get('/api/ping', (req, res) => res.json({status: "OK"}));
