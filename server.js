@@ -51,26 +51,17 @@ const dbPool = new Pool({
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
-// ✅✅✅ دالة حذف الصور (المهمة جداً) ✅✅✅
+// ✅ دالة حذف الصور من Cloudinary (تمت إضافتها هنا)
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || imageUrls.length === 0) return;
     
-    // التعامل مع imageUrls سواء كانت مصفوفة أو نص
-    let urlsArray = [];
-    if (Array.isArray(imageUrls)) {
-        urlsArray = imageUrls;
-    } else if (typeof imageUrls === 'string') {
-        // لو جاية كنص مفصول بـ | أو ,
-        if (imageUrls.includes(' | ')) urlsArray = imageUrls.split(' | ');
-        else urlsArray = [imageUrls];
-    }
-
-    const publicIds = urlsArray.map(url => {
+    // استخراج الـ Public ID من الرابط
+    const publicIds = imageUrls.map(url => {
         try {
             const parts = url.split('/');
-            const filename = parts.pop();       
-            const folder = parts.pop();         
-            const id = filename.split('.')[0];  
+            const filename = parts.pop();
+            const folder = parts.pop(); // aqarak_properties أو aqarak_submissions
+            const id = filename.split('.')[0];
             return `${folder}/${id}`; 
         } catch (e) { return null; }
     }).filter(id => id !== null);
@@ -78,9 +69,9 @@ async function deleteCloudinaryImages(imageUrls) {
     if (publicIds.length > 0) {
         try {
             await cloudinary.api.delete_resources(publicIds);
-            console.log(`🗑️ Deleted from Cloudinary: ${publicIds.join(', ')}`);
+            console.log(`🗑️ Deleted ${publicIds.length} images from Cloudinary.`);
         } catch (error) {
-            console.error("⚠️ Cloudinary Delete Error:", error.message);
+            console.error("⚠️ Cloudinary Delete Warning:", error.message);
         }
     }
 }
@@ -129,7 +120,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
-// ... (بحث ودوال البوت كما هي في الكود السابق) ...
+// ==========================================================
+// 🧠 خريطة مصر الشاملة
+// ==========================================================
+
 function expandSearchKeywords(message) {
     const locations = {
         "قاهرة": ["القاهرة", "التجمع", "الشروق", "مدينتي", "الرحاب", "المستقبل", "العاصمة الادارية", "مصر الجديدة", "مدينة نصر", "المعادي", "زهراء المعادي", "المقطم", "القطامية", "الزيتون", "عين شمس", "المرج", "السلام", "العباسية", "وسط البلد", "الزمالك", "جاردن سيتي", "شبرا مصر", "حلوان", "المعصرة", "15 مايو", "بدر", "حدائق القبة", "الوايلي", "المنيل", "السيدة زينب", "عابدين", "الازبكية", "بولاق ابو العلا", "الشرابية", "روض الفرج", "الساحل", "شبرا", "المطرية", "المرج", "النزهة", "هليوبوليس", "عين شمس", "الاميرية", "حدائق القبة", "الوايلي", "باب الشعرية", "الموسكي", "الدرب الاحمر", "الخليفة", "مصر القديمة", "البساتين", "دار السلام", "طرة", "المعصرة", "التبين", "حلوان"],
@@ -170,24 +164,22 @@ function expandSearchKeywords(message) {
 async function searchPropertiesInDB(query) {
     const keywords = expandSearchKeywords(query);
     
-    let sql = `SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties`;
+    let sql = "";
     let params = [];
-    
-    // إذا وجدنا كلمات مفتاحية (مناطق)، نبحث عنها
+
     if (keywords.length > 0) {
         const conditions = keywords.map((_, i) => `(title ILIKE $${i+1} OR description ILIKE $${i+1})`).join(' OR ');
-        sql += ` WHERE ${conditions}`;
+        sql = `SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties WHERE ${conditions} LIMIT 15`;
         params = keywords.map(k => `%${k}%`);
     } else {
-        // إذا لم نجد مناطق، نعتبره بحث عام ونجيب أحدث العقارات
-        // لا يوجد شرط WHERE هنا
+        // بحث عام (أحدث 20 عقار)
+        sql = `SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties ORDER BY id DESC LIMIT 20`;
+        params = [];
     }
-
-    // دائماً نرتب بالأحدث ونحدد العدد بـ 10
-    sql += ` ORDER BY id DESC LIMIT 10`;
     
     try {
         const result = await pgQuery(sql, params);
+        
         let propertiesData = [];
         if (result.rows.length > 0) {
             propertiesData = result.rows.map(p => ({
@@ -203,6 +195,11 @@ async function searchPropertiesInDB(query) {
         return { count: propertiesData.length, data: JSON.stringify(propertiesData) };
     } catch (e) { return { count: 0, data: "[]" }; }
 }
+
+// ==========================================================
+// 🧠 دستور البوت (System Prompt) - الدليل الشامل
+// ==========================================================
+
 const SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠.
 تتحدث باللهجة المصرية الودودة.
@@ -211,11 +208,12 @@ const SYSTEM_INSTRUCTION = `
 ⛔ **قواعد صارمة جداً (Zero Tolerance):**
 1. **الالتزام بالبيانات:** ستصلك بيانات من قاعدة البيانات. إذا كان العدد 0، قل "مفيش عقارات متاحة". ممنوع التأليف.
 2. **نطاق العمل:** شقق وفيلات فقط. لا محلات/أراضي/سماسرة.
-3. **الشخصي:** لا تتدخل في الأمور الشخصية (يوتيوب، طبخ..).
+3. **الشخصي:** لا تتدخل في الأمور الشخصية.
 4. **عرض العقارات:**
+   - بحث عام (ايه المتاح): صنف العقارات حسب المحافظة (مثال: "في 3 في القاهرة، 2 في الجيزة").
    - بحث محافظة: اذكر العدد في المدن.
-   - بحث مدينة: اشرح ثم اعرض الكروت.
-   - الكارت: استخدم الكود التالي فقط:
+   - بحث مدينة (أو طلب العرض): اشرح ثم اعرض الكروت.
+   - الكارت: استخدم كود HTML التالي فقط:
    
    <a href="property-details?id={ID}" class="chat-property-box">
        <div class="chat-box-header">
@@ -280,23 +278,27 @@ app.post('/api/chat', async (req, res) => {
         let dbContext = "";
         let finalPrompt = message;
 
-        if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ") || message.includes("محافظة") || message.includes("مدينة") || message.includes("عندك") || message.includes("متاح") || message.includes("ايه") || message.includes("وريني") || message.includes("شوف")) {
+        if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ") || message.includes("محافظة") || message.includes("مدينة") || message.includes("عندك") || message.includes("متاح") || message.includes("وريني") || message.includes("ايه")) {
             
             const searchResult = await searchPropertiesInDB(message);
             
             if (searchResult && searchResult.count > 0) {
-                dbContext = `\n[🔴 **بيانات قاعدة البيانات:** وجدت عدد (${searchResult.count}) عقارات. البيانات هي: ${searchResult.data}. هذه هي العقارات المتاحة حالياً، تحدث عنها.]`;
+                dbContext = `\n[🔴 **بيانات العقارات:** وجدت (${searchResult.count}) عقارات في القاعدة: ${searchResult.data}.
+                **المطلوب منك:**
+                1. اقرأ عناوين العقارات وحلل المحافظات والمدن.
+                2. لو المستخدم سأل سؤال عام ("ايه المتاح")، لا تعرض الكروت فوراً، بل قل له: "متاح X في القاهرة، Y في الإسكندرية.. تحب تشوف ايه؟".
+                3. لو حدد مكان، اعرض الكروت.]`;
                 finalPrompt = message + dbContext;
             } else {
                 finalPrompt = `المستخدم بيسأل: "${message}". 
-                🔴 **تقرير النظام:** بحثت في قاعدة البيانات ولم أجد أي عقار مطابق (العدد = 0).
-                ⚠️ **أمر مباشر:** اعتذر للمستخدم بأدب وقل له "مفيش عقارات متاحة حالياً" واقترح عليه زر "احجز عقارك".`;
+                🔴 **تقرير:** لا توجد عقارات (العدد 0).
+                ⚠️ **أمر:** اعتذر واقترح "احجز عقارك".`;
             }
         }
 
         const chatSession = model.startChat({
             history: chatHistories[sessionId],
-            generationConfig: { maxOutputTokens: 2000, temperature: 0.0 }, 
+            generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }, 
         });
 
         const result = await chatSession.sendMessage(finalPrompt);
@@ -315,7 +317,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// ... (باقي كود الـ Login و Routes انسخه من الملف السابق كما هو) ...
+// ... (Login/Register/CRUD/DeleteCloudinaryImages كما هي في الكود السابق) ...
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     let user = null; let role = 'user';
