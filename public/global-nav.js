@@ -1,34 +1,40 @@
-if (data.isAuthenticated && data.role === 'user') {
-async function logout() {
-    if (!confirm('هل تريد تأكيد تسجيل الخروج؟')) return;
+if (data.isAuthenticated) {
+    // 1. إظهار زر الخروج (لو كان مخفي)
+    // const logoutBtn = document.querySelector('.logout-btn');
+    // if(logoutBtn) logoutBtn.style.display = 'block';
 
-    try {
-        const response = await fetch('/api/logout', { method: 'POST' });
+    // 2. دالة تسجيل الخروج
+    async function logout() {
+        if (!confirm('هل تريد تأكيد تسجيل الخروج؟')) return;
 
-        if (response.ok) {
-            localStorage.removeItem('userEmail');
+        try {
+            // محاولة إبلاغ السيرفر بمسح الكوكيز
+            await fetch('/api/logout', { method: 'POST' });
+        } catch (error) {
+            console.error('Logout API Error (Ignored):', error);
+        } finally {
+            // ⚠️ تنظيف المتصفح (أهم خطوة)
+            // مسحنا userEmail وحطينا userPhone عشان التحديث الجديد
+            localStorage.removeItem('userPhone'); 
             localStorage.removeItem('userRole');
-            localStorage.clear();
+            localStorage.clear(); // مسح كل حاجة للأمان
 
-            window.location.href = 'index';
-        } else {
-            console.error('Server logout failed');
-            alert('حدث خطأ أثناء محاولة الخروج من السيرفر.');
+            // تحويل للصفحة الرئيسية
+            window.location.href = '/'; 
         }
-
-    } catch (error) {
-        console.error('Logout Error:', error);
-        alert('حدث خطأ في الاتصال. تأكد من الإنترنت.');
     }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.querySelector('.logout-btn');
-    if (btn) {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            logout();
-        });
-    }
-});
+    // 3. ربط الزر بالدالة
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.querySelector('.logout-btn');
+        // أو لو الزرار عبارة عن لينك في النافبار
+        // const btn = document.getElementById('logout-link'); 
+        
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+        }
+    });
 }
