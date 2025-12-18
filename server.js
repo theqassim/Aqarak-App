@@ -51,16 +51,15 @@ const dbPool = new Pool({
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
-// ✅ دالة حذف الصور من Cloudinary (تمت إضافتها هنا)
+// ✅ دالة حذف الصور من Cloudinary (عشان الحذف يشتغل)
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || imageUrls.length === 0) return;
     
-    // استخراج الـ Public ID من الرابط
     const publicIds = imageUrls.map(url => {
         try {
             const parts = url.split('/');
             const filename = parts.pop();
-            const folder = parts.pop(); // aqarak_properties أو aqarak_submissions
+            const folder = parts.pop(); 
             const id = filename.split('.')[0];
             return `${folder}/${id}`; 
         } catch (e) { return null; }
@@ -69,10 +68,7 @@ async function deleteCloudinaryImages(imageUrls) {
     if (publicIds.length > 0) {
         try {
             await cloudinary.api.delete_resources(publicIds);
-            console.log(`🗑️ Deleted ${publicIds.length} images from Cloudinary.`);
-        } catch (error) {
-            console.error("⚠️ Cloudinary Delete Warning:", error.message);
-        }
+        } catch (error) { console.error("Cloudinary Error:", error.message); }
     }
 }
 
@@ -161,6 +157,7 @@ function expandSearchKeywords(message) {
     return [...new Set(expandedKeywords)];
 }
 
+// 🧠 دالة البحث المعدلة: تجلب أحدث العقارات إذا لم يحدد المستخدم موقعاً
 async function searchPropertiesInDB(query) {
     const keywords = expandSearchKeywords(query);
     
@@ -168,11 +165,12 @@ async function searchPropertiesInDB(query) {
     let params = [];
 
     if (keywords.length > 0) {
+        // بحث مخصص بأسماء مدن
         const conditions = keywords.map((_, i) => `(title ILIKE $${i+1} OR description ILIKE $${i+1})`).join(' OR ');
         sql = `SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties WHERE ${conditions} LIMIT 15`;
         params = keywords.map(k => `%${k}%`);
     } else {
-        // بحث عام (أحدث 20 عقار)
+        // 🔥 بحث عام (ايه المتاح؟): هات أحدث 20 عقار عشان البوت يصنفهم
         sql = `SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties ORDER BY id DESC LIMIT 20`;
         params = [];
     }
@@ -197,7 +195,7 @@ async function searchPropertiesInDB(query) {
 }
 
 // ==========================================================
-// 🧠 دستور البوت (System Prompt) - الدليل الشامل
+// 🧠 دستور البوت (System Prompt)
 // ==========================================================
 
 const SYSTEM_INSTRUCTION = `
@@ -207,13 +205,20 @@ const SYSTEM_INSTRUCTION = `
 
 ⛔ **قواعد صارمة جداً (Zero Tolerance):**
 1. **الالتزام بالبيانات:** ستصلك بيانات من قاعدة البيانات. إذا كان العدد 0، قل "مفيش عقارات متاحة". ممنوع التأليف.
-2. **نطاق العمل:** شقق وفيلات فقط. لا محلات/أراضي/سماسرة.
-3. **الشخصي:** لا تتدخل في الأمور الشخصية.
-4. **عرض العقارات:**
-   - بحث عام (ايه المتاح): صنف العقارات حسب المحافظة (مثال: "في 3 في القاهرة، 2 في الجيزة").
-   - بحث محافظة: اذكر العدد في المدن.
-   - بحث مدينة (أو طلب العرض): اشرح ثم اعرض الكروت.
-   - الكارت: استخدم كود HTML التالي فقط:
+2. **نطاق العمل:** شقق وفيلات فقط.
+3. **التسلسل في الرد (General Inquiry Logic):**
+   - **لو المستخدم سأل "ايه المتاح؟" أو "عندك عقارات؟" (بدون تحديد مكان):**
+     * ⚠️ **ممنوع** تعرض كروت العقارات فوراً.
+     * **لازم** تحلل عناوين العقارات اللي جاتلك في البيانات، وتفرزهم حسب المحافظة.
+     * **الرد يكون:** "متاح يا هندسة عقارات في المحافظات دي:
+       - محافظة كذا: فيها عدد [X] شقق.
+       - محافظة كذا: فيها عدد [Y] شقق.
+       تحب أعرضلك شقق أنهي محافظة؟"
+   - **لو المستخدم اختار محافظة (أو بحث عنها مباشرة):**
+     * قول له المدن المتاحة جواها (مثلاً: "في القاهرة عندنا في الشروق والتجمع").
+   - **لو المستخدم اختار مدينة (أو قال "وريني"):**
+     * اشرح العقارات باختصار (السعر والمواصفات).
+     * اعرض الكروت باستخدام الكود التالي (بدون علامات Markdown):
    
    <a href="property-details?id={ID}" class="chat-property-box">
        <div class="chat-box-header">
@@ -254,9 +259,9 @@ const SYSTEM_INSTRUCTION = `
 * **خدمات التشطيب:** في حالة انك عايز تشطيبات فقط (المونتال، نجارة، ديكور، تشطيب، نقل عفش، رخام وجرانيت...الخ) تقدر تشوف الخدمات عن طريق انك تدوس على زرار "القائمة" في الصفحة الرئيسية وتضغط على زر "الخدمات" هيحولّك لصفحة الخدمات الكاملة اللي عقارك بيوفرها عن طريق الشركاء الموثوقين.
 
 **الروابط الرسمية:**
-* واتساب: https://wa.me/201008102237
-* فيسبوك: https://www.facebook.com/share/17b14ZTvd9/
-* انستجرام: https://instagram.com/aqarak.eg
+* واتساب: [https://wa.me/201008102237](https://wa.me/201008102237)
+* فيسبوك: [https://www.facebook.com/share/17b14ZTvd9/](https://www.facebook.com/share/17b14ZTvd9/)
+* انستجرام: [https://instagram.com/aqarak.eg](https://instagram.com/aqarak.eg)
 `;
 
 const chatHistories = {};
@@ -278,11 +283,13 @@ app.post('/api/chat', async (req, res) => {
         let dbContext = "";
         let finalPrompt = message;
 
+        // توسيع الشرط ليشمل الأسئلة العامة
         if (message.includes("شقة") || message.includes("عقار") || message.includes("ايجار") || message.includes("بيع") || message.includes("في ") || message.includes("محافظة") || message.includes("مدينة") || message.includes("عندك") || message.includes("متاح") || message.includes("وريني") || message.includes("ايه")) {
             
             const searchResult = await searchPropertiesInDB(message);
             
             if (searchResult && searchResult.count > 0) {
+                // نرسل له البيانات ونقوله دول "أحدث العقارات" أو "العقارات المتاحة"
                 dbContext = `\n[🔴 **بيانات العقارات:** وجدت (${searchResult.count}) عقارات في القاعدة: ${searchResult.data}.
                 **المطلوب منك:**
                 1. اقرأ عناوين العقارات وحلل المحافظات والمدن.
@@ -317,7 +324,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// ... (Login/Register/CRUD/DeleteCloudinaryImages كما هي في الكود السابق) ...
+// ... (باقي كود السيرفر كما هو) ...
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     let user = null; let role = 'user';
