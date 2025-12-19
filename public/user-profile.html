@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>بروفايل المستخدم - عقارك</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* هيدر البروفايل */
+        .profile-header {
+            background: linear-gradient(135deg, #1c2630, #2c3e50);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 3px solid #00ff88;
+            margin-bottom: 30px;
+        }
+        
+        .profile-avatar {
+            width: 100px; height: 100px;
+            background: #00ff88; color: #1c2630;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; margin: 0 auto 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .profile-name { color: #fff; margin: 0; font-size: 1.8rem; }
+        .profile-stats { color: #aaa; margin-top: 5px; font-size: 0.9rem; }
+
+        /* شبكة العقارات */
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 0 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* كارت العقار (نفس ستايل الرئيسية) */
+        .property-card {
+            background: #252525; border-radius: 10px; overflow: hidden;
+            transition: transform 0.3s; position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .property-card:hover { transform: translateY(-5px); }
+        .property-card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-content { padding: 15px; color: #fff; }
+        .card-price { color: #ffd700; font-weight: bold; font-size: 1.1rem; }
+        .card-details { color: #aaa; font-size: 0.9rem; margin-top: 5px; }
+        
+        .empty-state { text-align: center; color: #777; margin-top: 50px; grid-column: 1/-1; }
+    </style>
+</head>
+<body class="custom-body">
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <a href="home" style="text-decoration: none;">
+                    <img src="logo.png" alt="logo" class="logo">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <a href="home" class="nav-button neon-button-white">الرئيسية</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="profile-header">
+        <div class="profile-avatar"><i class="fas fa-user"></i></div>
+        <h1 class="profile-name" id="user-name">جاري التحميل...</h1>
+        <p class="profile-stats" id="listing-count">عدد العقارات: --</p>
+    </div>
+
+    <main>
+        <h2 style="text-align:center; color:#fff; margin-bottom:20px;">العقارات المعروضة</h2>
+        <div id="loading" style="text-align:center; color:#00ff88;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+        
+        <div class="listings-grid" id="properties-grid">
+            </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('u');
+            const grid = document.getElementById('properties-grid');
+            const loading = document.getElementById('loading');
+
+            if (!username) {
+                document.body.innerHTML = '<h2 style="color:white;text-align:center;margin-top:50px;">رابط غير صحيح</h2>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/public/profile/${username}`);
+                
+                if (!response.ok) {
+                    document.getElementById('user-name').textContent = 'مستخدم غير موجود';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                const data = await response.json();
+
+                // تحديث بيانات الهيدر
+                document.getElementById('user-name').textContent = data.name;
+                document.getElementById('listing-count').textContent = `عدد العقارات المعروضة: ${data.properties.length}`;
+                document.title = `عقارات ${data.name} - عقارك`;
+
+                loading.style.display = 'none';
+
+                // عرض العقارات
+                if (data.properties.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><i class="fas fa-box-open fa-3x"></i><p>لا توجد عقارات نشطة لهذا المستخدم حالياً.</p></div>';
+                    return;
+                }
+
+                data.properties.forEach(prop => {
+                    const price = Number(prop.price).toLocaleString();
+                    const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'بيع' : 'إيجار';
+                    
+                    const card = `
+                        <div class="property-card" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor:pointer;">
+                            <img src="${prop.imageUrl}" alt="${prop.title}">
+                            <div class="card-content">
+                                <h3 style="margin:0 0 10px 0; font-size:1.1rem;">${prop.title}</h3>
+                                <div class="card-price">${price} ج.م <span style="font-size:0.8rem; color:#aaa;">(${typeLabel})</span></div>
+                                <div class="card-details">
+                                    <i class="fas fa-bed"></i> ${prop.rooms} | 
+                                    <i class="fas fa-bath"></i> ${prop.bathrooms} | 
+                                    <i class="fas fa-ruler-combined"></i> ${prop.area} م²
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    grid.innerHTML += card;
+                });
+
+            } catch (error) {
+                console.error(error);
+                loading.style.display = 'none';
+                grid.innerHTML = '<p class="error-msg" style="text-align:center; color:red; grid-column:1/-1;">حدث خطأ في تحميل البيانات.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

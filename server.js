@@ -751,4 +751,38 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'خطأ داخلي', error: err.message });
 });
 
+// 🟢 API لجلب بروفايل مستخدم عام (للزوار)
+app.get('/api/public/profile/:username', async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+        // 1. التأكد من وجود المستخدم
+        const userRes = await pgQuery('SELECT name, phone FROM users WHERE username = $1', [username.toLowerCase()]);
+        
+        if (userRes.rows.length === 0) {
+            return res.status(404).json({ message: 'المستخدم غير موجود' });
+        }
+
+        const user = userRes.rows[0];
+
+        // 2. جلب العقارات النشطة لهذا المستخدم
+        // بنستخدم sellerPhone أو publisherUsername للربط
+        const propsRes = await pgQuery(`
+            SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured"
+            FROM properties 
+            WHERE "publisherUsername" = $1 OR "sellerPhone" = $2
+            ORDER BY id DESC
+        `, [username.toLowerCase(), user.phone]);
+
+        res.json({
+            name: user.name,
+            properties: propsRes.rows
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
