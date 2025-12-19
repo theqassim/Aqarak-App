@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>إحصائيات المستخدمين - الأدمن</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="admin-auth.js"></script>
+    <style>
+        /* تنسيقات خاصة بالجدول */
+        .stats-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #1c2630;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #e91e63;
+            box-shadow: 0 0 20px rgba(233, 30, 99, 0.2);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background-color: rgba(233, 30, 99, 0.1);
+            color: #e91e63;
+            font-size: 1.1rem;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge {
+            width: 30px; height: 30px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-weight: bold;
+        }
+        .rank-1 { background: gold; color: black; box-shadow: 0 0 10px gold; }
+        .rank-2 { background: silver; color: black; box-shadow: 0 0 10px silver; }
+        .rank-3 { background: #cd7f32; color: black; box-shadow: 0 0 10px #cd7f32; }
+        .rank-normal { background: #333; color: white; }
+
+        .username-tag {
+            color: #aaa;
+            font-size: 0.9rem;
+            display: block;
+        }
+    </style>
+</head>
+<body class="internal-page">
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">إحصائيات المستخدمين</span>
+            </div>
+            <nav class="main-nav">
+                <a href="admin-home" class="nav-button neon-button-white">عودة للوحة التحكم</a> 
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="stats-container">
+            <h2 style="text-align: center; margin-bottom: 20px; color: white;">
+                <i class="fas fa-chart-bar" style="color: #e91e63;"></i> ترتيب المستخدمين الأكثر نشاطاً
+            </h2>
+
+            <div id="loading" style="text-align:center; color:#e91e63; margin: 30px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري تحميل البيانات...
+            </div>
+
+            <div class="table-responsive">
+                <table id="stats-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>البيانات الشخصية</th>
+                            <th>رقم الهاتف</th>
+                            <th>عدد العقارات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body">
+                        </tbody>
+                </table>
+            </div>
+            
+            <p id="empty-msg" style="display:none; text-align:center; color:#777; margin-top:20px;">
+                لا يوجد مستخدمين قاموا بنشر عقارات حتى الآن.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchStats);
+
+        async function fetchStats() {
+            const table = document.getElementById('stats-table');
+            const tbody = document.getElementById('stats-body');
+            const loading = document.getElementById('loading');
+            const emptyMsg = document.getElementById('empty-msg');
+
+            try {
+                const response = await fetch('/api/admin/users-stats');
+                
+                if (response.status === 401 || response.status === 403) {
+                    alert('غير مصرح لك.');
+                    window.location.href = 'login';
+                    return;
+                }
+
+                const users = await response.json();
+                loading.style.display = 'none';
+
+                if (users.length === 0) {
+                    emptyMsg.style.display = 'block';
+                    return;
+                }
+
+                table.style.display = 'table';
+
+                users.forEach((user, index) => {
+                    let rankClass = 'rank-normal';
+                    let rankContent = index + 1;
+
+                    // تلوين المراكز الثلاثة الأولى
+                    if (index === 0) { rankClass = 'rank-1'; rankContent = '1'; }
+                    else if (index === 1) { rankClass = 'rank-2'; rankContent = '2'; }
+                    else if (index === 2) { rankClass = 'rank-3'; rankContent = '3'; }
+
+                    const row = `
+                        <tr>
+                            <td><span class="rank-badge ${rankClass}">${rankContent}</span></td>
+                            <td>
+                                <strong style="font-size:1.1rem;">${user.name || 'غير محدد'}</strong>
+                                <span class="username-tag">@${user.username || '-'}</span>
+                            </td>
+                            <td style="direction: ltr; text-align: right;">${user.phone}</td>
+                            <td>
+                                <span style="color: #00ff88; font-weight: bold; font-size: 1.2rem;">${user.property_count}</span> عقار
+                            </td>
+                            <td>
+                                <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth" style="padding: 5px 15px; font-size: 0.8rem; text-decoration:none;">
+                                    صفحة المستخدم <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+            } catch (error) {
+                console.error(error);
+                loading.innerHTML = '<span style="color:red">حدث خطأ في الاتصال بالسيرفر</span>';
+            }
+        }
+    </script>
+
+</body>
+</html>

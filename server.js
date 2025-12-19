@@ -627,11 +627,65 @@ app.post('/api/add-property', uploadProperties.array('propertyImages', 10), asyn
     try { const result = await pgQuery(sql, params); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } 
 });
 
+// 🟢 استقبال طلب بيع (مؤمن 100%)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
-    const data = req.body; const files = req.files || []; const paths = files.map(f => f.path).join(' | ');
-    const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
-    try { await pgQuery(sql, [data.sellerName, data.sellerPhone, data.propertyTitle, data.propertyType, data.propertyPrice, safeInt(data.propertyArea), safeInt(data.propertyRooms), safeInt(data.propertyBathrooms), data.propertyDescription, paths, new Date().toISOString()]); 
-    await sendDiscordNotification("📢 طلب عرض عقار جديد!", [{ name: "👤 المالك", value: data.sellerName }, { name: "📞 الهاتف", value: data.sellerPhone }], 3066993, files[0]?.path); res.status(200).json({ success: true, message: 'تم الاستلام' }); } catch (err) { res.status(500).json({ message: 'Error' }); }
+    // 1. التحقق من التوكن وتحديد هوية المستخدم الحقيقية
+    const token = req.cookies.auth_token;
+    if (!token) {
+        return res.status(401).json({ message: 'يجب عليك تسجيل الدخول أولاً' });
+    }
+
+    let realUser;
+    try {
+        realUser = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+        return res.status(403).json({ message: 'جلسة غير صالحة' });
+    }
+
+    // 2. تجاهل البيانات القادمة من الفورم واستخدام بيانات التوكن
+    // حتى لو المستخدم غير اسمه في HTML، السيرفر هيستخدم realUser.name
+    const sellerName = realUser.name || realUser.username || 'مستخدم عقارك';
+    const sellerPhone = realUser.phone; 
+
+    const data = req.body;
+    const files = req.files || [];
+    const paths = files.map(f => f.path).join(' | ');
+
+    const sql = `
+        INSERT INTO seller_submissions 
+        ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `;
+
+    const params = [
+        sellerName,      // 🔒 مأخوذ من التوكن
+        sellerPhone,     // 🔒 مأخوذ من التوكن
+        data.propertyTitle,
+        data.propertyType,
+        data.propertyPrice,
+        safeInt(data.propertyArea),
+        safeInt(data.propertyRooms),
+        safeInt(data.propertyBathrooms),
+        data.propertyDescription,
+        paths,
+        new Date().toISOString()
+    ];
+
+    try { 
+        await pgQuery(sql, params); 
+        
+        // إشعار للأدمن
+        await sendDiscordNotification("📢 طلب عرض عقار جديد!", [
+            { name: "👤 المالك (الموثق)", value: sellerName }, 
+            { name: "📞 الهاتف", value: sellerPhone },
+            { name: "🏠 العقار", value: data.propertyTitle }
+        ], 3066993, files[0]?.path); 
+        
+        res.status(200).json({ success: true, message: 'تم الاستلام بنجاح' }); 
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ message: 'خطأ في قاعدة البيانات' }); 
+    }
 });
 
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
@@ -778,6 +832,36 @@ app.get('/api/public/profile/:username', async (req, res) => {
             name: user.name,
             properties: propsRes.rows
         });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
+
+// 🟢 إحصائيات المستخدمين للأدمن
+app.get('/api/admin/users-stats', async (req, res) => {
+    // تحقق من صلاحية الأدمن
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        // الاستعلام: يجيب الاسم، الهاتف، اليوزر نيم، وعدد العقارات
+        // ويستبعد اللي عندهم 0 عقارات (HAVING count > 0)
+        const sql = `
+            SELECT u.name, u.phone, u.username, COUNT(p.id) as property_count
+            FROM users u
+            JOIN properties p ON u.phone = p."sellerPhone"
+            GROUP BY u.id
+            HAVING COUNT(p.id) > 0
+            ORDER BY property_count DESC
+        `;
+        
+        const result = await pgQuery(sql);
+        res.json(result.rows);
 
     } catch (error) {
         console.error(error);

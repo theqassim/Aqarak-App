@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error("Auth Check Error:", error);
-        window.location.href = 'login'; // أمان إضافي
+        window.location.href = 'index'; // أمان إضافي
         return;
     }
 
