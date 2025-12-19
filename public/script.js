@@ -1,22 +1,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. التحقق من حالة الدخول عند فتح الصفحة
+    // 1. التحقق من حالة الدخول
     try {
         const response = await fetch('/api/auth/me');
         const userData = await response.json();
-
         if (userData.isAuthenticated) {
-            localStorage.setItem('userPhone', userData.phone); 
-            if (userData.role === 'admin') {
-                window.location.href = 'admin-home'; // أو الصفحة الخاصة بالأدمن
-            } else {
-                window.location.href = '/'; // الصفحة الرئيسية
-            }
+            localStorage.setItem('userPhone', userData.phone);
+            window.location.href = userData.role === 'admin' ? 'admin-home' : '/';
         }
-    } catch (error) {
-        console.log("زائر جديد");
-    }
+    } catch (error) { console.log("Guest"); }
 
-    // 2. تفعيل فورم تسجيل الدخول
+    // 2. تسجيل الدخول (Login) - زي ما هو
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -37,66 +30,121 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const data = await response.json();
 
                 if (data.success) {
-                    if (data.role === 'admin') window.location.href = 'admin-home'; // صفحة الأدمن
-                    else window.location.href = '/'; // الصفحة الرئيسية
+                    window.location.href = data.role === 'admin' ? 'admin-home' : '/';
                 } else {
                     throw new Error(data.message);
                 }
             } catch (error) {
-                msgEl.textContent = error.message || 'بيانات خاطئة';
+                msgEl.textContent = error.message || 'خطأ في الاتصال';
                 msgEl.style.color = 'red';
             }
         });
     }
 
-    // 3. تفعيل فورم إنشاء الحساب
+    // 3. إنشاء حساب (Register) - التعديل الجوهري هنا 🔥
     const registerForm = document.getElementById('register-form');
+    let isOtpSent = false; // متغير حالة (هل الكود اتبعت ولا لسه؟)
+
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const msgEl = document.getElementById('register-message');
+            const submitBtn = document.getElementById('reg-submit-btn');
             
             const name = document.getElementById('reg-name').value;
             const phone = document.getElementById('reg-phone').value;
             const password = document.getElementById('reg-password').value;
-            const otp = document.getElementById('reg-otp').value;
+            const otpInput = document.getElementById('reg-otp');
 
-            if (!otp) {
-                msgEl.textContent = 'من فضلك أدخل كود التحقق المرسل للواتساب';
-                msgEl.style.color = 'red';
-                return;
-            }
-
-            msgEl.textContent = 'جاري إنشاء الحساب...';
-            
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone, password, otp }),
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    msgEl.textContent = 'تم التسجيل بنجاح! يمكنك الدخول الآن.';
-                    msgEl.style.color = '#00ff88';
-                    setTimeout(() => switchTab('login'), 2000);
-                } else {
-                    throw new Error(data.message);
+            // 🛑 المرحلة الأولى: إرسال الكود
+            if (!isOtpSent) {
+                if (!name || !phone || !password) {
+                    msgEl.textContent = 'املأ جميع البيانات أولاً';
+                    msgEl.style.color = 'red';
+                    return;
                 }
-            } catch (error) {
-                msgEl.textContent = error.message;
-                msgEl.style.color = 'red';
+
+                msgEl.textContent = 'جاري إرسال كود التحقق للواتساب...';
+                msgEl.style.color = 'yellow';
+                submitBtn.disabled = true; // تعطيل الزر مؤقتاً
+
+                try {
+                    const response = await fetch('/api/auth/send-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // نجاح الإرسال -> نغير واجهة المستخدم
+                        isOtpSent = true;
+                        msgEl.textContent = '✅ تم الإرسال! أدخل الكود أدناه.';
+                        msgEl.style.color = '#00ff88';
+                        
+                        // إظهار حقل الـ OTP
+                        document.getElementById('reg-otp-group').style.display = 'block';
+                        
+                        // قفل الحقول القديمة عشان مايغيرش الرقم بعد ما الكود وصل
+                        document.getElementById('reg-phone').readOnly = true;
+                        document.getElementById('reg-name').readOnly = true;
+                        
+                        // تغيير نص الزر
+                        submitBtn.textContent = 'تأكيد وإنشاء الحساب';
+                        submitBtn.disabled = false;
+                        submitBtn.classList.add('neon-glow'); // تأثير إضافي
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    msgEl.textContent = error.message;
+                    msgEl.style.color = 'red';
+                    submitBtn.disabled = false;
+                }
+
+            } 
+            // 🛑 المرحلة الثانية: التحقق وإنشاء الحساب
+            else {
+                const otp = otpInput.value;
+                if (!otp) {
+                    msgEl.textContent = 'أدخل كود التحقق!';
+                    msgEl.style.color = 'red';
+                    return;
+                }
+
+                msgEl.textContent = 'جاري إنشاء الحساب...';
+                submitBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, phone, password, otp }),
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        msgEl.textContent = '🎉 تم التسجيل بنجاح! سيتم تحويلك...';
+                        msgEl.style.color = '#00ff88';
+                        setTimeout(() => {
+                            // تسجيل دخول تلقائي أو تحويل لصفحة الدخول
+                            switchTab('login');
+                            document.getElementById('login-phone').value = phone; // تسهيل على المستخدم
+                        }, 2000);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    msgEl.textContent = error.message;
+                    msgEl.style.color = 'red';
+                    submitBtn.disabled = false;
+                }
             }
         });
     }
 });
 
-// =======================
-// دوال مساعدة (UI Logic)
-// =======================
-
-// التبديل بين التبويبات
+// دوال التبديل والمودال (زي ما هي)
 function switchTab(tab) {
     const loginWrapper = document.getElementById('login-form-wrapper');
     const registerWrapper = document.getElementById('register-form-wrapper');
@@ -115,108 +163,41 @@ function switchTab(tab) {
     }
 }
 
-// 🟢 إرسال OTP للتسجيل
-async function sendRegisterOTP() {
-    const phone = document.getElementById('reg-phone').value;
-    const msgEl = document.getElementById('register-message');
-    const btn = document.getElementById('send-otp-btn');
-
-    if (!phone || phone.length < 11) {
-        msgEl.textContent = 'أدخل رقم واتساب صحيح أولاً';
-        msgEl.style.color = 'red';
-        return;
-    }
-
-    btn.textContent = 'جاري الإرسال...';
-    btn.disabled = true;
-
-    try {
-        const response = await fetch('/api/auth/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            msgEl.textContent = 'تم إرسال الكود للواتساب. افحص رسائلك.';
-            msgEl.style.color = '#00ff88';
-            document.getElementById('reg-otp-group').style.display = 'block';
-            document.getElementById('reg-submit-btn').disabled = false;
-            btn.textContent = 'أعيد الإرسال';
-            btn.disabled = false;
-        } else {
-            throw new Error(data.message);
-        }
-    } catch (error) {
-        msgEl.textContent = 'فشل الإرسال: ' + error.message;
-        msgEl.style.color = 'red';
-        btn.textContent = 'حاول مرة أخرى';
-        btn.disabled = false;
-    }
-}
-
-// 🟠 منطق استعادة كلمة المرور
 const modal = document.getElementById("forgotModal");
 const msgForgot = document.getElementById("forgot-message");
-
 function openForgotModal() { modal.style.display = "block"; }
 function closeForgotModal() { modal.style.display = "none"; }
-
-window.onclick = function(event) {
-    if (event.target == modal) closeForgotModal();
-}
+window.onclick = function(event) { if (event.target == modal) closeForgotModal(); }
 
 async function sendForgotOTP() {
     const phone = document.getElementById('forgot-phone').value;
     if (!phone) return;
-
     msgForgot.textContent = 'جاري الإرسال...';
-    
     try {
         const response = await fetch('/api/auth/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
         });
         const data = await response.json();
-
         if (data.success) {
-            msgForgot.textContent = 'تم الإرسال! أدخل الكود وكلمة المرور الجديدة.';
-            msgForgot.style.color = '#00ff88';
+            msgForgot.textContent = 'تم الإرسال!'; msgForgot.style.color = '#00ff88';
             document.getElementById('forgot-step-1').style.display = 'none';
             document.getElementById('forgot-step-2').style.display = 'block';
-        } else {
-            msgForgot.textContent = data.message;
-            msgForgot.style.color = 'red';
-        }
-    } catch (e) {
-        msgForgot.textContent = 'خطأ في الاتصال';
-    }
+        } else { msgForgot.textContent = data.message; msgForgot.style.color = 'red'; }
+    } catch (e) { msgForgot.textContent = 'خطأ'; }
 }
 
 async function resetPassword() {
     const phone = document.getElementById('forgot-phone').value;
     const otp = document.getElementById('forgot-otp').value;
     const newPassword = document.getElementById('new-password').value;
-
     try {
         const response = await fetch('/api/auth/reset-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, otp, newPassword })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, otp, newPassword })
         });
         const data = await response.json();
-
         if (data.success) {
-            msgForgot.textContent = 'تم تغيير الباسورد بنجاح! جرب تسجل دخول.';
-            msgForgot.style.color = '#00ff88';
-            setTimeout(closeForgotModal, 3000);
-        } else {
-            msgForgot.textContent = data.message;
-            msgForgot.style.color = 'red';
-        }
-    } catch (e) {
-        msgForgot.textContent = 'حدث خطأ';
-    }
+            msgForgot.textContent = 'تم التغيير بنجاح!'; msgForgot.style.color = '#00ff88';
+            setTimeout(closeForgotModal, 2000);
+        } else { msgForgot.textContent = data.message; msgForgot.style.color = 'red'; }
+    } catch (e) { msgForgot.textContent = 'خطأ'; }
 }
