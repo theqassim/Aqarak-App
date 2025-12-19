@@ -81,7 +81,7 @@ window.toggleFavorite = async (propertyId) => {
         
         if (response.status === 401) {
             alert('يجب تسجيل الدخول لإضافة العقار للمفضلة.');
-            window.location.href = 'login';
+            window.location.href = 'index';
             return;
         }
 
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // بيانات التواصل
         const ownerPhone = property.sellerPhone || "01008102237"; 
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
-        const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
+        const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title}`)}`;
 
         // منطق "تم النشر بواسطة"
         let publisherHTML = '';
