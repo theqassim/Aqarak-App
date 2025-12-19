@@ -746,10 +746,51 @@ app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } catch (e) { throw e; } });
 app.post('/api/favorites', async (req, res) => { try { await pgQuery(`INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`, [req.body.userEmail, req.body.propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة' }); throw err; } });
-app.delete('/api/favorites/:propertyId', async (req, res) => { try { await pgQuery(`DELETE FROM favorites WHERE user_email = $1 AND property_id = $2`, [req.query.userEmail, req.params.propertyId]); res.json({ success: true }); } catch (err) { throw err; } });
-app.get('/api/favorites', async (req, res) => { const sql = `SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id FROM properties p JOIN favorites f ON p.id = f.property_id WHERE f.user_email = $1 ORDER BY f.id DESC`; try { const result = await pgQuery(sql, [req.query.userEmail]); res.json(result.rows); } catch (err) { throw err; } });
-app.delete('/api/user/delete-account', async (req, res) => { try { await pgQuery(`DELETE FROM users WHERE phone = $1`, [req.body.phone]); res.json({ success: true }); } catch (err) { throw err; } });
+// 🟢 إضافة للمفضلة (معدلة لتعمل بالتوكن والهاتف)
+app.post('/api/favorites', async (req, res) => { 
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
 
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        await pgQuery(`INSERT INTO favorites (user_phone, property_id) VALUES ($1, $2)`, [decoded.phone, req.body.propertyId]); 
+        res.status(201).json({ success: true }); 
+    } catch (err) { 
+        if (err.code === '23505') return res.status(409).json({ message: 'موجودة بالفعل' }); 
+        res.status(500).json({ error: 'خطأ سيرفر' }); 
+    } 
+});
+
+// 🟢 حذف من المفضلة
+app.delete('/api/favorites/:propertyId', async (req, res) => { 
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
+
+    try { 
+        const decoded = jwt.verify(token, JWT_SECRET);
+        await pgQuery(`DELETE FROM favorites WHERE user_phone = $1 AND property_id = $2`, [decoded.phone, req.params.propertyId]); 
+        res.json({ success: true }); 
+    } catch (err) { res.status(500).json({ error: 'خطأ' }); } 
+});
+
+// 🟢 عرض المفضلة
+app.get('/api/favorites', async (req, res) => { 
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
+
+    try { 
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const sql = `
+            SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id 
+            FROM properties p 
+            JOIN favorites f ON p.id = f.property_id 
+            WHERE f.user_phone = $1 
+            ORDER BY f.id DESC
+        `; 
+        const result = await pgQuery(sql, [decoded.phone]); 
+        res.json(result.rows); 
+    } catch (err) { res.status(500).json({ error: err.message }); } 
+});
 // 🛑 رابط مؤقت لإصلاح الداتابيز (استخدمه مرة واحدة وامسحه)
 app.get('/fix-db', async (req, res) => {
     try {

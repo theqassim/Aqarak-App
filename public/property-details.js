@@ -43,24 +43,47 @@ window.closeOfferModal = () => { document.getElementById('offer-modal').style.di
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
-    const userEmail = localStorage.getItem('userEmail'); // لاحظ: قد تحتاج لتعديلها لـ userPhone لو غيرنا النظام بالكامل
 
-    if (!userEmail) { alert('حدث خطأ في التعرف على هويتك، قم بتحديث الصفحة.'); return; }
+    // لم نعد بحاجة للتحقق من localStorage هنا، السيرفر سيتحقق من الكوكيز
+    // لكن ممكن نتحقق شكلياً لتوجيه المستخدم
+    if (!localStorage.getItem('userPhone')) {
+        alert('يجب تسجيل الدخول لإضافة العقار للمفضلة.');
+        window.location.href = 'login';
+        return;
+    }
 
     const isFavorite = btn.classList.contains('is-favorite');
     const method = isFavorite ? 'DELETE' : 'POST';
-    const url = isFavorite ? `/api/favorites/${propertyId}?userEmail=${encodeURIComponent(userEmail)}` : `/api/favorites`;
-    const body = isFavorite ? null : JSON.stringify({ userEmail, propertyId });
+    // لا نرسل userEmail في الرابط أو الـ Body
+    const url = isFavorite ? `/api/favorites/${propertyId}` : `/api/favorites`;
+    const body = isFavorite ? null : JSON.stringify({ propertyId });
 
     try {
-        const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body });
+        const response = await fetch(url, { 
+            method, 
+            headers: { 'Content-Type': 'application/json' }, 
+            body 
+        });
+
+        if (response.status === 401) {
+            alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.');
+            window.location.href = 'login';
+            return;
+        }
+
         if (response.ok || response.status === 409) { 
-            if (isFavorite) { btn.classList.remove('is-favorite'); favIcon.className = 'far fa-heart'; alert('تمت الإزالة من المفضلة.'); } 
-            else { btn.classList.add('is-favorite'); favIcon.className = 'fas fa-heart'; alert('تمت الإضافة للمفضلة.'); }
+            if (isFavorite) {
+                btn.classList.remove('is-favorite');
+                favIcon.className = 'far fa-heart';
+                alert('تمت الإزالة من المفضلة.');
+            } else {
+                btn.classList.add('is-favorite');
+                favIcon.className = 'fas fa-heart';
+                alert('تمت الإضافة للمفضلة.');
+            }
         }
     } catch (error) { console.error('Favorite Error:', error); }
 };
-
 window.shareProperty = async (title) => {
     const shareData = { title: `عقارك - ${title}`, text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`, url: window.location.href };
     try { if (navigator.share) await navigator.share(shareData); else { await navigator.clipboard.writeText(window.location.href); alert('تم نسخ الرابط!'); } } catch (err) { console.error('Error sharing:', err); }
@@ -186,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let isFav = false;
         if (canViewDetails) {
             try {
-                const favRes = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userEmail)}`);
+                const favRes = await fetch(`/api/favorites`);
                 if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); }
             } catch(e) {}
         }
