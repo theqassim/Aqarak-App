@@ -928,4 +928,85 @@ app.get('/fix-favorites-table', async (req, res) => {
     }
 });
 
+// 🟢 API العقارات المتشابهة (Smart Recommendation)
+app.get('/api/properties/similar/:id', async (req, res) => {
+    try {
+        const propId = req.params.id;
+
+        // 1. جلب تفاصيل العقار الحالي
+        const currentRes = await pgQuery('SELECT * FROM properties WHERE id = $1', [propId]);
+        if (currentRes.rows.length === 0) return res.status(404).json({ message: 'العقار غير موجود' });
+        const current = currentRes.rows[0];
+
+        // 2. استخراج المنطقة الجغرافية من العنوان
+        // بنستخدم قائمة المدن الموجودة في السيرفر لتحديد الموقع بدقة
+        let locationKeyword = '';
+        const textToSearch = normalizeText(current.title + " " + current.description);
+        
+        for (const [gov, cities] of Object.entries(EGYPT_LOCATIONS)) {
+            if (textToSearch.includes(normalizeText(gov))) { locationKeyword = gov; break; }
+            for (const city of cities) {
+                if (textToSearch.includes(normalizeText(city))) { locationKeyword = city; break; }
+            }
+            if (locationKeyword) break;
+        }
+
+        // لو معرفناش نحدد المكان، نستخدم أول كلمة من العنوان كبديل
+        if (!locationKeyword) locationKeyword = current.title.split(' ')[0] || '';
+
+        // 3. بناء الاستعلام الذكي
+        // - نفس النوع (بيع/إيجار)
+        // - السعر: في نطاق 25% زيادة أو نقصان
+        // - العنوان: يحتوي على نفس المنطقة
+        // - الترتيب: الأقرب في عدد الغرف والمساحة
+        
+        const minPrice = Number(current.numericPrice) * 0.75; // -25%
+        const maxPrice = Number(current.numericPrice) * 1.25; // +25%
+
+        const sql = `
+            SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured"
+            FROM properties
+            WHERE type = $1 
+            AND id != $2
+            AND "numericPrice" BETWEEN $3 AND $4
+            AND (title ILIKE $5 OR description ILIKE $5)
+            ORDER BY 
+                ABS(rooms - $6) + ABS(bathrooms - $7) ASC, -- الأقرب في عدد الغرف والحمامات
+                ABS(area - $8) ASC -- ثم الأقرب في المساحة
+            LIMIT 4
+        `;
+
+        const params = [
+            current.type,
+            propId,
+            minPrice,
+            maxPrice,
+            `%${locationKeyword}%`,
+            safeInt(current.rooms),
+            safeInt(current.bathrooms),
+            safeInt(current.area)
+        ];
+
+        const result = await pgQuery(sql, params);
+        
+        // لو ملقيناش حاجة بالشروط الصارمة، نجيب أي حاجة نفس النوع والسعر التقريبي (Fallback)
+        if (result.rows.length === 0) {
+            const fallbackSql = `
+                SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured"
+                FROM properties
+                WHERE type = $1 AND id != $2
+                ORDER BY RANDOM() LIMIT 4
+            `;
+            const fallbackResult = await pgQuery(fallbackSql, [current.type, propId]);
+            return res.json(fallbackResult.rows);
+        }
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Similar API Error:", error);
+        res.status(500).json({ message: 'Error' });
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

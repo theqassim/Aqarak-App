@@ -1,12 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// (إعدادات Supabase القديمة - لو مش محتاجها ممكن تشيلها، بس هسيبها عشان الأخطاء)
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// --- 1. ستايل الزرار ---
+// --- 1. ستايل الأزرار والعناصر ---
 const style = document.createElement('style');
 style.innerHTML = `
+    /* زر الفيديو */
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -15,12 +17,36 @@ style.innerHTML = `
         transition: all 0.3s ease; margin: 20px auto; width: fit-content; text-decoration: none;
     }
     .video-btn-modern:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(192, 57, 43, 0.6); }
-    .video-btn-modern .icon-pulse {
-        background: white; color: #c0392b; width: 32px; height: 32px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; font-size: 14px; animation: pulse-glow 2s infinite;
+    
+    /* صندوق الزوار (تسجيل الدخول / إنشاء حساب) */
+    .guest-action-box {
+        text-align: center;
+        padding: 30px 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed #00ff88;
+        border-radius: 15px;
+        margin-top: 20px;
     }
-    .video-btn-modern .badge { background: rgba(0,0,0,0.2); padding: 2px 10px; border-radius: 10px; font-size: 0.9rem; }
-    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+    .guest-btns-wrapper {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    .btn-login-action {
+        background: transparent; border: 2px solid #00ff88; color: #00ff88;
+        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold;
+        transition: 0.3s;
+    }
+    .btn-login-action:hover { background: #00ff88; color: #000; }
+    
+    .btn-register-action {
+        background: #00ff88; border: 2px solid #00ff88; color: #000;
+        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold;
+        transition: 0.3s;
+    }
+    .btn-register-action:hover { background: transparent; color: #00ff88; }
 `;
 document.head.appendChild(style);
 
@@ -40,33 +66,21 @@ window.getTypeTag = (type) => {
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
+// --- دالة المفضلة ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
-
-    // لم نعد بحاجة للتحقق من localStorage هنا، السيرفر سيتحقق من الكوكيز
-    // لكن ممكن نتحقق شكلياً لتوجيه المستخدم
-    if (!localStorage.getItem('userPhone')) {
-        alert('يجب تسجيل الدخول لإضافة العقار للمفضلة.');
-        window.location.href = 'login';
-        return;
-    }
-
+    
     const isFavorite = btn.classList.contains('is-favorite');
     const method = isFavorite ? 'DELETE' : 'POST';
-    // لا نرسل userEmail في الرابط أو الـ Body
     const url = isFavorite ? `/api/favorites/${propertyId}` : `/api/favorites`;
     const body = isFavorite ? null : JSON.stringify({ propertyId });
 
     try {
-        const response = await fetch(url, { 
-            method, 
-            headers: { 'Content-Type': 'application/json' }, 
-            body 
-        });
-
+        const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body });
+        
         if (response.status === 401) {
-            alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.');
+            alert('يجب تسجيل الدخول لإضافة العقار للمفضلة.');
             window.location.href = 'login';
             return;
         }
@@ -84,6 +98,7 @@ window.toggleFavorite = async (propertyId) => {
         }
     } catch (error) { console.error('Favorite Error:', error); }
 };
+
 window.shareProperty = async (title) => {
     const shareData = { title: `عقارك - ${title}`, text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`, url: window.location.href };
     try { if (navigator.share) await navigator.share(shareData); else { await navigator.clipboard.writeText(window.location.href); alert('تم نسخ الرابط!'); } } catch (err) { console.error('Error sharing:', err); }
@@ -91,29 +106,60 @@ window.shareProperty = async (title) => {
 
 window.handleWhatsappClick = async (link) => { window.open(link, '_blank'); };
 
-// --- تحميل المشابه ---
+// --- 🧠 تحميل المشابه (منطق الذكاء الاصطناعي من السيرفر) ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
-    if(!container) return;
+    if (!container) return;
+
     try {
-        const { data: similar, error } = await supabase.rpc('get_similar_properties', {
-            p_id: parseInt(currentProperty.id),
-            p_type: currentProperty.type,
-            p_price: parseFloat(String(currentProperty.price).replace(/[^0-9.]/g, '')),
-            p_rooms: parseInt(currentProperty.rooms || 0),
-            p_bathrooms: parseInt(currentProperty.bathrooms || 0),
-            p_area: parseInt(currentProperty.area || 0)
-        });
-        if (error) throw error;
-        if (!similar || similar.length === 0) { container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد عقارات مشابهة حالياً.</p>'; return; }
+        // طلب البيانات من السيرفر الذكي (لازم تكون ضفت الرابط في server.js)
+        const response = await fetch(`/api/properties/similar/${currentProperty.id}`);
+        
+        if (!response.ok) throw new Error('فشل جلب البيانات');
+        
+        const similar = await response.json();
+
+        if (!similar || similar.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد عقارات مشابهة حالياً.</p>';
+            return;
+        }
+
         container.innerHTML = ''; 
+
         similar.forEach(prop => {
-            const price = window.formatPrice(prop.price, prop.type);
-            let badges = ''; if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">مميز</span>';
-            const card = `<div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'" style="position:relative; cursor:pointer;">${badges}<img src="${prop.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${prop.title}"><div class="card-content"><h4 style="font-size:1.1em; margin-bottom:5px;">${prop.title}</h4><p class="price" style="font-size:1.1em;">${price}</p><p style="font-size:0.85em; color:#888;"><i class="fas fa-bed"></i> ${prop.rooms} | <i class="fas fa-bath"></i> ${prop.bathrooms} | ${prop.area} م²</p></div></div>`;
+            const priceVal = prop.price ? Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString() : 'N/A';
+            const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'للبيع' : 'للإيجار';
+            let badges = ''; 
+            if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; z-index:2;">مميز</span>';
+
+            const card = `
+                <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'" style="position:relative; cursor:pointer;">
+                    ${badges}
+                    <div style="height:200px; overflow:hidden;">
+                        <img src="${prop.imageUrl || 'logo.png'}" alt="${prop.title}" style="width:100%; height:100%; object-fit:cover; transition:0.3s;">
+                    </div>
+                    <div class="card-content">
+                        <h4 style="font-size:1.1em; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prop.title}</h4>
+                        <p class="price" style="font-size:1.1em; color:#ffd700;">${priceVal} ج.م</p>
+                        <p style="font-size:0.85em; color:#aaa; margin-top:5px;">
+                            <i class="fas fa-map-marker-alt"></i> مشابه لمنطقتك
+                        </p>
+                        <hr style="border-color:#333; margin:10px 0;">
+                        <p style="font-size:0.85em; color:#888; display:flex; justify-content:space-between;">
+                            <span><i class="fas fa-bed"></i> ${prop.rooms}</span>
+                            <span><i class="fas fa-bath"></i> ${prop.bathrooms}</span>
+                            <span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>
+                        </p>
+                    </div>
+                </div>
+            `;
             container.innerHTML += card;
         });
-    } catch (e) { console.error("Error loading similar:", e); container.innerHTML = '<p>خطأ في تحميل الاقتراحات.</p>'; }
+
+    } catch (e) {
+        console.error("Error loading similar:", e);
+        container.innerHTML = '<p style="text-align:center; color:#777;">جاري البحث عن عقارات مشابهة...</p>';
+    }
 }
 
 // === التنفيذ الرئيسي ===
@@ -132,20 +178,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         let userRole = 'guest';
-        // 🆕 جلب رقم المستخدم الحالي للمقارنة
-        let currentUserPhone = localStorage.getItem('userPhone');
+        let currentUserPhone = null;
+        let isAuthenticated = false;
 
+        // 🟢 التحقق من المصادقة (Auth Check)
         try {
             const authRes = await fetch('/api/auth/me');
             const authData = await authRes.json();
             if (authData.isAuthenticated) {
                 userRole = authData.role; 
-                currentUserPhone = authData.phone; // تحديث الرقم من السيرفر للتأكد
+                currentUserPhone = authData.phone;
+                isAuthenticated = true; // ✅ المستخدم مسجل
             }
-        } catch (e) { console.log("Guest"); }
-
-        const userEmail = localStorage.getItem('userEmail');
-        const canViewDetails = !!userEmail; 
+        } catch (e) { console.log("Guest User"); }
 
         const urlParams = new URLSearchParams(window.location.search);
         const propertyId = urlParams.get('id'); 
@@ -167,27 +212,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         loadingMessage.style.display = 'none';
 
-        // 🆕 منطق الواتساب: استخدام رقم المالك (sellerPhone)
-        const ownerPhone = property.sellerPhone || "01008102237"; // fallback لرقمنا لو مفيش رقم
+        // بيانات التواصل
+        const ownerPhone = property.sellerPhone || "01008102237"; 
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
         const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-        // 🆕 منطق زر التحكم للمالك
-        let ownerControlsHTML = '';
-        if (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone) {
-            const editMsg = encodeURIComponent(`السلام عليكم، أنا صاحب العقار كود (${property.hiddenCode}). أرغب في تعديله أو حذفه.`);
-            const adminWaLink = `https://wa.me/201008102237?text=${editMsg}`;
-            ownerControlsHTML = `
-                <div style="margin-top: 15px; padding: 10px; border: 1px dashed #ff4444; border-radius: 8px; text-align: center;">
-                    <p style="color: #ff4444; font-weight: bold; margin-bottom: 5px;">أنت صاحب هذا العقار 👑</p>
-                    <a href="${adminWaLink}" target="_blank" class="btn-neon-red" style="display: block; text-decoration: none; padding: 10px;">
-                        <i class="fas fa-cog"></i> تواصل للتعديل أو الحذف
-                    </a>
-                </div>
-            `;
-        }
-
-        // 🆕 منطق "تم النشر بواسطة"
+        // منطق "تم النشر بواسطة"
         let publisherHTML = '';
         if (property.publisherUsername) {
             publisherHTML = `
@@ -206,22 +236,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
 
-        let isFav = false;
-        if (canViewDetails) {
-            try {
-                const favRes = await fetch(`/api/favorites`);
-                if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); }
-            } catch(e) {}
-        }
-
-        const favClass = isFav ? 'is-favorite' : '';
-        const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
-
+        // 🔒 التحكم في الأزرار حسب حالة الدخول
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
-        if (canViewDetails) {
+        if (isAuthenticated) {
+            // ✅ المستخدم مسجل: اعرض أزرار التواصل والعرض
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
+            
+            // زر تحكم المالك
+            let ownerControlsHTML = '';
+            if (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone) {
+                const editMsg = encodeURIComponent(`السلام عليكم، أنا صاحب العقار كود (${property.hiddenCode}). أرغب في تعديله أو حذفه.`);
+                const adminWaLink = `https://wa.me/201008102237?text=${editMsg}`;
+                ownerControlsHTML = `
+                    <div style="margin-top: 15px; padding: 10px; border: 1px dashed #ff4444; border-radius: 8px; text-align: center;">
+                        <p style="color: #ff4444; font-weight: bold; margin-bottom: 5px;">أنت صاحب هذا العقار 👑</p>
+                        <a href="${adminWaLink}" target="_blank" class="btn-neon-red" style="display: block; text-decoration: none; padding: 10px;">
+                            <i class="fas fa-cog"></i> تواصل للتعديل أو الحذف
+                        </a>
+                    </div>
+                `;
+            }
+
+            // المفضلة
+            let isFav = false;
+            try {
+                const favRes = await fetch(`/api/favorites`); 
+                if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); }
+            } catch(e) {}
+            const favClass = isFav ? 'is-favorite' : '';
+            const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
+
             actionSectionHTML = `
                 <div class="action-buttons-group">
                     <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
@@ -237,7 +283,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${ownerControlsHTML}
             `;
         } else {
-            actionSectionHTML = `<div class="login-prompt-box"><p>جاري تحميل الصلاحيات...</p></div>`;
+            // 🛑 المستخدم زائر (Guest): اعرض أزرار التسجيل
+            actionSectionHTML = `
+                <div class="guest-action-box">
+                    <p style="color:#ccc; margin-bottom:15px; font-size:0.95rem;">
+                        <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i>
+                        يجب تسجيل الدخول للتواصل مع المالك ومشاهدة رقم الهاتف.
+                    </p>
+                    <div class="guest-btns-wrapper">
+                        <a href="login" class="btn-login-action">تسجيل دخول</a>
+                        <a href="register" class="btn-register-action">إنشاء حساب</a>
+                    </div>
+                </div>
+            `;
         }
 
         // فيديو
@@ -258,14 +316,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
                             ${makeOfferButtonHTML}
                         </div>
-                        <div id="savings-calculator-box" class="savings-box-modern" style="display: none;">
-                            <div class="savings-header-modern"><i class="fas fa-wallet"></i> ليه تدفع أكتر؟</div>
-                            <div class="savings-body">
-                                <div class="compare-row bad"><div class="label-col"><span class="icon">❌</span><span class="text" id="broker-label">عمولة المكاتب العادية (2.5%)</span></div><div class="value-col" id="broker-fee">0 ج.م</div></div>
-                                <div class="compare-row good"><div class="label-col"><span class="icon">✅</span><span class="text" id="aqarak-label">عمولة موقع عقارك (1%)</span></div><div class="value-col" id="aqarak-fee">0 ج.م</div></div>
-                            </div>
-                            <div class="savings-footer"><span class="saved-label">💰 إجمالي توفيرك معنا:</span><span class="saved-value" id="total-saved-amount">0 ج.م</span></div>
-                        </div>
+                        
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <div style="color:#333; font-size:0.95rem;">
@@ -274,6 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <p><strong>الكود:</strong> <span>${property.hiddenCode}</span></p>
                             </div>
                         </div>
+
                         <div class="property-specs">
                             <ul class="specs-list">
                                 <li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>
@@ -296,25 +348,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="similar-properties-section" style="margin-top: 50px;"><h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--main-secondary); display:inline-block; padding-bottom:5px;"><i class="fas fa-home"></i> عقارات مشابهة</h2><div id="similar-properties-container" class="listings-container"><p>جاري البحث...</p></div></div>
             </div>
         `;
-
-        // حسابات التوفير
-        const priceNum = parseFloat(String(property.price).replace(/[^0-9.]/g, ''));
-        if (!isNaN(priceNum) && priceNum > 0) {
-            const expiryDate = new Date('2026-03-03'); const today = new Date();
-            let aqarakRate = (today < expiryDate) ? 0 : 0.01;
-            let aqarakLabelText = (today < expiryDate) ? 'عمولة موقع عقارك (0%) 🔥' : 'عمولة موقع عقارك (1%)';
-            const propType = String(property.type || "").toLowerCase(); 
-            const isRent = propType.includes('ايجار') || propType.includes('إيجار') || propType.includes('rent');
-            let broker = isRent ? priceNum : priceNum * 0.025; 
-            let brokerLabelText = isRent ? "عمولة السماسرة (شهر كامل)" : "عمولة المكاتب العادية (2.5%)";
-            const aqarak = priceNum * aqarakRate; const saved = broker - aqarak;        
-            document.getElementById('broker-fee').textContent = Math.round(broker).toLocaleString() + ' ج.م';
-            document.getElementById('aqarak-fee').textContent = Math.round(aqarak).toLocaleString() + ' ج.م';
-            document.getElementById('total-saved-amount').textContent = Math.round(saved).toLocaleString() + ' ج.م';
-            document.getElementById('aqarak-label').textContent = aqarakLabelText;
-            document.getElementById('broker-label').textContent = brokerLabelText;
-            document.getElementById('savings-calculator-box').style.display = 'block';
-        }
 
         // لوحة الأدمن
         if (userRole === 'admin') {
