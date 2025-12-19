@@ -4,14 +4,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>عقارك - اعرض عقارك</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1c2630">
-<link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604"
-     crossorigin="anonymous"></script>
 </head>
 <body class="internal-page custom-body">
 
@@ -22,7 +16,7 @@
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
             <nav class="main-nav">
-                <a href="home" class="nav-button neon-button-white">الرئيسية للموقع</a> 
+                <a href="home" class="nav-button neon-button-white">الرئيسية</a> 
             </nav>
         </div>
     </header>
@@ -30,23 +24,25 @@
     <main class="main-content">
         <div class="seller-form-container neon-glow centered-page-content" style="max-width: 800px;">
             <h2>نموذج عرض عقار</h2>
-            <p>املأ البيانات التالية وارفع الصور، وستصلنا للمراجعة.</p>
+            <p>سيتم نشر العقار باسمك ورقمك المسجل لدينا.</p>
 
             <form id="seller-form" enctype="multipart/form-data" class="auth-form"> 
 
                 <div class="form-grid">
                     <div class="input-group">
                         <label for="seller-name">اسمك</label>
-                        <input type="text" id="seller-name" name="sellerName" class="neon-input-white" required>
+                        <input type="text" id="seller-name" name="sellerName" class="neon-input-white" 
+                               style="background-color: #333; color: #aaa; cursor: not-allowed;" readonly required>
                     </div>
 
                     <div class="input-group">
-                        <label for="seller-phone">رقم تليفونك (للتواصل)</label>
-                        <input type="tel" id="seller-phone" name="sellerPhone" class="neon-input-white" required>
+                        <label for="seller-phone">رقم تليفونك</label>
+                        <input type="tel" id="seller-phone" name="sellerPhone" class="neon-input-white" 
+                               style="background-color: #333; color: #aaa; cursor: not-allowed;" readonly required>
                     </div>
 
                     <div class="input-group">
-                        <label for="property-title">عنوان الإعلان (مثال: شقة للبيع بالمعادي)</label>
+                        <label for="property-title">عنوان الإعلان</label>
                         <input type="text" id="property-title" name="propertyTitle" class="neon-input-white" required>
                     </div>
 
@@ -81,51 +77,30 @@
                 </div>
 
                 <div class="input-group full-width">
-                    <label for="property-description">وصف تفصيلي للعقار</label>
+                    <label for="property-description">وصف تفصيلي</label>
                     <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white"></textarea>
                 </div>
 
                 <div class="input-group full-width">
-                    <label>ارفع صور العقار (يمكنك اختيار صور متعددة)</label>
-                    
+                    <label>ارفع صور العقار</label>
                     <label for="property-images" class="file-upload-label btn-neon-auth">
                         <i class="fas fa-upload"></i> اختر الصور
                     </label>
-                    
                     <input type="file" id="property-images" name="images[]" multiple accept="image/*" style="display:none;"> 
-                    
-                    <small style="color: #ff4444; font-size: 0.85rem; margin-top: 8px; display: block; font-weight: bold;">
-                        ⚠️ ملاحظة: الحد الأقصى لحجم الصورة الواحدة هو 10 ميجابايت.
-                    </small>
-
                     <div class="image-preview-container" id="image-preview-container"></div>
                 </div>
-                
-                <button type="submit" class="btn-neon-large-green">
-                    تأكيد وإرسال للمراجعة
-                </button>
+
+                <button type="submit" class="btn-neon-large-green">تأكيد وإرسال</button>
             </form>
-
-            <p id="seller-form-message" class="message" style="margin-top: 20px; font-weight: bold; text-align: center; font-size: 1.1em;"></p> 
-
+            <p id="seller-form-message" class="message"></p> 
         </div>
     </main>
 
     <footer class="main-footer">
         <div class="footer-content">
-              <div class="social-links">
-                <a href="https://www.facebook.com/share/1DRMsHUZdG/" title="فيسبوك" target="_blank"><i class="fab fa-facebook-f"></i></a>
-                <a href="https://www.instagram.com/aqarak.eg?igsh=ZHZhd2U0NTg4MzAy" title="انستجرام" target="_blank"><i class="fab fa-instagram"></i></a>
-                <a href="https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38" title="واتساب" target="_blank"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            <p class="contact-info">تواصلوا معنا!</p>
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
-    <script src="guest.js"></script>
-    <script src="utils.js"></script> 
     <script src="seller-form.js"></script>
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
 </body>
 </html>
