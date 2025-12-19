@@ -10,15 +10,25 @@
         .auth-tabs { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
         .tab-btn { background: transparent; border: none; color: #fff; padding: 10px 20px; cursor: pointer; font-size: 1.1rem; border-bottom: 2px solid transparent; }
         .tab-btn.active { border-bottom: 2px solid #00ff88; color: #00ff88; }
-
         .otp-group { display: none; margin-top: 15px; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .error-msg { color: #ff4444; font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 5px; min-height: 20px; }
+        .password-strength { height: 5px; width: 100%; background: #333; margin-top: 5px; border-radius: 3px; }
+        .strength-bar { height: 100%; width: 0%; border-radius: 3px; transition: width 0.3s, background 0.3s; }
+        .strength-text { font-size: 0.75rem; float: left; margin-top: 3px; }
+
+        /* ستايل حقل اليوزر نيم (انستجرام ستايل) */
+        .input-wrapper { position: relative; }
+        .validation-icon { position: absolute; left: 15px; top: 38px; font-size: 1.2rem; display: none; }
+        .fa-check-circle { color: #00ff88; }
+        .fa-times-circle { color: #ff4444; }
+        .username-error { color: #ff4444; font-size: 0.75rem; margin-top: 2px; display: none; }
 
         /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
         .modal-content { background-color: #1c2630; margin: 15% auto; padding: 20px; border: 1px solid #00ff88; width: 90%; max-width: 400px; border-radius: 10px; text-align: center; color: white; }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: #fff; }
         .forgot-link { color: #aaa; font-size: 0.9rem; margin-top: 10px; display: block; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
@@ -33,13 +43,14 @@
             </div>
 
             <div id="login-form-wrapper">
-                <p id="login-message" class="message"></p>
                 <form id="login-form" class="auth-form">
                     <div class="input-group">
+                        <span id="login-phone-error" class="error-msg"></span>
                         <label>رقم الواتساب</label>
                         <input type="tel" id="login-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
                     </div>
                     <div class="input-group">
+                        <span id="login-pass-error" class="error-msg"></span>
                         <label>كلمة المرور</label>
                         <input type="password" id="login-password" class="neon-input-white" required>
                     </div>
@@ -49,25 +60,43 @@
             </div>
 
             <div id="register-form-wrapper" style="display:none;">
-                <p id="register-message" class="message"></p>
                 <form id="register-form" class="auth-form">
                     <div id="reg-step-1">
                         <div class="input-group">
                             <label>الاسم بالكامل</label>
                             <input type="text" id="reg-name" class="neon-input-white" required>
                         </div>
+
+                        <div class="input-group input-wrapper">
+                            <label>اسم المستخدم (إنجليزي فقط)</label>
+                            <input type="text" id="reg-username" class="neon-input-white" placeholder="username" required>
+                            <i id="icon-check" class="fas fa-check-circle validation-icon"></i>
+                            <i id="icon-error" class="fas fa-times-circle validation-icon"></i>
+                            <p id="username-msg" class="username-error">اسم المستخدم مستخدم بالفعل من قبل مستخدم اخر برجاء كتابة اسم مستخدم اخر</p>
+                        </div>
+                        
                         <div class="input-group">
+                            <span id="reg-phone-error" class="error-msg"></span>
                             <label>رقم الواتساب</label>
                             <input type="tel" id="reg-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
                         </div>
+
                         <div class="input-group">
                             <label>كلمة المرور</label>
-                            <input type="password" id="reg-password" class="neon-input-white" required>
+                            <input type="password" id="reg-password" class="neon-input-white" onkeyup="checkStrength()" required>
+                            <div class="password-strength"><div id="strength-bar" class="strength-bar"></div></div>
+                            <span id="strength-text" class="strength-text" style="color: #aaa;"></span>
+                        </div>
+
+                        <div class="input-group">
+                            <label>تأكيد كلمة المرور</label>
+                            <input type="password" id="reg-confirm-password" class="neon-input-white" required>
+                            <span id="confirm-pass-error" class="error-msg"></span>
                         </div>
                     </div>
 
                     <div class="input-group otp-group" id="reg-otp-group">
-                        <label style="color: #00ff88;">تم إرسال الكود للواتساب ✅</label>
+                        <label style="color: #00ff88;">تم إرسال الكود ✅</label>
                         <input type="text" id="reg-otp" class="neon-input-white" placeholder="أدخل الكود (4 أرقام)">
                     </div>
 
