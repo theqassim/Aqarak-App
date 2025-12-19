@@ -25,7 +25,7 @@ async function updateNavigation() {
             // 🔴 سيناريو 2: زائر (Guest)
             // الزرارين بيودوا على صفحة login لأنها فيها التبويبين
             nav.innerHTML = `
-                <a href="login" class="nav-button neon-button-white">تسجيل دخول</a>
+                <a href="index" class="nav-button neon-button-white">تسجيل دخول</a>
                 <a href="login" class="sell-btn" style="background: transparent; border: 1px solid #00ff88; color: #00ff88;">انشاء حساب</a>
             `;
         }
