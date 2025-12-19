@@ -202,7 +202,7 @@ async function createTables() {
         `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "publisherUsername" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE, "video_urls" TEXT[] DEFAULT '{}')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
-        `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_phone TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_phone, property_id))`,
+        `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_phone TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_phone, property_id))`
         `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`,
         `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`,
         `CREATE TABLE IF NOT EXISTS bot_settings (id SERIAL PRIMARY KEY, setting_key TEXT UNIQUE, setting_value TEXT)`
@@ -745,41 +745,48 @@ app.get('/api/properties', async (req, res) => { let sql = "SELECT id, title, pr
 app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery(`SELECT * FROM properties WHERE id=$1`, [req.params.id]); if(r.rows[0]) { try { r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); } catch(e){ r.rows[0].imageUrls=[]; } res.json(r.rows[0]); } else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } catch (e) { throw e; } });
-app.post('/api/favorites', async (req, res) => { try { await pgQuery(`INSERT INTO favorites (user_email, property_id) VALUES ($1, $2)`, [req.body.userEmail, req.body.propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة' }); throw err; } });
-// 🟢 إضافة للمفضلة (معدلة لتعمل بالتوكن والهاتف)
+// ==========================================================
+// ❤️ نظام المفضلة (تم التحديث ليعمل برقم الهاتف)
+// ==========================================================
+
+// 1. إضافة للمفضلة
 app.post('/api/favorites', async (req, res) => { 
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+        // ✅ التعديل هنا: استخدام user_phone
         await pgQuery(`INSERT INTO favorites (user_phone, property_id) VALUES ($1, $2)`, [decoded.phone, req.body.propertyId]); 
         res.status(201).json({ success: true }); 
     } catch (err) { 
         if (err.code === '23505') return res.status(409).json({ message: 'موجودة بالفعل' }); 
+        console.error("Favorite Error:", err);
         res.status(500).json({ error: 'خطأ سيرفر' }); 
     } 
 });
 
-// 🟢 حذف من المفضلة
+// 2. حذف من المفضلة
 app.delete('/api/favorites/:propertyId', async (req, res) => { 
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
 
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
+        // ✅ التعديل هنا: استخدام user_phone
         await pgQuery(`DELETE FROM favorites WHERE user_phone = $1 AND property_id = $2`, [decoded.phone, req.params.propertyId]); 
         res.json({ success: true }); 
     } catch (err) { res.status(500).json({ error: 'خطأ' }); } 
 });
 
-// 🟢 عرض المفضلة
+// 3. عرض المفضلة
 app.get('/api/favorites', async (req, res) => { 
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
 
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
+        // ✅ التعديل هنا: استخدام user_phone في الربط والشرط
         const sql = `
             SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id 
             FROM properties p 
@@ -789,7 +796,10 @@ app.get('/api/favorites', async (req, res) => {
         `; 
         const result = await pgQuery(sql, [decoded.phone]); 
         res.json(result.rows); 
-    } catch (err) { res.status(500).json({ error: err.message }); } 
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: err.message }); 
+    } 
 });
 // 🛑 رابط مؤقت لإصلاح الداتابيز (استخدمه مرة واحدة وامسحه)
 app.get('/fix-db', async (req, res) => {
