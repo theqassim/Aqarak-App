@@ -9,9 +9,9 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
-// 🟢 إضافات الواتساب والجلسة
+// 🟢 إضافات الواتساب
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+// const qrcode = require('qrcode-terminal'); // مش محتاجينه دلوقتي
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const cloudinary = require('cloudinary').v2;
@@ -21,7 +21,7 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
-const APP_URL = "https://aqarakeg.com"; // ⚠️ استبدله برابط موقعك الفعلي لو مختلف
+const APP_URL = "https://aqarakeg.com"; // ⚠️ رابط موقعك
 
 // ⚠️ مفتاح API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE"; 
@@ -58,14 +58,12 @@ function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
 // ==========================================================
-// 🧠 1. نظام الواتساب (WhatsApp)
+// 📱 1. إعدادات الواتساب (نظام كود الربط Pairing Code)
 // ==========================================================
 
-/* بما أن Render لا يحتفظ بالملفات، سنستخدم LocalAuth
-   مع حيلة "Keep Alive" لمنع السيرفر من النوم.
-   للحفظ الدائم الحقيقي (Persistent)، الحل الأمثل هو "Render Disk".
-   لكن الكود التالي يحاول الحفاظ على الاتصال لأطول فترة ممكنة.
-*/
+// ⚠️ رقمك الشخصي اللي هيتبعت عليه كود الربط
+// (20 كود مصر + 1008102237 رقمك بدون الصفر الأول)
+const MY_PHONE_NUMBER = "201008102237"; 
 
 const whatsappClient = new Client({
     authStrategy: new LocalAuth({ clientId: "aqarak-session" }),
@@ -75,32 +73,43 @@ const whatsappClient = new Client({
     }
 });
 
-whatsappClient.on('qr', (qr) => {
-    console.log('📱 QR Code received. Scan it NOW:');
-    qrcode.generate(qr, { small: true });
+let pairingCodeRequested = false;
+
+whatsappClient.on('qr', async (qr) => {
+    // بدل ما نعرض QR، هنطلب كود ربط
+    if (!pairingCodeRequested) {
+        try {
+            console.log('⏳ جاري طلب كود الربط من واتساب...');
+            const pairingCode = await whatsappClient.requestPairingCode(MY_PHONE_NUMBER);
+            
+            console.log('🚀 -------------------------------------------------------');
+            console.log('🔗 كود الربط الخاص بك (انسخه واكتبه في واتساب):');
+            console.log(`👉   ${pairingCode}   👈`);
+            console.log('🚀 -------------------------------------------------------');
+            
+            pairingCodeRequested = true;
+        } catch (err) {
+            console.error('❌ فشل طلب كود الربط:', err);
+        }
+    }
 });
 
 whatsappClient.on('ready', () => {
-    console.log('✅ الواتساب متصل وجاهز!');
+    console.log('✅ الواتساب متصل وجاهز للإرسال!');
 });
 
 whatsappClient.on('authenticated', () => {
     console.log('🔑 تم التوثيق بنجاح');
 });
 
-whatsappClient.on('auth_failure', msg => {
-    console.error('❌ فشل التوثيق:', msg);
-});
-
 whatsappClient.initialize();
 
-// ✅ دالة إرسال الرسالة (المصححة لمشكلة Lid Missing)
+// ✅ دالة إرسال الرسالة (Lid Fix)
 async function sendWhatsAppMessage(phone, message) {
     try {
         let formattedNumber = phone.replace(/\D/g, '');
         if (formattedNumber.startsWith('01')) formattedNumber = '2' + formattedNumber;
 
-        // التحقق من وجود الرقم والحصول على المعرف الصحيح
         const numberDetails = await whatsappClient.getNumberId(formattedNumber);
 
         if (numberDetails) {
@@ -117,7 +126,7 @@ async function sendWhatsAppMessage(phone, message) {
     }
 }
 
-// 🧠 Keep Alive: منع السيرفر من النوم (كل 5 دقايق)
+// 🧠 Keep Alive
 setInterval(() => {
     fetch(`${APP_URL}/api/ping`)
         .then(() => console.log('💓 Ping sent to keep server awake'))
@@ -127,7 +136,7 @@ setInterval(() => {
 const otpStore = {}; 
 
 // ==========================================================
-// 🧠 2. دوال المساعدة (حذف الصور + الإشعارات)
+// 🧠 2. دوال المساعدة
 // ==========================================================
 
 async function deleteCloudinaryImages(imageUrls) {
@@ -166,7 +175,6 @@ async function notifyAllUsers(title, body, url) {
     } catch (err) { console.error("Web Push Error:", err); }
 }
 
-// 🔥 النص الافتراضي (مع الدليل الكامل والتعليمات الصارمة)
 const DEFAULT_SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠.
 تتحدث باللهجة المصرية الودودة.
@@ -174,7 +182,7 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
 
 ⛔ **قواعد صارمة جداً (Zero Tolerance):**
 1. **الالتزام بالبيانات:** إذا كان العدد 0، قل "مفيش عقارات حالياً".
-2. **البحث العام (GENERAL_STATS):** إذا سأل "ايه المتاح؟"، اعرض الأعداد فقط (نصياً). 🚫 **ممنوع** عرض كروت HTML.
+2. **البحث العام (GENERAL_STATS):** إذا سأل "ايه المتاح؟"، اعرض الأعداد فقط. 🚫 **ممنوع** عرض كروت HTML.
 3. **البحث المخصص (SPECIFIC_DATA):** إذا حدد مدينة، اعرض التفاصيل والكروت.
 4. **كود الكارت:**
    <a href="property-details?id={ID}" class="chat-property-box">
@@ -198,7 +206,7 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
 `;
 
 // ==========================================================
-// 🧠 3. إعداد الجداول وقاعدة البيانات
+// 🧠 3. إعداد الجداول
 // ==========================================================
 async function createTables() {
     const queries = [
@@ -232,13 +240,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
 
 // ==========================================================
-// 🧠 4. خوارزميات البحث الذكي
+// 🧠 4. خوارزميات البحث
 // ==========================================================
 const EGYPT_LOCATIONS = {
     "قاهرة": ["القاهرة", "التجمع", "الشروق", "مدينتي", "الرحاب", "المستقبل", "العاصمة الادارية", "مصر الجديدة", "مدينة نصر", "المعادي", "زهراء المعادي", "المقطم", "القطامية", "الزيتون", "عين شمس", "المرج", "السلام", "العباسية", "وسط البلد", "الزمالك", "جاردن سيتي", "شبرا مصر", "حلوان", "المعصرة", "15 مايو", "بدر", "حدائق القبة", "الوايلي", "المنيل", "السيدة زينب", "الازبكية", "بولاق", "عابدين", "الموسكي", "الخليفة", "المطرية", "النزهة", "شيراتون", "الالف مسكن", "الحلمية", "منشأة ناصر", "طرة", "المعصرة", "التبين"],
     "جيزة": ["الجيزة", "6 أكتوبر", "الشيخ زايد", "حدائق الأهرام", "الدقي", "المهندسين", "الهرم", "فيصل", "العجوزة", "إمبابة", "الوراق", "بولاق الدكرور", "العمرانية", "المنيب", "البدرشين", "العياط", "الصف", "أطفيح", "كرداسة", "أوسيم", "الحوامدية", "حدائق اكتوبر", "ابو النمرس", "منشأة القناطر", "الواحات البحرية", "ميت عقبة", "بين السرايات", "الكيت كات", "أرض اللواء", "ناهيا", "صفط اللبن", "كفر طهرمس", "الطوابق", "المريوطية", "الرماية"],
     "اسكندرية": ["الاسكندرية", "سموحة", "ميامي", "سيدي بشر", "المنتزه", "العجمي", "الساحل الشمالي", "محرم بك", "الشاطبي", "كامب شيزار", "الإبراهيمية", "سبورتنج", "كليوباترا", "سيدي جابر", "رشدي", "جليم", "زيزينيا", "باكوس", "فلمنج", "الظاهرية", "العصافرة", "المندرة", "المعمورة", "أبوقير", "الهانوفيل", "البيطاش", "الكيلو 21", "كينج مريوط", "برج العرب", "العامرية", "الدخيلة", "المكس", "القباري", "كرموز", "غيط العنب", "كوم الدكة", "العطارين", "المنشية", "الجمرك", "الانفوشي", "راس التين", "المندرة", "ابيس"],
-    // ... باقي المحافظات كما هي ...
+    // ... باقي المحافظات
 };
 
 function getLevenshteinDistance(a, b) {
@@ -342,7 +350,7 @@ async function searchPropertiesInDBGeneral() {
 }
 
 // ==========================================================
-// 🧠 5. API الشات والتعليم
+// 🧠 5. API الشات
 // ==========================================================
 const chatHistories = {};
 const TIMEOUT_MS = 15 * 60 * 1000; 
@@ -446,7 +454,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ==========================================================
-// 🚀 6. نظام التوثيق والمصادقة (API)
+// 🚀 6. نظام التوثيق والمصادقة
 // ==========================================================
 
 app.post('/api/auth/send-otp', async (req, res) => {
@@ -513,7 +521,21 @@ app.get('/api/auth/me', (req, res) => {
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
 
-// ... باقي الـ Routes (CRUD & Features) ...
+// إضافة الـ Route المطلوب لتغيير الباسورد بالطريقة العادية
+app.put('/api/user/change-password', async (req, res) => {
+    const { phone, currentPassword, newPassword } = req.body;
+    try {
+        const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
+        if (!r.rows[0] || !(await bcrypt.compare(currentPassword, r.rows[0].password))) {
+            return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
+        }
+        const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+        await pgQuery(`UPDATE users SET password = $1 WHERE id = $2`, [hash, r.rows[0].id]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false, message: 'خطأ سيرفر' }); }
+});
+
+// ... باقي الـ Routes ...
 app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json({ success: true, message: 'تم الخروج' }); });
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
 app.post('/api/subscribe', async (req, res) => { try { await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [req.body.endpoint, JSON.stringify(req.body.keys)]); res.status(201).json({}); } catch (err) { res.status(500).json({ error: 'Failed' }); } });
@@ -544,6 +566,25 @@ app.get('/fix-db', async (req, res) => {
         res.send('✅ تم حذف الجداول القديمة. اعمل Restart للسيرفر دلوقتي عشان ينشئ الجداول الجديدة صح.');
     } catch (error) {
         res.send('❌ حدث خطأ: ' + error.message);
+    }
+});
+
+// 👑 رابط سحري لترقية حسابك (01145435095) لأدمن
+app.get('/upgrade-my-account', async (req, res) => {
+    const myPhone = "01145435095"; // ده رقمك اللي ظهر في اللوج
+    try {
+        // 1. تحديث الرتبة في قاعدة البيانات
+        await pgQuery("UPDATE users SET role = 'admin' WHERE phone = $1", [myPhone]);
+        
+        // 2. رسالة نجاح
+        res.send(`
+            <h1 style="color:green; text-align:center;">🎉 مبروك يا هندسة!</h1>
+            <p style="text-align:center; font-size:20px;">الرقم <b>${myPhone}</b> أصبح Admin الآن.</p>
+            <p style="text-align:center; color:red; font-weight:bold;">⚠️ مهم جداً: لازم تعمل "تسجيل خروج" وتدخل تاني عشان التحديث يظهر.</p>
+            <div style="text-align:center;"><a href="/">العودة للصفحة الرئيسية</a></div>
+        `);
+    } catch (error) {
+        res.send(`<h1 style="color:red;">❌ حدث خطأ: ${error.message}</h1>`);
     }
 });
 
