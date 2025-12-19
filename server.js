@@ -9,7 +9,7 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
-// 🟢 إضافات الواتساب والجلسة
+// 🟢 إضافات الواتساب
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
@@ -58,7 +58,7 @@ function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
 function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 
 // ==========================================================
-// 🧠 1. نظام الواتساب (WhatsApp)
+// 🧠 1. نظام الواتساب (WhatsApp QR)
 // ==========================================================
 
 const whatsappClient = new Client({
@@ -88,7 +88,7 @@ whatsappClient.on('auth_failure', msg => {
 
 whatsappClient.initialize();
 
-// ✅ دالة إرسال الرسالة (Lid Fix)
+// ✅ دالة إرسال الرسالة
 async function sendWhatsAppMessage(phone, message) {
     try {
         let formattedNumber = phone.replace(/\D/g, '');
@@ -98,6 +98,7 @@ async function sendWhatsAppMessage(phone, message) {
 
         if (numberDetails) {
             await whatsappClient.sendMessage(numberDetails._serialized, message);
+            console.log(`✅ Message sent to ${formattedNumber}`);
             return true;
         } else {
             console.error(`❌ الرقم غير مسجل في واتساب: ${formattedNumber}`);
@@ -119,10 +120,10 @@ setInterval(() => {
 const otpStore = {}; 
 
 // ==========================================================
-// 🧠 2. دوال المساعدة (بما فيها دالة الحذف الناقصة)
+// 🧠 2. دوال المساعدة
 // ==========================================================
 
-// ✅ دالة حذف الصور من Cloudinary (تمت إضافتها)
+// ✅ دالة حذف الصور من Cloudinary (كانت ناقصة وتمت إضافتها)
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) return;
     const publicIds = imageUrls.map(url => {
@@ -183,16 +184,21 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
            <div class="cta">اضغط للتفاصيل 👈</div>
        </div>
    </a>
+
+📘 **دليل استخدام الموقع:**
+**عام:** لا تسجيل دخول إجباري.
+**للبائع:** اعرض عقارك مجاناً. عمولة 0% حتى 3/2026. شعار "قانوني" بعد الفحص. فيديو واتساب 01008102237.
+**للمشتري:** ابحث بالفلتر. تواصل واتساب من صفحة العقار.
 `;
 
 // ==========================================================
-// 🧠 3. إعداد الجداول وقاعدة البيانات (تم التحديث)
+// 🧠 3. إعداد الجداول وقاعدة البيانات (محدث)
 // ==========================================================
 async function createTables() {
     const queries = [
-        // ✅ تم إضافة username
+        // ✅ تم تحديث جدول المستخدمين لإضافة username
         `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, username TEXT UNIQUE, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
-        // ✅ تم إضافة publisherUsername
+        // ✅ تم تحديث جدول العقارات لإضافة publisherUsername
         `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "publisherUsername" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE, "video_urls" TEXT[] DEFAULT '{}')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
@@ -228,7 +234,6 @@ const EGYPT_LOCATIONS = {
     "قاهرة": ["القاهرة", "التجمع", "الشروق", "مدينتي", "الرحاب", "المستقبل", "العاصمة الادارية", "مصر الجديدة", "مدينة نصر", "المعادي", "زهراء المعادي", "المقطم", "القطامية", "الزيتون", "عين شمس", "المرج", "السلام", "العباسية", "وسط البلد", "الزمالك", "جاردن سيتي", "شبرا مصر", "حلوان", "المعصرة", "15 مايو", "بدر", "حدائق القبة", "الوايلي", "المنيل", "السيدة زينب", "الازبكية", "بولاق", "عابدين", "الموسكي", "الخليفة", "المطرية", "النزهة", "شيراتون", "الالف مسكن", "الحلمية", "منشأة ناصر", "طرة", "المعصرة", "التبين"],
     "جيزة": ["الجيزة", "6 أكتوبر", "الشيخ زايد", "حدائق الأهرام", "الدقي", "المهندسين", "الهرم", "فيصل", "العجوزة", "إمبابة", "الوراق", "بولاق الدكرور", "العمرانية", "المنيب", "البدرشين", "العياط", "الصف", "أطفيح", "كرداسة", "أوسيم", "الحوامدية", "حدائق اكتوبر", "ابو النمرس", "منشأة القناطر", "الواحات البحرية", "ميت عقبة", "بين السرايات", "الكيت كات", "أرض اللواء", "ناهيا", "صفط اللبن", "كفر طهرمس", "الطوابق", "المريوطية", "الرماية"],
     "اسكندرية": ["الاسكندرية", "سموحة", "ميامي", "سيدي بشر", "المنتزه", "العجمي", "الساحل الشمالي", "محرم بك", "الشاطبي", "كامب شيزار", "الإبراهيمية", "سبورتنج", "كليوباترا", "سيدي جابر", "رشدي", "جليم", "زيزينيا", "باكوس", "فلمنج", "الظاهرية", "العصافرة", "المندرة", "المعمورة", "أبوقير", "الهانوفيل", "البيطاش", "الكيلو 21", "كينج مريوط", "برج العرب", "العامرية", "الدخيلة", "المكس", "القباري", "كرموز", "غيط العنب", "كوم الدكة", "العطارين", "المنشية", "الجمرك", "الانفوشي", "راس التين", "المندرة", "ابيس"],
-    // ... باقي المحافظات كما هي ...
 };
 
 function getLevenshteinDistance(a, b) {
@@ -453,7 +458,7 @@ app.post('/api/check-username', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ✅ 2. إرسال OTP
+// ✅ 2. إرسال OTP مع التحقق من الهدف (تسجيل جديد vs استعادة)
 app.post('/api/auth/send-otp', async (req, res) => {
     const { phone, type } = req.body; // type: 'register' | 'reset'
     if (!phone) return res.status(400).json({ message: 'رقم الهاتف مطلوب' });
@@ -474,20 +479,20 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         otpStore[phone] = { code: otp, expires: Date.now() + 10 * 60 * 1000 };
-        
+
         const message = `🔐 كود التحقق الخاص بك في *عقارك* هو: *${otp}*\nصلاحية الكود 10 دقائق.`;
         const sent = await sendWhatsAppMessage(phone, message);
-        
+
         if (sent) res.json({ success: true, message: 'تم إرسال الكود' });
         else res.status(500).json({ success: false, message: 'فشل إرسال الرسالة، تأكد من صحة الرقم ووجود واتساب عليه' });
 
     } catch (e) { res.status(500).json({ message: 'خطأ في السيرفر' }); }
 });
 
-// ✅ 3. التسجيل النهائي (حفظ الـ username)
+// ✅ 3. التسجيل النهائي (مع username)
 app.post('/api/register', async (req, res) => {
     const { name, username, phone, password, otp } = req.body;
-    
+
     // تحقق أخير من الـ OTP
     if (!otpStore[phone] || otpStore[phone].code !== otp || Date.now() > otpStore[phone].expires) {
         return res.status(400).json({ message: 'كود التحقق غير صحيح أو منتهي' });
@@ -508,12 +513,12 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// ✅ 4. تسجيل الدخول (إرجاع username)
+// ✅ 4. تسجيل الدخول (مع تحديد نوع الخطأ وإرجاع username)
 app.post('/api/login', async (req, res) => {
     const { phone, password } = req.body;
     try {
         const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
-        
+
         if (!r.rows[0]) {
             return res.status(404).json({ success: false, errorType: 'phone', message: 'هذا الرقم غير مسجل في موقع عقارك' });
         }
@@ -566,13 +571,45 @@ app.put('/api/user/change-password', async (req, res) => {
 
 app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json({ success: true, message: 'تم الخروج' }); });
 
+// ==========================================================
+// 🆕 ميزة "إعلاناتي" (My Ads)
+// ==========================================================
+app.get('/api/user/my-properties', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        // البحث بالرقم
+        const sql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "hiddenCode", "isFeatured", "isLegal" FROM properties WHERE "sellerPhone" = $1 ORDER BY id DESC`;
+        const result = await pgQuery(sql, [decoded.phone]);
+        res.json(result.rows);
+    } catch (error) { res.status(500).json({ message: 'خطأ' }); }
+});
+
+// ==========================================================
+// 🏠 Property & Admin APIs
+// ==========================================================
+
+app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { 
+    const files = req.files || []; const data = req.body; const urls = files.map(f => f.path);
+    // افتراضاً الأدمن هو الناشر لو مفيش توكن، ممكن تعدلها لتجيب اسم الأدمن من التوكن
+    const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; 
+    const params = [data.title, data.price, parseFloat(data.price.replace(/[^0-9.]/g,'')), safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), data.description, urls[0], JSON.stringify(urls), data.type, data.hiddenCode, "Admin", ADMIN_EMAIL, "admin", false, false]; 
+    try { const result = await pgQuery(sql, params); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } 
+});
+
+app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
+    const data = req.body; const files = req.files || []; const paths = files.map(f => f.path).join(' | ');
+    const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
+    try { await pgQuery(sql, [data.sellerName, data.sellerPhone, data.propertyTitle, data.propertyType, data.propertyPrice, safeInt(data.propertyArea), safeInt(data.propertyRooms), safeInt(data.propertyBathrooms), data.propertyDescription, paths, new Date().toISOString()]); 
+    await sendDiscordNotification("📢 طلب عرض عقار جديد!", [{ name: "👤 المالك", value: data.sellerName }, { name: "📞 الهاتف", value: data.sellerPhone }], 3066993, files[0]?.path); res.status(200).json({ success: true, message: 'تم الاستلام' }); } catch (err) { res.status(500).json({ message: 'Error' }); }
+});
+
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
 app.post('/api/subscribe', async (req, res) => { try { await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [req.body.endpoint, JSON.stringify(req.body.keys)]); res.status(201).json({}); } catch (err) { res.status(500).json({ error: 'Failed' }); } });
 app.post('/api/make-offer', async (req, res) => { const { propertyId, buyerName, buyerPhone, offerPrice } = req.body; try { await pgQuery(`INSERT INTO property_offers (property_id, buyer_name, buyer_phone, offer_price, created_at) VALUES ($1, $2, $3, $4, $5)`, [propertyId, buyerName, buyerPhone, offerPrice, new Date().toISOString()]); const propRes = await pgQuery('SELECT title FROM properties WHERE id = $1', [propertyId]); await sendDiscordNotification("💰 عرض سعر جديد", [{ name: "🏠 العقار", value: propRes.rows[0]?.title || 'غير معروف' }, { name: "📉 العرض", value: `${offerPrice} ج.م` }, { name: "👤 المشتري", value: `${buyerName} - ${buyerPhone}` }], 16753920); res.status(200).json({ success: true }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
 app.post('/api/admin/publish-submission', async (req, res) => { const { submissionId, hiddenCode } = req.body; try { const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]); const sub = subRes.rows[0]; const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean); const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "isFeatured", "isLegal", "video_urls") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; const params = [sub.propertyTitle, sub.propertyPrice, parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), safeInt(sub.propertyRooms), safeInt(sub.propertyBathrooms), safeInt(sub.propertyArea), sub.propertyDescription, imageUrls[0], JSON.stringify(imageUrls), sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone, false, false, []]; const result = await pgQuery(sql, params); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]); notifyAllUsers(`عقار جديد!`, sub.propertyTitle, `/property-details?id=${result.rows[0].id}`); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } });
-app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { const files = req.files || []; const data = req.body; const urls = files.map(f => f.path); let videoUrls = []; try { videoUrls = JSON.parse(data.video_urls || '[]'); } catch(e) {} const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "isFeatured", "isLegal", "video_urls") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; const params = [data.title, data.price, parseFloat((data.price || '0').replace(/[^0-9.]/g, '')), safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), data.description, urls[0], JSON.stringify(urls), data.type, data.hiddenCode, "Admin", ADMIN_EMAIL, false, false, videoUrls]; try { const result = await pgQuery(sql, params); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } });
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages, video_urls } = req.body; let oldUrls = []; try { oldUrls = JSON.parse((Array.isArray(existingImages) ? existingImages[0] : existingImages) || '[]'); } catch(e) {} const newUrls = req.files ? req.files.map(f => f.path) : []; const allUrls = [...oldUrls, ...newUrls]; let videoUrlsArr = []; try { videoUrlsArr = JSON.parse(video_urls || '[]'); } catch(e) {} const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11, "video_urls"=$12 WHERE id=$13`; const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), safeInt(rooms), safeInt(bathrooms), safeInt(area), description, allUrls[0], JSON.stringify(allUrls), type, hiddenCode, videoUrlsArr, req.params.id]; try { await pgQuery(sql, params); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { res.status(400).json({ message: `خطأ` }); } });
-app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => { const data = req.body; const files = req.files || []; const paths = files.map(f => f.path).join(' | '); const sql = `INSERT INTO seller_submissions ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`; const params = [data.sellerName, data.sellerPhone, data.propertyTitle, data.propertyType, data.propertyPrice, safeInt(data.propertyArea), safeInt(data.propertyRooms), safeInt(data.propertyBathrooms), data.propertyDescription, paths, new Date().toISOString()]; try { await pgQuery(sql, params); await sendDiscordNotification("📢 طلب عرض عقار جديد!", [{ name: "👤 المالك", value: data.sellerName }, { name: "📞 الهاتف", value: data.sellerPhone }], 3066993, files[0]?.path); res.status(200).json({ success: true, message: 'تم الاستلام' }); } catch (err) { throw err; } });
 app.post('/api/request-property', async (req, res) => { const { name, phone, email, specifications } = req.body; try { await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]); await sendDiscordNotification("📩 طلب عقار مخصص", [{ name: "👤 الاسم", value: name }, { name: "📝 المواصفات", value: specifications }], 15158332); res.status(200).json({ success: true }); } catch (err) { throw err; } });
 app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
 app.get('/api/admin/property-requests', async (req, res) => { try { const r = await pgQuery("SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
@@ -619,13 +656,13 @@ app.get('/update-db-schema', async (req, res) => {
     try {
         // إضافة عمود username لو مش موجود
         await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE`);
-        
+
         // إضافة عمود publisherUsername للعقارات
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "publisherUsername" TEXT`);
 
         // تحديث المستخدمين القدامى (اسمهم + رقم عشوائي) عشان ميكنش null
         await pgQuery(`UPDATE users SET username = CONCAT('user_', FLOOR(RANDOM() * 100000)) WHERE username IS NULL`);
-        
+
         res.send('✅ تم تحديث هيكل قاعدة البيانات بنجاح.');
     } catch (error) {
         res.send('❌ حدث خطأ: ' + error.message);
