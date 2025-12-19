@@ -513,9 +513,25 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// ✅ 4. تسجيل الدخول (مع تحديد نوع الخطأ وإرجاع username)
+// ✅ 4. تسجيل الدخول (مع بوابة الأدمن)
 app.post('/api/login', async (req, res) => {
     const { phone, password } = req.body;
+
+    // 👑 1. التحقق هل هو الأدمن الرئيسي؟ (Hardcoded Check)
+    if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD) {
+        const token = jwt.sign({ 
+            id: 0, 
+            phone: ADMIN_PHONE, 
+            role: 'admin', 
+            username: 'admin', 
+            name: 'المدير العام' 
+        }, JWT_SECRET, { expiresIn: '7d' });
+
+        res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+        return res.json({ success: true, role: 'admin', username: 'admin', name: 'المدير العام', message: 'أهلاً بك يا أدمن 👑' });
+    }
+
+    // 👤 2. التحقق من المستخدمين العاديين في قاعدة البيانات
     try {
         const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
 
@@ -528,14 +544,12 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = r.rows[0];
-        // تضمين username في التوكن والرد
         const token = jwt.sign({ id: user.id, phone: user.phone, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
         res.json({ success: true, role: user.role, username: user.username, name: user.name, message: 'تم الدخول بنجاح' });
 
     } catch (e) { return res.status(500).json({ error: e.message }); }
 });
-
 app.post('/api/auth/reset-password', async (req, res) => {
     const { phone, otp, newPassword } = req.body;
     if (!otpStore[phone] || otpStore[phone].code !== otp || Date.now() > otpStore[phone].expires) {
