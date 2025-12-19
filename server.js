@@ -21,7 +21,7 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
-const APP_URL = "https://aqarakeg.com"; // ⚠️ استبدله برابط موقعك الفعلي لو مختلف
+const APP_URL = "https://aqarakeg.com"; 
 
 // ⚠️ مفتاح API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE"; 
@@ -61,12 +61,6 @@ function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
 // 🧠 1. نظام الواتساب (WhatsApp)
 // ==========================================================
 
-/* بما أن Render لا يحتفظ بالملفات، سنستخدم LocalAuth
-   مع حيلة "Keep Alive" لمنع السيرفر من النوم.
-   للحفظ الدائم الحقيقي (Persistent)، الحل الأمثل هو "Render Disk".
-   لكن الكود التالي يحاول الحفاظ على الاتصال لأطول فترة ممكنة.
-*/
-
 const whatsappClient = new Client({
     authStrategy: new LocalAuth({ clientId: "aqarak-session" }),
     puppeteer: { 
@@ -94,18 +88,16 @@ whatsappClient.on('auth_failure', msg => {
 
 whatsappClient.initialize();
 
-// ✅ دالة إرسال الرسالة (المصححة لمشكلة Lid Missing)
+// ✅ دالة إرسال الرسالة (Lid Fix)
 async function sendWhatsAppMessage(phone, message) {
     try {
         let formattedNumber = phone.replace(/\D/g, '');
         if (formattedNumber.startsWith('01')) formattedNumber = '2' + formattedNumber;
 
-        // التحقق من وجود الرقم والحصول على المعرف الصحيح
         const numberDetails = await whatsappClient.getNumberId(formattedNumber);
 
         if (numberDetails) {
             await whatsappClient.sendMessage(numberDetails._serialized, message);
-            console.log(`✅ Message sent to ${formattedNumber}`);
             return true;
         } else {
             console.error(`❌ الرقم غير مسجل في واتساب: ${formattedNumber}`);
@@ -117,7 +109,7 @@ async function sendWhatsAppMessage(phone, message) {
     }
 }
 
-// 🧠 Keep Alive: منع السيرفر من النوم (كل 5 دقايق)
+// 🧠 Keep Alive
 setInterval(() => {
     fetch(`${APP_URL}/api/ping`)
         .then(() => console.log('💓 Ping sent to keep server awake'))
@@ -127,9 +119,10 @@ setInterval(() => {
 const otpStore = {}; 
 
 // ==========================================================
-// 🧠 2. دوال المساعدة (حذف الصور + الإشعارات)
+// 🧠 2. دوال المساعدة (بما فيها دالة الحذف الناقصة)
 // ==========================================================
 
+// ✅ دالة حذف الصور من Cloudinary (تمت إضافتها)
 async function deleteCloudinaryImages(imageUrls) {
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) return;
     const publicIds = imageUrls.map(url => {
@@ -166,7 +159,7 @@ async function notifyAllUsers(title, body, url) {
     } catch (err) { console.error("Web Push Error:", err); }
 }
 
-// 🔥 النص الافتراضي (مع الدليل الكامل والتعليمات الصارمة)
+// 🔥 النص الافتراضي
 const DEFAULT_SYSTEM_INSTRUCTION = `
 أنت "مساعد عقارك" الذكي 🏠.
 تتحدث باللهجة المصرية الودودة.
@@ -190,20 +183,17 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
            <div class="cta">اضغط للتفاصيل 👈</div>
        </div>
    </a>
-
-📘 **دليل استخدام الموقع:**
-**عام:** لا تسجيل دخول إجباري.
-**للبائع:** اعرض عقارك مجاناً. عمولة 0% حتى 3/2026. شعار "قانوني" بعد الفحص. فيديو واتساب 01008102237.
-**للمشتري:** ابحث بالفلتر. تواصل واتساب من صفحة العقار.
 `;
 
 // ==========================================================
-// 🧠 3. إعداد الجداول وقاعدة البيانات
+// 🧠 3. إعداد الجداول وقاعدة البيانات (تم التحديث)
 // ==========================================================
 async function createTables() {
     const queries = [
-        `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE, "video_urls" TEXT[] DEFAULT '{}')`,
-        `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
+        // ✅ تم إضافة username
+        `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, username TEXT UNIQUE, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user')`,
+        // ✅ تم إضافة publisherUsername
+        `CREATE TABLE IF NOT EXISTS properties (id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, "sellerName" TEXT, "sellerPhone" TEXT, "publisherUsername" TEXT, "isFeatured" BOOLEAN DEFAULT FALSE, "isLegal" BOOLEAN DEFAULT FALSE, "video_urls" TEXT[] DEFAULT '{}')`,
         `CREATE TABLE IF NOT EXISTS seller_submissions (id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending')`,
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_email TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_email, property_id))`,
@@ -449,48 +439,96 @@ app.post('/api/chat', async (req, res) => {
 // 🚀 6. نظام التوثيق والمصادقة (API)
 // ==========================================================
 
-app.post('/api/auth/send-otp', async (req, res) => {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: 'رقم الهاتف مطلوب' });
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    otpStore[phone] = { code: otp, expires: Date.now() + 10 * 60 * 1000 };
-    const message = `🔐 كود التحقق الخاص بك في *عقارك* هو: *${otp}*\nصلاحية الكود 10 دقائق.`;
-    const sent = await sendWhatsAppMessage(phone, message);
-    if (sent) res.json({ success: true, message: 'تم إرسال الكود' });
-    else res.status(500).json({ success: false, message: 'فشل الإرسال، تأكد من الرقم' });
+// ✅ 1. التحقق من اسم المستخدم (Instagram Style)
+app.post('/api/check-username', async (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.json({ available: false });
+    const validRegex = /^[a-zA-Z0-9_.]+$/;
+    if (!validRegex.test(username) || username.length < 3) return res.json({ available: false, message: 'invalid_format' });
+
+    try {
+        const result = await pgQuery('SELECT id FROM users WHERE username = $1', [username.toLowerCase()]);
+        if (result.rows.length > 0) res.json({ available: false, message: 'taken' });
+        else res.json({ available: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ 2. إرسال OTP
+app.post('/api/auth/send-otp', async (req, res) => {
+    const { phone, type } = req.body; // type: 'register' | 'reset'
+    if (!phone) return res.status(400).json({ message: 'رقم الهاتف مطلوب' });
+
+    try {
+        const userCheck = await pgQuery('SELECT id FROM users WHERE phone = $1', [phone]);
+        const userExists = userCheck.rows.length > 0;
+
+        // لو تسجيل جديد والرقم موجود -> خطأ
+        if (type === 'register' && userExists) {
+            return res.status(409).json({ success: false, message: 'هذا الرقم مسجل بالفعل على موقع عقارك، سجل دخول الأن' });
+        }
+
+        // لو استعادة كلمة مرور والرقم مش موجود -> خطأ
+        if (type === 'reset' && !userExists) {
+            return res.status(404).json({ success: false, message: 'هذا الرقم غير مسجل لدينا، تأكد من الرقم أو أنشئ حساب جديد' });
+        }
+
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        otpStore[phone] = { code: otp, expires: Date.now() + 10 * 60 * 1000 };
+        
+        const message = `🔐 كود التحقق الخاص بك في *عقارك* هو: *${otp}*\nصلاحية الكود 10 دقائق.`;
+        const sent = await sendWhatsAppMessage(phone, message);
+        
+        if (sent) res.json({ success: true, message: 'تم إرسال الكود' });
+        else res.status(500).json({ success: false, message: 'فشل إرسال الرسالة، تأكد من صحة الرقم ووجود واتساب عليه' });
+
+    } catch (e) { res.status(500).json({ message: 'خطأ في السيرفر' }); }
+});
+
+// ✅ 3. التسجيل النهائي (حفظ الـ username)
 app.post('/api/register', async (req, res) => {
-    const { name, phone, password, otp } = req.body;
+    const { name, username, phone, password, otp } = req.body;
+    
+    // تحقق أخير من الـ OTP
     if (!otpStore[phone] || otpStore[phone].code !== otp || Date.now() > otpStore[phone].expires) {
         return res.status(400).json({ message: 'كود التحقق غير صحيح أو منتهي' });
     }
     delete otpStore[phone];
+
     try {
+        // تأكد تاني إن اليوزر نيم مش محجوز (زيادة أمان)
+        const userCheck = await pgQuery('SELECT id FROM users WHERE username = $1', [username.toLowerCase()]);
+        if (userCheck.rows.length > 0) return res.status(409).json({ message: 'اسم المستخدم تم حجزه للتو!' });
+
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        await pgQuery(`INSERT INTO users (name, phone, password, role) VALUES ($1, $2, $3, $4)`, [name, phone, hashedPassword, 'user']);
+        await pgQuery(`INSERT INTO users (name, username, phone, password, role) VALUES ($1, $2, $3, $4, $5)`, 
+            [name, username.toLowerCase(), phone, hashedPassword, 'user']);
         res.status(201).json({ success: true, message: 'تم إنشاء الحساب' });
     } catch (error) {
-        if (error.message.includes('unique constraint')) return res.status(400).json({ message: 'رقم الهاتف مسجل مسبقاً' });
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
 
+// ✅ 4. تسجيل الدخول (إرجاع username)
 app.post('/api/login', async (req, res) => {
     const { phone, password } = req.body;
-    let user = null; let role = 'user';
-    if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD) { 
-        user = { id: 0, name: 'Admin', phone: phone }; role = 'admin'; 
-    } else {
-        try {
-            const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
-            if (!r.rows[0] || !(await bcrypt.compare(password, r.rows[0].password))) return res.status(401).json({ message: 'رقم الهاتف أو كلمة المرور خطأ' });
-            user = r.rows[0]; role = user.role;
-        } catch (e) { return res.status(500).json({ error: e.message }); }
-    }
-    const token = jwt.sign({ id: user.id, phone: user.phone, role: role }, JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
-    res.json({ success: true, role: role, message: 'تم الدخول بنجاح' });
+    try {
+        const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
+        
+        if (!r.rows[0]) {
+            return res.status(404).json({ success: false, errorType: 'phone', message: 'هذا الرقم غير مسجل في موقع عقارك' });
+        }
+
+        if (!(await bcrypt.compare(password, r.rows[0].password))) {
+            return res.status(401).json({ success: false, errorType: 'password', message: 'برجاء التأكد من كلمة المرور واعادة المحاولة' });
+        }
+
+        const user = r.rows[0];
+        // تضمين username في التوكن والرد
+        const token = jwt.sign({ id: user.id, phone: user.phone, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+        res.json({ success: true, role: user.role, username: user.username, name: user.name, message: 'تم الدخول بنجاح' });
+
+    } catch (e) { return res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/auth/reset-password', async (req, res) => {
@@ -509,12 +547,25 @@ app.post('/api/auth/reset-password', async (req, res) => {
 app.get('/api/auth/me', (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
-    try { const decoded = jwt.verify(token, JWT_SECRET); res.json({ isAuthenticated: true, role: decoded.role, phone: decoded.phone }); } 
+    try { const decoded = jwt.verify(token, JWT_SECRET); res.json({ isAuthenticated: true, role: decoded.role, phone: decoded.phone, username: decoded.username }); } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
 
-// ... باقي الـ Routes (CRUD & Features) ...
+app.put('/api/user/change-password', async (req, res) => {
+    const { phone, currentPassword, newPassword } = req.body;
+    try {
+        const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
+        if (!r.rows[0] || !(await bcrypt.compare(currentPassword, r.rows[0].password))) {
+            return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
+        }
+        const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+        await pgQuery(`UPDATE users SET password = $1 WHERE id = $2`, [hash, r.rows[0].id]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false, message: 'خطأ سيرفر' }); }
+});
+
 app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json({ success: true, message: 'تم الخروج' }); });
+
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
 app.post('/api/subscribe', async (req, res) => { try { await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [req.body.endpoint, JSON.stringify(req.body.keys)]); res.status(201).json({}); } catch (err) { res.status(500).json({ error: 'Failed' }); } });
 app.post('/api/make-offer', async (req, res) => { const { propertyId, buyerName, buyerPhone, offerPrice } = req.body; try { await pgQuery(`INSERT INTO property_offers (property_id, buyer_name, buyer_phone, offer_price, created_at) VALUES ($1, $2, $3, $4, $5)`, [propertyId, buyerName, buyerPhone, offerPrice, new Date().toISOString()]); const propRes = await pgQuery('SELECT title FROM properties WHERE id = $1', [propertyId]); await sendDiscordNotification("💰 عرض سعر جديد", [{ name: "🏠 العقار", value: propRes.rows[0]?.title || 'غير معروف' }, { name: "📉 العرض", value: `${offerPrice} ج.م` }, { name: "👤 المشتري", value: `${buyerName} - ${buyerPhone}` }], 16753920); res.status(200).json({ success: true }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
@@ -542,6 +593,40 @@ app.get('/fix-db', async (req, res) => {
         await pgQuery('DROP TABLE IF EXISTS users CASCADE');
         await pgQuery('DROP TABLE IF EXISTS seller_submissions CASCADE');
         res.send('✅ تم حذف الجداول القديمة. اعمل Restart للسيرفر دلوقتي عشان ينشئ الجداول الجديدة صح.');
+    } catch (error) {
+        res.send('❌ حدث خطأ: ' + error.message);
+    }
+});
+
+// 👑 رابط سحري لترقية حسابك (01145435095) لأدمن
+app.get('/upgrade-my-account', async (req, res) => {
+    const myPhone = "01145435095"; // ده رقمك اللي ظهر في اللوج
+    try {
+        await pgQuery("UPDATE users SET role = 'admin' WHERE phone = $1", [myPhone]);
+        res.send(`
+            <h1 style="color:green; text-align:center;">🎉 مبروك يا هندسة!</h1>
+            <p style="text-align:center; font-size:20px;">الرقم <b>${myPhone}</b> أصبح Admin الآن.</p>
+            <p style="text-align:center; color:red; font-weight:bold;">⚠️ مهم جداً: لازم تعمل "تسجيل خروج" وتدخل تاني عشان التحديث يظهر.</p>
+            <div style="text-align:center;"><a href="/">العودة للصفحة الرئيسية</a></div>
+        `);
+    } catch (error) {
+        res.send(`<h1 style="color:red;">❌ حدث خطأ: ${error.message}</h1>`);
+    }
+});
+
+// 🛠️ رابط تحديث هيكل قاعدة البيانات (شغله مرة واحدة عشان يضيف username)
+app.get('/update-db-schema', async (req, res) => {
+    try {
+        // إضافة عمود username لو مش موجود
+        await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE`);
+        
+        // إضافة عمود publisherUsername للعقارات
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "publisherUsername" TEXT`);
+
+        // تحديث المستخدمين القدامى (اسمهم + رقم عشوائي) عشان ميكنش null
+        await pgQuery(`UPDATE users SET username = CONCAT('user_', FLOOR(RANDOM() * 100000)) WHERE username IS NULL`);
+        
+        res.send('✅ تم تحديث هيكل قاعدة البيانات بنجاح.');
     } catch (error) {
         res.send('❌ حدث خطأ: ' + error.message);
     }
