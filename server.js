@@ -869,4 +869,22 @@ app.get('/api/admin/users-stats', async (req, res) => {
     }
 });
 
+// 🛠️ رابط إصلاح جدول المفضلة (شغله مرة واحدة)
+app.get('/fix-favorites-table', async (req, res) => {
+    try {
+        await pgQuery('DROP TABLE IF EXISTS favorites');
+        await pgQuery(`
+            CREATE TABLE IF NOT EXISTS favorites (
+                id SERIAL PRIMARY KEY, 
+                user_phone TEXT NOT NULL, 
+                property_id INTEGER NOT NULL, 
+                UNIQUE(user_phone, property_id)
+            )
+        `);
+        res.send('✅ تم تحديث جدول المفضلة ليعمل برقم الهاتف.');
+    } catch (error) {
+        res.send('❌ حدث خطأ: ' + error.message);
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
