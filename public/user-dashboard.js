@@ -1,139 +1,244 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>عقارك - القائمة</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1c2630">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* ستايل النافذة المنبثقة (Modal) */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
-        .modal-content { background-color: #1c2630; margin: 10% auto; padding: 25px; border: 1px solid #00ff88; width: 90%; max-width: 400px; border-radius: 15px; text-align: center; color: white; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); position: relative; }
-        .close { color: #aaa; position: absolute; left: 15px; top: 10px; font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .close:hover { color: #ff4444; }
-        .switch-link { color: #ffaa00; margin-top: 15px; display: block; cursor: pointer; text-decoration: underline; font-size: 0.9em; }
-        .hidden { display: none; }
-        .input-group { margin-bottom: 15px; }
-    </style>
-</head>
-<body class="internal-page custom-body">
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. المتغيرات والتحقق من الهاتف (بدل الإيميل)
+    const userPhone = localStorage.getItem('userPhone'); 
+    const favoritesBtn = document.getElementById('show-favorites');
+    const favoritesArea = document.getElementById('favorites-area');
+    const favoritesContainer = document.getElementById('favorites-listings');
+    const modal = document.getElementById("passwordModal");
 
-    <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo" id="secret-logo" style="cursor: pointer;">
-                <span class="logo-text">القائمة</span>
-            </div>
-            <nav class="main-nav">
-                <a href="home" class="nav-button neon-button-white">الرئيسية للموقع</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <h1 class="page-title">لوحة التحكم</h1>
-
-        <div class="admin-dashboard-grid">
-
-            <div class="dashboard-card neon-glow">
-                <i class="fas fa-briefcase icon-large"></i>
-                <h2 class="card-title">الخدمات</h2>
-                <p>تشطيبات، ديكور، ونقل عفش.</p>
-                <a href="service" class="btn-neon-auth btn-full">تصفح الخدمات</a>
-            </div>
-
-            <div class="dashboard-card neon-glow">
-                <i class="fas fa-heart icon-large"></i>
-                <h2 class="card-title">المفضلة</h2>
-                <p>العقارات التي حفظتها.</p>
-                <button id="show-favorites" class="btn-neon-auth btn-full">عرض المفضلة</button>
-            </div>
-
-            <div class="dashboard-card neon-glow" style="border-color: #008cff;">
-                <i class="fas fa-lock icon-large" style="color: #008cff;"></i>
-                <h2 class="card-title">إعدادات الأمان</h2>
-                <p>تغيير كلمة المرور أو استعادتها.</p>
-                <button id="open-password-modal" class="btn-neon-auth btn-full" style="border-color: #008cff; color: #008cff;">تغيير كلمة المرور</button>
-            </div>
-
-        </div>
-
-        <section class="favorites-section" style="display: none;" id="favorites-area">
-            <h2 class="page-title">العقارات المفضلة</h2>
-            <div class="listings-container" id="favorites-listings">
-                <p class="empty-message">جاري التحميل...</p>
-            </div>
-        </section>
-
-    </main>
-
-    <div id="passwordModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            
-            <div id="normal-change-mode">
-                <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
-                <p class="message" id="pass-msg"></p>
-                
-                <div class="input-group">
-                    <input type="password" id="current-pass" class="neon-input-white" placeholder="كلمة المرور الحالية">
-                </div>
-                <div class="input-group">
-                    <input type="password" id="new-pass-1" class="neon-input-white" placeholder="كلمة المرور الجديدة">
-                </div>
-                <button class="btn-neon-auth" onclick="changePasswordNormal()">حفظ التغيير</button>
-                
-                <span class="switch-link" onclick="switchPassMode('otp')">نسيت كلمة المرور؟</span>
-            </div>
-
-            <div id="otp-change-mode" class="hidden">
-                <h3><i class="fab fa-whatsapp"></i> استعادة عبر واتساب</h3>
-                <p class="message" id="otp-msg"></p>
-
-                <div id="step-send-otp">
-                    <p style="font-size:0.9rem; color:#aaa;">أدخل رقم الواتساب المسجل لاستلام الكود.</p>
-                    <input type="tel" id="reset-phone" class="neon-input-white" placeholder="01xxxxxxxxx">
-                    <button class="btn-neon-auth" onclick="sendResetOTP()">أرسل كود التحقق</button>
-                </div>
-
-                <div id="step-verify-otp" class="hidden">
-                    <input type="text" id="otp-code" class="neon-input-white" placeholder="كود التحقق (4 أرقام)">
-                    <input type="password" id="new-pass-2" class="neon-input-white" placeholder="كلمة المرور الجديدة">
-                    <button class="btn-neon-auth" onclick="resetPasswordViaOTP()">تغيير كلمة المرور</button>
-                </div>
-
-                <span class="switch-link" onclick="switchPassMode('normal')">العودة للطريقة العادية</span>
-            </div>
-        </div>
-    </div>
-
-    <script src="guest.js"></script>
-    <script src="user-dashboard.js"></script>
-    <script src="dash.js"></script> 
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
-    <script src="global-nav.js"></script>
-    <script>
-        // كود اللوجو السري
-        (function() {
-            let clicks = 0;
-            const secretLogo = document.getElementById('secret-logo');
-            if (secretLogo) {
-                secretLogo.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    clicks++;
-                    if (clicks === 5) {
-                        window.location.href = "index"; 
-                        clicks = 0;
-                    }
-                });
+    // 2. منطق المفضلة (باستخدام userPhone)
+    if (favoritesBtn) {
+        favoritesBtn.addEventListener('click', () => {
+            if (favoritesArea) {
+                favoritesArea.style.display = 'block';
+                favoritesArea.scrollIntoView({ behavior: 'smooth' });
             }
-        })();
-    </script>
-</body>
-</html>
+            fetchFavorites();
+        });
+    }
+
+    async function fetchFavorites() {
+        if (!favoritesContainer) return;
+        if (!userPhone) {
+            favoritesContainer.innerHTML = '<p class="empty-message error">يجب تسجيل الدخول لعرض المفضلة.</p>';
+            return;
+        }
+        favoritesContainer.innerHTML = '<p class="empty-message info">جاري تحميل المفضلة...</p>';
+
+        try {
+            // استخدام userPhone بدلاً من userEmail
+            const response = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userPhone)}`);
+            
+            if (!response.ok) throw new Error('فشل الاتصال بالسيرفر');
+            
+            const properties = await response.json();
+            favoritesContainer.innerHTML = '';
+
+            if (properties.length === 0) {
+                favoritesContainer.innerHTML = `<div class="empty-message neon-glow" style="background: none;">
+                    <i class="fas fa-heart" style="color: var(--neon-color); font-size: 2em;"></i>
+                    <p style="color: var(--text-color); margin-top: 10px;">لا يوجد عقارات في المفضلة حالياً.</p>
+                </div>`;
+                return;
+            }
+
+            properties.forEach(property => {
+                const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
+                const typeTag = window.getTypeTag ? window.getTypeTag(property.type) : '';
+
+                const cardHTML = `
+                    <div class="property-card">
+                        <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=عقارك'}" alt="${property.title}">
+                        <div class="card-content">
+                            <h3>${property.title} ${typeTag}</h3> 
+                            <p class="price">${formattedPrice}</p> 
+                            <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
+                            
+                            <a href="property-details?id=${property.id}" class="btn">عرض التفاصيل</a>
+                            <button class="btn-neon-red remove-favorite-btn" data-id="${property.id}" style="margin-top: 10px;">
+                                <i class="fas fa-trash"></i> إزالة من المفضلة
+                            </button>
+                        </div>
+                    </div>
+                `;
+                favoritesContainer.innerHTML += cardHTML;
+            });
+
+            addRemoveFavoriteListeners();
+
+        } catch (error) {
+            console.error('Error fetching favorites:', error);
+            favoritesContainer.innerHTML = `<p class="empty-message error">حدث خطأ: ${error.message}</p>`;
+        }
+    }
+
+    function addRemoveFavoriteListeners() {
+        document.querySelectorAll('.remove-favorite-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const btn = e.currentTarget; 
+                const propertyId = btn.dataset.id;
+
+                if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
+
+                try {
+                    const response = await fetch(`/api/favorites/${propertyId}?userEmail=${encodeURIComponent(userPhone)}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('فشل الإزالة.');
+
+                    alert('تمت الإزالة بنجاح.');
+                    fetchFavorites();
+                } catch (error) {
+                    alert(`خطأ: ${error.message}`);
+                }
+            });
+        });
+    }
+
+    // 3. منطق زرار تغيير كلمة المرور (يفتح المودال)
+    const openModalBtn = document.getElementById('open-password-modal');
+    if(openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+            modal.style.display = "block";
+            // لو المستخدم مسجل دخول، املأ حقل الرقم تلقائياً
+            if(userPhone) {
+                const phoneInput = document.getElementById('reset-phone');
+                if(phoneInput) phoneInput.value = userPhone;
+                // اعرض الوضع العادي كافتراضي
+                switchPassMode('normal');
+            } else {
+                // لو مش مسجل، اعرض وضع الـ OTP علطول عشان يدخل رقمه
+                switchPassMode('otp');
+            }
+        });
+    }
+});
+
+// === دوال المودال (خارج الـ DOMContentLoaded) ===
+
+function closeModal() {
+    document.getElementById("passwordModal").style.display = "none";
+}
+
+function switchPassMode(mode) {
+    const normalDiv = document.getElementById('normal-change-mode');
+    const otpDiv = document.getElementById('otp-change-mode');
+    const msgs = document.querySelectorAll('.message');
+    msgs.forEach(m => m.textContent = ''); 
+
+    if (mode === 'otp') {
+        normalDiv.classList.add('hidden');
+        otpDiv.classList.remove('hidden');
+    } else {
+        otpDiv.classList.add('hidden');
+        normalDiv.classList.remove('hidden');
+    }
+}
+
+// أ) تغيير الباسورد بالطريقة العادية (تتطلب تسجيل دخول)
+async function changePasswordNormal() {
+    const userPhone = localStorage.getItem('userPhone');
+    const msg = document.getElementById('pass-msg');
+
+    if (!userPhone) {
+        msg.textContent = 'يجب تسجيل الدخول لاستخدام هذه الطريقة، أو استخدم "نسيت كلمة المرور".';
+        msg.style.color = 'orange';
+        return;
+    }
+
+    const currentPassword = document.getElementById('current-pass').value;
+    const newPassword = document.getElementById('new-pass-1').value;
+
+    if (!currentPassword || !newPassword) {
+        msg.textContent = 'املأ جميع الحقول'; msg.style.color = 'red'; return;
+    }
+
+    msg.textContent = 'جاري التحديث...';
+
+    try {
+        const response = await fetch('/api/user/change-password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: userPhone, currentPassword, newPassword })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            msg.textContent = '✅ تم تغيير كلمة المرور بنجاح';
+            msg.style.color = '#00ff88';
+            setTimeout(closeModal, 2000);
+        } else {
+            msg.textContent = '❌ ' + data.message;
+            msg.style.color = 'red';
+        }
+    } catch (e) {
+        msg.textContent = 'خطأ في الاتصال'; msg.style.color = 'red';
+    }
+}
+
+// ب) إرسال كود OTP للواتساب
+async function sendResetOTP() {
+    // نجيب الرقم من الحقل (مهم لو المستخدم مش مسجل دخول)
+    const phoneInput = document.getElementById('reset-phone').value;
+    const msg = document.getElementById('otp-msg');
+    
+    if (!phoneInput) {
+        msg.textContent = 'أدخل رقم الواتساب أولاً'; msg.style.color = 'red'; return;
+    }
+
+    msg.textContent = 'جاري إرسال الكود...';
+
+    try {
+        const response = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phoneInput })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            msg.textContent = '✅ تم الإرسال! أدخل الكود بالأسفل.';
+            msg.style.color = '#00ff88';
+            document.getElementById('step-send-otp').classList.add('hidden');
+            document.getElementById('step-verify-otp').classList.remove('hidden');
+        } else {
+            msg.textContent = '❌ ' + data.message;
+            msg.style.color = 'red';
+        }
+    } catch (e) {
+        msg.textContent = 'خطأ في الاتصال'; msg.style.color = 'red';
+    }
+}
+
+// ج) تأكيد الكود وتغيير الباسورد
+async function resetPasswordViaOTP() {
+    const phoneInput = document.getElementById('reset-phone').value;
+    const otp = document.getElementById('otp-code').value;
+    const newPassword = document.getElementById('new-pass-2').value;
+    const msg = document.getElementById('otp-msg');
+
+    if (!otp || !newPassword) {
+        msg.textContent = 'اكتب الكود والباسورد الجديد'; return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phoneInput, otp, newPassword })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            msg.textContent = '🎉 تم تغيير كلمة المرور بنجاح!';
+            msg.style.color = '#00ff88';
+            setTimeout(closeModal, 2000);
+        } else {
+            msg.textContent = '❌ ' + data.message;
+            msg.style.color = 'red';
+        }
+    } catch (e) {
+        msg.textContent = 'حدث خطأ'; msg.style.color = 'red';
+    }
+}
