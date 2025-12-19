@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>مفضلتي - عقارك</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .fav-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: 0.3s;
+            position: relative;
+        }
+        
+        .fav-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
+        }
+
+        .fav-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .fav-info {
+            padding: 15px;
+            color: white;
+        }
+
+        .fav-price {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .remove-btn:hover { background: red; transform: scale(1.1); }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+        }
+    </style>
+</head>
+<body class="internal-page custom-body">
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">مفضلتي ❤️</span>
+            </div>
+            <nav class="main-nav">
+                <a href="home" class="nav-button neon-button-white">الرئيسية</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <h1 class="page-title">العقارات المحفوظة</h1>
+        
+        <div id="loading" style="text-align:center; color:#00ff88; margin-top:30px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري التحميل...
+        </div>
+
+        <div class="favorites-grid" id="favorites-container">
+            </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('favorites-container');
+            const loading = document.getElementById('loading');
+
+            try {
+                // طلب العقارات المفضلة (السيرفر بيعرف المستخدم من الكوكيز)
+                const response = await fetch('/api/favorites');
+
+                // لو غير مسجل -> حوله لصفحة الدخول
+                if (response.status === 401) {
+                    alert('يجب تسجيل الدخول لعرض المفضلة.');
+                    window.location.href = 'login';
+                    return;
+                }
+
+                const favorites = await response.json();
+                loading.style.display = 'none';
+
+                if (favorites.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="far fa-heart fa-4x" style="margin-bottom:15px;"></i>
+                            <p>لم تقم بإضافة أي عقارات للمفضلة بعد.</p>
+                            <a href="home" class="btn-neon-auth" style="margin-top:15px; display:inline-block;">تصفح العقارات</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                favorites.forEach(prop => {
+                    const price = Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString();
+                    const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'بيع' : 'إيجار';
+                    
+                    const card = `
+                        <div class="fav-card" id="card-${prop.id}">
+                            <button class="remove-btn" onclick="removeFavorite(${prop.id}, ${prop.favorite_id})" title="إزالة من المفضلة">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="property-details?id=${prop.id}" style="text-decoration:none;">
+                                <img src="${prop.imageUrl}" class="fav-img" alt="${prop.title}">
+                                <div class="fav-info">
+                                    <h3 style="margin:0 0 5px 0; font-size:1.1rem;">${prop.title}</h3>
+                                    <div class="fav-price">${price} ج.م <span style="font-size:0.8rem; color:#aaa; font-weight:normal;">(${typeLabel})</span></div>
+                                    <div style="margin-top:10px; font-size:0.9rem; color:#ccc;">
+                                        <i class="fas fa-bed"></i> ${prop.rooms} | 
+                                        <i class="fas fa-bath"></i> ${prop.bathrooms} | 
+                                        <i class="fas fa-ruler-combined"></i> ${prop.area} م²
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+
+            } catch (error) {
+                console.error(error);
+                loading.innerHTML = '<p class="error-msg" style="text-align:center;">حدث خطأ في تحميل البيانات.</p>';
+            }
+        });
+
+        // دالة الحذف من داخل الصفحة
+        async function removeFavorite(propId, favId) {
+            if(!confirm('هل أنت متأكد من الحذف من المفضلة؟')) return;
+
+            try {
+                const response = await fetch(`/api/favorites/${propId}`, { 
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // حذف الكارت من الشاشة فوراً
+                    const card = document.getElementById(`card-${propId}`);
+                    if (card) {
+                        card.style.transition = '0.5s';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.8)';
+                        setTimeout(() => card.remove(), 500);
+                    }
+                    
+                    // لو مفيش كروت تانية، اعرض رسالة "فارغة"
+                    const remaining = document.querySelectorAll('.fav-card').length - 1;
+                    if (remaining === 0) {
+                        setTimeout(() => location.reload(), 500);
+                    }
+                } else {
+                    alert('فشل الحذف');
+                }
+            } catch (e) {
+                alert('خطأ في الاتصال');
+            }
+        }
+    </script>
+</body>
+</html>

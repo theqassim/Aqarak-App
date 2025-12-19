@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. المتغيرات والتحقق من الهاتف (بدل الإيميل)
+    // 1. المتغيرات
+    // بنستخدم localStorage بس عشان نعرف نعرض الرقم في المودال، لكن التوثيق الحقيقي بيتم في السيرفر
     const userPhone = localStorage.getItem('userPhone'); 
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
     const favoritesContainer = document.getElementById('favorites-listings');
     const modal = document.getElementById("passwordModal");
 
-    // 2. منطق المفضلة (باستخدام userPhone)
+    // 2. منطق المفضلة
     if (favoritesBtn) {
         favoritesBtn.addEventListener('click', () => {
             if (favoritesArea) {
@@ -19,15 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchFavorites() {
         if (!favoritesContainer) return;
-        if (!userPhone) {
-            favoritesContainer.innerHTML = '<p class="empty-message error">يجب تسجيل الدخول لعرض المفضلة.</p>';
-            return;
-        }
+        
         favoritesContainer.innerHTML = '<p class="empty-message info">جاري تحميل المفضلة...</p>';
 
         try {
-            // استخدام userPhone بدلاً من userEmail
-            const response = await fetch(`/api/favorites?userEmail=${encodeURIComponent(userPhone)}`);
+            // 🟢 تعديل هام: طلب المفضلة بدون إرسال بارامترات في الرابط
+            // السيرفر هيقرا التوكن من الكوكيز ويعرف مين المستخدم
+            const response = await fetch('/api/favorites');
+            
+            if (response.status === 401) {
+                favoritesContainer.innerHTML = '<p class="empty-message error">انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.</p>';
+                return;
+            }
             
             if (!response.ok) throw new Error('فشل الاتصال بالسيرفر');
             
@@ -47,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const typeTag = window.getTypeTag ? window.getTypeTag(property.type) : '';
 
                 const cardHTML = `
-                    <div class="property-card">
-                        <img src="${property.imageUrl || 'https://via.placeholder.com/300x200.png?text=عقارك'}" alt="${property.title}">
+                    <div class="property-card" id="fav-card-${property.id}">
+                        <img src="${property.imageUrl || 'logo.png'}" alt="${property.title}">
                         <div class="card-content">
                             <h3>${property.title} ${typeTag}</h3> 
                             <p class="price">${formattedPrice}</p> 
@@ -80,42 +84,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
 
+                // تغيير شكل الزرار أثناء التحميل
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
                 try {
-                    const response = await fetch(`/api/favorites/${propertyId}?userEmail=${encodeURIComponent(userPhone)}`, {
+                    // 🟢 تعديل هام: الحذف بدون بارامترات إضافية
+                    const response = await fetch(`/api/favorites/${propertyId}`, {
                         method: 'DELETE'
                     });
 
                     if (!response.ok) throw new Error('فشل الإزالة.');
 
-                    alert('تمت الإزالة بنجاح.');
-                    fetchFavorites();
+                    // إزالة الكارت من الشاشة فوراً
+                    const card = document.getElementById(`fav-card-${propertyId}`);
+                    if (card) card.remove();
+                    
+                    // لو مفيش كروت باقية، نعيد التحميل لإظهار رسالة "فارغة"
+                    if (document.querySelectorAll('.property-card').length === 0) {
+                        fetchFavorites();
+                    }
+
                 } catch (error) {
                     alert(`خطأ: ${error.message}`);
+                    btn.innerHTML = originalText;
                 }
             });
         });
     }
 
-    // 3. منطق زرار تغيير كلمة المرور (يفتح المودال)
+    // 3. منطق زرار تغيير كلمة المرور
     const openModalBtn = document.getElementById('open-password-modal');
     if(openModalBtn) {
         openModalBtn.addEventListener('click', () => {
             modal.style.display = "block";
-            // لو المستخدم مسجل دخول، املأ حقل الرقم تلقائياً
-            if(userPhone) {
-                const phoneInput = document.getElementById('reset-phone');
-                if(phoneInput) phoneInput.value = userPhone;
-                // اعرض الوضع العادي كافتراضي
-                switchPassMode('normal');
-            } else {
-                // لو مش مسجل، اعرض وضع الـ OTP علطول عشان يدخل رقمه
-                switchPassMode('otp');
-            }
+            
+            // محاولة جلب الرقم من التوكن لو مش موجود في اللوكل ستوريج
+            checkAuthAndFillPhone(userPhone);
         });
     }
 });
 
-// === دوال المودال (خارج الـ DOMContentLoaded) ===
+// دالة مساعدة للتأكد من الرقم
+async function checkAuthAndFillPhone(storedPhone) {
+    const phoneInput = document.getElementById('reset-phone');
+    if (!phoneInput) return;
+
+    if (storedPhone) {
+        phoneInput.value = storedPhone;
+        switchPassMode('normal');
+    } else {
+        // لو مفيش رقم في اللوكل، نحاول نجيبه من السيرفر
+        try {
+            const res = await fetch('/api/auth/me');
+            const data = await res.json();
+            if (data.isAuthenticated) {
+                phoneInput.value = data.phone;
+                switchPassMode('normal');
+            } else {
+                switchPassMode('otp');
+            }
+        } catch (e) { switchPassMode('otp'); }
+    }
+}
+
+// === دوال المودال ===
 
 function closeModal() {
     document.getElementById("passwordModal").style.display = "none";
@@ -136,17 +169,12 @@ function switchPassMode(mode) {
     }
 }
 
-// أ) تغيير الباسورد بالطريقة العادية (تتطلب تسجيل دخول)
+// أ) تغيير الباسورد بالطريقة العادية
 async function changePasswordNormal() {
-    const userPhone = localStorage.getItem('userPhone');
     const msg = document.getElementById('pass-msg');
-
-    if (!userPhone) {
-        msg.textContent = 'يجب تسجيل الدخول لاستخدام هذه الطريقة، أو استخدم "نسيت كلمة المرور".';
-        msg.style.color = 'orange';
-        return;
-    }
-
+    
+    // هنجيب الرقم من الانبوت نفسه عشان نكون متأكدين
+    const phoneVal = document.getElementById('reset-phone').value; 
     const currentPassword = document.getElementById('current-pass').value;
     const newPassword = document.getElementById('new-pass-1').value;
 
@@ -160,7 +188,7 @@ async function changePasswordNormal() {
         const response = await fetch('/api/user/change-password', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: userPhone, currentPassword, newPassword })
+            body: JSON.stringify({ phone: phoneVal, currentPassword, newPassword })
         });
         
         const data = await response.json();
@@ -177,9 +205,8 @@ async function changePasswordNormal() {
     }
 }
 
-// ب) إرسال كود OTP للواتساب
+// ب) إرسال كود OTP
 async function sendResetOTP() {
-    // نجيب الرقم من الحقل (مهم لو المستخدم مش مسجل دخول)
     const phoneInput = document.getElementById('reset-phone').value;
     const msg = document.getElementById('otp-msg');
     
@@ -211,7 +238,7 @@ async function sendResetOTP() {
     }
 }
 
-// ج) تأكيد الكود وتغيير الباسورد
+// ج) تأكيد الكود
 async function resetPasswordViaOTP() {
     const phoneInput = document.getElementById('reset-phone').value;
     const otp = document.getElementById('otp-code').value;
