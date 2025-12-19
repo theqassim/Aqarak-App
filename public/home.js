@@ -26,14 +26,14 @@ async function updateNavigation() {
             // الزرارين بيودوا على صفحة login لأنها فيها التبويبين
             nav.innerHTML = `
                 <a href="index" class="nav-button neon-button-white">تسجيل دخول</a>
-                <a href="login" class="sell-btn" style="background: transparent; border: 1px solid #00ff88; color: #00ff88;">انشاء حساب</a>
+                <a href="index" class="sell-btn" style="background: transparent; border: 1px solid #00ff88; color: #00ff88;">انشاء حساب</a>
             `;
         }
 
     } catch (error) {
         console.error('Navigation Error:', error);
         // في حالة الخطأ، نعرض أزرار الزائر كاحتياط
-        nav.innerHTML = `<a href="login" class="nav-button neon-button-white">تسجيل دخول</a>`;
+        nav.innerHTML = `<a href="index" class="nav-button neon-button-white">تسجيل دخول</a>`;
     }
 }
 
