@@ -11,7 +11,7 @@
         
         .ad-item {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #00ff88;
+            border: 1px solid #333;
             border-radius: 12px;
             padding: 15px 20px;
             display: flex;
@@ -22,20 +22,29 @@
             text-decoration: none;
             color: white;
             backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
         }
 
         .ad-item:hover {
-            background: rgba(0, 255, 136, 0.1);
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
             transform: translateX(-5px);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
         }
 
-        .ad-title { font-size: 1.1rem; font-weight: bold; margin: 0; }
-        .ad-price { font-size: 0.9rem; color: #ffd700; margin-top: 5px; }
-        .ad-status { font-size: 0.8rem; background: #333; padding: 2px 8px; border-radius: 4px; margin-left: 10px; }
-        .arrow-icon { color: #00ff88; font-size: 1.2rem; }
+        .ad-info h3 { font-size: 1.1rem; font-weight: bold; margin: 0 0 5px 0; }
+        .ad-price { font-size: 0.95rem; color: #ffd700; font-weight: bold; }
         
-        .empty-ads { text-align: center; color: #aaa; margin-top: 50px; font-size: 1.1rem; }
+        .status-badge {
+            font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: normal; display: inline-block;
+        }
+        .status-active { border: 1px solid #00ff88; color: #00ff88; background: rgba(0, 255, 136, 0.1); }
+        .status-pending { border: 1px solid #ffaa00; color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
+
+        .arrow-icon { color: #555; font-size: 1.2rem; transition: 0.3s; }
+        .ad-item:hover .arrow-icon { color: #00ff88; }
+        
+        .empty-ads { text-align: center; color: #aaa; margin-top: 50px; }
     </style>
 </head>
 <body class="internal-page custom-body">
@@ -56,11 +65,10 @@
         <h1 class="page-title">عقارات قمت بنشرها</h1>
         
         <div id="loading-spinner" style="text-align:center; color:#00ff88; margin-top:30px;">
-            <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري التحميل...
+            <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري تحميل عقاراتك...
         </div>
 
-        <div class="ads-list" id="my-ads-container">
-            </div>
+        <div class="ads-list" id="my-ads-container"></div>
     </main>
 
     <script>
@@ -72,7 +80,7 @@
                 const response = await fetch('/api/user/my-properties');
                 
                 if (response.status === 401) {
-                    window.location.href = 'login'; // لو مش مسجل حوله للدخول
+                    window.location.href = 'login'; 
                     return;
                 }
 
@@ -82,7 +90,7 @@
                 if (properties.length === 0) {
                     container.innerHTML = `
                         <div class="empty-ads">
-                            <i class="fas fa-folder-open fa-3x" style="margin-bottom:15px;"></i>
+                            <i class="fas fa-box-open fa-3x" style="margin-bottom:15px; color:#333;"></i>
                             <p>لم تقم بنشر أي عقارات حتى الآن.</p>
                             <a href="seller-dashboard" class="btn-neon-auth" style="margin-top:15px; display:inline-block;">اعرض عقارك الآن</a>
                         </div>
@@ -91,16 +99,29 @@
                 }
 
                 properties.forEach(prop => {
-                    const price = Number(prop.price).toLocaleString();
+                    // تنظيف السعر من الحروف
+                    const cleanPrice = prop.price.replace(/[^0-9.]/g, ''); 
+                    const price = Number(cleanPrice).toLocaleString();
                     const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'بيع' : 'إيجار';
                     
+                    let statusHtml = '';
+                    let link = '';
+                    let clickAction = '';
+
+                    if (prop.status === 'active') {
+                        statusHtml = `<span class="status-badge status-active">نشط ✅</span>`;
+                        link = `property-details?id=${prop.id}`;
+                    } else {
+                        statusHtml = `<span class="status-badge status-pending">قيد المراجعة ⏳</span>`;
+                        link = '#';
+                        clickAction = `onclick="alert('جاري مراجعة هذا العقار من قبل الإدارة، سيتم نشره قريباً.'); return false;"`;
+                    }
+
                     const itemHTML = `
-                        <a href="property-details?id=${prop.id}" class="ad-item">
-                            <div>
-                                <h3 class="ad-title">
-                                    <span class="ad-status">${typeLabel}</span> ${prop.title}
-                                </h3>
-                                <div class="ad-price">${prop.price} ج.م</div>
+                        <a href="${link}" ${clickAction} class="ad-item">
+                            <div class="ad-info">
+                                <h3>${statusHtml} ${prop.title}</h3>
+                                <div class="ad-price">${price} ج.م <span style="font-size:0.8rem; color:#888; font-weight:normal;">(${typeLabel})</span></div>
                             </div>
                             <i class="fas fa-chevron-left arrow-icon"></i>
                         </a>
@@ -110,8 +131,7 @@
 
             } catch (error) {
                 spinner.style.display = 'none';
-                container.innerHTML = '<p class="error-msg">حدث خطأ في تحميل الإعلانات.</p>';
-                console.error(error);
+                container.innerHTML = '<p class="error-msg" style="text-align:center;">حدث خطأ في الاتصال.</p>';
             }
         });
     </script>

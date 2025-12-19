@@ -588,16 +588,31 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // ==========================================================
 // 🆕 ميزة "إعلاناتي" (My Ads)
 // ==========================================================
+// 🟢 API لجلب عقارات المستخدم (المنشورة + قيد المراجعة)
 app.get('/api/user/my-properties', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        // البحث بالرقم
-        const sql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "hiddenCode", "isFeatured", "isLegal" FROM properties WHERE "sellerPhone" = $1 ORDER BY id DESC`;
-        const result = await pgQuery(sql, [decoded.phone]);
-        res.json(result.rows);
-    } catch (error) { res.status(500).json({ message: 'خطأ' }); }
+        
+        // 1. العقارات المنشورة (Active)
+        const publishedSql = `SELECT id, title, price, type, "imageUrl", 'active' as status FROM properties WHERE "sellerPhone" = $1`;
+        const publishedRes = await pgQuery(publishedSql, [decoded.phone]);
+
+        // 2. العقارات قيد المراجعة (Pending)
+        const pendingSql = `SELECT id, "propertyTitle" as title, "propertyPrice" as price, "propertyType" as type, 'pending' as status FROM seller_submissions WHERE "sellerPhone" = $1 AND status = 'pending'`;
+        const pendingRes = await pgQuery(pendingSql, [decoded.phone]);
+
+        // 3. دمجهم وعرض الأحدث
+        const allProperties = [...publishedRes.rows, ...pendingRes.rows];
+        allProperties.sort((a, b) => b.id - a.id);
+
+        res.json(allProperties);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
 });
 
 // ==========================================================
@@ -622,7 +637,73 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
 app.post('/api/subscribe', async (req, res) => { try { await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [req.body.endpoint, JSON.stringify(req.body.keys)]); res.status(201).json({}); } catch (err) { res.status(500).json({ error: 'Failed' }); } });
 app.post('/api/make-offer', async (req, res) => { const { propertyId, buyerName, buyerPhone, offerPrice } = req.body; try { await pgQuery(`INSERT INTO property_offers (property_id, buyer_name, buyer_phone, offer_price, created_at) VALUES ($1, $2, $3, $4, $5)`, [propertyId, buyerName, buyerPhone, offerPrice, new Date().toISOString()]); const propRes = await pgQuery('SELECT title FROM properties WHERE id = $1', [propertyId]); await sendDiscordNotification("💰 عرض سعر جديد", [{ name: "🏠 العقار", value: propRes.rows[0]?.title || 'غير معروف' }, { name: "📉 العرض", value: `${offerPrice} ج.م` }, { name: "👤 المشتري", value: `${buyerName} - ${buyerPhone}` }], 16753920); res.status(200).json({ success: true }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
-app.post('/api/admin/publish-submission', async (req, res) => { const { submissionId, hiddenCode } = req.body; try { const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]); const sub = subRes.rows[0]; const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean); const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "isFeatured", "isLegal", "video_urls") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; const params = [sub.propertyTitle, sub.propertyPrice, parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')), safeInt(sub.propertyRooms), safeInt(sub.propertyBathrooms), safeInt(sub.propertyArea), sub.propertyDescription, imageUrls[0], JSON.stringify(imageUrls), sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone, false, false, []]; const result = await pgQuery(sql, params); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]); notifyAllUsers(`عقار جديد!`, sub.propertyTitle, `/property-details?id=${result.rows[0].id}`); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } });
+// 🟢 نشر العقار (الموافقة عليه من الأدمن) ونقله للمستخدم الأصلي
+app.post('/api/admin/publish-submission', async (req, res) => {
+    const { submissionId, hiddenCode } = req.body;
+    try {
+        // 1. جلب بيانات الطلب
+        const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]);
+        if (subRes.rows.length === 0) return res.status(404).json({ message: 'الطلب غير موجود' });
+        
+        const sub = subRes.rows[0];
+        
+        // 2. البحث عن username صاحب العقار الأصلي باستخدام رقمه
+        let publisherUsername = null;
+        // بنحاول نجيب اليوزر نيم عشان يظهر في صفحة التفاصيل
+        const userCheck = await pgQuery(`SELECT username FROM users WHERE phone = $1`, [sub.sellerPhone]);
+        if (userCheck.rows.length > 0) {
+            publisherUsername = userCheck.rows[0].username;
+        }
+
+        const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean);
+        
+        // 3. إدخال العقار في جدول العقارات (بيانات المالك الأصلي)
+        const sql = `
+            INSERT INTO properties (
+                title, price, "numericPrice", rooms, bathrooms, area, description, 
+                "imageUrl", "imageUrls", type, "hiddenCode", 
+                "sellerName", "sellerPhone", "publisherUsername", 
+                "isFeatured", "isLegal", "video_urls"
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, 
+                $8, $9, $10, $11, 
+                $12, $13, $14, 
+                false, false, '[]'
+            ) RETURNING id
+        `;
+
+        const params = [
+            sub.propertyTitle,
+            sub.propertyPrice,
+            parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, '')),
+            safeInt(sub.propertyRooms),
+            safeInt(sub.propertyBathrooms),
+            safeInt(sub.propertyArea),
+            sub.propertyDescription,
+            imageUrls[0] || '', 
+            JSON.stringify(imageUrls), 
+            sub.propertyType,
+            hiddenCode,
+            sub.sellerName,      // ✅ اسم المالك (من الاستمارة)
+            sub.sellerPhone,     // ✅ رقم المالك (ده اللي بيخليه يظهر في إعلاناتي)
+            publisherUsername    // ✅ يوزر نيم المالك
+        ];
+
+        const result = await pgQuery(sql, params);
+
+        // 4. حذف الطلب من الانتظار
+        await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
+
+        // 5. إشعار للمستخدمين
+        notifyAllUsers(`عقار جديد!`, sub.propertyTitle, `/property-details?id=${result.rows[0].id}`);
+
+        res.status(201).json({ success: true, id: result.rows[0].id });
+
+    } catch (err) {
+        console.error("Publish Error:", err);
+        res.status(400).json({ message: 'حدث خطأ أثناء النشر' });
+    }
+});
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages, video_urls } = req.body; let oldUrls = []; try { oldUrls = JSON.parse((Array.isArray(existingImages) ? existingImages[0] : existingImages) || '[]'); } catch(e) {} const newUrls = req.files ? req.files.map(f => f.path) : []; const allUrls = [...oldUrls, ...newUrls]; let videoUrlsArr = []; try { videoUrlsArr = JSON.parse(video_urls || '[]'); } catch(e) {} const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11, "video_urls"=$12 WHERE id=$13`; const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), safeInt(rooms), safeInt(bathrooms), safeInt(area), description, allUrls[0], JSON.stringify(allUrls), type, hiddenCode, videoUrlsArr, req.params.id]; try { await pgQuery(sql, params); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { res.status(400).json({ message: `خطأ` }); } });
 app.post('/api/request-property', async (req, res) => { const { name, phone, email, specifications } = req.body; try { await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]); await sendDiscordNotification("📩 طلب عقار مخصص", [{ name: "👤 الاسم", value: name }, { name: "📝 المواصفات", value: specifications }], 15158332); res.status(200).json({ success: true }); } catch (err) { throw err; } });
 app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
