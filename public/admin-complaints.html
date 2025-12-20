@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الشكاوي - عقارك</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="admin-auth.js"></script>
+    <style>
+        .complaint-card {
+            background: #252f38;
+            border: 1px solid #444;
+            border-right: 4px solid #ff4444;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            color: white;
+        }
+        .complaint-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px;
+        }
+        .user-info { color: #aaa; font-size: 0.9rem; }
+        .user-phone { color: #00ff88; font-family: monospace; }
+        .complaint-body { font-size: 1.1rem; line-height: 1.6; }
+        .complaint-date { font-size: 0.8rem; color: #666; margin-top: 10px; text-align: left; }
+    </style>
+</head>
+<body class="internal-page">
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">صندوق الشكاوي</span>
+            </div>
+            <nav class="main-nav">
+                <a href="admin-home" class="nav-button neon-button-white">عودة</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content" style="max-width: 800px; margin: 20px auto;">
+        <h2 style="color: white; margin-bottom: 20px;">الشكاوي الواردة</h2>
+        <div id="complaints-list">
+            <p style="text-align:center; color:#888;">جاري التحميل...</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const list = document.getElementById('complaints-list');
+            try {
+                const res = await fetch('/api/admin/complaints');
+                const complaints = await res.json();
+                
+                list.innerHTML = '';
+                if(complaints.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color:#888;">لا توجد شكاوي حالياً.</p>';
+                    return;
+                }
+
+                complaints.forEach(c => {
+                    const date = new Date(c.created_at).toLocaleDateString('ar-EG') + ' ' + new Date(c.created_at).toLocaleTimeString('ar-EG');
+                    const html = `
+                        <div class="complaint-card">
+                            <div class="complaint-header">
+                                <div>
+                                    <span style="font-weight:bold; color:white;">${c.user_name}</span>
+                                    <br>
+                                    <span class="user-phone">${c.user_phone}</span>
+                                </div>
+                                <a href="tel:${c.user_phone}" class="btn-neon-auth" style="padding: 5px 10px; font-size: 0.8rem;">
+                                    <i class="fas fa-phone"></i> اتصل
+                                </a>
+                            </div>
+                            <div class="complaint-body">
+                                ${c.content}
+                            </div>
+                            <div class="complaint-date">${date}</div>
+                        </div>
+                    `;
+                    list.innerHTML += html;
+                });
+
+            } catch(e) {
+                list.innerHTML = '<p style="color:red; text-align:center;">فشل تحميل الشكاوي.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

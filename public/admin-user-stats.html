@@ -17,73 +17,27 @@
             border: 1px solid #e91e63;
             box-shadow: 0 0 20px rgba(233, 30, 99, 0.2);
         }
-
-        /* جعل الجدول قابل للتمرير أفقياً على الموبايل */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            color: white;
-            min-width: 600px; /* ضمان عرض مناسب للجدول حتى لو الشاشة صغيرة */
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: right;
-            border-bottom: 1px solid #333;
-            white-space: nowrap; /* منع النص من النزول لسطر جديد */
-        }
-
-        th {
-            background-color: rgba(233, 30, 99, 0.1);
-            color: #e91e63;
-            font-size: 1rem;
-        }
-
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; color: white; min-width: 600px; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #333; white-space: nowrap; }
+        th { background-color: rgba(233, 30, 99, 0.1); color: #e91e63; font-size: 1rem; }
         tr:hover { background-color: rgba(255, 255, 255, 0.05); }
-
         .rank-badge {
-            width: 30px; height: 30px;
-            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
             border-radius: 50%; font-weight: bold;
         }
         .rank-1 { background: gold; color: black; box-shadow: 0 0 10px gold; }
         .rank-2 { background: silver; color: black; box-shadow: 0 0 10px silver; }
         .rank-3 { background: #cd7f32; color: black; box-shadow: 0 0 10px #cd7f32; }
         .rank-normal { background: #333; color: white; }
-
         .username-tag { color: #aaa; font-size: 0.85rem; display: block; margin-top: 2px; }
-
-        /* 📱 تحسينات الزرار للموبايل */
-        .btn-view-profile {
-            padding: 8px 15px;
-            font-size: 0.85rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            justify-content: center;
-        }
-
+        .btn-view-profile { padding: 8px 15px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
         @media (max-width: 768px) {
             .stats-container { padding: 10px; margin: 10px; }
-            
-            /* تصغير المسافات في الجدول */
             th, td { padding: 10px 8px; font-size: 0.9rem; }
-            
-            /* إخفاء كلمة "صفحة المستخدم" وترك الأيقونة فقط */
             .btn-view-profile span { display: none; }
             .btn-view-profile i { margin: 0; font-size: 1.1rem; }
-            .btn-view-profile { 
-                padding: 8px; 
-                border-radius: 50%; /* تحويل الزر لدائرة */
-                width: 35px; height: 35px;
-            }
+            .btn-view-profile { padding: 8px; border-radius: 50%; width: 35px; height: 35px; }
         }
     </style>
 </head>
@@ -104,7 +58,7 @@
     <main class="main-content">
         <div class="stats-container">
             <h2 style="text-align: center; margin-bottom: 20px; color: white;">
-                <i class="fas fa-chart-bar" style="color: #e91e63;"></i> ترتيب النشاط
+                <i class="fas fa-chart-bar" style="color: #e91e63;"></i> ترتيب النشاط والحظر
             </h2>
 
             <div id="loading" style="text-align:center; color:#e91e63; margin: 30px;">
@@ -118,12 +72,11 @@
                             <th style="width: 50px;">#</th>
                             <th>المستخدم</th>
                             <th>الهاتف</th>
-                            <th>العدد</th>
-                            <th>تصفح</th>
+                            <th>النشاط</th>
+                            <th>إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody id="stats-body">
-                        </tbody>
+                    <tbody id="stats-body"></tbody>
                 </table>
             </div>
             
@@ -159,6 +112,7 @@
                 }
 
                 table.style.display = 'table';
+                tbody.innerHTML = '';
 
                 users.forEach((user, index) => {
                     let rankClass = 'rank-normal';
@@ -168,21 +122,34 @@
                     else if (index === 1) { rankClass = 'rank-2'; rankContent = '2'; }
                     else if (index === 2) { rankClass = 'rank-3'; rankContent = '3'; }
 
+                    const isBanned = user.is_banned;
+                    const banBtnText = isBanned ? 'فك الحظر' : 'حظر';
+                    const banBtnColor = isBanned ? '#4caf50' : '#f44336'; 
+                    const banAction = isBanned ? false : true;
+
                     const row = `
-                        <tr>
+                        <tr style="${isBanned ? 'background: rgba(244, 67, 54, 0.1);' : ''}">
                             <td><span class="rank-badge ${rankClass}">${rankContent}</span></td>
                             <td>
                                 <div style="font-weight:bold;">${user.name || 'غير محدد'}</div>
                                 <div class="username-tag">@${user.username || '-'}</div>
+                                ${isBanned ? '<span style="color:red; font-size:0.8rem;">(محظور)</span>' : ''}
                             </td>
                             <td style="direction: ltr; text-align: right;">${user.phone}</td>
                             <td>
                                 <span style="color: #00ff88; font-weight: bold;">${user.property_count}</span>
                             </td>
                             <td>
-                                <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth btn-view-profile" title="عرض البروفايل">
-                                    <span>عرض</span> <i class="fas fa-external-link-alt"></i>
-                                </a>
+                                <div style="display:flex; gap:5px; justify-content:center;">
+                                    <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth btn-view-profile" title="عرض البروفايل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button onclick="toggleBan('${user.phone}', ${banAction})" 
+                                            class="btn-neon-auth" 
+                                            style="border-color: ${banBtnColor}; color: ${banBtnColor}; font-size:0.8rem; padding:5px 10px;">
+                                        ${banBtnText}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -193,6 +160,25 @@
                 console.error(error);
                 loading.innerHTML = '<span style="color:red">خطأ في الاتصال</span>';
             }
+        }
+
+        async function toggleBan(phone, shouldBan) {
+            if(!confirm(shouldBan ? "هل أنت متأكد من حظر هذا المستخدم؟ لن يتمكن من الدخول." : "هل تريد فك الحظر؟")) return;
+
+            try {
+                const res = await fetch('/api/admin/toggle-ban', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone, shouldBan })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert(data.message);
+                    fetchStats(); 
+                } else {
+                    alert("حدث خطأ: " + data.message);
+                }
+            } catch(e) { alert("خطأ في الاتصال"); }
         }
     </script>
 

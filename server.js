@@ -279,9 +279,17 @@ function generateUniqueCode() {
 // ==========================================================
 async function createTables() {
     const queries = [
-        `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, username TEXT UNIQUE, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user', lifetime_posts INTEGER DEFAULT 0)`,
+        `CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY, 
+            name TEXT, 
+            username TEXT UNIQUE, 
+            phone TEXT NOT NULL UNIQUE, 
+            password TEXT NOT NULL, 
+            role TEXT DEFAULT 'user', 
+            lifetime_posts INTEGER DEFAULT 0,
+            is_banned BOOLEAN DEFAULT FALSE
+        )`,
         
-        // تحديث جدول العقارات بالأعمدة الجديدة (Level, Floors, Finishing)
         `CREATE TABLE IF NOT EXISTS properties (
             id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, 
             rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, 
@@ -291,26 +299,41 @@ async function createTables() {
             "level" TEXT, "floors_count" INTEGER, "finishing_type" TEXT
         )`,
         
-        // تحديث جدول الطلبات
         `CREATE TABLE IF NOT EXISTS seller_submissions (
             id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, 
             "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, 
             "propertyArea" INTEGER, "propertyRooms" INTEGER, "propertyBathrooms" INTEGER, 
             "propertyDescription" TEXT, "imagePaths" TEXT, "submissionDate" TEXT, status TEXT DEFAULT 'pending',
-            "propertyLevel" TEXT, "propertyFloors" INTEGER, "propertyFinishing" TEXT
+            "propertyLevel" TEXT, "propertyFloors" INTEGER, "propertyFinishing" TEXT,
+            "ai_review_note" TEXT
         )`,
         
         `CREATE TABLE IF NOT EXISTS property_requests (id SERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, specifications TEXT NOT NULL, "submissionDate" TEXT)`,
         `CREATE TABLE IF NOT EXISTS favorites (id SERIAL PRIMARY KEY, user_phone TEXT NOT NULL, property_id INTEGER NOT NULL, UNIQUE(user_phone, property_id))`,
         `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`,
         `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`,
-        `CREATE TABLE IF NOT EXISTS bot_settings (id SERIAL PRIMARY KEY, setting_key TEXT UNIQUE, setting_value TEXT)`
+        `CREATE TABLE IF NOT EXISTS bot_settings (id SERIAL PRIMARY KEY, setting_key TEXT UNIQUE, setting_value TEXT)`,
+        
+        // الجدول الجديد للشكاوي
+        `CREATE TABLE IF NOT EXISTS complaints (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            user_name TEXT,
+            user_phone TEXT,
+            content TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT
+        )`
     ];
+
     try { 
         for (const query of queries) await pgQuery(query); 
+        
+        // أمر تحديث لإضافة عمود الحظر للمستخدمين القدامى (Migration)
+        await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN DEFAULT FALSE`);
+        
         await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING`, ['system_prompt', DEFAULT_SYSTEM_INSTRUCTION]);
 
-        // التريجر للعداد
         await pgQuery(`
             CREATE OR REPLACE FUNCTION increment_post_count() RETURNS TRIGGER AS $$
             BEGIN
@@ -319,11 +342,11 @@ async function createTables() {
             END;
             $$ LANGUAGE plpgsql;
         `);
-        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "ai_review_note" TEXT`);
+        
         await pgQuery(`DROP TRIGGER IF EXISTS trigger_post_count ON properties`);
         await pgQuery(`CREATE TRIGGER trigger_post_count AFTER INSERT ON properties FOR EACH ROW EXECUTE FUNCTION increment_post_count();`);
 
-        console.log('✅ Tables & Triggers synced.'); 
+        console.log('✅ Tables, Triggers & Ban System synced.'); 
     } 
     catch (err) { console.error('❌ Table Sync Error:', err); }
 }
@@ -612,37 +635,61 @@ app.post('/api/register', async (req, res) => {
     username = username ? username.toLowerCase().trim() : '';
 
     if (!otpStore[phone] || otpStore[phone].code !== otp || Date.now() > otpStore[phone].expires) {
-        return res.status(400).json({ message: 'كود التحقق غير صحيح' });
+        return res.status(400).json({ message: 'كود التحقق غير صحيح أو منتهي الصلاحية' });
     }
-    delete otpStore[phone];
-
+    
     try {
-        if (username.length < 5) return res.status(400).json({ message: 'اسم المستخدم قصير' });
+        // فحص هل الرقم محظور سابقاً؟
+        const banCheck = await pgQuery('SELECT is_banned FROM users WHERE phone = $1', [phone]);
+        if (banCheck.rows.length > 0 && banCheck.rows[0].is_banned) {
+            delete otpStore[phone];
+            return res.status(403).json({ message: '⛔ هذا الرقم محظور من استخدام موقع عقارك بسبب مخالفة الشروط.' });
+        }
+
+        if (username.length < 5) return res.status(400).json({ message: 'اسم المستخدم قصير (يجب أن يكون 5 حروف على الأقل)' });
+        
         const userCheck = await pgQuery('SELECT id FROM users WHERE username = $1', [username]);
-        if (userCheck.rows.length > 0) return res.status(409).json({ message: 'اسم المستخدم محجوز' });
+        if (userCheck.rows.length > 0) return res.status(409).json({ message: 'اسم المستخدم محجوز، اختر اسماً آخر' });
 
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         await pgQuery(`INSERT INTO users (name, username, phone, password, role) VALUES ($1, $2, $3, $4, $5)`, 
             [name, username, phone, hashedPassword, 'user']);
-        res.status(201).json({ success: true, message: 'تم إنشاء الحساب' });
-    } catch (error) { res.status(500).json({ message: 'خطأ في السيرفر' }); }
-});
+        
+        delete otpStore[phone];
+        res.status(201).json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
 
+    } catch (error) { 
+        if(error.code === '23505') return res.status(409).json({ message: 'البيانات (الهاتف أو اسم المستخدم) مسجلة بالفعل' });
+        console.error("Register Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر' }); 
+    }
+});
 app.post('/api/login', async (req, res) => {
     const { phone, password } = req.body;
+    
+    // دخول الأدمن (تجاوز الفحص)
     if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD) {
         const token = jwt.sign({ id: 0, phone: ADMIN_PHONE, role: 'admin', username: 'admin', name: 'المدير العام' }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
         return res.json({ success: true, role: 'admin', username: 'admin', name: 'المدير العام' });
     }
+
     try {
         const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
-        if (!r.rows[0]) return res.status(404).json({ success: false, errorType: 'phone', message: 'غير مسجل' });
+        if (!r.rows[0]) return res.status(404).json({ success: false, errorType: 'phone', message: 'رقم الهاتف غير مسجل' });
+        
+        // ⛔ التحقق من الحظر
+        if (r.rows[0].is_banned) {
+            return res.status(403).json({ success: false, message: '⛔ حسابك محظور من استخدام الموقع. تواصل مع الإدارة عبر واتساب.' });
+        }
+
         if (!(await bcrypt.compare(password, r.rows[0].password))) return res.status(401).json({ success: false, errorType: 'password', message: 'كلمة المرور خطأ' });
+        
         const user = r.rows[0];
-        const token = jwt.sign({ id: user.id, phone: user.phone, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, phone: user.phone, role: user.role, username: user.username, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
         res.json({ success: true, role: user.role, username: user.username, name: user.name });
+
     } catch (e) { return res.status(500).json({ error: e.message }); }
 });
 
@@ -1036,6 +1083,82 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         console.error("Update Error:", error);
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
+});
+
+// ==========================================================
+// 🛡️ نظام الإدارة والشكاوي (Admin & Complaints)
+// ==========================================================
+
+// 1. تبديل حالة الحظر (Ban/Unban)
+app.post('/api/admin/toggle-ban', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        
+        const { phone, shouldBan } = req.body;
+        // لا يمكن حظر الأدمن نفسه
+        if (phone === ADMIN_PHONE) return res.status(400).json({ message: 'لا يمكن حظر الأدمن' });
+
+        await pgQuery(`UPDATE users SET is_banned = $1 WHERE phone = $2`, [shouldBan, phone]);
+        res.json({ success: true, message: shouldBan ? 'تم حظر المستخدم' : 'تم فك الحظر' });
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
+});
+
+// 2. إرسال شكوى من المستخدم
+app.post('/api/submit-complaint', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول لإرسال شكوى' });
+    
+    try {
+        const user = jwt.verify(token, JWT_SECRET);
+        const { content } = req.body;
+        
+        await pgQuery(`INSERT INTO complaints (user_id, user_name, user_phone, content, created_at) VALUES ($1, $2, $3, $4, $5)`, 
+            [user.id, user.name, user.phone, content, new Date().toISOString()]);
+
+        // إشعار ديسكورد بالشكوى
+        await sendDiscordNotification("📢 شكوى جديدة", [
+            { name: "👤 صاحب الشكوى", value: `${user.name} (${user.phone})` },
+            { name: "📝 نص الشكوى", value: content }
+        ], 16711680); 
+
+        res.json({ success: true, message: 'تم إرسال الشكوى وسيتم مراجعتها.' });
+    } catch (error) { res.status(500).json({ message: 'خطأ أثناء الإرسال' }); }
+});
+
+// 3. جلب عدد الشكاوي (للأدمن)
+app.get('/api/admin/complaints-count', async (req, res) => {
+    try {
+        const result = await pgQuery(`SELECT COUNT(*) FROM complaints WHERE status = 'pending'`);
+        res.json({ count: result.rows[0].count });
+    } catch (e) { res.json({ count: 0 }); }
+});
+
+// 4. جلب قائمة الشكاوي (للأدمن)
+app.get('/api/admin/complaints', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        
+        const result = await pgQuery(`SELECT * FROM complaints ORDER BY id DESC`);
+        res.json(result.rows);
+    } catch (e) { res.status(500).json([]); }
+});
+
+// 5. استبدال API إحصائيات المستخدمين القديم ليجلب حالة الحظر
+app.get('/api/admin/users-stats', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        
+        // جلب حالة الحظر is_banned
+        const sql = `SELECT name, phone, username, lifetime_posts as property_count, is_banned FROM users WHERE lifetime_posts >= 0 ORDER BY lifetime_posts DESC`;
+        const result = await pgQuery(sql);
+        res.json(result.rows);
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
