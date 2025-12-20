@@ -130,6 +130,56 @@ async function deleteCloudinaryImages(imageUrls) {
     }
 }
 
+// ==========================================================
+// ➕ إضافات جديدة: دوال المطابقة (Match Maker)
+// ==========================================================
+
+// 1. دالة تنظيف النصوص (عشان المقارنة تكون دقيقة)
+function normalizeText(text) {
+    if (!text) return "";
+    return text.replace(/(أ|إ|آ)/g, 'ا').replace(/(ة)/g, 'ه').replace(/(ى)/g, 'ي').replace(/(ؤ|ئ)/g, 'ء').toLowerCase();
+}
+
+// 2. دالة المطابقة وإرسال الإشعارات
+async function checkAndNotifyMatches(propertyDetails) {
+    try {
+        console.log("🔍 جاري البحث عن طلبات مطابقة للعقار الجديد...");
+        const searchText = normalizeText(propertyDetails.title + " " + propertyDetails.description + " " + (propertyDetails.level || ''));
+        
+        // نجيب آخر 50 طلب شراء
+        const requests = await pgQuery(`SELECT * FROM property_requests ORDER BY id DESC LIMIT 50`);
+        
+        for (const req of requests.rows) {
+            const reqSpec = normalizeText(req.specifications);
+            
+            // شروط المطابقة: نفس النوع (شقة/فيلا) + كلمة مشتركة
+            const isTypeMatch = (searchText.includes("شقه") && reqSpec.includes("شقه")) || 
+                                (searchText.includes("فيلا") && reqSpec.includes("فيلا")) ||
+                                (searchText.includes("محل") && reqSpec.includes("محل"));
+
+            const reqWords = reqSpec.split(' ');
+            let matchCount = 0;
+            reqWords.forEach(w => {
+                if (w.length > 3 && searchText.includes(w)) matchCount++;
+            });
+
+            if (isTypeMatch && matchCount >= 1) {
+                // إشعار للمشتري
+                const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد قد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}`;
+                await sendWhatsAppMessage(req.phone, buyerMsg);
+
+                // إشعار للبائع
+                const sellerMsg = `🚀 عقارك لقطة!\n\nيا هندسة، السيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})* وبعتناله!\nتابع تليفونك بالتوفيق. 😉`;
+                await sendWhatsAppMessage(propertyDetails.sellerPhone, sellerMsg);
+                
+                console.log(`✅ ماتش! طلب رقم ${req.id} مع العقار الجديد.`);
+            }
+        }
+    } catch (e) {
+        console.error("Matching Error:", e);
+    }
+}
+
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("ضع_رابط")) return;
     const embed = { title, color, fields, footer: { text: "Aqarak Bot 🏠" }, timestamp: new Date().toISOString() };
@@ -269,6 +319,7 @@ async function createTables() {
             END;
             $$ LANGUAGE plpgsql;
         `);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "ai_review_note" TEXT`);
         await pgQuery(`DROP TRIGGER IF EXISTS trigger_post_count ON properties`);
         await pgQuery(`CREATE TRIGGER trigger_post_count AFTER INSERT ON properties FOR EACH ROW EXECUTE FUNCTION increment_post_count();`);
 
@@ -631,6 +682,7 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // ==========================================================
 
 // 🟢 استقبال طلب بيع (مؤمن + فحص AI ذكي + بيانات ديناميكية)
+// 🟢 استقبال طلب بيع (النسخة المحدثة مع المطابقة ورأي AI)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'سجل دخول أولاً' });
@@ -642,10 +694,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     const publisherUsername = realUser.username; 
 
-    // 🟢 استقبال البيانات الجديدة (Category, Level, Floors, Finishing)
     const { 
         propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
-        propertyCategory, 
         propertyRooms, propertyBathrooms, 
         propertyLevel, propertyFloors, propertyFinishing 
     } = req.body;
@@ -655,8 +705,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const code = generateUniqueCode();
 
     try {
-        // 🧠 الفحص الذكي (Vision)
-        console.log("🤖 جاري فحص العقار (صور + نص)...");
+        // 1. فحص الذكاء الاصطناعي
+        console.log("🤖 جاري فحص العقار...");
         const imageUrls = files.map(f => f.path);
         const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, propertyPrice, imageUrls);
 
@@ -666,33 +716,32 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         if (aiReview.status === 'approved') {
             finalStatus = 'approved'; 
             isPublic = true;          
-            console.log("✅ الـ AI وافق ونشر العقار!");
-        } else {
-            console.log(`❌ الـ AI رفض/شك في العقار. السبب: ${aiReview.reason}`);
         }
 
-        // حفظ في الأرشيف (seller_submissions) مع الأعمدة الجديدة
+        // 2. الحفظ في الأرشيف (مع سبب الـ AI)
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
              "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate", status,
-             "propertyLevel", "propertyFloors", "propertyFinishing") 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note") 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         `, [
             sellerName, sellerPhone, propertyTitle, propertyType, propertyPrice, 
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), finalStatus,
-            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || ''
+            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
+            aiReview.reason || 'No automated note'
         ]);
 
-        // نشر فوري لو وافق الـ AI مع نقل الأعمدة الجديدة لجدول properties
+        // 3. النشر الفوري + تشغيل المطابقة
         if (isPublic) {
-            await pgQuery(`
+            const pubRes = await pgQuery(`
                 INSERT INTO properties 
                 (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, 
                  "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal", "video_urls",
                  "level", "floors_count", "finishing_type")
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, '{}', $15, $16, $17)
+                RETURNING id
             `, [
                 propertyTitle, propertyPrice, parseFloat(propertyPrice.replace(/[^0-9.]/g, '')), 
                 safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), propertyDescription,
@@ -700,19 +749,34 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 propertyType, code, sellerName, sellerPhone, publisherUsername,
                 propertyLevel || '', safeInt(propertyFloors), propertyFinishing || ''
             ]);
+            
+            // 🔥 هنا بنشغل المطابقة ونبعت الواتساب
+            checkAndNotifyMatches({
+                id: pubRes.rows[0].id,
+                title: propertyTitle,
+                description: propertyDescription,
+                price: propertyPrice,
+                level: propertyLevel,
+                sellerPhone: sellerPhone
+            });
         }
 
-        await sendDiscordNotification(`📢 طلب عقار جديد (${aiReview.status === 'approved' ? '✅ تم النشر' : '⚠️ قيد المراجعة'})`, [
+        // إشعار ديسكورد
+        await sendDiscordNotification(`📢 طلب عقار جديد (${aiReview.status === 'approved' ? '✅ تم النشر' : '⚠️ تحت المراجعة'})`, [
             { name: "👤 المالك", value: sellerName },
             { name: "🏠 العقار", value: propertyTitle },
-            { name: "🤖 رأي AI", value: aiReview.status === 'approved' ? "موافق" : `مرفوض: ${aiReview.reason}` }
+            { name: "🤖 تقرير AI", value: aiReview.reason }
         ], aiReview.status === 'approved' ? 3066993 : 15158332, files[0]?.path);
 
-        res.status(200).json({ success: true, message: aiReview.status === 'approved' ? 'تمت الموافقة والنشر فوراً! 🎉' : 'تم استلام الطلب وسيتم مراجعته يدوياً.' }); 
+        res.status(200).json({ 
+            success: true, 
+            status: finalStatus,
+            message: aiReview.status === 'approved' ? 'تمت الموافقة والنشر فوراً! 🎉' : 'تم استلام الطلب.',
+            aiReason: aiReview.reason 
+        }); 
 
     } catch (err) { console.error(err); res.status(500).json({ message: 'خطأ' }); }
 });
-
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { 
     const files = req.files || []; const data = req.body; const urls = files.map(f => f.path);
     const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; 
