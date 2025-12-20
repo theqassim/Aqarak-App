@@ -27,11 +27,10 @@ const APP_URL = "https://aqarakeg.com";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE"; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// 🧠 موديلات الذكاء الاصطناعي
-// 1. للشات (نصوص فقط - ذكي في المحادثة)
-const modelChat = genAI.getGenerativeModel({ model: "gemma-3-27b-it" }); 
-// 2. للفحص (نصوص + صور - سريع ودقيق)
-const modelVision = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
+// 🧠 موديل الشات (للمحادثة)
+const modelChat = genAI.getGenerativeModel({ model: "gemma-2-27b-it" }); 
+// 👁️ موديل الرؤية (لفحص الصور والنص) - Flash سريع ورخيص ويدعم الصور
+const modelVision = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ... إعدادات السيرفر ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -149,7 +148,7 @@ async function notifyAllUsers(title, body, url) {
     } catch (err) { console.error("Web Push Error:", err); }
 }
 
-// 🛠️ دالة تحويل رابط الصورة لـ Base64 عشان الـ AI يشوفها
+// 🛠️ دالة لجلب الصورة من الرابط وتحويلها لـ Base64 للـ AI
 async function urlToGenerativePart(url) {
     try {
         const response = await fetch(url);
@@ -157,7 +156,7 @@ async function urlToGenerativePart(url) {
         return {
             inlineData: {
                 data: Buffer.from(arrayBuffer).toString("base64"),
-                mimeType: "image/webp" 
+                mimeType: "image/webp" // Cloudinary بيحولها webp حسب إعداداتنا
             },
         };
     } catch (error) {
@@ -166,18 +165,18 @@ async function urlToGenerativePart(url) {
     }
 }
 
-// 🧠 دالة الفحص الذكي (Vision + Logic)
+// 🧠 دالة الفحص الذكي (نص + صور + منطق عقاري)
 async function aiCheckProperty(title, description, price, imageUrls) {
     try {
         const imageParts = [];
         if (imageUrls && imageUrls.length > 0) {
-            // نأخذ أول 3 صور فقط لتوفير الوقت
             for (const url of imageUrls.slice(0, 3)) {
                 const part = await urlToGenerativePart(url);
                 if (part) imageParts.push(part);
             }
         }
 
+        // 🟢 تم تحديث الـ Prompt هنا
         const prompt = `
         أنت مراقب جودة صارم لموقع عقارات مصري.
         مهمتك: مراجعة بيانات وصور عقار وتحديد هل هو صالح للنشر فوراً أم لا.
@@ -186,15 +185,17 @@ async function aiCheckProperty(title, description, price, imageUrls) {
         1. **العمارة الكاملة / الأرض / المخزن / المحل:**
            - طبيعي جداً أن يكون عدد الغرف = 0 وعدد الحمامات = 0.
            - لا ترفض الإعلان بسبب نقص هذه البيانات في هذه الفئات.
+           - ركز على الوصف والمنطقية.
+        
         2. **الشقق والفيلات:**
            - يجب وجود غرف وحمامات.
 
         ⛔ قواعد الرفض القاطع (Status: rejected):
-        1. الصور تحتوي على عري، عنف، محتوى سياسي، أو أشخاص بشكل واضح (سيلفي مثلاً).
-        2. الصور ليست لعقارات (صور سيارات، حيوانات، شاشة سوداء).
-        3. النص يحتوي على ألفاظ خارجة أو محتوى مسيء.
-        4. السعر 0 أو غير منطقي (مثل فيلا بـ 1000 جنيه).
-        5. الإعلان لشيء غير العقارات.
+        1. الصور تحتوي على عري، عنف، محتوى سياسي، أو أشخاص بشكل واضح (سيلفي).
+        2. الصور ليست لعقارات (مثلاً صور سيارات، ملابس، شاشة سوداء).
+        3. النص يحتوي على كلمات بذيئة، شتائم، أو محتوى غير أخلاقي.
+        4. السعر غير منطقي تماماً (مثلاً شقة بـ 5 جنيه أو 0 جنيه) إلا لو للإيجار اليومي.
+        5. الإعلان ليس لبيع/إيجار عقار.
 
         بيانات العقار:
         - العنوان: ${title}
@@ -203,7 +204,7 @@ async function aiCheckProperty(title, description, price, imageUrls) {
         
         ${imageParts.length > 0 ? "- مرفق معه صور للعقار." : "- لا يوجد صور مرفقة."}
 
-        المطلوب: رد بصيغة JSON فقط:
+        المطلوب: رد بصيغة JSON فقط كالتالي بدون أي علامات Markdown:
         { "status": "approved" أو "rejected", "reason": "سبب الرفض باختصار بالعربية" }
         `;
 
@@ -214,10 +215,11 @@ async function aiCheckProperty(title, description, price, imageUrls) {
         return JSON.parse(text);
     } catch (error) {
         console.error("AI Check Error:", error);
-        return { status: "pending", reason: "AI Check Failed" };
+        return { status: "pending", reason: "AI Error or Timeout" };
     }
 }
 
+// دالة توليد كود عشوائي للعقارات
 function generateUniqueCode() {
     return 'AQ-' + Math.floor(100000 + Math.random() * 900000);
 }
@@ -229,7 +231,7 @@ async function createTables() {
     const queries = [
         `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, username TEXT UNIQUE, phone TEXT NOT NULL UNIQUE, password TEXT NOT NULL, role TEXT DEFAULT 'user', lifetime_posts INTEGER DEFAULT 0)`,
         
-        // تحديث جدول العقارات بالحقول الجديدة
+        // تحديث جدول العقارات بالأعمدة الجديدة (Level, Floors, Finishing)
         `CREATE TABLE IF NOT EXISTS properties (
             id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, 
             rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, 
@@ -239,7 +241,7 @@ async function createTables() {
             "level" TEXT, "floors_count" INTEGER, "finishing_type" TEXT
         )`,
         
-        // تحديث جدول الطلبات بالحقول الجديدة
+        // تحديث جدول الطلبات
         `CREATE TABLE IF NOT EXISTS seller_submissions (
             id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, 
             "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, 
@@ -259,7 +261,14 @@ async function createTables() {
         await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING`, ['system_prompt', DEFAULT_SYSTEM_INSTRUCTION]);
 
         // التريجر للعداد
-        await pgQuery(`CREATE OR REPLACE FUNCTION increment_post_count() RETURNS TRIGGER AS $$ BEGIN UPDATE users SET lifetime_posts = lifetime_posts + 1 WHERE phone = NEW."sellerPhone"; RETURN NEW; END; $$ LANGUAGE plpgsql;`);
+        await pgQuery(`
+            CREATE OR REPLACE FUNCTION increment_post_count() RETURNS TRIGGER AS $$
+            BEGIN
+                UPDATE users SET lifetime_posts = lifetime_posts + 1 WHERE phone = NEW."sellerPhone";
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        `);
         await pgQuery(`DROP TRIGGER IF EXISTS trigger_post_count ON properties`);
         await pgQuery(`CREATE TRIGGER trigger_post_count AFTER INSERT ON properties FOR EACH ROW EXECUTE FUNCTION increment_post_count();`);
 
@@ -278,7 +287,16 @@ const uploadProperties = multer({ storage: storageProperties, limits: { fileSize
 app.use(cors({ origin: true, credentials: true })); 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public'), { index: false, extensions: ['html'] }));
+
+// 🌐 إعدادات الملفات الاستاتيكية والتوجيه (مهم لإصلاح مشكلة 404)
+app.use(express.static(path.join(__dirname, 'public'), { 
+    extensions: ['html'], 
+    index: false 
+}));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'home.html'));
+});
 
 // ==========================================================
 // 🧠 4. خوارزميات البحث الذكي
@@ -609,10 +627,10 @@ app.put('/api/user/change-password', async (req, res) => {
 app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json({ success: true }); });
 
 // ==========================================================
-// 🏠 Property & Admin APIs (مع فحص AI المطور)
+// 🏠 Property & Admin APIs (مع فحص AI المطور والبيانات الجديدة)
 // ==========================================================
 
-// 🟢 استقبال طلب بيع (مؤمن + فحص AI ذكي للصور والنص + بيانات ديناميكية)
+// 🟢 استقبال طلب بيع (مؤمن + فحص AI ذكي + بيانات ديناميكية)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'سجل دخول أولاً' });
@@ -624,7 +642,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     const publisherUsername = realUser.username; 
 
-    // استقبال البيانات الجديدة من الـ Body
+    // 🟢 استقبال البيانات الجديدة (Category, Level, Floors, Finishing)
     const { 
         propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
         propertyCategory, 
@@ -653,7 +671,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             console.log(`❌ الـ AI رفض/شك في العقار. السبب: ${aiReview.reason}`);
         }
 
-        // حفظ في الأرشيف (seller_submissions) بالبيانات الجديدة
+        // حفظ في الأرشيف (seller_submissions) مع الأعمدة الجديدة
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
@@ -667,7 +685,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || ''
         ]);
 
-        // نشر فوري لو وافق الـ AI
+        // نشر فوري لو وافق الـ AI مع نقل الأعمدة الجديدة لجدول properties
         if (isPublic) {
             await pgQuery(`
                 INSERT INTO properties 
@@ -695,7 +713,18 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     } catch (err) { console.error(err); res.status(500).json({ message: 'خطأ' }); }
 });
 
-// نشر العقار من الأدمن (نقل البيانات الجديدة)
+app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { 
+    const files = req.files || []; const data = req.body; const urls = files.map(f => f.path);
+    const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; 
+    const params = [data.title, data.price, parseFloat(data.price.replace(/[^0-9.]/g,'')), safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), data.description, urls[0], JSON.stringify(urls), data.type, data.hiddenCode, "Admin", ADMIN_EMAIL, "admin", false, false]; 
+    try { const result = await pgQuery(sql, params); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } 
+});
+
+app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
+app.post('/api/subscribe', async (req, res) => { try { await pgQuery(`INSERT INTO subscriptions (endpoint, keys) VALUES ($1, $2) ON CONFLICT (endpoint) DO NOTHING`, [req.body.endpoint, JSON.stringify(req.body.keys)]); res.status(201).json({}); } catch (err) { res.status(500).json({ error: 'Failed' }); } });
+app.post('/api/make-offer', async (req, res) => { const { propertyId, buyerName, buyerPhone, offerPrice } = req.body; try { await pgQuery(`INSERT INTO property_offers (property_id, buyer_name, buyer_phone, offer_price, created_at) VALUES ($1, $2, $3, $4, $5)`, [propertyId, buyerName, buyerPhone, offerPrice, new Date().toISOString()]); const propRes = await pgQuery('SELECT title FROM properties WHERE id = $1', [propertyId]); await sendDiscordNotification("💰 عرض سعر جديد", [{ name: "🏠 العقار", value: propRes.rows[0]?.title || 'غير معروف' }, { name: "📉 العرض", value: `${offerPrice} ج.م` }, { name: "👤 المشتري", value: `${buyerName} - ${buyerPhone}` }], 16753920); res.status(200).json({ success: true }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
+
+// نشر العقار من الأدمن (نقل البيانات الجديدة أيضاً)
 app.post('/api/admin/publish-submission', async (req, res) => {
     const { submissionId, hiddenCode } = req.body;
     try {
@@ -737,12 +766,12 @@ app.post('/api/admin/publish-submission', async (req, res) => {
     } catch (err) { console.error("Publish Error:", err); res.status(400).json({ message: 'Error' }); }
 });
 
-// باقي الـ APIs كما هي ...
-app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { /* ... */ });
-app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { /* ... */ });
-app.post('/api/request-property', async (req, res) => { /* ... */ });
+app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages, video_urls } = req.body; let oldUrls = []; try { oldUrls = JSON.parse((Array.isArray(existingImages) ? existingImages[0] : existingImages) || '[]'); } catch(e) {} const newUrls = req.files ? req.files.map(f => f.path) : []; const allUrls = [...oldUrls, ...newUrls]; let videoUrlsArr = []; try { videoUrlsArr = JSON.parse(video_urls || '[]'); } catch(e) {} const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11, "video_urls"=$12 WHERE id=$13`; const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), safeInt(rooms), safeInt(bathrooms), safeInt(area), description, allUrls[0], JSON.stringify(allUrls), type, hiddenCode, videoUrlsArr, req.params.id]; try { await pgQuery(sql, params); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { res.status(400).json({ message: `خطأ` }); } });
+app.post('/api/request-property', async (req, res) => { const { name, phone, email, specifications } = req.body; try { await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]); await sendDiscordNotification("📩 طلب عقار مخصص", [{ name: "👤 الاسم", value: name }, { name: "📝 المواصفات", value: specifications }], 15158332); res.status(200).json({ success: true }); } catch (err) { throw err; } });
 app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
-app.delete('/api/admin/seller-submission/:id', async (req, res) => { try { const r = await pgQuery(`SELECT "imagePaths" FROM seller_submissions WHERE id = $1`, [req.params.id]); if(r.rows[0]) await deleteCloudinaryImages((r.rows[0].imagePaths || '').split(' | ')); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { res.status(500).json({ message: 'فشل الحذف' }); } });
+app.get('/api/admin/property-requests', async (req, res) => { try { const r = await pgQuery("SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
+app.delete('/api/admin/seller-submission/:id', async (req, res) => { try { const r = await pgQuery(`SELECT "imagePaths" FROM seller_submissions WHERE id = $1`, [req.params.id]); if(r.rows[0]) await deleteCloudinaryImages((r.rows[0].imagePaths || '').split(' | ')); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { console.error("Delete Error:", err); res.status(500).json({ message: 'فشل الحذف' }); } });
+app.delete('/api/admin/property-request/:id', async (req, res) => { try { await pgQuery(`DELETE FROM property_requests WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { throw err; } });
 app.get('/api/properties', async (req, res) => { let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type, \"isFeatured\", \"isLegal\" FROM properties"; const params = []; let idx = 1; const filters = []; const { type, limit, keyword, minPrice, maxPrice, rooms, sort } = req.query; if (type) { filters.push(`type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } if (keyword) { filters.push(`(title ILIKE $${idx} OR description ILIKE $${idx} OR "hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } if (minPrice) { filters.push(`"numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } if (maxPrice) { filters.push(`"numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } if (rooms) { if (rooms === '4+') { filters.push(`rooms >= $${idx++}`); params.push(4); } else { filters.push(`rooms = $${idx++}`); params.push(Number(rooms)); } } if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); let orderBy = "ORDER BY id DESC"; if (sort === 'price_asc') orderBy = 'ORDER BY "numericPrice" ASC'; else if (sort === 'price_desc') orderBy = 'ORDER BY "numericPrice" DESC'; else if (sort === 'oldest') orderBy = 'ORDER BY id ASC'; sql += ` ${orderBy}`; if (limit) { sql += ` LIMIT $${idx++}`; params.push(parseInt(limit)); } try { const result = await pgQuery(sql, params); res.json(result.rows); } catch (err) { throw err; } });
 app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery(`SELECT * FROM properties WHERE id=$1`, [req.params.id]); if(r.rows[0]) { try { r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); } catch(e){ r.rows[0].imageUrls=[]; } res.json(r.rows[0]); } else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
@@ -754,71 +783,64 @@ app.get('/api/user/my-properties', async (req, res) => { const token = req.cooki
 app.get('/api/properties/similar/:id', async (req, res) => { try { const propId = req.params.id; const currentRes = await pgQuery('SELECT * FROM properties WHERE id = $1', [propId]); if (currentRes.rows.length === 0) return res.status(404).json({ message: 'العقار غير موجود' }); const current = currentRes.rows[0]; let locationKeyword = ''; const textToSearch = normalizeText(current.title + " " + current.description); for (const [gov, cities] of Object.entries(EGYPT_LOCATIONS)) { if (textToSearch.includes(normalizeText(gov))) { locationKeyword = gov; break; } for (const city of cities) { if (textToSearch.includes(normalizeText(city))) { locationKeyword = city; break; } } if (locationKeyword) break; } if (!locationKeyword) locationKeyword = current.title.split(' ')[0] || ''; const minPrice = Number(current.numericPrice) * 0.75; const maxPrice = Number(current.numericPrice) * 1.25; const sql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE type = $1 AND id != $2 AND "numericPrice" BETWEEN $3 AND $4 AND (title ILIKE $5 OR description ILIKE $5) ORDER BY ABS(rooms - $6) + ABS(bathrooms - $7) ASC, ABS(area - $8) ASC LIMIT 4`; const params = [current.type, propId, minPrice, maxPrice, `%${locationKeyword}%`, safeInt(current.rooms), safeInt(current.bathrooms), safeInt(current.area)]; const result = await pgQuery(sql, params); if (result.rows.length === 0) { const fallbackSql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE type = $1 AND id != $2 ORDER BY RANDOM() LIMIT 4`; const fallbackResult = await pgQuery(fallbackSql, [current.type, propId]); return res.json(fallbackResult.rows); } res.json(result.rows); } catch (error) { res.status(500).json({ message: 'Error' }); } });
 
 // ==========================================================
-// 🛠️ روابط إصلاح وتحديث (للتشغيل مرة واحدة)
+// 📊 إحصائيات الأدمن (هام جداً للصفحة الرئيسية للأدمن)
+// ==========================================================
+app.get('/api/admin/counts', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        const pendingRes = await pgQuery(`SELECT COUNT(*) FROM seller_submissions WHERE status = 'pending'`);
+        const requestsRes = await pgQuery(`SELECT COUNT(*) FROM property_requests`);
+        res.json({
+            pendingCount: parseInt(pendingRes.rows[0].count),
+            requestsCount: parseInt(requestsRes.rows[0].count)
+        });
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
+});
+
+app.get('/api/admin/users-stats', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        const sql = `SELECT name, phone, username, lifetime_posts as property_count FROM users WHERE lifetime_posts > 0 ORDER BY lifetime_posts DESC`;
+        const result = await pgQuery(sql);
+        res.json(result.rows);
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
+});
+
+app.get('/api/public/profile/:username', async (req, res) => { const { username } = req.params; try { const userRes = await pgQuery('SELECT name, phone FROM users WHERE username = $1', [username.toLowerCase()]); if (userRes.rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود' }); const user = userRes.rows[0]; const propsRes = await pgQuery(`SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`, [username.toLowerCase(), user.phone]); res.json({ name: user.name, properties: propsRes.rows }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
+
+// ==========================================================
+// 🛠️ روابط تحديث وإصلاح الداتابيز (شغلها مرة واحدة)
 // ==========================================================
 
-// 1. رابط لإضافة أعمدة البيانات الجديدة (دور، أدوار، تشطيب) + العداد التراكمي
+// 1. رابط تحديث الأعمدة (شغله لإضافة الحقول الجديدة)
 app.get('/update-db-details', async (req, res) => {
     try {
-        // الأعمدة الجديدة للعقارات
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "level" TEXT`);
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "floors_count" INTEGER`);
         await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "finishing_type" TEXT`);
-
-        // الأعمدة الجديدة للطلبات
         await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyLevel" TEXT`);
         await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFloors" INTEGER`);
         await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFinishing" TEXT`);
-
-        res.send('✅ تم تحديث قاعدة البيانات وإضافة أعمدة الأدوار والتشطيب بنجاح.');
-    } catch (error) {
-        res.send('❌ حدث خطأ: ' + error.message);
-    }
+        res.send('✅ تم تحديث قاعدة البيانات وإضافة الأعمدة الناقصة بنجاح.');
+    } catch (error) { res.send('❌ حدث خطأ: ' + error.message); }
 });
 
-// 2. رابط لإصلاح مشكلة العداد (Lifetime Posts)
+// 2. رابط إصلاح العداد التراكمي
 app.get('/emergency-fix-columns', async (req, res) => {
     try {
         await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_posts INTEGER DEFAULT 0`);
-        await pgQuery(`
-            UPDATE users u
-            SET lifetime_posts = (
-                SELECT COUNT(*) FROM properties p WHERE p."sellerPhone" = u.phone
-            )
-        `);
+        await pgQuery(`UPDATE users u SET lifetime_posts = (SELECT COUNT(*) FROM properties p WHERE p."sellerPhone" = u.phone)`);
         res.send('✅ تم إصلاح عمود العداد التراكمي.');
-    } catch (error) {
-        res.status(500).send('❌ حدث خطأ: ' + error.message);
-    }
-});
-// 🏠 توجيه الصفحة الرئيسية
-app.get('/', (req, res) => { 
-    res.sendFile(path.join(__dirname, 'public', 'home.html')); 
+    } catch (error) { res.status(500).send('❌ حدث خطأ: ' + error.message); }
 });
 
 // ✅ اختبار السيرفر (Ping)
-app.get('/api/ping', (req, res) => {
-    res.json({ status: "OK", message: "Server is running 🚀" });
-});
-
-// 🚑 رابط الطوارئ لإضافة الأعمدة الناقصة في الداتابيز
-app.get('/fix-missing-columns', async (req, res) => {
-    try {
-        // 1. تحديث جدول طلبات البائعين (ده سبب المشكلة الحالية)
-        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyLevel" TEXT`);
-        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFloors" INTEGER`);
-        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFinishing" TEXT`);
-
-        // 2. تحديث جدول العقارات الرئيسي (عشان لما توافق على الطلب ميعملش مشكلة تانية)
-        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "level" TEXT`);
-        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "floors_count" INTEGER`);
-        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "finishing_type" TEXT`);
-
-        res.send('✅ تم إصلاح قاعدة البيانات وإضافة الأعمدة الناقصة بنجاح! جرب ترفع العقار دلوقتي.');
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('❌ حدث خطأ أثناء التحديث: ' + error.message);
-    }
-});
+app.get('/api/ping', (req, res) => { res.json({ status: "OK", message: "Server is running 🚀" }); });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
