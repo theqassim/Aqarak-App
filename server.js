@@ -1204,7 +1204,12 @@ app.get('/api/admin/users-stats', async (req, res) => {
 });
 
 // 🛠️ رابط طوارئ لإنشاء جدول الشكاوي يدوياً
-app.get('/emergency-create-complaints-table', async (req, res) => {
+// ==========================================================
+// 🛠️ إصلاح قاعدة البيانات والشكاوي
+// ==========================================================
+
+// 1. رابط لإنشاء جدول الشكاوي يدوياً (افتحه في المتصفح مرة واحدة)
+app.get('/fix-db', async (req, res) => {
     try {
         await pgQuery(`
             CREATE TABLE IF NOT EXISTS complaints (
@@ -1217,9 +1222,26 @@ app.get('/emergency-create-complaints-table', async (req, res) => {
                 created_at TEXT
             )
         `);
-        res.send('✅ تم إنشاء جدول الشكاوي (complaints) بنجاح. جرب إرسال الشكوى الآن.');
+        res.send('✅ تم إنشاء جدول الشكاوي (complaints) بنجاح! يمكنك الآن استخدام الصفحة.');
     } catch (error) {
-        res.status(500).send('❌ فشل إنشاء الجدول: ' + error.message);
+        res.status(500).send('❌ خطأ في إنشاء الجدول: ' + error.message);
+    }
+});
+
+// 2. تحديث API جلب الشكاوي (ليطبع الخطأ في الترمينال)
+app.get('/api/admin/complaints', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        // التأكد من صلاحية الأدمن
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        
+        // جلب البيانات
+        const result = await pgQuery(`SELECT * FROM complaints ORDER BY id DESC`);
+        res.json(result.rows);
+    } catch (e) { 
+        console.error("❌ خطأ في جلب الشكاوي:", e.message); // طباعة السبب في الشاشة السوداء
+        res.status(500).json([]); 
     }
 });
 
