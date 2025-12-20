@@ -34,6 +34,42 @@ style.innerHTML = `
         padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;
     }
     .btn-register-action:hover { background: transparent; color: #00ff88; }
+
+    /* 🆕 Edit Modal & Image Grid Styles */
+    .edit-modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .edit-modal-content {
+        background: #1c2630; padding: 25px; border-radius: 15px; border: 1px solid #00ff88;
+        width: 95%; max-width: 600px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
+        max-height: 90vh; overflow-y: auto;
+    }
+    .edit-input-group { margin-bottom: 15px; }
+    .edit-input-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold; }
+    .edit-input { 
+        width: 100%; padding: 12px; background: #2a3b4c; border: 1px solid #444; 
+        color: #fff; border-radius: 8px; outline: none; font-size: 1rem; transition: 0.3s;
+    }
+    .edit-input:focus { border-color: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.2); }
+    .edit-actions { display: flex; gap: 10px; margin-top: 25px; }
+    .btn-save { background: linear-gradient(45deg, #00ff88, #00cc6a); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; transition: 0.3s; }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,255,136,0.3); }
+    .btn-cancel { background: #ff4444; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.3s; }
+    .btn-cancel:hover { background: #cc0000; }
+
+    /* Image Grid Logic */
+    .img-grid-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .img-box { position: relative; width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid #444; transition: 0.3s; }
+    .img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .img-box:hover { border-color: #00ff88; }
+    .delete-img-btn { 
+        position: absolute; top: 2px; right: 2px; background: rgba(255,68,68,0.9); color: white; 
+        border: none; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; z-index: 10;
+    }
+    .delete-img-btn:hover { background: #ff0000; transform: scale(1.1); }
 `;
 document.head.appendChild(style);
 
@@ -210,22 +246,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             publisherHTML = `<div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;"><p style="color: #ccc;"><i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}</p></div>`;
         }
 
-        // Action Buttons Logic
+        // Action Buttons Logic (With Owner Controls)
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (isAuthenticated) {
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
+            // 🟢 تحكم المالك (تعديل وحذف)
             let ownerControlsHTML = '';
             if (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone) {
-                const editMsg = encodeURIComponent(`السلام عليكم، أنا صاحب العقار كود (${property.hiddenCode}). أرغب في تعديله أو حذفه.`);
                 ownerControlsHTML = `
-                    <div style="margin-top: 15px; padding: 10px; border: 1px dashed #ff4444; border-radius: 8px; text-align: center;">
-                        <p style="color: #ff4444; font-weight: bold; margin-bottom: 5px;">أنت صاحب هذا العقار 👑</p>
-                        <a href="https://wa.me/201008102237?text=${editMsg}" target="_blank" class="btn-neon-red" style="display: block; text-decoration: none; padding: 10px;"><i class="fas fa-cog"></i> تواصل للتعديل أو الحذف</a>
+                    <div style="margin-top: 20px; padding: 15px; border: 1px solid #00ff88; border-radius: 10px; background: rgba(0, 255, 136, 0.05); text-align: center;">
+                        <p style="color: #00ff88; font-weight: bold; margin-bottom: 15px;">
+                            <i class="fas fa-crown"></i> أنت صاحب هذا العقار
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button onclick="openEditPropertyModal()" class="btn-neon-auth" style="background: #2196F3; border-color: #2196F3; color: white; flex: 1;">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            <button onclick="deleteProperty(${property.id})" class="btn-neon-auth" style="background: #ff4444; border-color: #ff4444; color: white; flex: 1;">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
                     </div>
                 `;
+                // حقن المودال في الصفحة (بالنظام الجديد للصور)
+                injectEditModal(property);
             }
 
             let isFav = false;
@@ -269,31 +316,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.goToCinemaMode = () => { localStorage.setItem('activePropertyVideos', JSON.stringify(videoList)); window.location.href = 'video-player'; };
         }
 
-        // =========================================================
-        // 🆕 Dynamic Specs Generation (بناء المواصفات ديناميكياً)
-        // =========================================================
+        // Dynamic Specs
         let specsHTML = `<li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>`;
-
-        // غرف (للشقق والفيلات فقط)
-        if (property.rooms && parseInt(property.rooms) > 0) {
-            specsHTML += `<li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>`;
-        }
-        // حمامات (للشقق والفيلات والمكاتب)
-        if (property.bathrooms && parseInt(property.bathrooms) > 0) {
-            specsHTML += `<li><span>الحمامات:</span> ${property.bathrooms} <i class="fas fa-bath"></i></li>`;
-        }
-        // الدور (للشقق والمكاتب)
-        if (property.level && property.level !== 'undefined') {
-            specsHTML += `<li><span>الدور:</span> ${property.level} <i class="fas fa-layer-group"></i></li>`;
-        }
-        // عدد الأدوار (للعمارة والفيلا)
-        if (property.floors_count && parseInt(property.floors_count) > 0) {
-            specsHTML += `<li><span>عدد الأدوار:</span> ${property.floors_count} <i class="fas fa-building"></i></li>`;
-        }
-        // التشطيب (للجميع ماعدا الأرض والمخزن)
-        if (property.finishing_type && property.finishing_type !== 'undefined') {
-            specsHTML += `<li><span>التشطيب:</span> ${property.finishing_type} <i class="fas fa-paint-roller"></i></li>`;
-        }
+        if (property.rooms && parseInt(property.rooms) > 0) specsHTML += `<li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>`;
+        if (property.bathrooms && parseInt(property.bathrooms) > 0) specsHTML += `<li><span>الحمامات:</span> ${property.bathrooms} <i class="fas fa-bath"></i></li>`;
+        if (property.level && property.level !== 'undefined') specsHTML += `<li><span>الدور:</span> ${property.level} <i class="fas fa-layer-group"></i></li>`;
+        if (property.floors_count && parseInt(property.floors_count) > 0) specsHTML += `<li><span>عدد الأدوار:</span> ${property.floors_count} <i class="fas fa-building"></i></li>`;
+        if (property.finishing_type && property.finishing_type !== 'undefined') specsHTML += `<li><span>التشطيب:</span> ${property.finishing_type} <i class="fas fa-paint-roller"></i></li>`;
 
         // HTML Injection
         container.innerHTML = `
@@ -396,6 +425,181 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) { console.error(error); container.innerHTML = `<p class="error">خطأ: ${error.message}</p>`; loadingMessage.style.display = 'none'; }
 });
+
+// ============================================================
+// 🛠️ دوال مودال التعديل الجديد (نظام إدارة الصور)
+// ============================================================
+
+let currentEditImages = []; // قائمة روابط الصور القديمة
+let newEditFiles = [];      // قائمة ملفات الصور الجديدة
+
+function injectEditModal(prop) {
+    // تهيئة القوائم
+    currentEditImages = [];
+    newEditFiles = [];
+    try {
+        if(Array.isArray(prop.imageUrls)) currentEditImages = prop.imageUrls;
+        else if(prop.imageUrls) currentEditImages = JSON.parse(prop.imageUrls);
+        else if(prop.imageUrl) currentEditImages = [prop.imageUrl];
+    } catch (e) { currentEditImages = []; }
+
+    const modalHTML = `
+        <div id="edit-modal" class="edit-modal-overlay">
+            <div class="edit-modal-content">
+                <h3 style="color:#00ff88; margin-bottom:20px; text-align:center;">تعديل بيانات العقار</h3>
+                
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #555;">
+                    <label style="color: #00ff88; font-weight: bold; display: block; margin-bottom: 10px;">📸 صور العقار الحالية</label>
+                    <div id="edit-images-container" class="img-grid-container"></div>
+                    
+                    <input type="file" id="new-images-input" multiple accept="image/*" style="display: none;">
+                    <button type="button" onclick="document.getElementById('new-images-input').click()" 
+                        class="btn-neon-auth" style="width: 100%; background: #2196F3; border-color: #2196F3; color: white; margin-top: 15px;">
+                        <i class="fas fa-plus-circle"></i> إضافة صور جديدة
+                    </button>
+                </div>
+
+                <form id="edit-property-form">
+                    <div class="edit-input-group">
+                        <label>العنوان</label>
+                        <input type="text" name="title" class="edit-input" value="${prop.title}" required>
+                    </div>
+                    <div class="edit-input-group">
+                        <label>السعر (رقم أو نص)</label>
+                        <input type="text" name="price" class="edit-input" value="${prop.price}" required>
+                    </div>
+                    <div class="edit-input-group" style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label>المساحة (م²)</label>
+                            <input type="number" name="area" class="edit-input" value="${prop.area}" required>
+                        </div>
+                        <div style="flex:1;">
+                            <label>الغرف</label>
+                            <input type="number" name="rooms" class="edit-input" value="${prop.rooms}">
+                        </div>
+                        <div style="flex:1;">
+                            <label>الحمامات</label>
+                            <input type="number" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
+                        </div>
+                    </div>
+                    <div class="edit-input-group">
+                        <label>الوصف</label>
+                        <textarea name="description" class="edit-input" rows="4">${prop.description}</textarea>
+                    </div>
+                    <div class="edit-actions">
+                        <button type="submit" class="btn-save">حفظ التعديلات</button>
+                        <button type="button" onclick="closeEditModal()" class="btn-cancel">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    renderEditImages();
+
+    // Listener for new images
+    document.getElementById('new-images-input').addEventListener('change', (e) => {
+        newEditFiles = [...newEditFiles, ...Array.from(e.target.files)];
+        renderEditImages();
+        e.target.value = '';
+    });
+
+    // Form Submission
+    document.getElementById('edit-property-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('.btn-save');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المراجعة والحفظ...'; 
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('title', e.target.title.value);
+        formData.append('price', e.target.price.value);
+        formData.append('area', e.target.area.value);
+        formData.append('rooms', e.target.rooms.value);
+        formData.append('bathrooms', e.target.bathrooms.value);
+        formData.append('description', e.target.description.value);
+        
+        // Send remaining old images as JSON
+        formData.append('keptImages', JSON.stringify(currentEditImages));
+
+        // Send new image files
+        newEditFiles.forEach(file => {
+            formData.append('newImages', file);
+        });
+
+        try {
+            const res = await fetch(`/api/user/property/${prop.id}`, { method: 'PUT', body: formData });
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert('✅ ' + data.message);
+                location.reload(); 
+            } else {
+                alert('❌ ' + data.message);
+                btn.innerHTML = originalText; btn.disabled = false;
+            }
+        } catch (err) {
+            alert('خطأ في الاتصال');
+            btn.innerHTML = originalText; btn.disabled = false;
+        }
+    });
+}
+
+function renderEditImages() {
+    const container = document.getElementById('edit-images-container');
+    container.innerHTML = '';
+
+    // Old Images
+    currentEditImages.forEach((url, index) => {
+        const div = document.createElement('div');
+        div.className = 'img-box';
+        div.innerHTML = `
+            <img src="${url}">
+            <button type="button" onclick="removeOldImage(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>
+        `;
+        container.appendChild(div);
+    });
+
+    // New Images (Preview)
+    newEditFiles.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'img-box';
+        div.style.borderColor = '#00ff88'; // تمييز الصور الجديدة
+        
+        const img = document.createElement('img');
+        img.style.opacity = '0.7';
+        div.appendChild(img);
+
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+
+        div.innerHTML += `<button type="button" onclick="removeNewFile(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
+        container.appendChild(div);
+    });
+}
+
+// Window scoped functions for inline onclicks
+window.removeOldImage = (index) => { currentEditImages.splice(index, 1); renderEditImages(); };
+window.removeNewFile = (index) => { newEditFiles.splice(index, 1); renderEditImages(); };
+window.openEditPropertyModal = () => { document.getElementById('edit-modal').style.display = 'flex'; };
+window.closeEditModal = () => { document.getElementById('edit-modal').style.display = 'none'; };
+
+window.deleteProperty = async (id) => {
+    if (!confirm('هل أنت متأكد تماماً من حذف هذا العقار؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    try {
+        const res = await fetch(`/api/user/property/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+            alert('🗑️ تم حذف العقار بنجاح.');
+            window.location.href = 'index'; 
+        } else {
+            alert('❌ فشل الحذف: ' + data.message);
+        }
+    } catch (err) { alert('خطأ في الاتصال بالسيرفر'); }
+};
 
 window.setupLightbox = (images) => {
     const lightbox = document.getElementById('lightbox-modal'); const lightboxImg = document.getElementById('lightbox-img');

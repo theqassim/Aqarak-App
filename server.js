@@ -193,7 +193,7 @@ async function aiCheckProperty(title, description, price, imageUrls) {
         ⛔ قواعد الرفض القاطع (Status: rejected):
         1. الصور تحتوي على عري، عنف، محتوى سياسي، أو أشخاص بشكل واضح (سيلفي).
         2. الصور ليست لعقارات (مثلاً صور سيارات، ملابس، شاشة سوداء).
-        3. النص يحتوي على كلمات بذيئة، شتائم، أو محتوى غير أخلاقي.
+        3. النص او العنوان يحتوي على كلمات بذيئة، شتائم، أو محتوى غير أخلاقي بأي لهجة عربية.
         4. السعر غير منطقي تماماً (مثلاً شقة بـ 5 جنيه أو 0 جنيه) إلا لو للإيجار اليومي.
         5. الإعلان ليس لبيع/إيجار عقار.
 
@@ -842,5 +842,136 @@ app.get('/emergency-fix-columns', async (req, res) => {
 
 // ✅ اختبار السيرفر (Ping)
 app.get('/api/ping', (req, res) => { res.json({ status: "OK", message: "Server is running 🚀" }); });
+
+// 🗑️ حذف العقار (للمالك فقط)
+app.delete('/api/user/property/:id', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const propId = req.params.id;
+
+        // 1. التأكد من الملكية
+        const checkSql = `SELECT "sellerPhone", "imageUrls" FROM properties WHERE id = $1`;
+        const checkRes = await pgQuery(checkSql, [propId]);
+
+        if (checkRes.rows.length === 0) return res.status(404).json({ message: 'العقار غير موجود' });
+        
+        // التحقق: هل رقم الهاتف في التوكن يطابق رقم صاحب العقار؟
+        if (checkRes.rows[0].sellerPhone !== decoded.phone && decoded.role !== 'admin') {
+            return res.status(403).json({ message: 'لا تملك صلاحية حذف هذا العقار' });
+        }
+
+        // 2. تنظيف الصور من Cloudinary (اختياري بس مستحسن)
+        const images = JSON.parse(checkRes.rows[0].imageUrls || '[]');
+        await deleteCloudinaryImages(images);
+
+        // 3. الحذف من قاعدة البيانات
+        await pgQuery(`DELETE FROM properties WHERE id = $1`, [propId]);
+        // تنظيف الجداول المرتبطة
+        await pgQuery(`DELETE FROM favorites WHERE property_id = $1`, [propId]);
+        await pgQuery(`DELETE FROM property_offers WHERE property_id = $1`, [propId]);
+
+        res.json({ success: true, message: 'تم حذف العقار بنجاح' });
+
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+
+// ✏️ تعديل العقار (بيانات + صور + فحص AI)
+app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const propId = req.params.id;
+        
+        // استقبال البيانات (Text + Files)
+        const { 
+            title, price, description, area, rooms, bathrooms, 
+            level, floors_count, finishing_type // البيانات الجديدة
+        } = req.body;
+
+        // استقبال قائمة الصور القديمة اللي المستخدم سابها (بتيجي كـ نص JSON)
+        const keptImages = JSON.parse(req.body.keptImages || '[]'); 
+        // استقبال ملفات الصور الجديدة
+        const newFiles = req.files || [];
+
+        // 1. التحقق من الملكية
+        const checkRes = await pgQuery(`SELECT "sellerPhone", "sellerName" FROM properties WHERE id = $1`, [propId]);
+        if (checkRes.rows.length === 0) return res.status(404).json({ message: 'غير موجود' });
+        
+        const property = checkRes.rows[0];
+        if (property.sellerPhone !== decoded.phone && decoded.role !== 'admin') {
+            return res.status(403).json({ message: 'لا تملك صلاحية التعديل' });
+        }
+
+        // 2. 🤖 فحص التعديلات بواسطة AI
+        console.log("🤖 AI جاري فحص التعديلات...");
+        const newImageUrls = newFiles.map(f => f.path); // روابط الصور الجديدة فقط للفحص
+        
+        // بنفحص العنوان والوصف والصور الجديدة بس
+        const aiReview = await aiCheckProperty(title, description, price, newImageUrls);
+
+        if (aiReview.status === 'rejected') {
+            console.log(`❌ تم رفض التعديل: ${aiReview.reason}`);
+            
+            // لو رفع صور والـ AI رفضها، نمسحها فوراً عشان منخزنش زبالة
+            if (newFiles.length > 0) await deleteCloudinaryImages(newImageUrls);
+
+            // إشعار للأدمن
+            await sendDiscordNotification("⚠️ محاولة تعديل مرفوضة", [
+                { name: "👤 المالك", value: property.sellerName },
+                { name: "🚫 السبب", value: aiReview.reason }
+            ], 15158332);
+
+            return res.status(400).json({ 
+                success: false, 
+                message: 'عذراً، التعديلات تحتوي على مخالفة لسياساتنا. سيتم مراجعة الأمر يدوياً.' 
+            });
+        }
+
+        // 3. 📦 تجميع القائمة النهائية للصور
+        // القائمة النهائية = الصور القديمة اللي سابها + الصور الجديدة اللي رفعها
+        const finalImageUrls = [...keptImages, ...newImageUrls];
+        const mainImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : 'logo.png';
+
+        // 4. التحديث في قاعدة البيانات
+        const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+        
+        const sql = `
+            UPDATE properties 
+            SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, 
+            "imageUrl"=$8, "imageUrls"=$9, 
+            "level"=$10, "floors_count"=$11, "finishing_type"=$12
+            WHERE id=$13
+        `;
+        
+        const params = [
+            title, price, numericPrice, description, safeInt(area), safeInt(rooms), safeInt(bathrooms),
+            mainImageUrl, JSON.stringify(finalImageUrls),
+            level || '', safeInt(floors_count), finishing_type || '',
+            propId
+        ];
+
+        await pgQuery(sql, params);
+
+        await sendDiscordNotification("📝 تم تعديل عقار بنجاح", [
+            { name: "👤 المالك", value: property.sellerName },
+            { name: "🏠 العنوان", value: title },
+            { name: "📸 الصور", value: `أصبح العدد ${finalImageUrls.length} صورة` }
+        ], 3066993);
+
+        res.json({ success: true, message: 'تم تحديث البيانات والصور بنجاح!' });
+
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
