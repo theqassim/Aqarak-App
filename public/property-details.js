@@ -594,7 +594,7 @@ window.deleteProperty = async (id) => {
         const data = await res.json();
         if (res.ok) {
             alert('🗑️ تم حذف العقار بنجاح.');
-            window.location.href = 'index'; 
+            window.location.href = 'home'; 
         } else {
             alert('❌ فشل الحذف: ' + data.message);
         }
