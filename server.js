@@ -28,9 +28,9 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSy_PUT_YOUR_KEY_HERE";
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // 🧠 موديل الشات (للمحادثة)
-const modelChat = genAI.getGenerativeModel({ model: "gemma-2-27b-it" }); 
+const modelChat = genAI.getGenerativeModel({ model: "gemma-3-27b-it" }); 
 // 👁️ موديل الرؤية (لفحص الصور والنص) - Flash سريع ورخيص ويدعم الصور
-const modelVision = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const modelVision = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
 // ... إعدادات السيرفر ...
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
