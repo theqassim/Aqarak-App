@@ -801,4 +801,24 @@ app.get('/api/ping', (req, res) => {
     res.json({ status: "OK", message: "Server is running 🚀" });
 });
 
+// 🚑 رابط الطوارئ لإضافة الأعمدة الناقصة في الداتابيز
+app.get('/fix-missing-columns', async (req, res) => {
+    try {
+        // 1. تحديث جدول طلبات البائعين (ده سبب المشكلة الحالية)
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyLevel" TEXT`);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFloors" INTEGER`);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFinishing" TEXT`);
+
+        // 2. تحديث جدول العقارات الرئيسي (عشان لما توافق على الطلب ميعملش مشكلة تانية)
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "level" TEXT`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "floors_count" INTEGER`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "finishing_type" TEXT`);
+
+        res.send('✅ تم إصلاح قاعدة البيانات وإضافة الأعمدة الناقصة بنجاح! جرب ترفع العقار دلوقتي.');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('❌ حدث خطأ أثناء التحديث: ' + error.message);
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
