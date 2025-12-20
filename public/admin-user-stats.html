@@ -87,100 +87,136 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', fetchStats);
+    document.addEventListener('DOMContentLoaded', fetchStats);
 
-        async function fetchStats() {
-            const table = document.getElementById('stats-table');
-            const tbody = document.getElementById('stats-body');
-            const loading = document.getElementById('loading');
-            const emptyMsg = document.getElementById('empty-msg');
+    async function fetchStats() {
+        const table = document.getElementById('stats-table');
+        const tbody = document.getElementById('stats-body');
+        const loading = document.getElementById('loading');
+        const emptyMsg = document.getElementById('empty-msg');
 
-            try {
-                const response = await fetch('/api/admin/users-stats');
-                
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = 'index';
-                    return;
-                }
-
-                const users = await response.json();
-                loading.style.display = 'none';
-
-                if (users.length === 0) {
-                    emptyMsg.style.display = 'block';
-                    return;
-                }
-
-                table.style.display = 'table';
-                tbody.innerHTML = '';
-
-                users.forEach((user, index) => {
-                    let rankClass = 'rank-normal';
-                    let rankContent = index + 1;
-
-                    if (index === 0) { rankClass = 'rank-1'; rankContent = '1'; }
-                    else if (index === 1) { rankClass = 'rank-2'; rankContent = '2'; }
-                    else if (index === 2) { rankClass = 'rank-3'; rankContent = '3'; }
-
-                    const isBanned = user.is_banned;
-                    const banBtnText = isBanned ? 'فك الحظر' : 'حظر';
-                    const banBtnColor = isBanned ? '#4caf50' : '#f44336'; 
-                    const banAction = isBanned ? false : true;
-
-                    const row = `
-                        <tr style="${isBanned ? 'background: rgba(244, 67, 54, 0.1);' : ''}">
-                            <td><span class="rank-badge ${rankClass}">${rankContent}</span></td>
-                            <td>
-                                <div style="font-weight:bold;">${user.name || 'غير محدد'}</div>
-                                <div class="username-tag">@${user.username || '-'}</div>
-                                ${isBanned ? '<span style="color:red; font-size:0.8rem;">(محظور)</span>' : ''}
-                            </td>
-                            <td style="direction: ltr; text-align: right;">${user.phone}</td>
-                            <td>
-                                <span style="color: #00ff88; font-weight: bold;">${user.property_count}</span>
-                            </td>
-                            <td>
-                                <div style="display:flex; gap:5px; justify-content:center;">
-                                    <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth btn-view-profile" title="عرض البروفايل">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <button onclick="toggleBan('${user.phone}', ${banAction})" 
-                                            class="btn-neon-auth" 
-                                            style="border-color: ${banBtnColor}; color: ${banBtnColor}; font-size:0.8rem; padding:5px 10px;">
-                                        ${banBtnText}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-
-            } catch (error) {
-                console.error(error);
-                loading.innerHTML = '<span style="color:red">خطأ في الاتصال</span>';
+        try {
+            const response = await fetch('/api/admin/users-stats');
+            
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = 'index'; // لو مش أدمن اطرده
+                return;
             }
+
+            const users = await response.json();
+            loading.style.display = 'none';
+
+            if (users.length === 0) {
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            tbody.innerHTML = '';
+
+            users.forEach((user, index) => {
+                let rankClass = 'rank-normal';
+                let rankContent = index + 1;
+                if (index === 0) { rankClass = 'rank-1'; rankContent = '1'; }
+                else if (index === 1) { rankClass = 'rank-2'; rankContent = '2'; }
+                else if (index === 2) { rankClass = 'rank-3'; rankContent = '3'; }
+
+                const isBanned = user.is_banned;
+                const banBtnText = isBanned ? 'فك الحظر' : 'حظر';
+                const banBtnColor = isBanned ? '#4caf50' : '#f44336'; 
+                
+                // هنا بندي ID مميز لكل زرار عشان نعرف نغيره
+                const btnId = `ban-btn-${user.phone}`; 
+                const rowId = `row-${user.phone}`;
+
+                const row = `
+                    <tr id="${rowId}" style="${isBanned ? 'background: rgba(244, 67, 54, 0.1);' : ''}">
+                        <td><span class="rank-badge ${rankClass}">${rankContent}</span></td>
+                        <td>
+                            <div style="font-weight:bold;">${user.name || 'غير محدد'}</div>
+                            <div class="username-tag">@${user.username || '-'}</div>
+                            <span id="ban-tag-${user.phone}" style="color:red; font-size:0.8rem; display:${isBanned ? 'inline' : 'none'}">(محظور)</span>
+                        </td>
+                        <td style="direction: ltr; text-align: right;">${user.phone}</td>
+                        <td><span style="color: #00ff88;">${user.property_count} عقار</span></td>
+                        <td>
+                            <div style="display:flex; gap:5px; justify-content:center;">
+                                <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth btn-view-profile" style="font-size:0.8rem; padding:5px 10px;">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button id="${btnId}" 
+                                        onclick="toggleBan('${user.phone}')" 
+                                        class="btn-neon-auth" 
+                                        data-banned="${isBanned}"
+                                        style="border-color: ${banBtnColor}; color: ${banBtnColor}; font-size:0.8rem; padding:5px 10px;">
+                                    ${banBtnText}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+        } catch (error) {
+            console.error(error);
+            loading.innerHTML = '<span style="color:red">خطأ في الاتصال</span>';
         }
+    }
 
-        async function toggleBan(phone, shouldBan) {
-            if(!confirm(shouldBan ? "هل أنت متأكد من حظر هذا المستخدم؟ لن يتمكن من الدخول." : "هل تريد فك الحظر؟")) return;
+    async function toggleBan(phone) {
+        const btn = document.getElementById(`ban-btn-${phone}`);
+        const row = document.getElementById(`row-${phone}`);
+        const tag = document.getElementById(`ban-tag-${phone}`);
+        
+        // قراءة الحالة الحالية من الزرار نفسه
+        const isCurrentlyBanned = btn.getAttribute('data-banned') === 'true';
+        const action = !isCurrentlyBanned; // العكس (لو محظور هنفك، لو لا هنحظر)
 
-            try {
-                const res = await fetch('/api/admin/toggle-ban', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ phone, shouldBan })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert(data.message);
-                    fetchStats(); 
-                } else {
-                    alert("حدث خطأ: " + data.message);
+        if(!confirm(action ? "هل أنت متأكد من حظر هذا المستخدم؟" : "هل تريد فك الحظر؟")) return;
+
+        // تغيير شكل الزرار مؤقتاً لحد ما السيرفر يرد
+        const oldText = btn.innerText;
+        btn.innerText = '...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/admin/toggle-ban', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ phone, shouldBan: action })
+            });
+            const data = await res.json();
+            
+            if(data.success) {
+                // تحديث الزرار والشكل فوراً بدون ريفرش
+                btn.setAttribute('data-banned', action);
+                
+                if (action) { // تم الحظر
+                    btn.innerText = 'فك الحظر';
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.color = '#4caf50';
+                    row.style.background = 'rgba(244, 67, 54, 0.1)';
+                    tag.style.display = 'inline';
+                } else { // تم فك الحظر
+                    btn.innerText = 'حظر';
+                    btn.style.borderColor = '#f44336';
+                    btn.style.color = '#f44336';
+                    row.style.background = 'transparent';
+                    tag.style.display = 'none';
                 }
-            } catch(e) { alert("خطأ في الاتصال"); }
+            } else {
+                alert("حدث خطأ: " + data.message);
+                btn.innerText = oldText; // رجع النص القديم لو فشل
+            }
+        } catch(e) { 
+            alert("خطأ في الاتصال");
+            btn.innerText = oldText;
+        } finally {
+            btn.disabled = false;
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>

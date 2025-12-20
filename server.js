@@ -704,10 +704,29 @@ app.post('/api/auth/reset-password', async (req, res) => {
     } catch (err) { res.status(500).json({ message: 'خطأ' }); }
 });
 
-app.get('/api/auth/me', (req, res) => {
+// ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع
+app.get('/api/auth/me', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
-    try { const decoded = jwt.verify(token, JWT_SECRET); res.json({ isAuthenticated: true, role: decoded.role, phone: decoded.phone, username: decoded.username }); } 
+    
+    try { 
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // لو أدمن عدي، لو مستخدم عادي افحص الداتابيز
+        if (decoded.role !== 'admin') {
+            const check = await pgQuery('SELECT is_banned FROM users WHERE id = $1', [decoded.id]);
+            // لو ملقناش المستخدم أو كان محظور
+            if (check.rows.length === 0 || check.rows[0].is_banned) {
+                return res.json({ 
+                    isAuthenticated: false, 
+                    isBanned: true, // 🚨 علامة الحظر
+                    role: 'guest' 
+                });
+            }
+        }
+        
+        res.json({ isAuthenticated: true, role: decoded.role, phone: decoded.phone, username: decoded.username }); 
+    } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
 
@@ -1136,15 +1155,38 @@ app.get('/api/admin/complaints-count', async (req, res) => {
 });
 
 // 4. جلب قائمة الشكاوي (للأدمن)
-app.get('/api/admin/complaints', async (req, res) => {
+// 2. إرسال شكوى من المستخدم (نسخة التصحيح)
+app.post('/api/submit-complaint', async (req, res) => {
     const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول لإرسال شكوى' });
+    
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+        // 1. التحقق من التوكن
+        const user = jwt.verify(token, JWT_SECRET);
         
-        const result = await pgQuery(`SELECT * FROM complaints ORDER BY id DESC`);
-        res.json(result.rows);
-    } catch (e) { res.status(500).json([]); }
+        // 2. استلام البيانات
+        const { content } = req.body;
+        if (!content) return res.status(400).json({ message: 'محتوى الشكوى فارغ' });
+
+        // 3. محاولة الإدخال في قاعدة البيانات
+        await pgQuery(`INSERT INTO complaints (user_id, user_name, user_phone, content, created_at) VALUES ($1, $2, $3, $4, $5)`, 
+            [user.id, user.name, user.phone, content, new Date().toISOString()]);
+
+        // 4. إشعار ديسكورد
+        await sendDiscordNotification("📢 شكوى جديدة", [
+            { name: "👤 صاحب الشكوى", value: `${user.name} (${user.phone})` },
+            { name: "📝 نص الشكوى", value: content }
+        ], 16711680); 
+
+        res.json({ success: true, message: 'تم إرسال الشكوى بنجاح.' });
+
+    } catch (error) { 
+        // 🚨 طباعة الخطأ الحقيقي في الترمينال لمعرفة السبب
+        console.error("❌ Complaint Error Details:", error); 
+        
+        // إرسال رد يوضح نوع الخطأ للمستخدم (لأغراض التصحيح الآن)
+        res.status(500).json({ message: 'خطأ في السيرفر', debug: error.message }); 
+    }
 });
 
 // 5. استبدال API إحصائيات المستخدمين القديم ليجلب حالة الحظر
@@ -1159,6 +1201,26 @@ app.get('/api/admin/users-stats', async (req, res) => {
         const result = await pgQuery(sql);
         res.json(result.rows);
     } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
+});
+
+// 🛠️ رابط طوارئ لإنشاء جدول الشكاوي يدوياً
+app.get('/emergency-create-complaints-table', async (req, res) => {
+    try {
+        await pgQuery(`
+            CREATE TABLE IF NOT EXISTS complaints (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                user_name TEXT,
+                user_phone TEXT,
+                content TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT
+            )
+        `);
+        res.send('✅ تم إنشاء جدول الشكاوي (complaints) بنجاح. جرب إرسال الشكوى الآن.');
+    } catch (error) {
+        res.status(500).send('❌ فشل إنشاء الجدول: ' + error.message);
+    }
 });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
