@@ -902,7 +902,40 @@ app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = a
 app.get('/api/admin/property-requests', async (req, res) => { try { const r = await pgQuery("SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
 app.delete('/api/admin/seller-submission/:id', async (req, res) => { try { const r = await pgQuery(`SELECT "imagePaths" FROM seller_submissions WHERE id = $1`, [req.params.id]); if(r.rows[0]) await deleteCloudinaryImages((r.rows[0].imagePaths || '').split(' | ')); await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { console.error("Delete Error:", err); res.status(500).json({ message: 'فشل الحذف' }); } });
 app.delete('/api/admin/property-request/:id', async (req, res) => { try { await pgQuery(`DELETE FROM property_requests WHERE id = $1`, [req.params.id]); res.json({ message: 'تم الحذف' }); } catch (err) { throw err; } });
-app.get('/api/properties', async (req, res) => { let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type, \"isFeatured\", \"isLegal\" FROM properties"; const params = []; let idx = 1; const filters = []; const { type, limit, keyword, minPrice, maxPrice, rooms, sort } = req.query; if (type) { filters.push(`type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } if (keyword) { filters.push(`(title ILIKE $${idx} OR description ILIKE $${idx} OR "hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } if (minPrice) { filters.push(`"numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } if (maxPrice) { filters.push(`"numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } if (rooms) { if (rooms === '4+') { filters.push(`rooms >= $${idx++}`); params.push(4); } else { filters.push(`rooms = $${idx++}`); params.push(Number(rooms)); } } if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); let orderBy = "ORDER BY id DESC"; if (sort === 'price_asc') orderBy = 'ORDER BY "numericPrice" ASC'; else if (sort === 'price_desc') orderBy = 'ORDER BY "numericPrice" DESC'; else if (sort === 'oldest') orderBy = 'ORDER BY id ASC'; sql += ` ${orderBy}`; if (limit) { sql += ` LIMIT $${idx++}`; params.push(parseInt(limit)); } try { const result = await pgQuery(sql, params); res.json(result.rows); } catch (err) { throw err; } });
+app.get('/api/properties', async (req, res) => { 
+    let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type, \"isFeatured\", \"isLegal\", \"sellerPhone\" FROM properties"; 
+    const params = []; 
+    let idx = 1; 
+    const filters = []; 
+    
+    // استقبال الـ Offset (عشان زرار عرض المزيد)
+    const { type, limit, offset, keyword, minPrice, maxPrice, rooms, sort } = req.query; 
+
+    if (type) { filters.push(`type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } 
+    if (keyword) { filters.push(`(title ILIKE $${idx} OR description ILIKE $${idx} OR "hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } 
+    if (minPrice) { filters.push(`"numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } 
+    if (maxPrice) { filters.push(`"numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } 
+    if (rooms) { if (rooms === '4+') { filters.push(`rooms >= $${idx++}`); params.push(4); } else { filters.push(`rooms = $${idx++}`); params.push(Number(rooms)); } } 
+    
+    if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); 
+
+    // 🌟 التعديل هنا: الترتيب الافتراضي يظهر العقارات المميزة (Featured) أولاً
+    let orderBy = 'ORDER BY "isFeatured" DESC, id DESC'; 
+    
+    if (sort === 'price_asc') orderBy = 'ORDER BY "isFeatured" DESC, "numericPrice" ASC'; 
+    else if (sort === 'price_desc') orderBy = 'ORDER BY "isFeatured" DESC, "numericPrice" DESC'; 
+    else if (sort === 'oldest') orderBy = 'ORDER BY "isFeatured" DESC, id ASC'; 
+    
+    sql += ` ${orderBy}`; 
+
+    if (limit) { sql += ` LIMIT $${idx++}`; params.push(parseInt(limit)); } 
+    
+    // 🌟 دعم الـ Offset (تخطي العقارات اللي ظهرت قبل كده)
+    if (offset) { sql += ` OFFSET $${idx++}`; params.push(parseInt(offset)); }
+
+    try { const result = await pgQuery(sql, params); res.json(result.rows); } 
+    catch (err) { res.status(500).json({ message: 'Error fetching properties' }); } 
+});
 app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery(`SELECT * FROM properties WHERE id=$1`, [req.params.id]); if(r.rows[0]) { try { r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); } catch(e){ r.rows[0].imageUrls=[]; } res.json(r.rows[0]); } else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } catch (e) { throw e; } });
@@ -1203,31 +1236,6 @@ app.get('/api/admin/users-stats', async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
-// 🛠️ رابط طوارئ لإنشاء جدول الشكاوي يدوياً
-// ==========================================================
-// 🛠️ إصلاح قاعدة البيانات والشكاوي
-// ==========================================================
-
-// 1. رابط لإنشاء جدول الشكاوي يدوياً (افتحه في المتصفح مرة واحدة)
-app.get('/fix-db', async (req, res) => {
-    try {
-        await pgQuery(`
-            CREATE TABLE IF NOT EXISTS complaints (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER,
-                user_name TEXT,
-                user_phone TEXT,
-                content TEXT,
-                status TEXT DEFAULT 'pending',
-                created_at TEXT
-            )
-        `);
-        res.send('✅ تم إنشاء جدول الشكاوي (complaints) بنجاح! يمكنك الآن استخدام الصفحة.');
-    } catch (error) {
-        res.status(500).send('❌ خطأ في إنشاء الجدول: ' + error.message);
-    }
-});
-
 // 2. تحديث API جلب الشكاوي (ليطبع الخطأ في الترمينال)
 app.get('/api/admin/complaints', async (req, res) => {
     const token = req.cookies.auth_token;
@@ -1243,6 +1251,15 @@ app.get('/api/admin/complaints', async (req, res) => {
         console.error("❌ خطأ في جلب الشكاوي:", e.message); // طباعة السبب في الشاشة السوداء
         res.status(500).json([]); 
     }
+});
+
+// أضف هذا الرابط في نهاية الملف لتحديث الجدول يدوياً
+app.get('/update-db-stage2', async (req, res) => {
+    try {
+        // إضافة عمود لطلب التمييز (Featured Request)
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "wants_featured" BOOLEAN DEFAULT FALSE`);
+        res.send('✅ تم تحديث قاعدة البيانات للمرحلة الثانية (Feature Request).');
+    } catch (error) { res.status(500).send('❌ خطأ: ' + error.message); }
 });
 
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

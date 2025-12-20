@@ -1,223 +1,130 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const imageInput = document.getElementById('property-images');
-    const previewContainer = document.getElementById('image-preview-container');
-    const sellerForm = document.getElementById('seller-form');
-    const messageEl = document.getElementById('seller-form-message');
+document.getElementById('seller-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-    // ==========================================================
-    // 🛠️ 1. التحكم الديناميكي في الحقول (إخفاء/إظهار)
-    // ==========================================================
-    window.toggleFields = function() {
-        const category = document.getElementById('property-category').value;
-        
-        // المجموعات (Containers)
-        const roomsGroup = document.getElementById('rooms-group');
-        const bathGroup = document.getElementById('bath-group');
-        const levelGroup = document.getElementById('level-group');        
-        const floorsCountGroup = document.getElementById('floors-count-group'); 
-        const finishingGroup = document.getElementById('finishing-group');
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    const msg = document.getElementById('seller-form-message');
+    const originalText = btn.innerHTML;
 
-        // وصف (لتغيير الـ Placeholder)
-        const descInput = document.getElementById('property-description');
+    // تعطيل الزر
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الفحص والرفع...';
+    btn.disabled = true;
+    msg.textContent = '';
+    msg.className = 'message';
 
-        // دالة مساعدة للإظهار والإخفاء مع التحكم في required
-        const show = (el, isRequired = false) => {
-            el.style.display = 'block';
-            const input = el.querySelector('input, select');
-            if(isRequired && input) input.setAttribute('required', 'true');
-        };
+    const formData = new FormData(form);
 
-        const hide = (el) => {
-            el.style.display = 'none';
-            const input = el.querySelector('input, select');
-            if(input) { 
-                input.removeAttribute('required'); 
-                input.value = ''; // تصفير القيمة عشان متبعتش داتا غلط
-            }
-        };
-
-        // 🔄 تصفير الحالة (إخفاء الكل مبدئياً)
-        hide(roomsGroup); hide(bathGroup); hide(levelGroup); hide(floorsCountGroup); hide(finishingGroup);
-        descInput.placeholder = "اكتب تفاصيل العقار والمميزات...";
-
-        // --- تطبيق المنطق ---
-
-        if (category === 'apartment') {
-            // شقة: غرف + حمام + دور كام + تشطيب
-            show(roomsGroup, true);
-            show(bathGroup, true);
-            show(levelGroup, true);
-            show(finishingGroup, true);
-            descInput.placeholder = "تشطيب سوبر لوكس، فيو حديقة، بحري...";
-        } 
-        else if (category === 'villa') {
-            // فيلا: غرف + حمام + عدد أدوار المبنى + تشطيب
-            show(roomsGroup, true);
-            show(bathGroup, true);
-            show(floorsCountGroup, true);
-            show(finishingGroup, true);
-            descInput.placeholder = "حديقة خاصة، حمام سباحة، جراج خاص...";
-        }
-        else if (category === 'office') {
-            // مكتب/عيادة: دور كام + تشطيب (حمام اختياري)
-            show(bathGroup); // اختياري (ممكن ميكونش فيه)
-            show(levelGroup, true);
-            show(finishingGroup, true);
-            descInput.placeholder = "مساحة مفتوحة، مرخصة إداري، تكييف مركزي...";
-        }
-        else if (category === 'store') {
-            // محل: تشطيب (ممكن حمام)
-            show(bathGroup); 
-            show(finishingGroup, true);
-            descInput.placeholder = "واجهة زجاجية، رخصة تجاري، منطقة حيوية...";
-        }
-        else if (category === 'building') {
-            // عمارة: عدد الأدوار + تشطيب
-            show(floorsCountGroup, true);
-            show(finishingGroup); // ممكن تكون طوب أحمر
-            descInput.placeholder = "عدد الشقق، مساحة الأرض، الدخل الشهري المتوقع...";
-        }
-        else if (category === 'land') {
-            // أرض: مساحة وسعر فقط (تم إخفاء الباقي)
-            descInput.placeholder = "تراخيص البناء، واجهة على الشارع، صرف ومياه...";
-        }
-        else if (category === 'warehouse') {
-            // مخزن: مساحة وسعر
-            descInput.placeholder = "ارتفاع السقف، دخول سيارات نقل، كهرباء 3 فاز...";
-        }
-    };
-
-    // تشغيل الدالة فوراً لضبط الوضع الافتراضي
-    toggleFields();
-
-
-    // ==========================================================
-    // 🔒 2. التحقق من المستخدم
-    // ==========================================================
     try {
-        const response = await fetch('/api/auth/me');
-        const userData = await response.json();
+        const response = await fetch('/api/submit-seller-property', {
+            method: 'POST',
+            body: formData
+        });
 
-        if (userData.isAuthenticated) {
-            const nameField = document.getElementById('seller-name');
-            const phoneField = document.getElementById('seller-phone');
-            nameField.value = userData.name || userData.username || 'مستخدم عقارك';
-            phoneField.value = userData.phone;
+        const data = await response.json();
+
+        if (response.ok) {
+            // ✅ حالة 1: تم النشر بنجاح (AI Approved)
+            if (data.status === 'approved') {
+                msg.textContent = '🎉 ' + data.message;
+                msg.className = 'message success';
+                form.reset();
+                document.getElementById('image-preview-container').innerHTML = '';
+                
+                // توجيه للرئيسية بعد ثانيتين
+                setTimeout(() => window.location.href = 'home', 2000);
+            
+            } 
+            // ⚠️ حالة 2: تحت المراجعة (AI Rejected/Pending)
+            else {
+                // عرض رسالة الـ AI بشكل شيك
+                let aiReasonHtml = '';
+                if (data.aiReason) {
+                    aiReasonHtml = `
+                        <div style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.1); border-radius:5px; border-right:3px solid #ff9800; text-align:right;">
+                            <strong>💡 ملحوظة المراجعة:</strong><br>
+                            ${data.aiReason}
+                        </div>
+                    `;
+                }
+
+                // رسالة واضحة للمستخدم
+                const alertDiv = document.createElement('div');
+                alertDiv.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center;">
+                        <div class="neon-glow" style="background:#1c2630; padding:30px; border-radius:15px; max-width:90%; width:400px; text-align:center; border:1px solid #ff9800;">
+                            <i class="fas fa-clipboard-check" style="font-size:3rem; color:#ff9800; margin-bottom:15px;"></i>
+                            <h3 style="color:#fff; margin-bottom:10px;">تم استلام الطلب</h3>
+                            <p style="color:#ccc;">عقارك الآن قيد المراجعة اليدوية.</p>
+                            ${aiReasonHtml}
+                            <button onclick="window.location.href='home'" class="btn-neon-auth" style="margin-top:20px; width:100%;">عودة للرئيسية</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(alertDiv);
+                form.reset();
+            }
+
         } else {
-            alert('يجب تسجيل الدخول أولاً لعرض عقارك!');
-            window.location.href = 'login';
-            return;
+            // ❌ خطأ من السيرفر
+            throw new Error(data.message || 'حدث خطأ ما');
         }
+
     } catch (error) {
-        window.location.href = 'index';
+        console.error(error);
+        msg.textContent = '❌ ' + error.message;
+        msg.className = 'message error';
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+// دوال مساعدة (مثل معاينة الصور)
+document.getElementById('property-images').addEventListener('change', function(event) {
+    const container = document.getElementById('image-preview-container');
+    container.innerHTML = '';
+    const files = event.target.files;
+
+    if (files.length > 10) {
+        alert("الحد الأقصى 10 صور فقط");
+        this.value = ""; // تفريغ
         return;
     }
 
-
-    // ==========================================================
-    // 📸 3. معالجة الصور (رفع ومعاينة)
-    // ==========================================================
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
-    let allSelectedFiles = []; 
-
-    function renderPreviews() {
-        previewContainer.innerHTML = ''; 
-        if (allSelectedFiles.length === 0) {
-            previewContainer.style.border = "1px dashed rgba(255, 255, 255, 0.3)";
-            return;
-        }
-        previewContainer.style.border = "1px solid var(--success-color)";
-
-        allSelectedFiles.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imgWrapper = document.createElement('div');
-                imgWrapper.className = 'preview-image-wrapper';
-                if (file.size > MAX_SIZE) {
-                    imgWrapper.classList.add('invalid-file');
-                    const errorOverlay = document.createElement('div');
-                    errorOverlay.className = 'error-overlay'; errorOverlay.textContent = 'حجم كبير';
-                    imgWrapper.appendChild(errorOverlay);
-                }
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.classList.add('preview-image');
-                const removeBtn = document.createElement('button');
-                removeBtn.classList.add('remove-preview-btn');
-                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                removeBtn.onclick = (e) => { e.preventDefault(); removeFileByIndex(index); };
-                imgWrapper.appendChild(img); imgWrapper.appendChild(removeBtn);
-                previewContainer.appendChild(imgWrapper);
-            }
-            if (file instanceof File) reader.readAsDataURL(file);
-        });
-    }
-
-    function removeFileByIndex(indexToRemove) {
-        allSelectedFiles = allSelectedFiles.filter((_, index) => index !== indexToRemove);
-        renderPreviews(); 
-    }
-
-    if (imageInput) {
-        imageInput.addEventListener('change', (event) => {
-            allSelectedFiles.push(...Array.from(event.target.files));
-            imageInput.value = ''; renderPreviews(); 
-        });
-    }
-
-    // ==========================================================
-    // 🚀 4. إرسال النموذج
-    // ==========================================================
-    if (sellerForm) {
-        sellerForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            messageEl.textContent = 'جاري التحقق...'; messageEl.className = 'info';
-
-            // تحقق بسيط من الصور
-            if (allSelectedFiles.some(file => file.size > MAX_SIZE)) {
-                messageEl.textContent = '⚠️ صور كبيرة الحجم، يرجى حذفها.'; messageEl.className = 'error'; return;
-            }
-            if (allSelectedFiles.length === 0) {
-                messageEl.textContent = 'اختر صورة واحدة على الأقل.'; messageEl.className = 'error'; return;
-            }
-
-            messageEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري رفع الصور ومعالجة الطلب...';
-
-            const formData = new FormData(sellerForm);
-            // حذف الصور الفارغة وإضافة الصور الحقيقية من المصفوفة
-            formData.delete('images[]'); 
-            allSelectedFiles.forEach(file => formData.append('images', file));
-
-            try {
-                const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
-                const data = await response.json(); 
-                
-                if (!response.ok) throw new Error(data.message);
-                
-                // التوجيه أو رسالة النجاح
-                if (data.message && data.message.includes('تمت الموافقة')) {
-                    alert('🎉 مبروك! عقارك تم فحصه ونشره فوراً.');
-                } else {
-                    alert('✅ تم استلام طلبك، سيتم مراجعته قريباً.');
-                }
-                window.location.href = 'home'; // أو صفحة الشكر
-                
-            } catch (error) {
-                messageEl.textContent = `فشل: ${error.message}`; messageEl.className = 'error';
-            }
-        });
-    }
-
-    // Styles for Preview (CSS Injected)
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .image-preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding: 10px; border-radius: 8px; min-height: 50px; }
-        .preview-image-wrapper { position: relative; width: 100px; height: 70px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .preview-image { width: 100%; height: 100%; object-fit: cover; }
-        .preview-image-wrapper.invalid-file { border: 2px solid #ff4444; }
-        .preview-image-wrapper.invalid-file img { filter: grayscale(100%) brightness(0.7); }
-        .error-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.9); color: white; font-size: 10px; padding: 2px 5px; border-radius: 3px; pointer-events: none; }
-        .remove-preview-btn { position: absolute; top: 2px; right: 2px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    `;
-    document.head.appendChild(style);
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.width = "80px";
+            img.style.height = "80px";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "5px";
+            img.style.margin = "5px";
+            img.style.border = "1px solid #00ff88";
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
 });
+
+// تفعيل الحقول الإضافية
+function toggleFields() {
+    const cat = document.getElementById('property-category').value;
+    const levelGroup = document.getElementById('level-group');
+    const floorsGroup = document.getElementById('floors-count-group');
+
+    // شقق ومكاتب -> دور كام
+    if(cat === 'apartment' || cat === 'office' || cat === 'store') {
+        levelGroup.style.display = 'block';
+        floorsGroup.style.display = 'none';
+    } 
+    // عمارة وفيلات -> عدد أدوار
+    else if (cat === 'villa' || cat === 'building') {
+        levelGroup.style.display = 'none';
+        floorsGroup.style.display = 'block';
+    } else {
+        levelGroup.style.display = 'none';
+        floorsGroup.style.display = 'none';
+    }
+}
