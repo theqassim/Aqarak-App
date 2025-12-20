@@ -1,14 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// (إعدادات Supabase القديمة - لو مش محتاجها ممكن تشيلها، بس هسيبها عشان الأخطاء)
+// (Supabase Config - Legacy/Backup)
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// --- 1. ستايل الأزرار والعناصر ---
+// --- 1. Styles ---
 const style = document.createElement('style');
 style.innerHTML = `
-    /* زر الفيديو */
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -18,39 +17,27 @@ style.innerHTML = `
     }
     .video-btn-modern:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(192, 57, 43, 0.6); }
     
-    /* صندوق الزوار (تسجيل الدخول / إنشاء حساب) */
     .guest-action-box {
-        text-align: center;
-        padding: 30px 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px dashed #00ff88;
-        border-radius: 15px;
-        margin-top: 20px;
+        text-align: center; padding: 30px 20px; background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed #00ff88; border-radius: 15px; margin-top: 20px;
     }
     .guest-btns-wrapper {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin-top: 15px;
-        flex-wrap: wrap;
+        display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;
     }
     .btn-login-action {
         background: transparent; border: 2px solid #00ff88; color: #00ff88;
-        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold;
-        transition: 0.3s;
+        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;
     }
     .btn-login-action:hover { background: #00ff88; color: #000; }
-    
     .btn-register-action {
         background: #00ff88; border: 2px solid #00ff88; color: #000;
-        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold;
-        transition: 0.3s;
+        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;
     }
     .btn-register-action:hover { background: transparent; color: #00ff88; }
 `;
 document.head.appendChild(style);
 
-// --- دوال المساعدة ---
+// --- Helpers ---
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -58,7 +45,7 @@ window.formatPrice = (price, type) => {
 };
 
 window.getTypeTag = (type) => {
-    if (type === 'buy' || type === 'شراء') return `<span class="property-type sale">للبيع</span>`;
+    if (type === 'buy' || type === 'شراء' || type === 'بيع') return `<span class="property-type sale">للبيع</span>`;
     else if (type === 'rent' || type === 'إيجار') return `<span class="property-type rent">للإيجار</span>`;
     return '';
 };
@@ -66,11 +53,10 @@ window.getTypeTag = (type) => {
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
-// --- دالة المفضلة ---
+// --- Favorites ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
-    
     const isFavorite = btn.classList.contains('is-favorite');
     const method = isFavorite ? 'DELETE' : 'POST';
     const url = isFavorite ? `/api/favorites/${propertyId}` : `/api/favorites`;
@@ -78,13 +64,11 @@ window.toggleFavorite = async (propertyId) => {
 
     try {
         const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body });
-        
         if (response.status === 401) {
             alert('يجب تسجيل الدخول لإضافة العقار للمفضلة.');
-            window.location.href = 'index';
+            window.location.href = 'login';
             return;
         }
-
         if (response.ok || response.status === 409) { 
             if (isFavorite) {
                 btn.classList.remove('is-favorite');
@@ -106,17 +90,14 @@ window.shareProperty = async (title) => {
 
 window.handleWhatsappClick = async (link) => { window.open(link, '_blank'); };
 
-// --- 🧠 تحميل المشابه (منطق الذكاء الاصطناعي من السيرفر) ---
+// --- 🧠 AI Similar Properties ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if (!container) return;
 
     try {
-        // طلب البيانات من السيرفر الذكي (لازم تكون ضفت الرابط في server.js)
         const response = await fetch(`/api/properties/similar/${currentProperty.id}`);
-        
         if (!response.ok) throw new Error('فشل جلب البيانات');
-        
         const similar = await response.json();
 
         if (!similar || similar.length === 0) {
@@ -125,10 +106,8 @@ async function loadSimilarProperties(currentProperty) {
         }
 
         container.innerHTML = ''; 
-
         similar.forEach(prop => {
             const priceVal = prop.price ? Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString() : 'N/A';
-            const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'للبيع' : 'للإيجار';
             let badges = ''; 
             if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; z-index:2;">مميز</span>';
 
@@ -146,8 +125,8 @@ async function loadSimilarProperties(currentProperty) {
                         </p>
                         <hr style="border-color:#333; margin:10px 0;">
                         <p style="font-size:0.85em; color:#888; display:flex; justify-content:space-between;">
-                            <span><i class="fas fa-bed"></i> ${prop.rooms}</span>
-                            <span><i class="fas fa-bath"></i> ${prop.bathrooms}</span>
+                            ${prop.rooms > 0 ? `<span><i class="fas fa-bed"></i> ${prop.rooms}</span>` : ''}
+                            ${prop.bathrooms > 0 ? `<span><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : ''}
                             <span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>
                         </p>
                     </div>
@@ -155,14 +134,13 @@ async function loadSimilarProperties(currentProperty) {
             `;
             container.innerHTML += card;
         });
-
     } catch (e) {
         console.error("Error loading similar:", e);
         container.innerHTML = '<p style="text-align:center; color:#777;">جاري البحث عن عقارات مشابهة...</p>';
     }
 }
 
-// === التنفيذ الرئيسي ===
+// === Main Execution ===
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
@@ -181,14 +159,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         let currentUserPhone = null;
         let isAuthenticated = false;
 
-        // 🟢 التحقق من المصادقة (Auth Check)
+        // Auth Check
         try {
             const authRes = await fetch('/api/auth/me');
             const authData = await authRes.json();
             if (authData.isAuthenticated) {
                 userRole = authData.role; 
                 currentUserPhone = authData.phone;
-                isAuthenticated = true; // ✅ المستخدم مسجل
+                isAuthenticated = true; 
             }
         } catch (e) { console.log("Guest User"); }
 
@@ -201,23 +179,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const property = await response.json(); 
 
-        // معالجة الصور
+        // Images Processing
         imageUrls = [];
         if (property.imageUrls) {
             if (Array.isArray(property.imageUrls)) imageUrls = property.imageUrls;
             else if (typeof property.imageUrls === 'string') { try { imageUrls = JSON.parse(property.imageUrls); } catch (e) { imageUrls = [property.imageUrl]; } }
         }
-        if (!imageUrls || imageUrls.length === 0) imageUrls = property.imageUrl ? [property.imageUrl] : ['https://via.placeholder.com/800x500.png?text=No+Image'];
+        if (!imageUrls || imageUrls.length === 0) imageUrls = property.imageUrl ? [property.imageUrl] : ['logo.png'];
         imageUrls = imageUrls.filter(u => u && u.trim() !== '');
 
         loadingMessage.style.display = 'none';
 
-        // بيانات التواصل
+        // Contact Info
         const ownerPhone = property.sellerPhone || "01008102237"; 
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
-        const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title}`)}`;
+        const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-        // منطق "تم النشر بواسطة"
+        // Publisher Info
         let publisherHTML = '';
         if (property.publisherUsername) {
             publisherHTML = `
@@ -229,42 +207,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         } else {
-            publisherHTML = `
-                <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc;"><i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}</p>
-                </div>
-            `;
+            publisherHTML = `<div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;"><p style="color: #ccc;"><i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}</p></div>`;
         }
 
-        // 🔒 التحكم في الأزرار حسب حالة الدخول
+        // Action Buttons Logic
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (isAuthenticated) {
-            // ✅ المستخدم مسجل: اعرض أزرار التواصل والعرض
             makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
             
-            // زر تحكم المالك
             let ownerControlsHTML = '';
             if (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone) {
                 const editMsg = encodeURIComponent(`السلام عليكم، أنا صاحب العقار كود (${property.hiddenCode}). أرغب في تعديله أو حذفه.`);
-                const adminWaLink = `https://wa.me/201008102237?text=${editMsg}`;
                 ownerControlsHTML = `
                     <div style="margin-top: 15px; padding: 10px; border: 1px dashed #ff4444; border-radius: 8px; text-align: center;">
                         <p style="color: #ff4444; font-weight: bold; margin-bottom: 5px;">أنت صاحب هذا العقار 👑</p>
-                        <a href="${adminWaLink}" target="_blank" class="btn-neon-red" style="display: block; text-decoration: none; padding: 10px;">
-                            <i class="fas fa-cog"></i> تواصل للتعديل أو الحذف
-                        </a>
+                        <a href="https://wa.me/201008102237?text=${editMsg}" target="_blank" class="btn-neon-red" style="display: block; text-decoration: none; padding: 10px;"><i class="fas fa-cog"></i> تواصل للتعديل أو الحذف</a>
                     </div>
                 `;
             }
 
-            // المفضلة
             let isFav = false;
-            try {
-                const favRes = await fetch(`/api/favorites`); 
-                if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); }
-            } catch(e) {}
+            try { const favRes = await fetch(`/api/favorites`); if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); } } catch(e) {}
             const favClass = isFav ? 'is-favorite' : '';
             const favIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
 
@@ -283,12 +248,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${ownerControlsHTML}
             `;
         } else {
-            // 🛑 المستخدم زائر (Guest): اعرض أزرار التسجيل
             actionSectionHTML = `
                 <div class="guest-action-box">
                     <p style="color:#ccc; margin-bottom:15px; font-size:0.95rem;">
-                        <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i>
-                        يجب تسجيل الدخول للتواصل مع المالك ومشاهدة رقم الهاتف.
+                        <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i> يجب تسجيل الدخول للتواصل مع المالك.
                     </p>
                     <div class="guest-btns-wrapper">
                         <a href="login" class="btn-login-action">تسجيل دخول</a>
@@ -298,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
 
-        // فيديو
+        // Video Section
         let videoSectionHTML = '';
         const videoList = Array.isArray(property.video_urls) ? property.video_urls : [];
         if (videoList.length > 0) {
@@ -306,10 +269,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.goToCinemaMode = () => { localStorage.setItem('activePropertyVideos', JSON.stringify(videoList)); window.location.href = 'video-player'; };
         }
 
+        // =========================================================
+        // 🆕 Dynamic Specs Generation (بناء المواصفات ديناميكياً)
+        // =========================================================
+        let specsHTML = `<li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>`;
+
+        // غرف (للشقق والفيلات فقط)
+        if (property.rooms && parseInt(property.rooms) > 0) {
+            specsHTML += `<li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>`;
+        }
+        // حمامات (للشقق والفيلات والمكاتب)
+        if (property.bathrooms && parseInt(property.bathrooms) > 0) {
+            specsHTML += `<li><span>الحمامات:</span> ${property.bathrooms} <i class="fas fa-bath"></i></li>`;
+        }
+        // الدور (للشقق والمكاتب)
+        if (property.level && property.level !== 'undefined') {
+            specsHTML += `<li><span>الدور:</span> ${property.level} <i class="fas fa-layer-group"></i></li>`;
+        }
+        // عدد الأدوار (للعمارة والفيلا)
+        if (property.floors_count && parseInt(property.floors_count) > 0) {
+            specsHTML += `<li><span>عدد الأدوار:</span> ${property.floors_count} <i class="fas fa-building"></i></li>`;
+        }
+        // التشطيب (للجميع ماعدا الأرض والمخزن)
+        if (property.finishing_type && property.finishing_type !== 'undefined') {
+            specsHTML += `<li><span>التشطيب:</span> ${property.finishing_type} <i class="fas fa-paint-roller"></i></li>`;
+        }
+
+        // HTML Injection
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
-                ${property.isLegal ? `<div class="legal-trust-box neon-glow"><div class="legal-icon"><i class="fas fa-shield-alt"></i></div><div class="legal-content"><h4>عقار تم الفحص القانوني له ✅</h4><p>تمت مراجعة أوراق هذا العقار والتسلسل الملكي الخاص به بواسطة فريقنا القانوني.</p></div></div>` : ''}
+                ${property.isLegal ? `<div class="legal-trust-box neon-glow"><div class="legal-icon"><i class="fas fa-shield-alt"></i></div><div class="legal-content"><h4>عقار تم الفحص القانوني له ✅</h4><p>تمت مراجعة أوراق هذا العقار.</p></div></div>` : ''}
                 <div class="details-layout">
                     <div class="details-info-frame neon-glow">
                         <div class="price-type-info">
@@ -320,24 +310,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
                             <h4 style="color:#dc3545; margin:0 0 10px 0;"><i class="fas fa-lock"></i> الأدمن</h4>
                             <div style="color:#333; font-size:0.95rem;">
-                                <p><strong>المالك:</strong> <span id="admin-owner-name">${property.sellerName || '-'}</span></p>
-                                <p><strong>الهاتف:</strong> <span id="admin-owner-phone">${property.sellerPhone || '-'}</span></p>
+                                <p><strong>المالك:</strong> <span>${property.sellerName || '-'}</span></p>
+                                <p><strong>الهاتف:</strong> <span>${property.sellerPhone || '-'}</span></p>
                                 <p><strong>الكود:</strong> <span>${property.hiddenCode}</span></p>
                             </div>
                         </div>
 
                         <div class="property-specs">
                             <ul class="specs-list">
-                                <li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>
-                                <li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>
-                                <li><span>الحمامات:</span> ${property.bathrooms} <i class="fas fa-bath"></i></li>
+                                ${specsHTML}
                             </ul>
                         </div>
+
                         ${videoSectionHTML}
                         <div class="property-description-box"><h3>الوصف</h3><p>${property.description || 'لا يوجد وصف.'}</p></div>
                         ${publisherHTML}
                         ${actionSectionHTML}
                     </div>
+                    
                     <div class="image-gallery-frame neon-glow">
                         <div class="gallery-inner">
                             <div class="main-image-container"><img id="property-main-image" src="${imageUrls[0]}" class="main-image"><button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-right"></i></button><button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-left"></i></button></div>
@@ -349,7 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        // لوحة الأدمن
+        // Admin Badge Controls
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
@@ -367,6 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // Image Gallery Logic
         const mainImg = document.getElementById('property-main-image');
         const thumbsContainer = document.getElementById('image-thumbnails');
         const update = () => updateMainImage(mainImg);
@@ -387,6 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
+        // Offer Form
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {

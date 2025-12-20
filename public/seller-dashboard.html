@@ -30,68 +30,100 @@
 
                 <div class="form-grid">
                     <div class="input-group">
-                        <label for="seller-name">اسمك</label>
+                        <label>اسمك</label>
                         <input type="text" id="seller-name" name="sellerName" class="neon-input-white" 
                                style="background-color: #333; color: #aaa; cursor: not-allowed;" readonly required>
                     </div>
 
                     <div class="input-group">
-                        <label for="seller-phone">رقم تليفونك</label>
+                        <label>رقم تليفونك</label>
                         <input type="tel" id="seller-phone" name="sellerPhone" class="neon-input-white" 
                                style="background-color: #333; color: #aaa; cursor: not-allowed;" readonly required>
                     </div>
 
                     <div class="input-group">
-                        <label for="property-category"><i class="fas fa-building"></i> فئة العقار</label>
+                        <label><i class="fas fa-building"></i> فئة العقار</label>
                         <select id="property-category" name="propertyCategory" class="neon-input-white" onchange="toggleFields()" required>
                             <option value="apartment" selected>شقة / دوبلكس</option>
                             <option value="villa">فيلا / شاليه</option>
-                            <option value="store">محل / مكتب / عيادة</option>
+                            <option value="office">مكتب / عيادة</option>
+                            <option value="store">محل تجاري</option>
+                            <option value="building">عمارة بالكامل</option>
                             <option value="land">أرض</option>
-                            <option value="building">عمارة كاملة</option>
                             <option value="warehouse">مخزن / مصنع</option>
                         </select>
                     </div>
 
                     <div class="input-group">
-                        <label for="property-type">نوع العرض</label>
-                        <select id="property-type" name="propertyType" class="neon-input-white" required>
+                        <label>نوع العرض</label>
+                        <select name="propertyType" class="neon-input-white" required>
                             <option value="بيع">بيع</option>
                             <option value="إيجار">إيجار</option>
                         </select>
                     </div>
 
                     <div class="input-group full-width">
-                        <label for="property-title">عنوان الإعلان</label>
-                        <input type="text" id="property-title" name="propertyTitle" class="neon-input-white" placeholder="مثال: شقة 150م للبيع في التجمع" required>
+                        <label>عنوان الإعلان</label>
+                        <input type="text" name="propertyTitle" class="neon-input-white" placeholder="مثال: شقة لقطة في التجمع" required>
                     </div>
 
                     <div class="input-group">
-                        <label for="property-price">السعر المطلوب (جنيه)</label>
-                        <input type="text" id="property-price" name="propertyPrice" class="neon-input-white" required>
+                        <label>السعر (جنيه)</label>
+                        <input type="text" name="propertyPrice" class="neon-input-white" required>
                     </div>
 
                     <div class="input-group">
-                        <label for="property-area">المساحة (م²)</label>
-                        <input type="number" id="property-area" name="propertyArea" class="neon-input-white" required>
+                        <label>المساحة (م²)</label>
+                        <input type="number" name="propertyArea" class="neon-input-white" required>
                     </div>
 
-                    <div id="specs-container" style="display:contents;">
-                        <div class="input-group" id="rooms-group">
-                            <label for="property-rooms">عدد الغرف</label>
-                            <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0" placeholder="3">
-                        </div>
-
-                        <div class="input-group" id="bath-group">
-                            <label for="property-bathrooms">عدد الحمامات</label>
-                            <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0" placeholder="2">
-                        </div>
+                    <div class="input-group" id="finishing-group">
+                        <label>نوع التشطيب</label>
+                        <select name="propertyFinishing" id="property-finishing" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="بدون تشطيب">بدون تشطيب (طوب أحمر)</option>
+                            <option value="نص تشطيب">نص تشطيب (محارة)</option>
+                            <option value="تشطيب كامل">تشطيب كامل</option>
+                            <option value="الترا لوكس">ألترا سوبر لوكس</option>
+                            <option value="فرش فندقي">مفروش / فندقي</option>
+                        </select>
                     </div>
+
+                    <div class="input-group" id="rooms-group">
+                        <label>عدد الغرف</label>
+                        <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0">
+                    </div>
+
+                    <div class="input-group" id="bath-group">
+                        <label>عدد الحمامات</label>
+                        <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0">
+                    </div>
+
+                    <div class="input-group" id="level-group" style="display:none;">
+                        <label>الدور الكام؟</label>
+                        <select name="propertyLevel" id="property-level" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="أرضي">أرضي</option>
+                            <option value="1">الأول</option>
+                            <option value="2">الثاني</option>
+                            <option value="3">الثالث</option>
+                            <option value="4">الرابع</option>
+                            <option value="5">الخامس</option>
+                            <option value="6+">أعلى من الخامس</option>
+                            <option value="أخير">الدور الأخير (رووف)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="floors-count-group" style="display:none;">
+                        <label>عدد الأدوار</label>
+                        <input type="number" name="propertyFloors" id="property-floors" class="neon-input-white" placeholder="مثلاً: 3 أدوار">
+                    </div>
+
                 </div>
 
                 <div class="input-group full-width">
-                    <label for="property-description">وصف تفصيلي</label>
-                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب تفاصيل العقار والمميزات..."></textarea>
+                    <label>وصف تفصيلي</label>
+                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب تفاصيل العقار..."></textarea>
                 </div>
 
                 <div class="input-group full-width">

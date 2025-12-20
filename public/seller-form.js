@@ -4,47 +4,96 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sellerForm = document.getElementById('seller-form');
     const messageEl = document.getElementById('seller-form-message');
 
-    // 🆕 دالة التحكم في الحقول (ديناميكي)
+    // ==========================================================
+    // 🛠️ 1. التحكم الديناميكي في الحقول (إخفاء/إظهار)
+    // ==========================================================
     window.toggleFields = function() {
         const category = document.getElementById('property-category').value;
+        
+        // المجموعات (Containers)
         const roomsGroup = document.getElementById('rooms-group');
         const bathGroup = document.getElementById('bath-group');
-        const roomsInput = document.getElementById('property-rooms');
-        const bathInput = document.getElementById('property-bathrooms');
+        const levelGroup = document.getElementById('level-group');        
+        const floorsCountGroup = document.getElementById('floors-count-group'); 
+        const finishingGroup = document.getElementById('finishing-group');
 
-        // الحالة 1: أرض أو مخزن (نخفي الغرف والحمامات)
-        if (category === 'land' || category === 'warehouse') {
-            roomsGroup.style.display = 'none';
-            bathGroup.style.display = 'none';
-            roomsInput.value = 0; // تصفير القيم
-            bathInput.value = 0;
-            roomsInput.removeAttribute('required'); // إلغاء الإجبار
-            bathInput.removeAttribute('required');
+        // وصف (لتغيير الـ Placeholder)
+        const descInput = document.getElementById('property-description');
+
+        // دالة مساعدة للإظهار والإخفاء مع التحكم في required
+        const show = (el, isRequired = false) => {
+            el.style.display = 'block';
+            const input = el.querySelector('input, select');
+            if(isRequired && input) input.setAttribute('required', 'true');
+        };
+
+        const hide = (el) => {
+            el.style.display = 'none';
+            const input = el.querySelector('input, select');
+            if(input) { 
+                input.removeAttribute('required'); 
+                input.value = ''; // تصفير القيمة عشان متبعتش داتا غلط
+            }
+        };
+
+        // 🔄 تصفير الحالة (إخفاء الكل مبدئياً)
+        hide(roomsGroup); hide(bathGroup); hide(levelGroup); hide(floorsCountGroup); hide(finishingGroup);
+        descInput.placeholder = "اكتب تفاصيل العقار والمميزات...";
+
+        // --- تطبيق المنطق ---
+
+        if (category === 'apartment') {
+            // شقة: غرف + حمام + دور كام + تشطيب
+            show(roomsGroup, true);
+            show(bathGroup, true);
+            show(levelGroup, true);
+            show(finishingGroup, true);
+            descInput.placeholder = "تشطيب سوبر لوكس، فيو حديقة، بحري...";
+        } 
+        else if (category === 'villa') {
+            // فيلا: غرف + حمام + عدد أدوار المبنى + تشطيب
+            show(roomsGroup, true);
+            show(bathGroup, true);
+            show(floorsCountGroup, true);
+            show(finishingGroup, true);
+            descInput.placeholder = "حديقة خاصة، حمام سباحة، جراج خاص...";
         }
-        // الحالة 2: محل (نخفي الغرف فقط - اختياري، أو نخليها مخزن)
+        else if (category === 'office') {
+            // مكتب/عيادة: دور كام + تشطيب (حمام اختياري)
+            show(bathGroup); // اختياري (ممكن ميكونش فيه)
+            show(levelGroup, true);
+            show(finishingGroup, true);
+            descInput.placeholder = "مساحة مفتوحة، مرخصة إداري، تكييف مركزي...";
+        }
         else if (category === 'store') {
-            roomsGroup.style.display = 'none'; // المحل عادة مساحة مفتوحة
-            bathGroup.style.display = 'block'; // ممكن يكون فيه حمام
-            roomsInput.value = 0;
-            roomsInput.removeAttribute('required');
-            bathInput.setAttribute('required', 'true');
+            // محل: تشطيب (ممكن حمام)
+            show(bathGroup); 
+            show(finishingGroup, true);
+            descInput.placeholder = "واجهة زجاجية، رخصة تجاري، منطقة حيوية...";
         }
-        // الحالة 3: شقة/فيلا/عمارة (نظهر الكل)
-        else {
-            roomsGroup.style.display = 'block';
-            bathGroup.style.display = 'block';
-            // لو القيم صفر، نمسحها عشان يكتب
-            if(roomsInput.value == 0) roomsInput.value = '';
-            if(bathInput.value == 0) bathInput.value = '';
-            roomsInput.setAttribute('required', 'true');
-            bathInput.setAttribute('required', 'true');
+        else if (category === 'building') {
+            // عمارة: عدد الأدوار + تشطيب
+            show(floorsCountGroup, true);
+            show(finishingGroup); // ممكن تكون طوب أحمر
+            descInput.placeholder = "عدد الشقق، مساحة الأرض، الدخل الشهري المتوقع...";
+        }
+        else if (category === 'land') {
+            // أرض: مساحة وسعر فقط (تم إخفاء الباقي)
+            descInput.placeholder = "تراخيص البناء، واجهة على الشارع، صرف ومياه...";
+        }
+        else if (category === 'warehouse') {
+            // مخزن: مساحة وسعر
+            descInput.placeholder = "ارتفاع السقف، دخول سيارات نقل، كهرباء 3 فاز...";
         }
     };
 
-    // تشغيل الدالة مرة عند التحميل لضبط الوضع الافتراضي
+    // تشغيل الدالة فوراً لضبط الوضع الافتراضي
     toggleFields();
 
-    // 🔒 1. جلب بيانات المستخدم
+
+    // ==========================================================
+    // 🔒 2. التحقق من المستخدم
+    // ==========================================================
     try {
         const response = await fetch('/api/auth/me');
         const userData = await response.json();
@@ -54,8 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const phoneField = document.getElementById('seller-phone');
             nameField.value = userData.name || userData.username || 'مستخدم عقارك';
             phoneField.value = userData.phone;
-            nameField.setAttribute('readonly', true);
-            phoneField.setAttribute('readonly', true);
         } else {
             alert('يجب تسجيل الدخول أولاً لعرض عقارك!');
             window.location.href = 'login';
@@ -66,8 +113,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ... (باقي كود الصور والـ Upload زي ما هو بدون تغيير) ...
-    const MAX_SIZE = 10 * 1024 * 1024;
+
+    // ==========================================================
+    // 📸 3. معالجة الصور (رفع ومعاينة)
+    // ==========================================================
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
     let allSelectedFiles = []; 
 
     function renderPreviews() {
@@ -115,11 +165,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ==========================================================
+    // 🚀 4. إرسال النموذج
+    // ==========================================================
     if (sellerForm) {
         sellerForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             messageEl.textContent = 'جاري التحقق...'; messageEl.className = 'info';
 
+            // تحقق بسيط من الصور
             if (allSelectedFiles.some(file => file.size > MAX_SIZE)) {
                 messageEl.textContent = '⚠️ صور كبيرة الحجم، يرجى حذفها.'; messageEl.className = 'error'; return;
             }
@@ -127,27 +181,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 messageEl.textContent = 'اختر صورة واحدة على الأقل.'; messageEl.className = 'error'; return;
             }
 
-            messageEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+            messageEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري رفع الصور ومعالجة الطلب...';
 
             const formData = new FormData(sellerForm);
+            // حذف الصور الفارغة وإضافة الصور الحقيقية من المصفوفة
             formData.delete('images[]'); 
             allSelectedFiles.forEach(file => formData.append('images', file));
 
             try {
                 const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
                 const data = await response.json(); 
+                
                 if (!response.ok) throw new Error(data.message);
                 
-                // عرض رسالة النجاح حسب رد السيرفر (هل تم النشر فوراً أم مراجعة)
-                if (data.message.includes('تمت الموافقة')) {
-                    alert('🎉 مبروك! عقارك تم نشره فوراً بنجاح.');
+                // التوجيه أو رسالة النجاح
+                if (data.message && data.message.includes('تمت الموافقة')) {
+                    alert('🎉 مبروك! عقارك تم فحصه ونشره فوراً.');
                 } else {
-                    alert('✅ تم استلام طلبك وسيتم مراجعته قريباً.');
+                    alert('✅ تم استلام طلبك، سيتم مراجعته قريباً.');
                 }
-                window.location.href = 'thank-you';
+                window.location.href = 'home'; // أو صفحة الشكر
+                
             } catch (error) {
                 messageEl.textContent = `فشل: ${error.message}`; messageEl.className = 'error';
             }
         });
     }
+
+    // Styles for Preview (CSS Injected)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .image-preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding: 10px; border-radius: 8px; min-height: 50px; }
+        .preview-image-wrapper { position: relative; width: 100px; height: 70px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .preview-image { width: 100%; height: 100%; object-fit: cover; }
+        .preview-image-wrapper.invalid-file { border: 2px solid #ff4444; }
+        .preview-image-wrapper.invalid-file img { filter: grayscale(100%) brightness(0.7); }
+        .error-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.9); color: white; font-size: 10px; padding: 2px 5px; border-radius: 3px; pointer-events: none; }
+        .remove-preview-btn { position: absolute; top: 2px; right: 2px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    `;
+    document.head.appendChild(style);
 });
