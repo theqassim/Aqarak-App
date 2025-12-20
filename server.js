@@ -807,4 +807,25 @@ app.get('/api/properties/similar/:id', async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'Error' }); }
 });
 
+// 🚑 رابط طوارئ لإضافة العمود الناقص وإصلاح العداد
+app.get('/emergency-fix-columns', async (req, res) => {
+    try {
+        // 1. إضافة العمود لو مش موجود
+        await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_posts INTEGER DEFAULT 0`);
+        
+        // 2. تحديث العداد بأثر رجعي (عشان الناس القديمة ميبقاش رصيدها صفر)
+        await pgQuery(`
+            UPDATE users u
+            SET lifetime_posts = (
+                SELECT COUNT(*) FROM properties p WHERE p."sellerPhone" = u.phone
+            )
+        `);
+
+        res.send('✅ تم إصلاح الجدول وإضافة عمود lifetime_posts بنجاح! العداد يعمل الآن.');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('❌ حدث خطأ: ' + error.message);
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
