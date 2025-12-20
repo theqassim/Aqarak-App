@@ -705,27 +705,19 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 // ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع
-app.get('/api/auth/me', async (req, res) => {
+app.get('/api/auth/me', (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
-    
     try { 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        
-        // لو أدمن عدي، لو مستخدم عادي افحص الداتابيز
-        if (decoded.role !== 'admin') {
-            const check = await pgQuery('SELECT is_banned FROM users WHERE id = $1', [decoded.id]);
-            // لو ملقناش المستخدم أو كان محظور
-            if (check.rows.length === 0 || check.rows[0].is_banned) {
-                return res.json({ 
-                    isAuthenticated: false, 
-                    isBanned: true, // 🚨 علامة الحظر
-                    role: 'guest' 
-                });
-            }
-        }
-        
-        res.json({ isAuthenticated: true, role: decoded.role, phone: decoded.phone, username: decoded.username }); 
+        const decoded = jwt.verify(token, JWT_SECRET); 
+        // ✅ التعديل: إضافة name في الرد
+        res.json({ 
+            isAuthenticated: true, 
+            role: decoded.role, 
+            phone: decoded.phone, 
+            username: decoded.username,
+            name: decoded.name 
+        }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
