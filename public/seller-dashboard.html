@@ -42,17 +42,28 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="property-title">عنوان الإعلان</label>
-                        <input type="text" id="property-title" name="propertyTitle" class="neon-input-white" required>
+                        <label for="property-category"><i class="fas fa-building"></i> فئة العقار</label>
+                        <select id="property-category" name="propertyCategory" class="neon-input-white" onchange="toggleFields()" required>
+                            <option value="apartment" selected>شقة / دوبلكس</option>
+                            <option value="villa">فيلا / شاليه</option>
+                            <option value="store">محل / مكتب / عيادة</option>
+                            <option value="land">أرض</option>
+                            <option value="building">عمارة كاملة</option>
+                            <option value="warehouse">مخزن / مصنع</option>
+                        </select>
                     </div>
 
                     <div class="input-group">
                         <label for="property-type">نوع العرض</label>
                         <select id="property-type" name="propertyType" class="neon-input-white" required>
-                            <option value="">اختر...</option>
                             <option value="بيع">بيع</option>
                             <option value="إيجار">إيجار</option>
                         </select>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label for="property-title">عنوان الإعلان</label>
+                        <input type="text" id="property-title" name="propertyTitle" class="neon-input-white" placeholder="مثال: شقة 150م للبيع في التجمع" required>
                     </div>
 
                     <div class="input-group">
@@ -65,20 +76,22 @@
                         <input type="number" id="property-area" name="propertyArea" class="neon-input-white" required>
                     </div>
 
-                    <div class="input-group">
-                        <label for="property-rooms">عدد الغرف</label>
-                        <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="1" required>
-                    </div>
+                    <div id="specs-container" style="display:contents;">
+                        <div class="input-group" id="rooms-group">
+                            <label for="property-rooms">عدد الغرف</label>
+                            <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0" placeholder="3">
+                        </div>
 
-                    <div class="input-group">
-                        <label for="property-bathrooms">عدد الحمامات</label>
-                        <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="1" required>
+                        <div class="input-group" id="bath-group">
+                            <label for="property-bathrooms">عدد الحمامات</label>
+                            <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0" placeholder="2">
+                        </div>
                     </div>
                 </div>
 
                 <div class="input-group full-width">
                     <label for="property-description">وصف تفصيلي</label>
-                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white"></textarea>
+                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب تفاصيل العقار والمميزات..."></textarea>
                 </div>
 
                 <div class="input-group full-width">
