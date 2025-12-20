@@ -793,7 +793,7 @@ app.get('/emergency-fix-columns', async (req, res) => {
 });
 // 🏠 توجيه الصفحة الرئيسية
 app.get('/', (req, res) => { 
-    res.sendFile(path.join(__dirname, 'public', 'home')); 
+    res.sendFile(path.join(__dirname, 'public', 'home.html')); 
 });
 
 // ✅ اختبار السيرفر (Ping)
