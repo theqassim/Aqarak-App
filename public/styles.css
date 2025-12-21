@@ -3066,5 +3066,16 @@ a[href="seller-dashboard"]:hover {
     display: flex !important;
 }
 
-   .nav-button {
+           .nav-button {
             background: rgba(0, 255, 136, 0.1);
+            color: var(--neon-primary);
+            text-decoration: none;
+            padding: 6px 15px;
+            border-radius: 50px;
+            border: 1px solid var(--neon-primary);
+            font-size: 0.85rem;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
