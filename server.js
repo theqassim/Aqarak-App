@@ -1262,4 +1262,31 @@ app.get('/update-db-stage2', async (req, res) => {
     } catch (error) { res.status(500).send('❌ خطأ: ' + error.message); }
 });
 
+// ==========================================================
+// 🛠️ رابط إصلاح هيكل جدول الشكاوي (Rebuild)
+// ==========================================================
+app.get('/rebuild-complaints-table', async (req, res) => {
+    try {
+        // 1. حذف الجدول القديم (الذي يسبب المشاكل)
+        await pgQuery(`DROP TABLE IF EXISTS complaints`);
+        
+        // 2. إنشاء الجدول الجديد بالأعمدة الصحيحة (user_id, etc.)
+        await pgQuery(`
+            CREATE TABLE complaints (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                user_name TEXT,
+                user_phone TEXT,
+                content TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT
+            )
+        `);
+        
+        res.send('✅ تم إعادة بناء جدول الشكاوي بنجاح! المشكلة اتحلت.');
+    } catch (error) {
+        res.status(500).send('❌ حدث خطأ أثناء الإصلاح: ' + error.message);
+    }
+});
+
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
