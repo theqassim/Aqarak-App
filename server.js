@@ -728,6 +728,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 // ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع
 // تعديل API التحقق (Real-time Ban Check)
+// تعديل API التحقق (يعالج مشكلة خروج الأدمن)
 app.get('/api/auth/me', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
@@ -735,7 +736,18 @@ app.get('/api/auth/me', async (req, res) => {
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // 🔥 هنا التعديل: نتأكد من الداتابيز مباشرة عشان لو لسه واخد بان دلوقتي
+        // 🟢 استثناء للأدمن (عشان هو مش موجود في جدول المستخدمين)
+        if (decoded.role === 'admin' || decoded.id === 0) {
+             return res.json({ 
+                 isAuthenticated: true, 
+                 role: 'admin', 
+                 phone: decoded.phone, 
+                 username: 'admin', 
+                 name: 'المدير العام' 
+             });
+        }
+
+        // 🔥 فحص المستخدمين العاديين من الداتابيز (عشان البان)
         const userRes = await pgQuery('SELECT role, phone, username, name FROM users WHERE id = $1', [decoded.id]);
         
         if (userRes.rows.length === 0) {
@@ -744,7 +756,7 @@ app.get('/api/auth/me', async (req, res) => {
 
         const user = userRes.rows[0];
 
-        // لو واخد بان، نطرده فوراً
+        // لو واخد بان، نطرده
         if (user.role === 'banned') {
             return res.json({ isAuthenticated: true, role: 'banned', forceLogout: true });
         }
@@ -753,7 +765,6 @@ app.get('/api/auth/me', async (req, res) => {
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
-
 app.put('/api/user/change-password', async (req, res) => {
     const { phone, currentPassword, newPassword } = req.body;
     try {
