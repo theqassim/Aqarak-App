@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     inputs.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.addEventListener('input', applyAdvFilters); // التحديث عند الكتابة فوراً
+        const type = urlParams.get('type'); // هنا بيشوف الرابط فيه type=buy ولا لأ
+
+    if (type) {
+        if (type === 'بيع' || type === 'buy') updateAdvType('buy'); // بيفتح تبويب الشراء أوتوماتيك
+        else if (type === 'إيجار' || type === 'rent') updateAdvType('rent'); // بيفتح تبويب الإيجار أوتوماتيك
+    }
     });
 });
 

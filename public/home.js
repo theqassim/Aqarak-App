@@ -17,8 +17,8 @@ async function updateNavigation() {
         if (data.isAuthenticated) {
             nav.innerHTML = `
                 <a href="all-properties" class="nav-button">جميع العقارات</a>
-                <a href="buy" class="nav-button">شراء</a>
-                <a href="rent" class="nav-button">ايجار</a>
+                <a href="all-properties.html?type=buy" class="nav-button">شراء</a>
+                <a href="all-properties.html?type=rent" class="nav-button">ايجار</a>
                 <a href="user-dashboard" class="nav-button">القائمة</a> 
                 <a href="seller-dashboard" class="sell-btn">اعرض عقارك!</a>
             `;
