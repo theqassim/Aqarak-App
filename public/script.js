@@ -1,22 +1,27 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. التحقق من حالة الدخول
+    // 1. التحقق لو المستخدم مسجل دخول بالفعل
     try {
         const response = await fetch('/api/auth/me');
         const userData = await response.json();
         if (userData.isAuthenticated) {
             localStorage.setItem('userPhone', userData.phone);
-            window.location.href = userData.role === 'admin' ? 'admin-home' : '/';
+            if(userData.username) localStorage.setItem('username', userData.username);
+            window.location.href = userData.role === 'admin' ? 'admin-home' : '/home';
         }
-    } catch (error) { console.log("Guest"); }
+    } catch (error) { console.log("Guest User"); }
 
-    // 2. تسجيل الدخول (Login) - زي ما هو
+    // 🟢 معالجة تسجيل الدخول (Login)
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const msgEl = document.getElementById('login-message');
-            msgEl.textContent = 'جاري التحقق...';
-            msgEl.style.color = '#fff';
+            document.getElementById('login-phone-error').textContent = '';
+            document.getElementById('login-pass-error').textContent = '';
+            
+            const btn = loginForm.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+            btn.disabled = true;
 
             const phone = document.getElementById('login-phone').value;
             const password = document.getElementById('login-password').value;
@@ -30,125 +35,157 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const data = await response.json();
 
                 if (data.success) {
-                    window.location.href = data.role === 'admin' ? 'admin-home' : '/';
+                    localStorage.setItem('username', data.username);
+                    window.location.href = data.role === 'admin' ? 'admin-home' : '/home';
                 } else {
-                    throw new Error(data.message);
+                    if (data.errorType === 'phone' || response.status === 404) {
+                        document.getElementById('login-phone-error').textContent = data.message;
+                    } else if (data.errorType === 'password' || response.status === 401) {
+                        document.getElementById('login-pass-error').textContent = data.message;
+                    } else {
+                        alert(data.message || 'حدث خطأ غير معروف');
+                    }
                 }
-            } catch (error) {
-                msgEl.textContent = error.message || 'خطأ في الاتصال';
-                msgEl.style.color = 'red';
+            } catch (error) { 
+                alert('خطأ في الاتصال بالسيرفر'); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     }
 
-    // 3. إنشاء حساب (Register) - التعديل الجوهري هنا 🔥
+    // 🟢 معالجة إنشاء الحساب (Register)
     const registerForm = document.getElementById('register-form');
-    let isOtpSent = false; // متغير حالة (هل الكود اتبعت ولا لسه؟)
+    let isOtpSent = false;
+    let isUsernameValid = false;
+    let typingTimer;
+
+    // التحقق من اسم المستخدم
+    const usernameInput = document.getElementById('reg-username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+        });
+
+        usernameInput.addEventListener('keyup', () => {
+            clearTimeout(typingTimer);
+            const val = usernameInput.value;
+            const iconCheck = document.getElementById('icon-check');
+            const iconError = document.getElementById('icon-error');
+            const msg = document.getElementById('username-msg');
+
+            iconCheck.style.display = 'none';
+            iconError.style.display = 'none';
+            msg.textContent = '';
+            isUsernameValid = false;
+
+            if (val.length < 5) return;
+
+            typingTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch('/api/check-username', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ username: val })
+                    });
+                    const data = await res.json();
+
+                    if (data.available) {
+                        iconCheck.style.display = 'block';
+                        isUsernameValid = true;
+                    } else {
+                        iconError.style.display = 'block';
+                        msg.textContent = data.message === 'taken' ? 'الاسم مستخدم بالفعل' : 'الاسم غير متاح';
+                    }
+                } catch (e) { console.error(e); }
+            }, 500);
+        });
+    }
 
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const msgEl = document.getElementById('register-message');
-            const submitBtn = document.getElementById('reg-submit-btn');
+            document.getElementById('reg-phone-error').textContent = '';
+            document.getElementById('confirm-pass-error').textContent = '';
             
+            const submitBtn = document.getElementById('reg-submit-btn');
+            const originalText = submitBtn.innerHTML;
+
             const name = document.getElementById('reg-name').value;
+            const username = document.getElementById('reg-username').value;
             const phone = document.getElementById('reg-phone').value;
             const password = document.getElementById('reg-password').value;
-            const otpInput = document.getElementById('reg-otp');
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
 
-            // 🛑 المرحلة الأولى: إرسال الكود
             if (!isOtpSent) {
-                if (!name || !phone || !password) {
-                    msgEl.textContent = 'املأ جميع البيانات أولاً';
-                    msgEl.style.color = 'red';
+                if (username.length < 5) { alert('اسم المستخدم قصير جداً'); return; }
+                if (!isUsernameValid) { alert('تأكد من صحة اسم المستخدم'); return; }
+                if (password !== confirmPassword) {
+                    document.getElementById('confirm-pass-error').textContent = 'كلمتا المرور غير متطابقتين';
                     return;
                 }
-
-                msgEl.textContent = 'جاري إرسال كود التحقق للواتساب...';
-                msgEl.style.color = 'yellow';
-                submitBtn.disabled = true; // تعطيل الزر مؤقتاً
+                
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+                submitBtn.disabled = true;
 
                 try {
                     const response = await fetch('/api/auth/send-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone })
+                        body: JSON.stringify({ phone, type: 'register' }) 
                     });
                     const data = await response.json();
 
                     if (data.success) {
-                        // نجاح الإرسال -> نغير واجهة المستخدم
                         isOtpSent = true;
-                        msgEl.textContent = '✅ تم الإرسال! أدخل الكود أدناه.';
-                        msgEl.style.color = '#00ff88';
-                        
-                        // إظهار حقل الـ OTP
                         document.getElementById('reg-otp-group').style.display = 'block';
-                        
-                        // قفل الحقول القديمة عشان مايغيرش الرقم بعد ما الكود وصل
                         document.getElementById('reg-phone').readOnly = true;
+                        document.getElementById('reg-username').readOnly = true;
                         document.getElementById('reg-name').readOnly = true;
-                        
-                        // تغيير نص الزر
                         submitBtn.textContent = 'تأكيد وإنشاء الحساب';
-                        submitBtn.disabled = false;
-                        submitBtn.classList.add('neon-glow'); // تأثير إضافي
                     } else {
-                        throw new Error(data.message);
+                        if (response.status === 409) document.getElementById('reg-phone-error').textContent = data.message;
+                        else alert(data.message);
                     }
-                } catch (error) {
-                    msgEl.textContent = error.message;
-                    msgEl.style.color = 'red';
-                    submitBtn.disabled = false;
-                }
+                } catch (error) { alert('خطأ في الاتصال'); }
+                finally { if(!isOtpSent) submitBtn.innerHTML = originalText; submitBtn.disabled = false; }
 
-            } 
-            // 🛑 المرحلة الثانية: التحقق وإنشاء الحساب
-            else {
-                const otp = otpInput.value;
-                if (!otp) {
-                    msgEl.textContent = 'أدخل كود التحقق!';
-                    msgEl.style.color = 'red';
-                    return;
-                }
+            } else {
+                const otp = document.getElementById('reg-otp').value;
+                if (!otp) return alert('من فضلك أدخل الكود');
 
-                msgEl.textContent = 'جاري إنشاء الحساب...';
+                submitBtn.innerHTML = 'جاري إنشاء الحساب...';
                 submitBtn.disabled = true;
 
                 try {
                     const response = await fetch('/api/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, phone, password, otp }),
+                        body: JSON.stringify({ name, username, phone, password, otp }),
                     });
                     const data = await response.json();
 
                     if (data.success) {
-                        msgEl.textContent = '🎉 تم التسجيل بنجاح! سيتم تحويلك...';
-                        msgEl.style.color = '#00ff88';
-                        setTimeout(() => {
-                            // تسجيل دخول تلقائي أو تحويل لصفحة الدخول
-                            switchTab('login');
-                            document.getElementById('login-phone').value = phone; // تسهيل على المستخدم
-                        }, 2000);
+                        alert('تم التسجيل بنجاح! سيتم توجيهك...');
+                        setTimeout(() => { switchTab('login'); document.getElementById('login-phone').value = phone; }, 1500);
                     } else {
-                        throw new Error(data.message);
+                        alert(data.message);
+                        submitBtn.innerHTML = 'تأكيد وإنشاء الحساب';
+                        submitBtn.disabled = false;
                     }
-                } catch (error) {
-                    msgEl.textContent = error.message;
-                    msgEl.style.color = 'red';
-                    submitBtn.disabled = false;
-                }
+                } catch (error) { alert('حدث خطأ'); submitBtn.disabled = false; }
             }
         });
     }
 });
 
-// دوال التبديل والمودال (زي ما هي)
-function switchTab(tab) {
+// --- دوال مساعدة ---
+window.switchTab = function(tab) {
     const loginWrapper = document.getElementById('login-form-wrapper');
     const registerWrapper = document.getElementById('register-form-wrapper');
     const btns = document.querySelectorAll('.tab-btn');
+    document.querySelectorAll('.error-msg').forEach(e => e.textContent = '');
 
     if (tab === 'login') {
         loginWrapper.style.display = 'block';
@@ -161,35 +198,72 @@ function switchTab(tab) {
         btns[0].classList.remove('active');
         btns[1].classList.add('active');
     }
-}
+};
 
+window.checkStrength = function() {
+    const password = document.getElementById('reg-password').value;
+    const bar = document.getElementById('strength-bar');
+    const text = document.getElementById('strength-text');
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (password.match(/[a-z]+/)) strength++;
+    if (password.match(/[0-9]+/)) strength++;
+    if (password.match(/[$@#&!]+/)) strength++;
+
+    if (password.length < 6) {
+        bar.style.width = '20%'; bar.style.background = '#ff4444'; text.textContent = 'ضعيفة'; text.style.color = '#ff4444';
+    } else if (strength <= 2) {
+        bar.style.width = '50%'; bar.style.background = 'orange'; text.textContent = 'متوسطة'; text.style.color = 'orange';
+    } else {
+        bar.style.width = '100%'; bar.style.background = '#00ff88'; text.textContent = 'قوية'; text.style.color = '#00ff88';
+    }
+};
+
+// 👁️ دالة إظهار/إخفاء كلمة المرور
+window.togglePassword = function(inputId, icon) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+};
+
+// مودال نسيت كلمة المرور
 const modal = document.getElementById("forgotModal");
 const msgForgot = document.getElementById("forgot-message");
-function openForgotModal() { modal.style.display = "block"; }
-function closeForgotModal() { modal.style.display = "none"; }
-window.onclick = function(event) { if (event.target == modal) closeForgotModal(); }
 
-async function sendForgotOTP() {
+window.openForgotModal = () => { modal.style.display = "flex"; };
+window.closeForgotModal = () => { modal.style.display = "none"; };
+window.onclick = (event) => { if (event.target == modal) closeForgotModal(); };
+
+window.sendForgotOTP = async () => {
     const phone = document.getElementById('forgot-phone').value;
-    if (!phone) return;
+    if(!phone) return alert('أدخل الرقم');
     msgForgot.textContent = 'جاري الإرسال...';
     try {
         const response = await fetch('/api/auth/send-otp', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, type: 'reset' })
         });
         const data = await response.json();
         if (data.success) {
             msgForgot.textContent = 'تم الإرسال!'; msgForgot.style.color = '#00ff88';
             document.getElementById('forgot-step-1').style.display = 'none';
             document.getElementById('forgot-step-2').style.display = 'block';
-        } else { msgForgot.textContent = data.message; msgForgot.style.color = 'red'; }
-    } catch (e) { msgForgot.textContent = 'خطأ'; }
-}
+        } else { msgForgot.textContent = data.message; msgForgot.style.color = '#ff4444'; }
+    } catch(e) { msgForgot.textContent = 'خطأ'; }
+};
 
-async function resetPassword() {
+window.resetPassword = async () => {
     const phone = document.getElementById('forgot-phone').value;
     const otp = document.getElementById('forgot-otp').value;
     const newPassword = document.getElementById('new-password').value;
+    if(!otp || !newPassword) return alert('أدخل البيانات');
+
     try {
         const response = await fetch('/api/auth/reset-password', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, otp, newPassword })
@@ -198,6 +272,6 @@ async function resetPassword() {
         if (data.success) {
             msgForgot.textContent = 'تم التغيير بنجاح!'; msgForgot.style.color = '#00ff88';
             setTimeout(closeForgotModal, 2000);
-        } else { msgForgot.textContent = data.message; msgForgot.style.color = 'red'; }
-    } catch (e) { msgForgot.textContent = 'خطأ'; }
-}
+        } else { msgForgot.textContent = data.message; msgForgot.style.color = '#ff4444'; }
+    } catch(e) { msgForgot.textContent = 'خطأ'; }
+};
