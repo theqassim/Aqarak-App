@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
     <title>جميع العقارات - عقارك</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -9,40 +9,44 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- 🎨 إعدادات الصفحة (بدون هيدر) --- */
+        /* --- 🎨 إعدادات الصفحة (تصحيح الفراغات) --- */
         :root {
-            --glass-bg: rgba(20, 20, 20, 0.95);
+            --glass-bg: rgba(20, 20, 20, 0.98); /* خلفية داكنة أكثر */
             --neon-primary: #00ff88;
             --neon-secondary: #00d4ff;
             --card-bg: #1a1a1a;
         }
 
+        /* إجبار الصفحة على البدء من الأعلى */
         body.internal-page {
             background-color: #0f0f0f;
             background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
             min-height: 100vh;
-            margin: 0;
-            padding: 0; /* 🚫 مفيش أي مسافات من فوق */
+            margin: 0 !important;
+            padding: 0 !important;
+            display: block !important; /* لغينا الـ flex اللي كان بيوسطن المحتوى */
         }
 
         /* --- 1. حاوية التحكم العلوية (Header + Search + Filters) --- */
         .adv-control-bar {
             position: sticky;
-            top: 0; /* 📌 لازقة في سقف المتصفح */
+            top: 0;
             z-index: 1000;
             width: 100%;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            padding: 15px 5%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            
+            /* تظبيط المسافات */
+            padding: 10px 15px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            /* تدوير الحواف من تحت بس لشكل جمالي */
-            border-bottom-left-radius: 25px;
-            border-bottom-right-radius: 25px;
+            gap: 12px;
+            
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
 
         /* الصف العلوي: زر العودة + اللوجو */
@@ -50,36 +54,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
         }
 
         .nav-logo-area {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             color: white;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .btn-back-home {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 255, 136, 0.1);
             color: var(--neon-primary);
             text-decoration: none;
-            padding: 8px 15px;
+            padding: 6px 15px;
             border-radius: 50px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            font-size: 0.9rem;
+            border: 1px solid var(--neon-primary);
+            font-size: 0.85rem;
             transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .btn-back-home:hover {
-            background: var(--neon-primary);
-            color: black;
-            box-shadow: 0 0 15px var(--neon-primary);
+            gap: 6px;
         }
 
         /* صف البحث والتبويبات */
@@ -97,48 +94,51 @@
 
         .adv-search-input {
             width: 100%;
-            padding: 12px 45px 12px 15px;
-            background: rgba(0,0,0,0.5);
+            padding: 10px 40px 10px 15px;
+            background: rgba(0,0,0,0.6);
             border: 1px solid #444;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            font-size: 0.95rem;
-            transition: 0.3s;
+            font-size: 0.9rem;
+            height: 40px;
         }
 
         .adv-search-input:focus {
             border-color: var(--neon-primary);
-            background: rgba(0,0,0,0.8);
             outline: none;
         }
 
         .adv-search-icon {
             position: absolute;
-            right: 15px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--neon-primary);
+            font-size: 1rem;
         }
 
         .adv-type-tabs {
-            background: rgba(0,0,0,0.5);
-            padding: 4px;
-            border-radius: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 3px;
+            border-radius: 10px;
             display: flex;
-            gap: 4px;
+            gap: 3px;
             border: 1px solid #444;
+            height: 40px;
         }
 
         .adv-tab-btn {
-            padding: 8px 15px;
+            padding: 0 15px;
             border-radius: 8px;
             border: none;
             background: transparent;
-            color: #888;
+            color: #999;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.9rem;
-            transition: 0.3s;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            height: 100%;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .adv-tab-btn.active {
@@ -146,34 +146,36 @@
             color: #000;
         }
 
-        /* الفلاتر السفلية (غرف وسعر) */
+        /* الفلاتر السفلية */
         .adv-filters-row {
             display: flex;
             gap: 8px;
-            overflow-x: auto; /* عشان لو الشاشة ضيقة اوي */
-            padding-bottom: 5px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            -webkit-overflow-scrolling: touch; /* تمرير ناعم للموبايل */
         }
-        
-        /* إخفاء شريط التمرير */
         .adv-filters-row::-webkit-scrollbar { display: none; }
 
         .adv-select, .adv-num-input {
             background: #222;
             border: 1px solid #444;
             color: white;
-            padding: 8px 12px;
+            padding: 0 10px;
             border-radius: 8px;
             font-size: 0.85rem;
-            min-width: 100px;
+            height: 38px;
+            min-width: 90px;
         }
 
         .adv-reset-btn {
             background: rgba(255, 68, 68, 0.2);
             color: #ff4444;
             border: 1px solid #ff4444;
-            min-width: 35px;
+            min-width: 38px;
+            height: 38px;
             border-radius: 8px;
             cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* --- 2. شبكة العقارات --- */
@@ -181,7 +183,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
-            padding: 30px 20px;
+            padding: 20px 15px;
             max-width: 1250px;
             margin: 0 auto;
         }
@@ -189,30 +191,49 @@
         /* الكارت */
         .adv-card {
             background: var(--card-bg); border-radius: 16px; overflow: hidden;
-            border: 1px solid #333; transition: 0.4s; position: relative;
+            border: 1px solid #333; transition: 0.3s; position: relative;
             display: flex; flex-direction: column;
         }
-        .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
         .adv-card-img-box { height: 200px; position: relative; }
         .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .adv-price-tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: var(--neon-primary); padding: 4px 10px; border-radius: 8px; font-weight: bold; border: 1px solid var(--neon-primary); font-size: 1rem; }
-        .adv-type-badge { position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: black; }
+        .adv-price-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.85); color: var(--neon-primary); padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid var(--neon-primary); font-size: 0.95rem; }
+        .adv-type-badge { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; color: black; }
         .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
         
-        .adv-card-body { padding: 15px; }
-        .adv-title { color: white; margin: 0 0 10px 0; font-size: 1.1rem; }
-        .adv-features { display: flex; gap: 10px; color: #aaa; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .adv-card-body { padding: 12px; }
+        .adv-title { color: white; margin: 0 0 8px 0; font-size: 1rem; line-height: 1.4; }
+        .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.8rem; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
         .adv-feat-item i { color: var(--neon-secondary); }
         
-        .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        .adv-details-btn:hover { background: var(--neon-primary); color: black; }
+        .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
 
+        /* 🔥 تحسينات الموبايل القوية لإزالة الفراغ 🔥 */
         @media (max-width: 768px) {
-            .adv-main-row { flex-direction: column; }
-            .adv-filters-row { flex-wrap: wrap; }
-            .adv-filter-group { flex: 1 1 40%; }
-            .adv-select, .adv-num-input { width: 100%; }
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow-x: hidden;
+            }
+            
+            body.internal-page {
+                padding-top: 0 !important; /* تأكيد عدم وجود مسافة علوية */
+            }
+
+            .adv-control-bar {
+                top: 0;
+                border-radius: 0 0 15px 15px; /* تدوير أقل للموبايل */
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .adv-main-row { flex-direction: column; gap: 8px; }
+            .adv-filters-row { padding-bottom: 5px; }
+            
+            .adv-grid-container {
+                padding: 15px 10px; /* تقليل هوامش الشبكة */
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -222,18 +243,18 @@
         
         <div class="nav-top-bar">
             <div class="nav-logo-area">
-                <img src="logo.jpg" style="height: 35px; border-radius: 50%;">
+                <img src="logo.jpg" style="height: 32px; border-radius: 50%;">
                 <span>عقارك</span>
             </div>
             <a href="home" class="btn-back-home">
-                <i class="fas fa-arrow-right"></i> الرئيسية
+                العودة <i class="fas fa-arrow-left"></i> 
             </a>
         </div>
 
         <div class="adv-main-row">
             <div class="adv-search-wrapper">
                 <i class="fas fa-search adv-search-icon"></i>
-                <input type="text" id="adv-search-input" class="adv-search-input" placeholder="ابحث باسم المنطقة، الكومبوند، أو الكود...">
+                <input type="text" id="adv-search-input" class="adv-search-input" placeholder="بحث (منطقة، كومبوند، كود)...">
             </div>
 
             <div class="adv-type-tabs">
@@ -249,22 +270,21 @@
                 <option value="1">1 غرفة</option>
                 <option value="2">2 غرفة</option>
                 <option value="3">3 غرف</option>
-                <option value="4">4+ غرف</option>
             </select>
 
             <input type="number" id="adv-price-min" class="adv-num-input" placeholder="من (سعر)" style="flex:1;">
             <input type="number" id="adv-price-max" class="adv-num-input" placeholder="إلى (سعر)" style="flex:1;">
 
-            <button class="adv-reset-btn" onclick="resetAdvFilters()" title="مسح الفلاتر">
+            <button class="adv-reset-btn" onclick="resetAdvFilters()">
                 <i class="fas fa-undo"></i>
             </button>
         </div>
     </div>
 
     <main class="adv-grid-container" id="adv-properties-container">
-        <div class="adv-loader" style="grid-column: 1/-1; text-align: center; color: white;">
-            <i class="fas fa-atom fa-spin fa-3x" style="color: var(--neon-primary); margin-bottom: 20px;"></i>
-            <h3>جاري البحث في العقارات...</h3>
+        <div class="adv-loader" style="grid-column: 1/-1; text-align: center; color: white; padding-top: 50px;">
+            <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--neon-primary); margin-bottom: 20px;"></i>
+            <h3>جاري البحث...</h3>
         </div>
     </main>
 
