@@ -1,62 +1,101 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>عقارك - طلب عقار</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1c2630">
-<link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>احجز عقارك - عقارك</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604"
-     crossorigin="anonymous"></script>
 </head>
-<body class="custom-body1">
+<body class="internal-page">
 
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">عقارك مضمون!</span>
+                <span class="logo-text">اطلب عقارك</span>
             </div>
             <nav class="main-nav">
-                <a href="home" class="nav-button neon-button-white">الرئيسية للموقع</a> 
+                <a href="home" class="nav-button neon-button-white">الرئيسية</a>
             </nav>
         </div>
     </header>
 
     <main class="main-content">
-        <div class="auth-frame neon-glow centered-page-content">
-            <h2>احجز عقارك المخصص</h2>
-            <p>املأ النموذج التالي لتخبرنا بالمواصفات التي تبحث عنها، وسنتواصل معك بأسرع وقت.</p>
+        <div class="neon-glow centered-page-content" style="max-width: 600px; padding: 30px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-magic" style="font-size: 3rem; color: #e91e63;"></i>
+                <h2 style="color: white; margin-top: 10px;">نظام المطابقة الذكي 🤖</h2>
+                <p style="color: #ccc;">سجل مواصفات العقار اللي بتدور عليه، وأول ما حد ينشره هيجيلك إشعار واتساب فوراً!</p>
+            </div>
 
-            <p id="request-message" class="message"></p>
-            <form id="request-form" class="auth-form">
+            <form id="request-form">
                 <div class="input-group">
-                    <label for="req-name">اسمك بالكامل</label>
-                    <input type="text" id="req-name" name="name" class="neon-input-white" required>
+                    <label>الاسم</label>
+                    <input type="text" id="req-name" class="neon-input-white" required>
                 </div>
                 <div class="input-group">
-                    <label for="req-phone">رقم هاتفك</label>
-                    <input type="tel" id="req-phone" name="phone" class="neon-input-white" required>
+                    <label>رقم الواتساب (لإرسال الإشعار)</label>
+                    <input type="tel" id="req-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
                 </div>
-                <div class="input-group">
-                    <label for="req-email">البريد الإلكتروني (اختياري)</label>
-                    <input type="email" id="req-email" name="email" class="neon-input-white">
+                <div class="input-group full-width">
+                    <label>المواصفات المطلوبة</label>
+                    <textarea id="req-specs" class="neon-input-white" rows="4" 
+                        placeholder="مثال: محتاج شقة في التجمع الخامس، 3 غرف، في حدود 3 مليون جنيه..." required></textarea>
                 </div>
-                <div class="input-group">
-                    <label for="req-specs">المواصفات المطلوبة بالتفصيل</label>
-                    <textarea id="req-specs" name="specifications" rows="5" class="neon-input-white" required></textarea>
-                </div>
-                <button type="submit" class="btn-neon-auth">إرسال الطلب</button>
+                <button type="submit" class="btn-neon-large" style="width: 100%; border-color: #e91e63; color: #e91e63;">
+                    <i class="fas fa-bell"></i> فعل التنبيه
+                </button>
             </form>
         </div>
     </main>
-     <script src="guest.js"></script>
-    <script src="request-property.js"></script>
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
+
+    <script>
+        // تعبئة البيانات تلقائياً لو مسجل
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                const data = await res.json();
+                if(data.isAuthenticated) {
+                    document.getElementById('req-name').value = data.name || '';
+                    document.getElementById('req-phone').value = data.phone || '';
+                }
+            } catch(e) {}
+        });
+
+        document.getElementById('request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'جاري الحفظ...';
+            btn.disabled = true;
+
+            const data = {
+                name: document.getElementById('req-name').value,
+                phone: document.getElementById('req-phone').value,
+                specifications: document.getElementById('req-specs').value
+            };
+
+            try {
+                const response = await fetch('/api/request-property', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                if(response.ok) {
+                    alert('✅ تم تسجيل طلبك! هيوصلك رسالة واتساب أول ما نلاقي عقار مطابق.');
+                    window.location.href = 'home';
+                } else {
+                    alert('حدث خطأ، حاول مرة أخرى.');
+                }
+            } catch(err) {
+                alert('خطأ في الاتصال.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
