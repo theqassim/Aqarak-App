@@ -1,21 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// (Supabase Config - Legacy/Backup)
+// (Supabase Config)
 const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// --- 1. Styles ---
+// --- 1. Style Injection (حقن الستايلات الخاصة بالجافاسكريبت) ---
 const style = document.createElement('style');
 style.innerHTML = `
-    /* تصميم مودال الحالة (Status Modal) */
+    /* تصميم مودال الحالة (Success/Error) */
     .status-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.95); z-index: 10000; display: flex;
         justify-content: center; align-items: center; backdrop-filter: blur(5px);
     }
     .status-modal-content {
-        background: #1c2630; padding: 40px 30px; border-radius: 20px;
+        background: #1c2630; padding: 30px; border-radius: 20px;
         width: 90%; max-width: 400px; text-align: center;
         border: 1px solid #333; position: relative;
         box-shadow: 0 0 30px rgba(0,0,0,0.5);
@@ -30,8 +30,9 @@ style.innerHTML = `
     .btn-status-action {
         width: 100%; padding: 15px; border-radius: 50px; border: none;
         font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
-        background: linear-gradient(90deg, #00ff88, #00cc6a); color: #000;
     }
+    
+    /* زر الفيديو الحديث */
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -41,6 +42,7 @@ style.innerHTML = `
     }
     .video-btn-modern:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(192, 57, 43, 0.6); }
     
+    /* صندوق الزائر */
     .guest-action-box {
         text-align: center; padding: 30px 20px; background: rgba(255, 255, 255, 0.03);
         border: 1px dashed #00ff88; border-radius: 15px; margin-top: 20px;
@@ -59,7 +61,7 @@ style.innerHTML = `
     }
     .btn-register-action:hover { background: transparent; color: #00ff88; }
 
-    /* 🆕 Edit Modal & Image Grid Styles */
+    /* مودال التعديل والصور */
     .edit-modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
@@ -83,7 +85,7 @@ style.innerHTML = `
     .btn-cancel { background: #ff4444; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.3s; }
     .btn-cancel:hover { background: #cc0000; }
 
-    /* Image Grid Logic */
+    /* شبكة الصور في التعديل */
     .img-grid-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
     .img-box { position: relative; width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid #444; transition: 0.3s; }
     .img-box img { width: 100%; height: 100%; object-fit: cover; }
@@ -97,7 +99,7 @@ style.innerHTML = `
 `;
 document.head.appendChild(style);
 
-// --- Helpers ---
+// --- 2. Helper Functions ---
 window.formatPrice = (price, type) => {
     if (!price) return 'N/A';
     const formatted = parseFloat(price).toLocaleString('ar-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0 });
@@ -113,7 +115,7 @@ window.getTypeTag = (type) => {
 window.openOfferModal = () => { document.getElementById('offer-modal').style.display = 'flex'; };
 window.closeOfferModal = () => { document.getElementById('offer-modal').style.display = 'none'; };
 
-// --- Favorites ---
+// --- 3. Favorites Logic ---
 window.toggleFavorite = async (propertyId) => {
     const btn = document.getElementById('favoriteBtn');
     const favIcon = btn.querySelector('i');
@@ -143,14 +145,18 @@ window.toggleFavorite = async (propertyId) => {
     } catch (error) { console.error('Favorite Error:', error); }
 };
 
+// --- 4. Sharing Logic ---
 window.shareProperty = async (title) => {
     const shareData = { title: `عقارك - ${title}`, text: `شاهد هذا العقار المميز على موقع عقارك: ${title}`, url: window.location.href };
-    try { if (navigator.share) await navigator.share(shareData); else { await navigator.clipboard.writeText(window.location.href); alert('تم نسخ الرابط!'); } } catch (err) { console.error('Error sharing:', err); }
+    try { 
+        if (navigator.share) await navigator.share(shareData); 
+        else { await navigator.clipboard.writeText(window.location.href); alert('تم نسخ الرابط!'); } 
+    } catch (err) { console.error('Error sharing:', err); }
 };
 
 window.handleWhatsappClick = async (link) => { window.open(link, '_blank'); };
 
-// --- 🧠 AI Similar Properties ---
+// --- 5. Similar Properties Logic ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
     if (!container) return;
@@ -200,7 +206,7 @@ async function loadSimilarProperties(currentProperty) {
     }
 }
 
-// 🟢 NEW: Auto-fill User Data in Offer Form
+// --- 6. Auto-fill User Data ---
 async function prefillUserData() {
     try {
         const res = await fetch('/api/auth/me');
@@ -216,11 +222,9 @@ async function prefillUserData() {
     } catch (e) { console.error("Error prefilling user data", e); }
 }
 
-// === Main Execution ===
+// === 7. Main Execution (DOMContentLoaded) ===
 document.addEventListener('DOMContentLoaded', async () => {
-    // تشغيل دالة التعبئة التلقائية
     prefillUserData();
-
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
     let currentImageIndex = 0;
@@ -267,26 +271,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!imageUrls || imageUrls.length === 0) imageUrls = property.imageUrl ? [property.imageUrl] : ['logo.png'];
         imageUrls = imageUrls.filter(u => u && u.trim() !== '');
 
-        loadingMessage.style.display = 'none';
+        if (loadingMessage) loadingMessage.style.display = 'none';
 
         // Contact Info
         const ownerPhone = property.sellerPhone || "01008102237"; 
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
         const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-       // Publisher Info (تحديث: جعل العداد قابل للنقر)
+       // Publisher Info
         let publisherHTML = '';
         let publisherStatsBadge = '';
 
         if (property.publisherUsername) {
             try {
-                // نكلم السيرفر نجيب عدد عقاراته
                 const statsRes = await fetch(`/api/public/profile/${property.publisherUsername}`);
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
                     const count = statsData.properties ? statsData.properties.length : 0;
                     
-                    // 👇 التعديل هنا: خليناه رابط <a> بدلاً من <span>
                     publisherStatsBadge = `
                         <a href="user-profile.html?u=${property.publisherUsername}" style="
                             background: rgba(0, 255, 136, 0.1); 
@@ -317,7 +319,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         } else {
-            // لو العقار منشور من الأدمن أو ملوش يوزرنيم
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
                     <p style="color: #ccc;">
@@ -326,32 +327,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         }
-        // Action Buttons Logic (With Owner Controls)
+
+        // Action Buttons Logic
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (isAuthenticated) {
-            // تعريف رسالة ورابط التفاوض
             const negOwnerPhone = property.sellerPhone ? (property.sellerPhone.replace(/\D/g, '').startsWith('0') ? '2' + property.sellerPhone : property.sellerPhone) : "201008102237";
             const negLink = `https://wa.me/${negOwnerPhone}?text=${encodeURIComponent(`سلام عليكم، كنت محتاج أتفاوض بخصوص السعر للعقار: ${property.title}`)}`;
 
-            // 👇 ده استبدال سطر الزرار القديم
             makeOfferButtonHTML = `
-                <button onclick="window.handleWhatsappClick('${negLink}')" class="btn-offer" style="background: linear-gradient(45deg, #ff9800, #ff5722); color: white;">
+                <button onclick="window.handleWhatsappClick('${negLink}')" class="btn-offer" style="background: linear-gradient(45deg, #ff9800, #ff5722); color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                     <i class="fas fa-handshake"></i> تفاوض
                 </button>
             `;
             
-            // 🟢 تحكم المالك أو الأدمن (تعديل وحذف)
+            // Owner/Admin Controls
             let ownerControlsHTML = '';
-            
-            // الشرط: إما هو صاحب العقار أو هو أدمن
             const isOwner = (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone);
             const isAdmin = (userRole === 'admin');
 
             if (isOwner || isAdmin) {
                 const controlTitle = isAdmin ? 'تحكم الإدارة 🛡️' : 'أنت صاحب هذا العقار 👑';
-                
                 ownerControlsHTML = `
                     <div style="margin-top: 20px; padding: 15px; border: 1px solid ${isAdmin ? '#e91e63' : '#00ff88'}; border-radius: 10px; background: rgba(0, 0, 0, 0.2); text-align: center;">
                         <p style="color: ${isAdmin ? '#e91e63' : '#00ff88'}; font-weight: bold; margin-bottom: 15px;">
@@ -367,7 +364,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
-                // حقن المودال في الصفحة
                 injectEditModal(property);
             }
 
@@ -381,7 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
                         <i class="fab fa-whatsapp"></i> تواصل مع المالك
                     </button>
-                    <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--main-secondary); color:#fff; flex:1;">
+                    <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--neon-secondary); color:#fff; flex:1;">
                         <i class="fas fa-share-alt"></i> مشاركة
                     </button>
                     <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
@@ -408,11 +404,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         let videoSectionHTML = '';
         const videoList = Array.isArray(property.video_urls) ? property.video_urls : [];
         if (videoList.length > 0) {
-            videoSectionHTML = `<div style="width: 100%; display: flex; justify-content: center; margin-bottom: 20px;"><button onclick="goToCinemaMode()" class="video-btn-modern"><div class="icon-pulse">▶</div><span>مشاهدة فيديو العقار</span><span class="badge">${videoList.length}</span></button></div>`;
+            videoSectionHTML = `<div style="width: 100%; display: flex; justify-content: center; margin-bottom: 20px;"><button onclick="goToCinemaMode()" class="video-btn-modern"><div class="icon-pulse">▶</div><span>مشاهدة فيديو العقار</span><span class="badge" style="background:white; color:red; padding:2px 6px; border-radius:50%; font-size:0.8rem; margin-right:5px;">${videoList.length}</span></button></div>`;
             window.goToCinemaMode = () => { localStorage.setItem('activePropertyVideos', JSON.stringify(videoList)); window.location.href = 'video-player'; };
         }
 
-        // Dynamic Specs
+        // Specs List
         let specsHTML = `<li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>`;
         if (property.rooms && parseInt(property.rooms) > 0) specsHTML += `<li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>`;
         if (property.bathrooms && parseInt(property.bathrooms) > 0) specsHTML += `<li><span>الحمامات:</span> ${property.bathrooms} <i class="fas fa-bath"></i></li>`;
@@ -420,16 +416,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (property.floors_count && parseInt(property.floors_count) > 0) specsHTML += `<li><span>عدد الأدوار:</span> ${property.floors_count} <i class="fas fa-building"></i></li>`;
         if (property.finishing_type && property.finishing_type !== 'undefined') specsHTML += `<li><span>التشطيب:</span> ${property.finishing_type} <i class="fas fa-paint-roller"></i></li>`;
 
-        // HTML Injection
+        // ✅ HTML Rendering
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
                 ${property.isLegal ? `<div class="legal-trust-box neon-glow"><div class="legal-icon"><i class="fas fa-shield-alt"></i></div><div class="legal-content"><h4>عقار تم الفحص القانوني له ✅</h4><p>تمت مراجعة أوراق هذا العقار.</p></div></div>` : ''}
+                
                 <div class="details-layout">
                     <div class="details-info-frame neon-glow">
-                        <div class="price-type-info">
-                            <p class="detail-price">${window.formatPrice(property.price, property.type)}</p>
+                        <div class="price-type-info" style="display:flex; justify-content:space-between; align-items:center;">
+                            <p class="detail-price" style="margin:0;">${window.formatPrice(property.price, property.type)}</p>
                             ${makeOfferButtonHTML}
+                        </div>
+
+                         <div style="margin: 10px 0;">
+                            ${property.isFeatured ? '<span class="badge-featured-main"><i class="fas fa-star"></i> عقار مميز</span>' : ''}
                         </div>
                         
                         <div id="admin-secret-box" style="display:none; margin:15px 0; background:#fff0f0; border:2px dashed #dc3545; padding:10px; border-radius:8px;">
@@ -448,19 +449,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
 
                         ${videoSectionHTML}
-                        <div class="property-description-box"><h3>الوصف</h3><p>${property.description || 'لا يوجد وصف.'}</p></div>
+                        
+                        <div class="property-description-box" style="margin-top:20px;">
+                            <h3 style="color:#00ff88; margin-bottom:10px;">الوصف</h3>
+                            <p style="color:#ccc; line-height:1.6;">${property.description || 'لا يوجد وصف.'}</p>
+                        </div>
+                        
                         ${publisherHTML}
                         ${actionSectionHTML}
                     </div>
                     
                     <div class="image-gallery-frame neon-glow">
                         <div class="gallery-inner">
-                            <div class="main-image-container"><img id="property-main-image" src="${imageUrls[0]}" class="main-image"><button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-right"></i></button><button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-left"></i></button></div>
+                            <div class="main-image-container">
+                                <img id="property-main-image" src="${imageUrls[0]}" class="main-image">
+                                ${imageUrls.length > 1 ? `<button id="prev-image" class="gallery-nav-btn prev-btn"><i class="fas fa-chevron-right"></i></button><button id="next-image" class="gallery-nav-btn next-btn"><i class="fas fa-chevron-left"></i></button>` : ''}
+                            </div>
                             <div id="image-thumbnails" class="image-thumbnails"></div>
                         </div>
                     </div>
                 </div>
-                <div class="similar-properties-section" style="margin-top: 50px;"><h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--main-secondary); display:inline-block; padding-bottom:5px;"><i class="fas fa-home"></i> عقارات مشابهة</h2><div id="similar-properties-container" class="listings-container"><p>جاري البحث...</p></div></div>
+                
+                <div class="similar-properties-section" style="margin-top: 50px;">
+                    <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--neon-secondary); display:inline-block; padding-bottom:5px; color:white;">
+                        <i class="fas fa-home"></i> عقارات مشابهة
+                    </h2>
+                    <div id="similar-properties-container" class="listings-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px;">
+                        <p>جاري البحث...</p>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -471,13 +488,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 box.style.display = 'block';
                 const controlsDiv = document.createElement('div');
                 controlsDiv.style.marginTop = '10px'; controlsDiv.style.display = 'flex'; controlsDiv.style.gap = '10px';
+                
                 const createBadgeBtn = (text, isActive, color, onClick) => {
                     const btn = document.createElement('button'); btn.className = 'btn-neon-auth';
                     btn.style.fontSize = '0.7rem'; btn.style.padding = '5px 10px'; btn.style.background = isActive ? color : '#555';
+                    btn.style.color = isActive ? '#000' : '#fff';
                     btn.innerHTML = isActive ? `<i class="fas fa-check"></i> ${text}` : `تفعيل ${text}`; btn.onclick = onClick; return btn;
                 };
-                controlsDiv.appendChild(createBadgeBtn('مميز', property.isFeatured, '#ffc107', async () => { if(!confirm('تغيير حالة التميز؟')) return; await fetch(`/api/admin/toggle-badge/${property.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'isFeatured', value: !property.isFeatured }) }); location.reload(); }));
-                controlsDiv.appendChild(createBadgeBtn('قانوني', property.isLegal, '#28a745', async () => { if(!confirm('تغيير حالة الفحص القانوني؟')) return; await fetch(`/api/admin/toggle-badge/${property.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'isLegal', value: !property.isLegal }) }); location.reload(); }));
+                
+                controlsDiv.appendChild(createBadgeBtn('مميز', property.isFeatured, '#ffc107', async () => { 
+                    if(!confirm('تغيير حالة التميز؟')) return; 
+                    await fetch(`/api/admin/toggle-badge/${property.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'isFeatured', value: !property.isFeatured }) }); 
+                    location.reload(); 
+                }));
+                
+                controlsDiv.appendChild(createBadgeBtn('قانوني', property.isLegal, '#28a745', async () => { 
+                    if(!confirm('تغيير حالة الفحص القانوني؟')) return; 
+                    await fetch(`/api/admin/toggle-badge/${property.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'isLegal', value: !property.isLegal }) }); 
+                    location.reload(); 
+                }));
+                
                 box.appendChild(controlsDiv);
             }
         }
@@ -503,7 +533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // Offer Form
+        // Offer Form Logic
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
@@ -519,18 +549,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-    } catch (error) { console.error(error); container.innerHTML = `<p class="error">خطأ: ${error.message}</p>`; loadingMessage.style.display = 'none'; }
+    } catch (error) { console.error(error); container.innerHTML = `<p class="error">خطأ: ${error.message}</p>`; if(loadingMessage) loadingMessage.style.display = 'none'; }
 });
 
 // ============================================================
-// 🛠️ دوال مودال التعديل الجديد (نظام إدارة الصور)
+// 🛠️ Edit Modal Functions (إدارة الصور والتعديل)
 // ============================================================
-
-let currentEditImages = []; // قائمة روابط الصور القديمة
-let newEditFiles = [];      // قائمة ملفات الصور الجديدة
+let currentEditImages = []; 
+let newEditFiles = [];
 
 function injectEditModal(prop) {
-    // تهيئة القوائم
     currentEditImages = [];
     newEditFiles = [];
     try {
@@ -538,6 +566,10 @@ function injectEditModal(prop) {
         else if(prop.imageUrls) currentEditImages = JSON.parse(prop.imageUrls);
         else if(prop.imageUrl) currentEditImages = [prop.imageUrl];
     } catch (e) { currentEditImages = []; }
+
+    // إزالة أي مودال قديم
+    const oldModal = document.getElementById('edit-modal');
+    if(oldModal) oldModal.remove();
 
     const modalHTML = `
         <div id="edit-modal" class="edit-modal-overlay">
@@ -550,7 +582,7 @@ function injectEditModal(prop) {
                     
                     <input type="file" id="new-images-input" multiple accept="image/*" style="display: none;">
                     <button type="button" onclick="document.getElementById('new-images-input').click()" 
-                        class="btn-neon-auth" style="width: 100%; background: #2196F3; border-color: #2196F3; color: white; margin-top: 15px;">
+                        class="btn-login-action" style="width: 100%; border-color: #2196F3; color: #2196F3; margin-top: 15px;">
                         <i class="fas fa-plus-circle"></i> إضافة صور جديدة
                     </button>
                 </div>
@@ -566,16 +598,16 @@ function injectEditModal(prop) {
                     </div>
                     <div class="edit-input-group" style="display:flex; gap:10px;">
                         <div style="flex:1;">
-                            <label>المساحة (م²)</label>
-                            <input type="number" inputmode="numeric" pattern="[0-9]*" name="area" class="edit-input" value="${prop.area}" required>
+                            <label>المساحة</label>
+                            <input type="number" name="area" class="edit-input" value="${prop.area}" required>
                         </div>
                         <div style="flex:1;">
                             <label>الغرف</label>
-                            <input type="number" inputmode="numeric" pattern="[0-9]*" inputmode="numeric" pattern="[0-9]*" name="rooms" class="edit-input" value="${prop.rooms}">
+                            <input type="number" name="rooms" class="edit-input" value="${prop.rooms}">
                         </div>
                         <div style="flex:1;">
                             <label>الحمامات</label>
-                            <input type="number" inputmode="numeric" pattern="[0-9]*" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
+                            <input type="number" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
                         </div>
                     </div>
                     <div class="edit-input-group">
@@ -594,19 +626,17 @@ function injectEditModal(prop) {
 
     renderEditImages();
 
-    // Listener for new images
     document.getElementById('new-images-input').addEventListener('change', (e) => {
         newEditFiles = [...newEditFiles, ...Array.from(e.target.files)];
         renderEditImages();
         e.target.value = '';
     });
 
-    // Form Submission
     document.getElementById('edit-property-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('.btn-save');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المراجعة والحفظ...'; 
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; 
         btn.disabled = true;
 
         const formData = new FormData();
@@ -617,49 +647,26 @@ function injectEditModal(prop) {
         formData.append('bathrooms', e.target.bathrooms.value);
         formData.append('description', e.target.description.value);
         
-        // Send remaining old images as JSON
         formData.append('keptImages', JSON.stringify(currentEditImages));
-
-        // Send new image files
-        newEditFiles.forEach(file => {
-            formData.append('newImages', file);
-        });
+        newEditFiles.forEach(file => formData.append('newImages', file));
 
         try {
             const res = await fetch(`/api/user/property/${prop.id}`, { method: 'PUT', body: formData });
             const data = await res.json();
             
-            // إغلاق مودال التحميل/التعديل القديم
             closeEditModal(); 
 
             if (res.ok) {
-                // ✅ حالة النجاح
-                window.showStatusModal('success', 'تم التعديل بنجاح!', 'تم تحديث بيانات العقار ونشره.', '');
+                window.showStatusModal('success', 'تم التعديل بنجاح!', 'تم تحديث بيانات العقار ونشره.');
             } else {
                 if (data.status === 'rejected') {
-                    // ❌ حالة الرفض (شكل الصورة اللي طلبتها)
-                    window.showStatusModal(
-                        'rejected', 
-                        'عذراً، التعديل مرفوض', 
-                        'يحتوي التعديل على مخالفة لسياسات النشر.', 
-                        data.reason // سبب الرفض
-                    );
+                    window.showStatusModal('rejected', 'عذراً، التعديل مرفوض', 'يحتوي التعديل على مخالفة لسياسات النشر.', data.reason);
                 } else {
-                    // خطأ عام
                     alert('❌ ' + (data.message || 'حدث خطأ ما'));
                 }
             }
-        } catch (err) {
-            console.error(err);
-            alert('خطأ في الاتصال');
-        } finally {
-            // إعادة تفعيل الزرار لو حصل خطأ ولم يغلق المودال
-            if(document.querySelector('.btn-save')) {
-                const btn = document.querySelector('.btn-save');
-                btn.innerHTML = originalText; 
-                btn.disabled = false;
-            }
-        }
+        } catch (err) { console.error(err); alert('خطأ في الاتصال'); } 
+        finally { if(document.querySelector('.btn-save')) { btn.innerHTML = originalText; btn.disabled = false; } }
     });
 }
 
@@ -667,37 +674,26 @@ function renderEditImages() {
     const container = document.getElementById('edit-images-container');
     container.innerHTML = '';
 
-    // Old Images
     currentEditImages.forEach((url, index) => {
-        const div = document.createElement('div');
-        div.className = 'img-box';
-        div.innerHTML = `
-            <img src="${url}">
-            <button type="button" onclick="removeOldImage(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>
-        `;
+        const div = document.createElement('div'); div.className = 'img-box';
+        div.innerHTML = `<img src="${url}"><button type="button" onclick="removeOldImage(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
         container.appendChild(div);
     });
 
-    // New Images (Preview)
     newEditFiles.forEach((file, index) => {
-        const div = document.createElement('div');
-        div.className = 'img-box';
-        div.style.borderColor = '#00ff88'; // تمييز الصور الجديدة
-        
-        const img = document.createElement('img');
-        img.style.opacity = '0.7';
+        const div = document.createElement('div'); div.className = 'img-box';
+        div.style.borderColor = '#00ff88';
+        const img = document.createElement('img'); img.style.opacity = '0.7';
         div.appendChild(img);
-
         const reader = new FileReader();
         reader.onload = (e) => { img.src = e.target.result; };
         reader.readAsDataURL(file);
-
         div.innerHTML += `<button type="button" onclick="removeNewFile(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
         container.appendChild(div);
     });
 }
 
-// Window scoped functions for inline onclicks
+// Window scoped functions
 window.removeOldImage = (index) => { currentEditImages.splice(index, 1); renderEditImages(); };
 window.removeNewFile = (index) => { newEditFiles.splice(index, 1); renderEditImages(); };
 window.openEditPropertyModal = () => { document.getElementById('edit-modal').style.display = 'flex'; };
@@ -708,12 +704,8 @@ window.deleteProperty = async (id) => {
     try {
         const res = await fetch(`/api/user/property/${id}`, { method: 'DELETE' });
         const data = await res.json();
-        if (res.ok) {
-            alert('🗑️ تم حذف العقار بنجاح.');
-            window.location.href = 'home'; 
-        } else {
-            alert('❌ فشل الحذف: ' + data.message);
-        }
+        if (res.ok) { alert('🗑️ تم حذف العقار بنجاح.'); window.location.href = 'home'; } 
+        else { alert('❌ فشل الحذف: ' + data.message); }
     } catch (err) { alert('خطأ في الاتصال بالسيرفر'); }
 };
 
@@ -734,41 +726,24 @@ window.setupLightbox = (images) => {
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
     document.addEventListener('keydown', (e) => { if (lightbox.style.display === 'flex') { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') nextBtn.click(); if (e.key === 'ArrowRight') prevBtn.click(); } });
 };
-// دالة عرض رسالة الحالة (نجاح/رفض)
+
+// Show Status Modal Helper
 window.showStatusModal = (type, title, subtitle, note = '') => {
-    // تحديد الألوان والأيقونات حسب النوع
     const isSuccess = type === 'success';
     const isRejected = type === 'rejected';
-    
     const icon = isSuccess ? 'fas fa-check-circle' : (isRejected ? 'fas fa-times-circle' : 'fas fa-clipboard-check');
-    const color = isSuccess ? '#00ff88' : (isRejected ? '#ff4444' : '#ff9800'); // أخضر، أحمر، برتقالي
-    const borderColor = color; 
-
-    // إزالة أي مودال قديم
-    const oldModal = document.getElementById('status-modal');
-    if (oldModal) oldModal.remove();
+    const color = isSuccess ? '#00ff88' : (isRejected ? '#ff4444' : '#ff9800'); 
+    
+    const oldModal = document.getElementById('status-modal'); if (oldModal) oldModal.remove();
 
     const modalHTML = `
         <div id="status-modal" class="status-modal-overlay">
-            <div class="status-modal-content" style="border-color: ${borderColor};">
-                <div class="status-icon-box" style="color: ${color};">
-                    <i class="${icon}"></i>
-                </div>
+            <div class="status-modal-content" style="border-color: ${color};">
+                <div class="status-icon-box" style="color: ${color};"><i class="${icon}"></i></div>
                 <h2 style="color: white; margin-bottom: 10px;">${title}</h2>
                 <p style="color: #ccc; font-size: 0.95rem; margin-bottom: 20px;">${subtitle}</p>
-                
-                ${note ? `
-                <div class="status-note-box" style="border-color: ${color};">
-                    <strong style="color: #fff; display:block; margin-bottom:5px;">💡 ملحوظة المراجعة:</strong>
-                    <span style="color: #ddd; font-size: 0.9rem;">${note}</span>
-                </div>
-                ` : ''}
-
-                <button onclick="document.getElementById('status-modal').remove(); window.location.reload();" 
-                        class="btn-status-action" 
-                        style="background: linear-gradient(90deg, ${color}, #444); color: white;">
-                    ${isSuccess ? 'تم' : 'إغلاق ومحاولة مرة أخرى'}
-                </button>
+                ${note ? `<div class="status-note-box" style="border-color: ${color};"><strong style="color: #fff; display:block; margin-bottom:5px;">💡 ملحوظة:</strong><span style="color: #ddd; font-size: 0.9rem;">${note}</span></div>` : ''}
+                <button onclick="document.getElementById('status-modal').remove(); window.location.reload();" class="btn-status-action" style="background: linear-gradient(90deg, ${color}, #444); color: white;">${isSuccess ? 'تم' : 'إغلاق'}</button>
             </div>
         </div>
     `;
