@@ -727,19 +727,29 @@ app.post('/api/auth/reset-password', async (req, res) => {
 });
 
 // ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع
-app.get('/api/auth/me', (req, res) => {
+// تعديل API التحقق (Real-time Ban Check)
+app.get('/api/auth/me', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
+    
     try { 
-        const decoded = jwt.verify(token, JWT_SECRET); 
-        // ✅ التعديل: إضافة name في الرد
-        res.json({ 
-            isAuthenticated: true, 
-            role: decoded.role, 
-            phone: decoded.phone, 
-            username: decoded.username,
-            name: decoded.name 
-        }); 
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // 🔥 هنا التعديل: نتأكد من الداتابيز مباشرة عشان لو لسه واخد بان دلوقتي
+        const userRes = await pgQuery('SELECT role, phone, username, name FROM users WHERE id = $1', [decoded.id]);
+        
+        if (userRes.rows.length === 0) {
+            return res.json({ isAuthenticated: false, role: 'guest' });
+        }
+
+        const user = userRes.rows[0];
+
+        // لو واخد بان، نطرده فوراً
+        if (user.role === 'banned') {
+            return res.json({ isAuthenticated: true, role: 'banned', forceLogout: true });
+        }
+
+        res.json({ isAuthenticated: true, role: user.role, phone: user.phone, username: user.username, name: user.name }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
@@ -763,6 +773,7 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 
 // 🟢 استقبال طلب بيع (مؤمن + فحص AI ذكي + بيانات ديناميكية)
 // 🟢 استقبال طلب بيع (النسخة المحدثة مع المطابقة ورأي AI)
+// 🟢 استقبال طلب بيع (تم إصلاح مشكلة السعر 0)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'سجل دخول أولاً' });
@@ -783,14 +794,19 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const files = req.files || [];
     const paths = files.map(f => f.path).join(' | ');
     const code = generateUniqueCode();
+
+    // 🔧 1. إصلاح السعر هنا (تحويل عربي لإنجليزي)
+    // لازم تكون ضفت دالة toEnglishDigits في ملفك زي ما اتفقنا
     const englishPrice = toEnglishDigits(propertyPrice); 
-    const numericPrice = parseFloat(englishPrice);
+    
+    // حساب السعر الرقمي عشان الفلترة والترتيب
+    const numericPrice = parseFloat(englishPrice); 
 
     try {
-        // 1. فحص الذكاء الاصطناعي
+        // 2. فحص الذكاء الاصطناعي (بنبعتله السعر المعالج)
         console.log("🤖 جاري فحص العقار...");
         const imageUrls = files.map(f => f.path);
-        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, propertyPrice, imageUrls);
+        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls);
 
         let finalStatus = 'pending';
         let isPublic = false;
@@ -800,7 +816,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             isPublic = true;          
         }
 
-        // 2. الحفظ في الأرشيف (مع سبب الـ AI)
+        // 3. الحفظ في الأرشيف
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
@@ -808,14 +824,14 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
              "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note") 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         `, [
-            sellerName, sellerPhone, propertyTitle, propertyType, englishPrice, 
+            sellerName, sellerPhone, propertyTitle, propertyType, englishPrice, // 👈 هنا استخدمنا السعر المعالج
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), finalStatus,
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
             aiReview.reason || 'No automated note'
         ]);
 
-        // 3. النشر الفوري + تشغيل المطابقة
+        // 4. النشر الفوري
         if (isPublic) {
             const pubRes = await pgQuery(`
                 INSERT INTO properties 
@@ -825,28 +841,29 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, '{}', $15, $16, $17)
                 RETURNING id
             `, [
-                propertyTitle, propertyPrice, parseFloat(propertyPrice.replace(/[^0-9.]/g, '')), 
+                propertyTitle, englishPrice, numericPrice, // 👈 السعر نصي (إنجليزي) ورقمي
                 safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), propertyDescription,
                 files.length > 0 ? files[0].path : 'logo.png', JSON.stringify(files.map(f => f.path)), 
                 propertyType, code, sellerName, sellerPhone, publisherUsername,
                 propertyLevel || '', safeInt(propertyFloors), propertyFinishing || ''
             ]);
             
-            // 🔥 هنا بنشغل المطابقة ونبعت الواتساب
+            // تشغيل المطابقة
             checkAndNotifyMatches({
                 id: pubRes.rows[0].id,
                 title: propertyTitle,
                 description: propertyDescription,
-                price: propertyPrice,
+                price: englishPrice,
                 level: propertyLevel,
                 sellerPhone: sellerPhone
-            }, code); // 👈 مررنا الكود السري هنا
+            });
         }
 
         // إشعار ديسكورد
         await sendDiscordNotification(`📢 طلب عقار جديد (${aiReview.status === 'approved' ? '✅ تم النشر' : '⚠️ تحت المراجعة'})`, [
             { name: "👤 المالك", value: sellerName },
             { name: "🏠 العقار", value: propertyTitle },
+            { name: "💰 السعر", value: englishPrice },
             { name: "🤖 تقرير AI", value: aiReview.reason }
         ], aiReview.status === 'approved' ? 3066993 : 15158332, files[0]?.path);
 
@@ -1085,20 +1102,20 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
             return res.status(403).json({ message: 'لا تملك صلاحية التعديل' });
         }
 
-        // 🔧 1. إصلاح السعر (تحويل الأرقام)
+        // 🔧 1. إصلاح السعر
         const englishPrice = toEnglishDigits(price);
         const numericPrice = parseFloat(englishPrice);
 
-        // 🔧 2. إصلاح فحص الصور (نبعت الصور القديمة + الجديدة للـ AI)
+        // 🔧 2. فحص الـ AI
         console.log("🤖 AI جاري فحص التعديلات...");
         const allImagesForCheck = [...keptImages, ...newImageUrls]; 
         
         const aiReview = await aiCheckProperty(title, description, englishPrice, allImagesForCheck);
 
-        // 🛑 حالة الرفض
+        // 🛑 حالة الرفض (مع إرسال السبب للواجهة)
         if (aiReview.status === 'rejected') {
             console.log(`❌ تم رفض التعديل: ${aiReview.reason}`);
-            // مسح الصور الجديدة لو اترفضت
+            
             if (newFiles.length > 0) await deleteCloudinaryImages(newImageUrls);
             
             await sendDiscordNotification("⚠️ محاولة تعديل مرفوضة", [
@@ -1106,10 +1123,12 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
                 { name: "🚫 السبب", value: aiReview.reason }
             ], 15158332);
 
-            // ✅ هنا بنرجع سبب الرفض للمستخدم في الرسالة
             return res.status(400).json({ 
                 success: false, 
-                message: `عذراً، تم رفض التعديل. السبب: ${aiReview.reason}` 
+                status: 'rejected',
+                title: 'عذراً، التعديلات مرفوضة',
+                message: 'تحتوي التعديلات على مخالفة لسياسات النشر.',
+                reason: aiReview.reason 
             });
         }
 
@@ -1117,11 +1136,13 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         const finalImageUrls = [...keptImages, ...newImageUrls];
         const mainImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : 'logo.png';
 
+        // 👇👇 التعديل هنا: ضفنا "isFeatured" = FALSE عشان يلغي التميز 👇👇
         const sql = `
             UPDATE properties 
             SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, 
             "imageUrl"=$8, "imageUrls"=$9, 
-            "level"=$10, "floors_count"=$11, "finishing_type"=$12
+            "level"=$10, "floors_count"=$11, "finishing_type"=$12,
+            "isFeatured"=FALSE 
             WHERE id=$13
         `;
         
@@ -1137,10 +1158,11 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         await sendDiscordNotification("📝 تم تعديل عقار بنجاح", [
             { name: "👤 المالك", value: property.sellerName },
             { name: "🏠 العنوان", value: title },
-            { name: "📸 الصور", value: `أصبح العدد ${finalImageUrls.length} صورة` }
+            { name: "📸 الصور", value: `أصبح العدد ${finalImageUrls.length} صورة` },
+            { name: "ℹ️ تنبيه", value: "تم إلغاء التميز (إن وجد) بسبب التعديل." }
         ], 3066993);
 
-        res.json({ success: true, message: 'تم تحديث البيانات والصور بنجاح!' });
+        res.json({ success: true, message: 'تم تحديث البيانات، وسيتم مراجعتها مرة أخرى.' });
 
     } catch (error) {
         console.error("Update Error:", error);
@@ -1290,4 +1312,22 @@ app.get('/rebuild-complaints-table', async (req, res) => {
     }
 });
 
+// حذف شكوى (للأدمن فقط)
+app.delete('/api/admin/complaint/:id', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        const id = req.params.id;
+        await pgQuery('DELETE FROM complaints WHERE id = $1', [id]);
+        
+        res.json({ success: true, message: 'تم حذف الشكوى بنجاح ✅' });
+    } catch (error) {
+        console.error("Delete Complaint Error:", error);
+        res.status(500).json({ message: 'فشل الحذف' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

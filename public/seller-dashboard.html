@@ -64,17 +64,17 @@
 
                     <div class="input-group full-width">
                         <label>عنوان الإعلان</label>
-                        <input type="text" name="propertyTitle" class="neon-input-white" placeholder="مثال: شقة لقطة في التجمع" required>
+                        <input type="text" name="propertyTitle" class="neon-input-white" required>
                     </div>
 
                     <div class="input-group">
                         <label>السعر (جنيه)</label>
-                        <input type="text" name="propertyPrice" class="neon-input-white" required>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyPrice" class="neon-input-white" required>
                     </div>
 
                     <div class="input-group">
                         <label>المساحة (م²)</label>
-                        <input type="number" name="propertyArea" class="neon-input-white" required>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyArea" class="neon-input-white" required>
                     </div>
 
                     <div class="input-group" id="finishing-group">
@@ -91,12 +91,12 @@
 
                     <div class="input-group" id="rooms-group">
                         <label>عدد الغرف</label>
-                        <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0">
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0">
                     </div>
 
                     <div class="input-group" id="bath-group">
                         <label>عدد الحمامات</label>
-                        <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0">
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0">
                     </div>
 
                     <div class="input-group" id="level-group" style="display:none;">
@@ -116,7 +116,7 @@
 
                     <div class="input-group" id="floors-count-group" style="display:none;">
                         <label>عدد الأدوار</label>
-                        <input type="number" name="propertyFloors" id="property-floors" class="neon-input-white" placeholder="مثلاً: 3 أدوار">
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyFloors" id="property-floors" class="neon-input-white">
                     </div>
 
                 </div>

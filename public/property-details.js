@@ -8,6 +8,30 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // --- 1. Styles ---
 const style = document.createElement('style');
 style.innerHTML = `
+    /* تصميم مودال الحالة (Status Modal) */
+    .status-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.95); z-index: 10000; display: flex;
+        justify-content: center; align-items: center; backdrop-filter: blur(5px);
+    }
+    .status-modal-content {
+        background: #1c2630; padding: 40px 30px; border-radius: 20px;
+        width: 90%; max-width: 400px; text-align: center;
+        border: 1px solid #333; position: relative;
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
+    .status-icon-box {
+        font-size: 3.5rem; margin-bottom: 20px;
+    }
+    .status-note-box {
+        background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;
+        margin: 20px 0; text-align: right; border-right: 4px solid;
+    }
+    .btn-status-action {
+        width: 100%; padding: 15px; border-radius: 50px; border: none;
+        font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
+        background: linear-gradient(90deg, #00ff88, #00cc6a); color: #000;
+    }
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -250,46 +274,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
         const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-        // Publisher Info (Updated to show count)
+       // Publisher Info (تحديث: جعل العداد قابل للنقر)
         let publisherHTML = '';
         let publisherStatsBadge = '';
+
         if (property.publisherUsername) {
             try {
+                // نكلم السيرفر نجيب عدد عقاراته
                 const statsRes = await fetch(`/api/public/profile/${property.publisherUsername}`);
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
                     const count = statsData.properties ? statsData.properties.length : 0;
-                    publisherStatsBadge = `<span style="background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 10px; border: 1px solid #00ff88;"><i class="fas fa-building"></i> ${count} عقار منشور</span>`;
+                    
+                    // 👇 التعديل هنا: خليناه رابط <a> بدلاً من <span>
+                    publisherStatsBadge = `
+                        <a href="user-profile.html?u=${property.publisherUsername}" style="
+                            background: rgba(0, 255, 136, 0.1); 
+                            color: #00ff88; 
+                            padding: 2px 8px; 
+                            border-radius: 12px; 
+                            font-size: 0.8rem; 
+                            margin-right: 10px; 
+                            border: 1px solid #00ff88;
+                            text-decoration: none;
+                            cursor: pointer;
+                            transition: 0.3s;">
+                            <i class="fas fa-building"></i> ${count} عقار منشور
+                        </a>
+                    `;
                 }
-            } catch (e) {}
+            } catch (e) { console.error("Error fetching publisher stats", e); }
 
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
                     <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <span><i class="fas fa-user-circle"></i> تم النشر بواسطة:</span>
-                        <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold;">${property.sellerName || 'مستخدم عقارك'}</a>
+                        <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold;">
+                            ${property.sellerName || 'مستخدم عقارك'}
+                        </a>
                         ${publisherStatsBadge}
                     </p>
                 </div>
             `;
         } else {
-            publisherHTML = `<div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;"><p style="color: #ccc;"><i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}</p></div>`;
+            // لو العقار منشور من الأدمن أو ملوش يوزرنيم
+            publisherHTML = `
+                <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
+                    <p style="color: #ccc;">
+                        <i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}
+                    </p>
+                </div>
+            `;
         }
-
         // Action Buttons Logic (With Owner Controls)
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
 
         if (isAuthenticated) {
-            makeOfferButtonHTML = `<button onclick="openOfferModal()" class="btn-offer"><i class="fas fa-hand-holding-usd"></i> قدم عرضك</button>`;
+            // تعريف رسالة ورابط التفاوض
+            const negOwnerPhone = property.sellerPhone ? (property.sellerPhone.replace(/\D/g, '').startsWith('0') ? '2' + property.sellerPhone : property.sellerPhone) : "201008102237";
+            const negLink = `https://wa.me/${negOwnerPhone}?text=${encodeURIComponent(`سلام عليكم، كنت محتاج أتفاوض بخصوص السعر للعقار: ${property.title}`)}`;
+
+            // 👇 ده استبدال سطر الزرار القديم
+            makeOfferButtonHTML = `
+                <button onclick="window.handleWhatsappClick('${negLink}')" class="btn-offer" style="background: linear-gradient(45deg, #ff9800, #ff5722); color: white;">
+                    <i class="fas fa-handshake"></i> تفاوض
+                </button>
+            `;
             
-            // 🟢 تحكم المالك (تعديل وحذف)
+            // 🟢 تحكم المالك أو الأدمن (تعديل وحذف)
             let ownerControlsHTML = '';
-            if (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone) {
+            
+            // الشرط: إما هو صاحب العقار أو هو أدمن
+            const isOwner = (currentUserPhone && property.sellerPhone && currentUserPhone === property.sellerPhone);
+            const isAdmin = (userRole === 'admin');
+
+            if (isOwner || isAdmin) {
+                const controlTitle = isAdmin ? 'تحكم الإدارة 🛡️' : 'أنت صاحب هذا العقار 👑';
+                
                 ownerControlsHTML = `
-                    <div style="margin-top: 20px; padding: 15px; border: 1px solid #00ff88; border-radius: 10px; background: rgba(0, 255, 136, 0.05); text-align: center;">
-                        <p style="color: #00ff88; font-weight: bold; margin-bottom: 15px;">
-                            <i class="fas fa-crown"></i> أنت صاحب هذا العقار
+                    <div style="margin-top: 20px; padding: 15px; border: 1px solid ${isAdmin ? '#e91e63' : '#00ff88'}; border-radius: 10px; background: rgba(0, 0, 0, 0.2); text-align: center;">
+                        <p style="color: ${isAdmin ? '#e91e63' : '#00ff88'}; font-weight: bold; margin-bottom: 15px;">
+                            ${controlTitle}
                         </p>
                         <div style="display: flex; gap: 10px; justify-content: center;">
                             <button onclick="openEditPropertyModal()" class="btn-neon-auth" style="background: #2196F3; border-color: #2196F3; color: white; flex: 1;">
@@ -301,6 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
+                // حقن المودال في الصفحة
                 injectEditModal(property);
             }
 
@@ -494,21 +561,21 @@ function injectEditModal(prop) {
                         <input type="text" name="title" class="edit-input" value="${prop.title}" required>
                     </div>
                     <div class="edit-input-group">
-                        <label>السعر (رقم أو نص)</label>
+                        <label>السعر</label>
                         <input type="text" name="price" class="edit-input" value="${prop.price}" required>
                     </div>
                     <div class="edit-input-group" style="display:flex; gap:10px;">
                         <div style="flex:1;">
                             <label>المساحة (م²)</label>
-                            <input type="number" name="area" class="edit-input" value="${prop.area}" required>
+                            <input type="number" inputmode="numeric" pattern="[0-9]*" name="area" class="edit-input" value="${prop.area}" required>
                         </div>
                         <div style="flex:1;">
                             <label>الغرف</label>
-                            <input type="number" name="rooms" class="edit-input" value="${prop.rooms}">
+                            <input type="number" inputmode="numeric" pattern="[0-9]*" inputmode="numeric" pattern="[0-9]*" name="rooms" class="edit-input" value="${prop.rooms}">
                         </div>
                         <div style="flex:1;">
                             <label>الحمامات</label>
-                            <input type="number" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
+                            <input type="number" inputmode="numeric" pattern="[0-9]*" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
                         </div>
                     </div>
                     <div class="edit-input-group">
@@ -562,16 +629,36 @@ function injectEditModal(prop) {
             const res = await fetch(`/api/user/property/${prop.id}`, { method: 'PUT', body: formData });
             const data = await res.json();
             
+            // إغلاق مودال التحميل/التعديل القديم
+            closeEditModal(); 
+
             if (res.ok) {
-                alert('✅ ' + data.message);
-                location.reload(); 
+                // ✅ حالة النجاح
+                window.showStatusModal('success', 'تم التعديل بنجاح!', 'تم تحديث بيانات العقار ونشره.', '');
             } else {
-                alert('❌ ' + data.message);
-                btn.innerHTML = originalText; btn.disabled = false;
+                if (data.status === 'rejected') {
+                    // ❌ حالة الرفض (شكل الصورة اللي طلبتها)
+                    window.showStatusModal(
+                        'rejected', 
+                        'عذراً، التعديل مرفوض', 
+                        'يحتوي التعديل على مخالفة لسياسات النشر.', 
+                        data.reason // سبب الرفض
+                    );
+                } else {
+                    // خطأ عام
+                    alert('❌ ' + (data.message || 'حدث خطأ ما'));
+                }
             }
         } catch (err) {
+            console.error(err);
             alert('خطأ في الاتصال');
-            btn.innerHTML = originalText; btn.disabled = false;
+        } finally {
+            // إعادة تفعيل الزرار لو حصل خطأ ولم يغلق المودال
+            if(document.querySelector('.btn-save')) {
+                const btn = document.querySelector('.btn-save');
+                btn.innerHTML = originalText; 
+                btn.disabled = false;
+            }
         }
     });
 }
@@ -646,4 +733,44 @@ window.setupLightbox = (images) => {
     closeBtn.addEventListener('click', close);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
     document.addEventListener('keydown', (e) => { if (lightbox.style.display === 'flex') { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') nextBtn.click(); if (e.key === 'ArrowRight') prevBtn.click(); } });
+};
+// دالة عرض رسالة الحالة (نجاح/رفض)
+window.showStatusModal = (type, title, subtitle, note = '') => {
+    // تحديد الألوان والأيقونات حسب النوع
+    const isSuccess = type === 'success';
+    const isRejected = type === 'rejected';
+    
+    const icon = isSuccess ? 'fas fa-check-circle' : (isRejected ? 'fas fa-times-circle' : 'fas fa-clipboard-check');
+    const color = isSuccess ? '#00ff88' : (isRejected ? '#ff4444' : '#ff9800'); // أخضر، أحمر، برتقالي
+    const borderColor = color; 
+
+    // إزالة أي مودال قديم
+    const oldModal = document.getElementById('status-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHTML = `
+        <div id="status-modal" class="status-modal-overlay">
+            <div class="status-modal-content" style="border-color: ${borderColor};">
+                <div class="status-icon-box" style="color: ${color};">
+                    <i class="${icon}"></i>
+                </div>
+                <h2 style="color: white; margin-bottom: 10px;">${title}</h2>
+                <p style="color: #ccc; font-size: 0.95rem; margin-bottom: 20px;">${subtitle}</p>
+                
+                ${note ? `
+                <div class="status-note-box" style="border-color: ${color};">
+                    <strong style="color: #fff; display:block; margin-bottom:5px;">💡 ملحوظة المراجعة:</strong>
+                    <span style="color: #ddd; font-size: 0.9rem;">${note}</span>
+                </div>
+                ` : ''}
+
+                <button onclick="document.getElementById('status-modal').remove(); window.location.reload();" 
+                        class="btn-status-action" 
+                        style="background: linear-gradient(90deg, ${color}, #444); color: white;">
+                    ${isSuccess ? 'تم' : 'إغلاق ومحاولة مرة أخرى'}
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
