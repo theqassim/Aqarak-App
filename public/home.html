@@ -70,6 +70,224 @@
 
 }
     </script>
+    <style>
+        /* --- 🎨 1. القواعد الأساسية (نفس كود All Properties) --- */
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --card-bg: #1a1a1a;
+            --text-main: #ffffff;
+        }
+
+        /* إعدادات الصفحة والخلفية */
+        body {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Cairo', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. الهيدر (Header) --- */
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .logo { height: 35px; border-radius: 50%; }
+
+        /* أزرار النافبار */
+        .main-nav { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .nav-button {
+            background: transparent;
+            color: #ddd;
+            text-decoration: none;
+            padding: 6px 15px;
+            border-radius: 50px;
+            border: 1px solid #444;
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+        .nav-button:hover {
+            border-color: var(--neon-primary);
+            color: var(--neon-primary);
+        }
+        
+        .sell-btn {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--neon-primary) !important;
+            border: 1px solid var(--neon-primary) !important;
+            padding: 6px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        /* --- 3. قسم البحث (Search Hero) --- */
+        .search-section {
+            padding: 30px 15px;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-bar-container {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #444;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .search-bar:focus {
+            border-color: var(--neon-secondary);
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .search-button {
+            background: var(--neon-secondary);
+            color: #000;
+            border: none;
+            padding: 0 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* --- 4. شبكة العقارات (Grid System) - نفس كود All Properties --- */
+        .listings-section {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 0 15px 40px 15px;
+        }
+
+        .section-title {
+            color: var(--neon-primary);
+            margin-bottom: 20px;
+            border-right: 4px solid var(--neon-primary);
+            padding-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .adv-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* تصميم الكارت الموحد */
+        .adv-card {
+            background: var(--card-bg); border-radius: 16px; overflow: hidden;
+            border: 1px solid #333; transition: 0.3s; position: relative;
+            display: flex; flex-direction: column;
+        }
+        .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
+        
+        .adv-card-img-box { height: 200px; position: relative; }
+        .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .adv-price-tag { 
+            position: absolute; bottom: 8px; left: 8px; 
+            background: rgba(0,0,0,0.85); color: var(--neon-primary); 
+            padding: 4px 10px; border-radius: 6px; 
+            font-weight: bold; border: 1px solid var(--neon-primary); 
+            font-size: 0.95rem; 
+        }
+        
+        .adv-type-badge { 
+            position: absolute; top: 8px; left: 8px; 
+            padding: 4px 8px; border-radius: 6px; 
+            font-weight: bold; font-size: 0.75rem; color: black; 
+        }
+        .is-sale { background: #00ff88; } 
+        .is-rent { background: #00d4ff; }
+        
+        .adv-card-body { padding: 12px; }
+        .adv-title { color: white; margin: 0 0 8px 0; font-size: 1rem; line-height: 1.4; }
+        
+        .adv-features { 
+            display: flex; gap: 10px; color: #bbb; 
+            font-size: 0.8rem; margin-bottom: 12px; 
+            border-bottom: 1px solid #333; padding-bottom: 8px; 
+        }
+        .adv-feat-item i { color: var(--neon-secondary); }
+        
+        .adv-details-btn { 
+            display: block; width: 100%; text-align: center; 
+            border: 1px solid var(--neon-primary); color: var(--neon-primary); 
+            padding: 8px; border-radius: 8px; text-decoration: none; 
+            font-weight: bold; font-size: 0.9rem; transition: 0.3s;
+        }
+        .adv-details-btn:hover { background: var(--neon-primary); color: black; }
+
+        /* زر عرض المزيد */
+        .load-more-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px 30px;
+            border-radius: 50px;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .load-more-btn:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
+
+        /* --- تحسينات الموبايل --- */
+        @media (max-width: 768px) {
+            .adv-grid-container { grid-template-columns: 1fr; gap: 15px; }
+            .search-bar-container { flex-direction: column; }
+            .search-button { width: 100%; padding: 10px; }
+            .header-container { flex-direction: column; gap: 10px; align-items: stretch; }
+            .main-nav { justify-content: center; }
+            .logo-container { justify-content: center; }
+        }
+
+        /* --- ستايلات العناصر القديمة (Popup, Chatbot, Toast) --- */
+        /* تم الإبقاء على ستايلات العناصر العائمة كما هي لأنها مستقلة */
+        .chatbot-toggler { position: fixed; bottom: 85px; right: 25px; /* ... نفس الستايل القديم ... */ }
+        /* (باقي ستايلات الشات والبوب اب موجودة داخل الكود الأصلي) */
+    </style>
 </head>
 <body>
 
