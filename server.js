@@ -59,7 +59,12 @@ const dbPool = new Pool({
 });
 
 function pgQuery(sql, params = []) { return dbPool.query(sql, params); }
-function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }
+function safeInt(value) { return isNaN(parseInt(value)) ? 0 : parseInt(value); }// 🛠️ دالة تحويل الأرقام العربية إلى إنجليزية
+function toEnglishDigits(str) {
+    if (!str) return "0";
+    return str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9.]/g, '');
+}
+
 
 // ==========================================================
 // 🧠 1. نظام الواتساب (WhatsApp QR)
@@ -778,6 +783,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const files = req.files || [];
     const paths = files.map(f => f.path).join(' | ');
     const code = generateUniqueCode();
+    const englishPrice = toEnglishDigits(propertyPrice); 
+    const numericPrice = parseFloat(englishPrice);
 
     try {
         // 1. فحص الذكاء الاصطناعي
@@ -801,7 +808,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
              "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note") 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         `, [
-            sellerName, sellerPhone, propertyTitle, propertyType, propertyPrice, 
+            sellerName, sellerPhone, propertyTitle, propertyType, englishPrice, 
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), finalStatus,
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
@@ -1053,7 +1060,6 @@ app.delete('/api/user/property/:id', async (req, res) => {
     }
 });
 
-// ✏️ تعديل العقار (بيانات + صور + فحص AI)
 app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
@@ -1062,18 +1068,15 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         const decoded = jwt.verify(token, JWT_SECRET);
         const propId = req.params.id;
         
-        // استقبال البيانات (Text + Files)
         const { 
             title, price, description, area, rooms, bathrooms, 
-            level, floors_count, finishing_type // البيانات الجديدة
+            level, floors_count, finishing_type 
         } = req.body;
 
-        // استقبال قائمة الصور القديمة اللي المستخدم سابها (بتيجي كـ نص JSON)
         const keptImages = JSON.parse(req.body.keptImages || '[]'); 
-        // استقبال ملفات الصور الجديدة
         const newFiles = req.files || [];
+        const newImageUrls = newFiles.map(f => f.path);
 
-        // 1. التحقق من الملكية
         const checkRes = await pgQuery(`SELECT "sellerPhone", "sellerName" FROM properties WHERE id = $1`, [propId]);
         if (checkRes.rows.length === 0) return res.status(404).json({ message: 'غير موجود' });
         
@@ -1082,39 +1085,38 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
             return res.status(403).json({ message: 'لا تملك صلاحية التعديل' });
         }
 
-        // 2. 🤖 فحص التعديلات بواسطة AI
-        console.log("🤖 AI جاري فحص التعديلات...");
-        const newImageUrls = newFiles.map(f => f.path); // روابط الصور الجديدة فقط للفحص
-        
-        // بنفحص العنوان والوصف والصور الجديدة بس
-        const aiReview = await aiCheckProperty(title, description, price, newImageUrls);
+        // 🔧 1. إصلاح السعر (تحويل الأرقام)
+        const englishPrice = toEnglishDigits(price);
+        const numericPrice = parseFloat(englishPrice);
 
+        // 🔧 2. إصلاح فحص الصور (نبعت الصور القديمة + الجديدة للـ AI)
+        console.log("🤖 AI جاري فحص التعديلات...");
+        const allImagesForCheck = [...keptImages, ...newImageUrls]; 
+        
+        const aiReview = await aiCheckProperty(title, description, englishPrice, allImagesForCheck);
+
+        // 🛑 حالة الرفض
         if (aiReview.status === 'rejected') {
             console.log(`❌ تم رفض التعديل: ${aiReview.reason}`);
-            
-            // لو رفع صور والـ AI رفضها، نمسحها فوراً عشان منخزنش زبالة
+            // مسح الصور الجديدة لو اترفضت
             if (newFiles.length > 0) await deleteCloudinaryImages(newImageUrls);
-
-            // إشعار للأدمن
+            
             await sendDiscordNotification("⚠️ محاولة تعديل مرفوضة", [
                 { name: "👤 المالك", value: property.sellerName },
                 { name: "🚫 السبب", value: aiReview.reason }
             ], 15158332);
 
+            // ✅ هنا بنرجع سبب الرفض للمستخدم في الرسالة
             return res.status(400).json({ 
                 success: false, 
-                message: 'عذراً، التعديلات تحتوي على مخالفة لسياساتنا. سيتم مراجعة الأمر يدوياً.' 
+                message: `عذراً، تم رفض التعديل. السبب: ${aiReview.reason}` 
             });
         }
 
-        // 3. 📦 تجميع القائمة النهائية للصور
-        // القائمة النهائية = الصور القديمة اللي سابها + الصور الجديدة اللي رفعها
+        // 3. التحديث في الداتابيز
         const finalImageUrls = [...keptImages, ...newImageUrls];
         const mainImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : 'logo.png';
 
-        // 4. التحديث في قاعدة البيانات
-        const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
-        
         const sql = `
             UPDATE properties 
             SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, 
@@ -1124,7 +1126,7 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         `;
         
         const params = [
-            title, price, numericPrice, description, safeInt(area), safeInt(rooms), safeInt(bathrooms),
+            title, englishPrice, numericPrice, description, safeInt(area), safeInt(rooms), safeInt(bathrooms),
             mainImageUrl, JSON.stringify(finalImageUrls),
             level || '', safeInt(floors_count), finishing_type || '',
             propId
@@ -1145,7 +1147,6 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
-
 // ==========================================================
 // 🛡️ نظام الإدارة والشكاوي (Admin & Complaints)
 // ==========================================================
