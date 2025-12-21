@@ -140,8 +140,8 @@ function normalizeText(text) {
     return text.replace(/(أ|إ|آ)/g, 'ا').replace(/(ة)/g, 'ه').replace(/(ى)/g, 'ي').replace(/(ؤ|ئ)/g, 'ء').toLowerCase();
 }
 
-// 2. دالة المطابقة وإرسال الإشعارات
-async function checkAndNotifyMatches(propertyDetails) {
+// 2. دالة المطابقة وإرسال الإشعارات (محدثة مع الكود السري)
+async function checkAndNotifyMatches(propertyDetails, hiddenCode) {
     try {
         console.log("🔍 جاري البحث عن طلبات مطابقة للعقار الجديد...");
         const searchText = normalizeText(propertyDetails.title + " " + propertyDetails.description + " " + (propertyDetails.level || ''));
@@ -149,6 +149,8 @@ async function checkAndNotifyMatches(propertyDetails) {
         // نجيب آخر 50 طلب شراء
         const requests = await pgQuery(`SELECT * FROM property_requests ORDER BY id DESC LIMIT 50`);
         
+        let matchFound = false;
+
         for (const req of requests.rows) {
             const reqSpec = normalizeText(req.specifications);
             
@@ -164,17 +166,32 @@ async function checkAndNotifyMatches(propertyDetails) {
             });
 
             if (isTypeMatch && matchCount >= 1) {
-                // إشعار للمشتري
-                const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد قد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}`;
+                matchFound = true;
+
+                // 1. إشعار للمشتري (طالب العقار)
+                const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد قد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}\n\n📞 للتواصل مع المالك: ${propertyDetails.sellerPhone}`;
                 await sendWhatsAppMessage(req.phone, buyerMsg);
 
-                // إشعار للبائع
-                const sellerMsg = `🚀 عقارك لقطة!\n\nيا هندسة، السيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})* وبعتناله!\nتابع تليفونك بالتوفيق. 😉`;
+                // 2. إشعار للبائع (ناشر العقار)
+                const sellerMsg = `🚀 عقارك لقطة!\n\nيا هندسة، السيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})* وبعتناله تفاصيلك!\n\n👤 اسم المشتري المحتمل: ${req.name}\n📞 رقمه: ${req.phone}\n\nبالتوفيق في البيعة! 😉`;
                 await sendWhatsAppMessage(propertyDetails.sellerPhone, sellerMsg);
                 
+                // 3. إشعار للأدمن على ديسكورد (بالتفاصيل الكاملة)
+                await sendDiscordNotification("✅ 🔥 تطابق ناجح (Match Alert)", [
+                    { name: "🏠 كود العقار", value: hiddenCode || "غير متوفر" },
+                    { name: "👤 البائع", value: `${propertyDetails.sellerPhone}` },
+                    { name: "👤 المشتري المهتم", value: `${req.name} - ${req.phone}` },
+                    { name: "📝 مواصفات الطلب", value: req.specifications }
+                ], 3066993); // لون أخضر
+
                 console.log(`✅ ماتش! طلب رقم ${req.id} مع العقار الجديد.`);
             }
         }
+
+        if (!matchFound) {
+            console.log("ℹ️ لم يتم العثور على تطابق مباشر حالياً.");
+        }
+
     } catch (e) {
         console.error("Matching Error:", e);
     }
@@ -816,7 +833,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 price: propertyPrice,
                 level: propertyLevel,
                 sellerPhone: sellerPhone
-            });
+            }, code); // 👈 مررنا الكود السري هنا
         }
 
         // إشعار ديسكورد

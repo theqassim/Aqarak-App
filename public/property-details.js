@@ -176,8 +176,27 @@ async function loadSimilarProperties(currentProperty) {
     }
 }
 
+// 🟢 NEW: Auto-fill User Data in Offer Form
+async function prefillUserData() {
+    try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        
+        if (data.isAuthenticated) {
+            const nameInput = document.getElementById('offer-name');
+            const phoneInput = document.getElementById('offer-phone');
+            
+            if (nameInput && data.name) nameInput.value = data.name;
+            if (phoneInput && data.phone) phoneInput.value = data.phone;
+        }
+    } catch (e) { console.error("Error prefilling user data", e); }
+}
+
 // === Main Execution ===
 document.addEventListener('DOMContentLoaded', async () => {
+    // تشغيل دالة التعبئة التلقائية
+    prefillUserData();
+
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
     let currentImageIndex = 0;
@@ -231,14 +250,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
         const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-        // Publisher Info
+        // Publisher Info (Updated to show count)
         let publisherHTML = '';
+        let publisherStatsBadge = '';
         if (property.publisherUsername) {
+            try {
+                const statsRes = await fetch(`/api/public/profile/${property.publisherUsername}`);
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    const count = statsData.properties ? statsData.properties.length : 0;
+                    publisherStatsBadge = `<span style="background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 10px; border: 1px solid #00ff88;"><i class="fas fa-building"></i> ${count} عقار منشور</span>`;
+                }
+            } catch (e) {}
+
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc;">
-                        <i class="fas fa-user-circle"></i> تم النشر بواسطة: 
+                    <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <span><i class="fas fa-user-circle"></i> تم النشر بواسطة:</span>
                         <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold;">${property.sellerName || 'مستخدم عقارك'}</a>
+                        ${publisherStatsBadge}
                     </p>
                 </div>
             `;
@@ -271,7 +301,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
-                // حقن المودال في الصفحة (بالنظام الجديد للصور)
                 injectEditModal(property);
             }
 
