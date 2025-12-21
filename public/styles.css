@@ -3065,3 +3065,6 @@ a[href="seller-dashboard"]:hover {
 #user-nav {
     display: flex !important;
 }
+
+   .nav-button {
+            background: rgba(0, 255, 136, 0.1);
