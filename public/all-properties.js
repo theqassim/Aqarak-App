@@ -1,130 +1,169 @@
+let advPropertiesData = [];
+let advCurrentType = 'all';
+
 document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const incomingKeyword = urlParams.get('keyword');
+    // 1. جلب البيانات فور تحميل الصفحة
+    fetchAdvProperties();
 
-    if (incomingKeyword) {
-        const keywordInput = document.getElementById('filter-keyword');
-        if (keywordInput) {
-            keywordInput.value = incomingKeyword;
-            
-            const filterBody = document.getElementById('filter-body');
-            const filterContainer = document.querySelector('.filter-container');
-            if(filterBody) filterBody.style.display = 'block';
-            if(filterContainer) filterContainer.classList.add('active');
-        }
-        
-        fetchProperties(`keyword=${encodeURIComponent(incomingKeyword)}`);
-    } else {
-        fetchProperties();
-    }
-
-    const filterForm = document.getElementById('filter-form');
-    if (filterForm) {
-        filterForm.addEventListener('submit', (e) => {
-            e.preventDefault(); 
-            applyFilter();
-        });
-    }
+    // 2. ربط الأحداث (Events) بالفلاتر الجديدة
+    const inputs = ['adv-search-input', 'adv-rooms-select', 'adv-price-min', 'adv-price-max'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('input', applyAdvFilters); // التحديث عند الكتابة فوراً
+    });
 });
 
-async function fetchProperties(queryParams = '') {
-    const container = document.querySelector('.properties-grid');
-    if (container) container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
+// دالة جلب البيانات من الـ API
+async function fetchAdvProperties() {
+    const container = document.getElementById('adv-properties-container');
+    
+    try {
+        const response = await fetch('/api/properties');
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            advPropertiesData = data;
+            
+            // التحقق لو جاي من الصفحة الرئيسية ببحث معين
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyword = urlParams.get('keyword');
+            const type = urlParams.get('type');
 
-    try {
-        const url = `/api/properties${queryParams ? '?' + queryParams : ''}`;
-        const response = await fetch(url);
-        const properties = await response.json();
-        renderProperties(properties);
-    } catch (error) {
-        console.error(error);
-        if (container) container.innerHTML = '<p class="empty-message error">حدث خطأ.</p>';
-    }
+            if (keyword) document.getElementById('adv-search-input').value = keyword;
+            if (type) {
+                if (type === 'بيع' || type === 'buy') updateAdvType('buy');
+                else if (type === 'إيجار' || type === 'rent') updateAdvType('rent');
+                else applyAdvFilters();
+            } else {
+                applyAdvFilters();
+            }
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        container.innerHTML = '<div class="adv-loader" style="color:#ff4444;"><i class="fas fa-exclamation-triangle fa-2x"></i><br><br>حدث خطأ في الاتصال بالسيرفر</div>';
+    }
 }
 
-function applyFilter() {
-    const keyword = document.getElementById('filter-keyword').value;
-    const type = document.getElementById('filter-type').value;
-    const rooms = document.getElementById('filter-rooms').value;
-    const minPrice = document.getElementById('filter-price-min').value;
-    const maxPrice = document.getElementById('filter-price-max').value;
+// دالة تحديث النوع (التبويبات)
+window.updateAdvType = function(type) {
+    advCurrentType = type;
 
-    const params = new URLSearchParams();
-    if (keyword) params.append('keyword', keyword);
-    if (type) params.append('type', type);
-    if (rooms) params.append('rooms', rooms);
-    if (minPrice) params.append('minPrice', minPrice);
-    if (maxPrice) params.append('maxPrice', maxPrice);
+    // تحديث شكل الزراير
+    document.querySelectorAll('.adv-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`adv-btn-${type}`).classList.add('active');
 
-    fetchProperties(params.toString());
-
-    const filterBody = document.getElementById('filter-body');
-    const filterContainer = document.querySelector('.filter-container');
-    if (filterBody) {
-        filterBody.style.display = 'none';
-        if(filterContainer) filterContainer.classList.remove('active');
-    }
+    applyAdvFilters();
 }
 
-function renderProperties(properties) {
-    const container = document.querySelector('.properties-grid');
-    if (!container) return;
-    container.innerHTML = '';
+// دالة الفلترة الرئيسية
+function applyAdvFilters() {
+    const keyword = document.getElementById('adv-search-input').value.toLowerCase();
+    const rooms = document.getElementById('adv-rooms-select').value;
+    const minPrice = parseFloat(document.getElementById('adv-price-min').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('adv-price-max').value) || Infinity;
 
-    if (properties.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1; text-align:center; padding:40px;">
-                <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
-                <h3>لا توجد عقارات مطابقة</h3>
-                <p>جرب كلمات بحث أخرى.</p>
-            </div>
-        `;
-        return;
-    }
+    const filtered = advPropertiesData.filter(prop => {
+        // 1. النوع
+        let typeMatch = true;
+        if (advCurrentType === 'buy') typeMatch = (prop.type === 'بيع' || prop.type === 'buy');
+        if (advCurrentType === 'rent') typeMatch = (prop.type === 'إيجار' || prop.type === 'rent');
 
-    properties.forEach(property => {
-        const formattedPrice = property.price ? parseInt(property.price).toLocaleString() : '0';
+        // 2. البحث (العنوان أو الكود)
+        const searchMatch = !keyword || 
+                            (prop.title && prop.title.toLowerCase().includes(keyword)) || 
+                            (prop.hiddenCode && prop.hiddenCode.toLowerCase().includes(keyword));
 
-        const typeTag = (property.type === 'buy' || property.type === 'بيع') 
-        ? '<span class="property-type sale">بيع</span>' 
-        : '<span class="property-type rent">إيجار</span>';
+        // 3. الغرف
+        let roomsMatch = true;
+        if (rooms) {
+            const propRooms = parseInt(prop.rooms) || 0;
+            if (rooms === '4') roomsMatch = propRooms >= 4;
+            else roomsMatch = propRooms == rooms;
+        }
 
-            
-        const detailsUrl = `property-details?id=${property.id}`;
+        // 4. السعر
+        // نحاول نجيب السعر الرقمي من كذا مكان عشان نضمن الدقة
+        let priceVal = prop.numericPrice; 
+        if (!priceVal && prop.price) {
+            priceVal = parseFloat(prop.price.toString().replace(/[^0-9.]/g, ''));
+        }
+        priceVal = priceVal || 0;
+        
+        const priceMatch = priceVal >= minPrice && priceVal <= maxPrice;
 
-        let badgesHTML = '<div class="card-badges-container">';
-        
-        if (property.isFeatured) {
-            badgesHTML += `<span class="badge-card badge-featured-small"><i class="fas fa-star"></i> مميز</span>`;
-        }
-        
-        if (property.isLegal) {
-            badgesHTML += `<span class="badge-card badge-legal-small"><i class="fas fa-shield-alt"></i> قانوني</span>`;
-        }
-        
-        badgesHTML += '</div>';
+        return typeMatch && searchMatch && roomsMatch && priceMatch;
+    });
 
-        const cardHTML = `
-            <div class="property-card neon-glow" onclick="window.location.href='${detailsUrl}'" style="cursor: pointer; position: relative;">
-                
-                ${badgesHTML}
-                
-                <img src="${property.imageUrl || 'https://via.placeholder.com/300x200'}" alt="${property.title}">
-                
-                <div class="card-content">
-                    <h3>${property.title} ${typeTag}</h3>
-                    <p class="price">${formattedPrice} ج.م</p>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
-                        <i class="fas fa-bed"></i> ${property.rooms} غرف | 
-                        <i class="fas fa-bath"></i> ${property.bathrooms} حمام | 
-                        <i class="fas fa-ruler-combined"></i> ${property.area} م²
-                    </p>
-                    <a href="${detailsUrl}" class="btn-details-pro" onclick="event.stopPropagation()">
-                        عرض التفاصيل <i class="fas fa-arrow-left" style="margin-right: 5px;"></i>
-                    </a>
-                </div>
-            </div>
-        `;
-        container.innerHTML += cardHTML;
-    });
+    renderAdvGrid(filtered);
+}
+
+// دالة رسم الكروت الجديدة
+function renderAdvGrid(properties) {
+    const container = document.getElementById('adv-properties-container');
+    container.innerHTML = '';
+
+    if (properties.length === 0) {
+        container.innerHTML = `
+            <div class="adv-loader" style="color: #888;">
+                <i class="fas fa-ghost fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                <h3>لا توجد نتائج!</h3>
+                <p>جرب تغيير خيارات البحث.</p>
+            </div>
+        `;
+        return;
+    }
+
+    properties.forEach(prop => {
+        const bgImage = prop.imageUrl || 'logo.png';
+        const priceText = prop.price ? parseInt(prop.price.toString().replace(/[^0-9]/g, '')).toLocaleString() : '0';
+        
+        const isSale = (prop.type === 'بيع' || prop.type === 'buy');
+        const typeClass = isSale ? 'is-sale' : 'is-rent';
+        const typeText = isSale ? 'للبيع' : 'للإيجار';
+
+        // شريط المميزات (غرف - حمام - مساحة)
+        const roomsHtml = prop.rooms ? `<span class="adv-feat-item"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
+        const bathsHtml = prop.bathrooms ? `<span class="adv-feat-item"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
+        const areaHtml = prop.area ? `<span class="adv-feat-item"><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
+
+        // بادجات إضافية
+        let extraBadges = '';
+        if (prop.isFeatured) extraBadges += `<span style="position:absolute; top:10px; right:10px; background:gold; color:black; padding:5px 8px; border-radius:5px; font-weight:bold; font-size:0.8rem; z-index:2;"><i class="fas fa-star"></i> مميز</span>`;
+
+        const html = `
+            <div class="adv-card" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
+                
+                <div class="adv-card-img-box">
+                    <img src="${bgImage}" alt="${prop.title}" class="adv-card-img" loading="lazy">
+                    <span class="adv-type-badge ${typeClass}">${typeText}</span>
+                    <div class="adv-price-tag">${priceText} ج.م</div>
+                    ${extraBadges}
+                </div>
+
+                <div class="adv-card-body">
+                    <h3 class="adv-title" title="${prop.title}">${prop.title}</h3>
+                    
+                    <div class="adv-features">
+                        ${roomsHtml}
+                        ${bathsHtml}
+                        ${areaHtml}
+                    </div>
+
+                    <a href="property-details?id=${prop.id}" class="adv-details-btn">
+                        عرض التفاصيل <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+}
+
+// زر إعادة التعيين
+window.resetAdvFilters = function() {
+    document.getElementById('adv-search-input').value = '';
+    document.getElementById('adv-rooms-select').value = '';
+    document.getElementById('adv-price-min').value = '';
+    document.getElementById('adv-price-max').value = '';
+    updateAdvType('all');
 }
