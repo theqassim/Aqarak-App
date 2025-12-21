@@ -1166,28 +1166,6 @@ app.post('/api/admin/toggle-ban', async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
-// 2. إرسال شكوى من المستخدم
-app.post('/api/submit-complaint', async (req, res) => {
-    const token = req.cookies.auth_token;
-    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول لإرسال شكوى' });
-    
-    try {
-        const user = jwt.verify(token, JWT_SECRET);
-        const { content } = req.body;
-        
-        await pgQuery(`INSERT INTO complaints (user_id, user_name, user_phone, content, created_at) VALUES ($1, $2, $3, $4, $5)`, 
-            [user.id, user.name, user.phone, content, new Date().toISOString()]);
-
-        // إشعار ديسكورد بالشكوى
-        await sendDiscordNotification("📢 شكوى جديدة", [
-            { name: "👤 صاحب الشكوى", value: `${user.name} (${user.phone})` },
-            { name: "📝 نص الشكوى", value: content }
-        ], 16711680); 
-
-        res.json({ success: true, message: 'تم إرسال الشكوى وسيتم مراجعتها.' });
-    } catch (error) { res.status(500).json({ message: 'خطأ أثناء الإرسال' }); }
-});
-
 // 3. جلب عدد الشكاوي (للأدمن)
 app.get('/api/admin/complaints-count', async (req, res) => {
     try {
@@ -1195,42 +1173,55 @@ app.get('/api/admin/complaints-count', async (req, res) => {
         res.json({ count: result.rows[0].count });
     } catch (e) { res.json({ count: 0 }); }
 });
+// ==========================================================
+// 🛡️ نظام الشكاوي (النسخة المصححة والنهائية)
+// ==========================================================
 
-// 4. جلب قائمة الشكاوي (للأدمن)
-// 2. إرسال شكوى من المستخدم (نسخة التصحيح)
 app.post('/api/submit-complaint', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول لإرسال شكوى' });
     
     try {
-        // 1. التحقق من التوكن
         const user = jwt.verify(token, JWT_SECRET);
-        
-        // 2. استلام البيانات
         const { content } = req.body;
+        
         if (!content) return res.status(400).json({ message: 'محتوى الشكوى فارغ' });
 
-        // 3. محاولة الإدخال في قاعدة البيانات
+        // 🛠️ خطوة التصليح الذاتي: التأكد من وجود الجدول قبل الإدخال
+        await pgQuery(`CREATE TABLE IF NOT EXISTS complaints (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            user_name TEXT,
+            user_phone TEXT,
+            content TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT
+        )`);
+
+        // الإدخال
         await pgQuery(`INSERT INTO complaints (user_id, user_name, user_phone, content, created_at) VALUES ($1, $2, $3, $4, $5)`, 
             [user.id, user.name, user.phone, content, new Date().toISOString()]);
 
-        // 4. إشعار ديسكورد
-        await sendDiscordNotification("📢 شكوى جديدة", [
-            { name: "👤 صاحب الشكوى", value: `${user.name} (${user.phone})` },
-            { name: "📝 نص الشكوى", value: content }
-        ], 16711680); 
+        // إشعار ديسكورد
+        try {
+            await sendDiscordNotification("📢 شكوى جديدة", [
+                { name: "👤 صاحب الشكوى", value: `${user.name} (${user.phone})` },
+                { name: "📝 نص الشكوى", value: content }
+            ], 16711680); 
+        } catch (discordErr) {
+            console.error("Discord Error (Ignored):", discordErr.message);
+        }
 
         res.json({ success: true, message: 'تم إرسال الشكوى بنجاح.' });
 
     } catch (error) { 
-        // 🚨 طباعة الخطأ الحقيقي في الترمينال لمعرفة السبب
+        // طباعة الخطأ بالتفصيل في التيرمينال
         console.error("❌ Complaint Error Details:", error); 
         
-        // إرسال رد يوضح نوع الخطأ للمستخدم (لأغراض التصحيح الآن)
-        res.status(500).json({ message: 'خطأ في السيرفر', debug: error.message }); 
+        // إرسال تفاصيل الخطأ للمتصفح لتراها (Debugging)
+        res.status(500).json({ message: 'خطأ في السيرفر: ' + error.message }); 
     }
 });
-
 // 5. استبدال API إحصائيات المستخدمين القديم ليجلب حالة الحظر
 app.get('/api/admin/users-stats', async (req, res) => {
     const token = req.cookies.auth_token;
