@@ -1,77 +1,88 @@
-// مصفوفة لتخزين الملفات المختارة
 let selectedFiles = []; 
-let map, marker;
+let map, marker, circle;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. جلب بيانات المستخدم
     await fetchUserData();
-
-    // 2. تفعيل منطق الحقول
     const catSelect = document.getElementById('property-category');
     if (catSelect) {
         catSelect.addEventListener('change', toggleFields);
         toggleFields();
     }
-
-    // 3. 🌍 تهيئة الخريطة
     initMap();
 });
 
-// --- دوال الخريطة والخدمات الذكية ---
+// --- 🌍 إعدادات الخريطة الجديدة ---
 function initMap() {
-    // إحداثيات افتراضية (القاهرة)
+    // القاهرة كافتراضي
     const defaultLat = 30.0444;
     const defaultLng = 31.2357;
 
+    // استخدام CartoDB Voyager (خريطة عصرية ونظيفة)
     map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
     }).addTo(map);
 
-    // محاولة جلب موقع المستخدم الحالي
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const { latitude, longitude } = position.coords;
-            map.setView([latitude, longitude], 15);
-        });
-    }
-
-    // عند الضغط على الخريطة
     map.on('click', async function(e) {
         const { lat, lng } = e.latlng;
         setMarker(lat, lng);
-        
-        // ✨ تشغيل التحليل الذكي للخدمات
         await fetchNearbyServices(lat, lng);
     });
 }
 
 function setMarker(lat, lng) {
     if (marker) map.removeLayer(marker);
+    if (circle) map.removeLayer(circle);
+
+    // إضافة الدبوس
     marker = L.marker([lat, lng]).addTo(map)
-        .bindPopup("تم تحديد موقع العقار").openPopup();
+        .bindPopup("موقع العقار").openPopup();
+
+    // إضافة دائرة توضح نطاق البحث (500 متر)
+    circle = L.circle([lat, lng], {
+        color: '#00ff88',
+        fillColor: '#00ff88',
+        fillOpacity: 0.1,
+        radius: 500
+    }).addTo(map);
     
-    // تخزين الإحداثيات في الحقول المخفية
     document.getElementById('lat').value = lat;
     document.getElementById('lng').value = lng;
 }
 
-// 🤖 دالة جلب الخدمات المحيطة (AI Analysis)
+// زرار "موقعي الحالي"
+window.locateUser = function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            map.setView([latitude, longitude], 16);
+            setMarker(latitude, longitude);
+            fetchNearbyServices(latitude, longitude);
+        }, () => { alert("تعذر تحديد الموقع. تأكد من تفعيل الـ GPS."); });
+    } else { alert("المتصفح لا يدعم تحديد الموقع."); }
+};
+
+// 🤖 البحث الذكي (محسن جداً لمصر)
 async function fetchNearbyServices(lat, lng) {
-    const statusMsg = document.querySelector('.map-note span');
-    const originalText = statusMsg.innerText;
-    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحليل المنطقة والبحث عن الخدمات...';
+    const statusMsg = document.getElementById('map-status-text');
+    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري مسح المنطقة والبحث عن الخدمات...';
     statusMsg.style.color = '#00d4ff';
 
-    // استعلام Overpass API لجلب (مدارس، مستشفيات، ماركت، بنوك) في دائرة 1000 متر
+    // استعلام موسع يشمل المساجد، السوبر ماركت، المولات، الجيم، المدارس، المستشفيات
+    // بنبحث في دائرة نصف قطرها 800 متر
     const query = `
         [out:json];
         (
-          node["amenity"~"school|hospital|university|bank|marketplace|pharmacy"](around:1000, ${lat}, ${lng});
-          way["amenity"~"school|hospital|university|bank|marketplace|pharmacy"](around:1000, ${lat}, ${lng});
+          node["amenity"~"school|hospital|university|bank|pharmacy|cafe|gym|place_of_worship"](around:800, ${lat}, ${lng});
+          way["amenity"~"school|hospital|university|bank|pharmacy|cafe|gym|place_of_worship"](around:800, ${lat}, ${lng});
+          node["shop"~"supermarket|mall|bakery|clothes"](around:800, ${lat}, ${lng});
+          way["shop"~"supermarket|mall|bakery|clothes"](around:800, ${lat}, ${lng});
+          node["leisure"~"park|fitness_centre|sports_centre"](around:800, ${lat}, ${lng});
         );
-        out center 5;
+        out center 15; 
     `;
 
     try {
@@ -81,62 +92,63 @@ async function fetchNearbyServices(lat, lng) {
         });
         const data = await response.json();
         
-        // استخراج الأسماء الفريدة
         const services = new Set();
         data.elements.forEach(el => {
-            if (el.tags.name) services.add(el.tags.name); // الاسم بالعربي أو الإنجليزي
-            else if (el.tags.amenity) services.add(el.tags.amenity); // نوع الخدمة لو مفيش اسم
+            // الأولوية للاسم العربي، ثم الإنجليزي، ثم نوع الخدمة
+            let name = el.tags['name:ar'] || el.tags.name || null;
+            let type = el.tags.amenity || el.tags.shop || el.tags.leisure;
+
+            // ترجمة بسيطة للأنواع لو الاسم مش موجود
+            if (!name && type) {
+                if(type === 'place_of_worship') name = 'مسجد/كنيسة';
+                else if(type === 'school') name = 'مدرسة';
+                else if(type === 'pharmacy') name = 'صيدلية';
+                else if(type === 'supermarket') name = 'سوبر ماركت';
+                else name = type;
+            }
+
+            if (name) services.add(name);
         });
 
-        // تحويلها لنص وتخزينها
-        const servicesArray = Array.from(services).slice(0, 8); // ناخد أول 8 خدمات بس
+        // تحويلها لنص
+        const servicesArray = Array.from(services).slice(0, 10); // ناخد أهم 10
         const servicesString = servicesArray.join(', ');
         
         document.getElementById('nearby_services').value = servicesString;
 
         if (servicesArray.length > 0) {
-            statusMsg.innerHTML = `✅ تم العثور على: ${servicesArray.length} خدمات قريبة (مدارس، مستشفيات، إلخ).`;
+            statusMsg.innerHTML = `✅ تم العثور على ${servicesArray.length} خدمات قريبة: (${servicesArray.slice(0, 3).join('، ')}...)`;
             statusMsg.style.color = '#00ff88';
         } else {
-            statusMsg.innerHTML = '⚠️ المنطقة هادئة، لم يتم العثور على معالم رئيسية مسجلة.';
-            statusMsg.style.color = '#ffd700';
+            statusMsg.innerHTML = '⚠️ المنطقة جديدة أو هادئة، لم يتم العثور على خدمات مسجلة قريبة.';
+            statusMsg.style.color = '#ff9800';
         }
 
     } catch (error) {
-        console.error("Error fetching POIs:", error);
-        statusMsg.innerText = originalText; // استعادة النص الأصلي في حالة الخطأ
+        console.error("Error fetching services:", error);
+        statusMsg.innerText = "فشل التحليل التلقائي. سيتم الاعتماد على الموقع فقط.";
     }
 }
 
-// دالة جلب بيانات المستخدم
+// --- باقي دوال الفورم (الصور والبيانات) كما هي ---
 async function fetchUserData() {
     try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
-
         if (data.isAuthenticated) {
-            const nameField = document.getElementById('seller-name');
-            if (nameField) nameField.value = data.name || 'مستخدم عقارك';
-            const phoneField = document.getElementById('seller-phone');
-            if (phoneField) phoneField.value = data.phone || '';
-        } else {
-            window.location.href = 'index'; 
-        }
+            document.getElementById('seller-name').value = data.name || 'مستخدم عقارك';
+            document.getElementById('seller-phone').value = data.phone || '';
+        } else { window.location.href = 'index'; }
     } catch (error) { console.error(error); }
 }
 
-// ==========================================================
-// 📸 منطق الصور (نفس الكود السابق مع الاحتفاظ به)
-// ==========================================================
+// منطق الصور
 const imgInput = document.getElementById('property-images');
 if (imgInput) {
     imgInput.addEventListener('change', function(event) {
         const newFiles = Array.from(event.target.files);
         newFiles.forEach(file => selectedFiles.push(file));
-        if (selectedFiles.length > 10) {
-            alert("⚠️ الحد الأقصى 10 صور فقط.");
-            selectedFiles = selectedFiles.slice(0, 10);
-        }
+        if (selectedFiles.length > 10) selectedFiles = selectedFiles.slice(0, 10);
         renderPreviews();
         this.value = ''; 
     });
@@ -152,14 +164,13 @@ function renderPreviews() {
         
         const img = document.createElement('img');
         img.style.cssText = `width:100%; height:100%; object-fit:cover; border-radius:8px; border:${isTooBig ? "2px solid red" : "1px solid #00ff88"};`;
-        
         const reader = new FileReader();
         reader.onload = (e) => img.src = e.target.result;
         reader.readAsDataURL(file);
         
         const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-        removeBtn.style.cssText = 'position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:24px; height:24px; cursor:pointer; border:2px solid white; display:flex; justify-content:center; align-items:center;';
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = 'position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; cursor:pointer; border:none; font-weight:bold;';
         removeBtn.onclick = (e) => { e.preventDefault(); selectedFiles.splice(index, 1); renderPreviews(); };
 
         wrapper.appendChild(img);
@@ -168,69 +179,34 @@ function renderPreviews() {
     });
 }
 
-// ==========================================================
-// 🚀 دالة الإرسال المعدلة (تشمل الإحداثيات والخدمات)
-// ==========================================================
+// الإرسال
 document.getElementById('seller-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector('button[type="submit"]');
+    const btn = e.target.querySelector('button[type="submit"]');
     const msg = document.getElementById('seller-form-message');
     const originalText = btn.innerHTML;
 
-    // التحقق من تحديد الموقع
     if (!document.getElementById('lat').value) {
-        alert("📍 من فضلك حدد موقع العقار على الخريطة لزيادة فرص البيع!");
-        // سكرول للخريطة
-        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        alert("📍 من فضلك حدد الموقع على الخريطة!");
+        document.querySelector('.map-container').scrollIntoView({ behavior: 'smooth' });
         return;
     }
 
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع والتحليل...';
+    btn.innerHTML = 'جاري النشر...';
     btn.disabled = true;
     if(msg) msg.textContent = '';
 
-    const formData = new FormData(form);
+    const formData = new FormData(e.target);
     formData.delete('images[]'); 
-    
-    let validImagesCount = 0;
-    selectedFiles.forEach(file => {
-        if (file.size <= 10 * 1024 * 1024) { 
-            formData.append('images', file); 
-            validImagesCount++;
-        }
-    });
-
-    if (validImagesCount === 0 && selectedFiles.length > 0) {
-        alert("⚠️ الصور كبيرة جداً. اختر صور أقل من 10 ميجا.");
-        btn.innerHTML = originalText; btn.disabled = false; return;
-    }
+    selectedFiles.forEach(file => { if (file.size <= 10 * 1024 * 1024) formData.append('images', file); });
 
     try {
-        const response = await fetch('/api/submit-seller-property', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
         const data = await response.json();
-
         if (response.ok) {
-            const successDiv = document.createElement('div');
-            successDiv.innerHTML = `
-                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center;">
-                    <div class="neon-glow" style="background:#1c2630; padding:30px; border-radius:15px; width:400px; text-align:center; border:1px solid #00ff88;">
-                        <i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88; margin-bottom:15px;"></i>
-                        <h3 style="color:#fff;">تم نشر عقارك بنجاح! 🚀</h3>
-                        <p style="color:#ccc;">تم حفظ الموقع والخدمات القريبة.</p>
-                        ${data.status !== 'approved' ? '<p style="color:#ff9800; font-size:0.9rem;">(قيد المراجعة)</p>' : ''}
-                        <button onclick="window.location.href='home'" class="btn-neon-auth" style="margin-top:20px; width:100%;">العودة للرئيسية</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(successDiv);
-            form.reset(); selectedFiles = []; renderPreviews();
-        } else {
-            throw new Error(data.message);
-        }
+            alert('🎉 تم نشر العقار بنجاح!');
+            window.location.href = 'home';
+        } else { throw new Error(data.message); }
     } catch (error) {
         if(msg) { msg.textContent = '❌ ' + error.message; msg.className = 'message error'; }
     } finally {
