@@ -6,6 +6,14 @@
     <title>عقارك - اعرض عقارك</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        /* تخصيص الخريطة */
+        #map { height: 350px; width: 100%; border-radius: 12px; border: 2px solid #333; z-index: 1; }
+        .map-note { background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+    </style>
 </head>
 <body class="internal-page custom-body">
 
@@ -127,6 +135,18 @@
                 </div>
 
                 <div class="input-group full-width">
+                    <label><i class="fas fa-map-marked-alt"></i> موقع العقار (سري: يظهر للأدمن فقط)</label>
+                    <div class="map-note">
+                        <i class="fas fa-robot"></i>
+                        <span>حدد الموقع بدقة! سيقوم الذكاء الاصطناعي بتحليل المنطقة وعرض الخدمات القريبة (مدارس، مستشفيات..) للمشترين تلقائياً.</span>
+                    </div>
+                    <div id="map"></div>
+                    <input type="hidden" name="latitude" id="lat">
+                    <input type="hidden" name="longitude" id="lng">
+                    <input type="hidden" name="nearby_services" id="nearby_services">
+                </div>
+
+                <div class="input-group full-width">
                     <label>ارفع صور العقار</label>
                     <label for="property-images" class="file-upload-label btn-neon-auth">
                         <i class="fas fa-upload"></i> اختر الصور
@@ -134,18 +154,19 @@
                     <input type="file" id="property-images" name="images[]" multiple accept="image/*" style="display:none;"> 
                     <div class="image-preview-container" id="image-preview-container"></div>
                 </div>
+                
                 <div class="whatsapp-note-box neon-glow" style="margin: 20px 0; padding: 15px; border: 1px dashed #25d366; border-radius: 10px; background: rgba(37, 211, 102, 0.1); text-align: center;">
-    <p style="color: #fff; margin-bottom: 5px; font-weight: bold;">
-        <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.2rem;"></i> عندك فيديو للعقار؟
-    </p>
-    <p style="color: #ccc; font-size: 0.9rem; margin: 0;">
-        بعد نشر الإعلان، تقدر تبعتلنا الفيديو على واتساب رقم 
-        <a href="https://wa.me/201008102237" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: bold; direction: ltr; display: inline-block;">01008102237</a> 
-        واحنا هنضيفهولك فوراً!
-    </p>
-</div>
+                    <p style="color: #fff; margin-bottom: 5px; font-weight: bold;">
+                        <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.2rem;"></i> عندك فيديو للعقار؟
+                    </p>
+                    <p style="color: #ccc; font-size: 0.9rem; margin: 0;">
+                        بعد نشر الإعلان، تقدر تبعتلنا الفيديو على واتساب رقم 
+                        <a href="https://wa.me/201008102237" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: bold; direction: ltr; display: inline-block;">01008102237</a> 
+                        واحنا هنضيفهولك فوراً!
+                    </p>
+                </div>
 
-<button type="submit" class="btn-neon-large-green">تأكيد وإرسال</button>
+                <button type="submit" class="btn-neon-large-green">تأكيد وإرسال</button>
             </form>
             <p id="seller-form-message" class="message"></p> 
         </div>
@@ -156,6 +177,8 @@
             <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
         </div>
     </footer>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="seller-form.js"></script>
 </body>
 </html>
