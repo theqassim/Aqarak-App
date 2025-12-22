@@ -3,131 +3,209 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-     <script src="admin-auth.js"></script>
-    <title>عقارك - تعديل ومسح العقارات</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1c2630">
-<link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
+    <script src="admin-auth.js"></script>
+    <title>عقارك - تعديل العقارات</title>
+    
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* ستايلات موحدة */
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --card-bg: #1a1a1a;
+            --input-bg: #111;
+        }
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            padding-top: 100px !important;
+        }
+        .main-header {
+            position: fixed !important; top: 0; width: 100%; z-index: 9999;
+            background: var(--glass-bg); backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 15px;
+        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; }
+        .nav-button { color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; text-decoration: none; }
+        .nav-button:hover { background: var(--neon-primary); color: black; }
+
+        .search-box, .edit-container {
+            background: var(--card-bg); border-radius: 16px; padding: 25px;
+            border: 1px solid #333; max-width: 800px; margin: 20px auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .neon-input-white { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid #444; color: white; border-radius: 8px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .map-wrapper { height: 300px; border: 1px solid #00d4ff; border-radius: 10px; margin-top: 10px; }
+        #map { width: 100%; height: 100%; }
+        
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } body.internal-page { padding-top: 130px !important; } }
+    </style>
 </head>
 <body class="internal-page">
 
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">مسح وتعديل (Admin)</span>
-                 <nav class="main-nav">
-                <a href="admin-home" class="nav-button neon-button-white">العودة</a> 
-            </nav>
+                <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height:40px; border-radius:50%; border:2px solid var(--neon-primary);">
+                <span style="color:white; font-weight:bold; margin-right:10px;">تعديل (Admin)</span>
             </div>
+            <nav class="main-nav">
+                <a href="admin-home" class="nav-button">العودة</a> 
+            </nav>
         </div>
     </header>
 
-    <main class="main-content">
-        <h1 class="page-title">البحث وتعديل العقارات المنشورة</h1>
-
-        <div class="search-box neon-glow centered-page-content" style="max-width: 600px;">
-            <h2>البحث بالكود السري</h2>
+    <main class="main-content" style="padding: 20px;">
+        
+        <div class="search-box">
+            <h2><i class="fas fa-search"></i> البحث بالكود السري</h2>
             <p id="search-message" class="message"></p>
-            <form id="search-property-form" class="auth-form">
-                <div class="input-group">
-                    <label for="search-code">الكود السري للعقار</label>
-                    <input type="text" id="search-code" class="neon-input-white" required>
-                </div>
-                <button type="submit" class="btn-neon-auth"><i class="fas fa-search"></i> بحث</button>
+            <form id="search-property-form" style="display:flex; gap:10px;">
+                <input type="text" id="search-code" class="neon-input-white" placeholder="أدخل كود العقار..." required>
+                <button type="submit" class="btn-neon-auth" style="background:var(--neon-primary); color:black; border:none; padding:0 20px; border-radius:8px;">بحث</button>
             </form>
         </div>
         
-        <div id="property-edit-area" style="display:none; margin-top: 30px;">
-            <div class="seller-form-container neon-glow centered-page-content" style="max-width: 800px;">
-                <h2>تعديل العقار: <span id="edit-property-title"></span></h2>
+        <div id="property-edit-area" style="display:none;">
+            <div class="edit-container">
+                <h2 style="color:var(--neon-primary); margin-bottom:20px;">تعديل البيانات</h2>
                 <p id="edit-form-message" class="message"></p>
+                
                 <form id="edit-property-form" enctype="multipart/form-data">
                     <input type="hidden" id="edit-property-id">
 
-                    <div class="form-grid">
+                    <div class="grid-2">
                         <div class="input-group">
-                            <label for="edit-title">عنوان العقار</label>
+                            <label>العنوان</label>
                             <input type="text" id="edit-title" name="title" class="neon-input-white" required>
                         </div>
                         <div class="input-group">
-                            <label for="edit-hidden-code">الكود السري</label>
-                            <input type="text" id="edit-hidden-code" name="hiddenCode" class="neon-input-white" required>
+                            <label style="color:#ffd700;">الكود السري</label>
+                            <input type="text" id="edit-hidden-code" name="hiddenCode" class="neon-input-white" style="border-color:#ffd700;" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>الفئة</label>
+                            <select id="edit-category" name="category" class="neon-input-white" onchange="toggleEditFields()">
+                                <option value="apartment">شقة / دوبلكس</option>
+                                <option value="villa">فيلا / شاليه</option>
+                                <option value="office">مكتب / عيادة</option>
+                                <option value="store">محل تجاري</option>
+                                <option value="building">عمارة بالكامل</option>
+                                <option value="land">أرض</option>
+                                <option value="warehouse">مخزن / مصنع</option>
+                            </select>
                         </div>
                         <div class="input-group">
-                            <label for="edit-price">السعر المطلوب (جنيه)</label>
-                            <input type="text" id="edit-price" name="price" class="neon-input-white" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="edit-type">نوع العرض</label>
-                            <select id="edit-type" name="type" class="neon-input-white" required>
+                            <label>النوع</label>
+                            <select id="edit-type" name="type" class="neon-input-white">
                                 <option value="بيع">بيع</option>
                                 <option value="إيجار">إيجار</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="grid-2">
                         <div class="input-group">
-                            <label for="edit-area">المساحة (م²)</label>
-                            <input type="number" id="edit-area" name="area" class="neon-input-white" min="1" required>
+                            <label>السعر</label>
+                            <input type="text" id="edit-price" name="price" class="neon-input-white" required>
                         </div>
                         <div class="input-group">
-                            <label for="edit-rooms">عدد الغرف</label>
-                            <input type="number" id="edit-rooms" name="rooms" class="neon-input-white" min="1" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="edit-bathrooms">عدد الحمامات</label>
-                            <input type="number" id="edit-bathrooms" name="bathrooms" class="neon-input-white" min="1" required>
+                            <label>المساحة</label>
+                            <input type="number" id="edit-area" name="area" class="neon-input-white" required>
                         </div>
                     </div>
 
-                    <div class="input-group full-width">
-                        <label for="edit-description">وصف تفصيلي للعقار</label>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>الغرف</label>
+                            <input type="number" id="edit-rooms" name="rooms" class="neon-input-white">
+                        </div>
+                        <div class="input-group">
+                            <label>الحمامات</label>
+                            <input type="number" id="edit-bathrooms" name="bathrooms" class="neon-input-white">
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="edit-level-group">
+                        <label>الدور</label>
+                        <select id="edit-level" name="level" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="أرضي">أرضي</option> <option value="أخير">أخير</option>
+                            <option value="1">1</option> <option value="2">2</option> <option value="3">3</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="edit-floors-group" style="display:none;">
+                        <label>عدد الأدوار</label>
+                        <input type="number" id="edit-floors" name="floors" class="neon-input-white">
+                    </div>
+
+                    <div class="input-group">
+                        <label>التشطيب</label>
+                        <select id="edit-finishing" name="finishing" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="بدون تشطيب">بدون تشطيب</option>
+                            <option value="تشطيب كامل">تشطيب كامل</option>
+                            <option value="الترا لوكس">ألترا سوبر لوكس</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>الوصف</label>
                         <textarea id="edit-description" name="description" rows="5" class="neon-input-white"></textarea>
                     </div>
 
-                    <div class="input-group full-width">
-                        <label>الصور الحالية (يمكنك مسحها أو إضافة المزيد)</label>
-                        <div class="image-preview-container existing-images" id="existing-images-container">
-                            </div>
-                        <input type="hidden" name="existingImages" id="existing-images-data">
-
-                        <label for="edit-images" class="file-upload-label btn-neon-auth" style="margin-top: 15px;">
-                            <i class="fas fa-upload"></i> إضافة صور جديدة
-                        </label>
-
-                        <div class="form-group" style="background: #f1f1f1; padding: 15px; border-radius: 8px; margin-top: 20px;">
-    <label style="font-weight: bold; margin-bottom: 10px; display: block;">🎥 فيديوهات العقار (YouTube)</label>
-    
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <input type="text" id="video-url-input" placeholder="https://www.youtube.com/watch?v=..." class="form-control" style="flex: 1;">
-        <button type="button" id="add-video-btn" style="background: #27ae60; color: white; border: none; padding: 0 20px; border-radius: 4px; cursor: pointer;">
-            <i class="fas fa-plus"></i> إضافة
-        </button>
-    </div>
-
-    <ul id="video-list-container" style="list-style: none; padding: 0; margin: 0;">
-        </ul>
-
-    <input type="hidden" name="video_urls" id="hidden-video-urls-input">
-</div>
-
-                        <input type="file" id="edit-images" name="propertyImages" multiple accept="image/*" style="display:none;">
+                    <div class="input-group">
+                        <label><i class="fas fa-map-marker-alt"></i> تعديل الموقع</label>
+                        <div class="map-wrapper" id="edit-map-container">
+                            <div id="map"></div>
+                        </div>
+                        <input type="hidden" name="latitude" id="edit-lat">
+                        <input type="hidden" name="longitude" id="edit-lng">
                     </div>
-                    
-                    <button type="submit" class="btn-neon-auth"><i class="fas fa-save"></i> حفظ التعديلات</button>
-                    <button type="button" class="btn-neon-red" id="delete-property-btn"><i class="fas fa-trash"></i> مسح العقار نهائياً</button>
+
+                    <div class="input-group">
+                        <label>الصور الحالية</label>
+                        <div id="existing-images-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
+                        <input type="hidden" name="existingImages" id="existing-images-data">
+                        
+                        <label class="btn-neon-auth" style="display:block; text-align:center; padding:10px; cursor:pointer;">
+                            <i class="fas fa-plus"></i> إضافة صور جديدة
+                            <input type="file" name="propertyImages" multiple accept="image/*" style="display:none;">
+                        </label>
+                    </div>
+
+                    <div class="input-group" style="background:#222; padding:15px; border-radius:10px; margin-top:20px;">
+                        <label style="color:#e91e63;"><i class="fab fa-youtube"></i> روابط يوتيوب</label>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" id="video-url-input" class="neon-input-white" placeholder="رابط الفيديو...">
+                            <button type="button" id="add-video-btn" style="background:#27ae60; color:white; border:none; padding:0 15px; border-radius:5px;">إضافة</button>
+                        </div>
+                        <ul id="video-list-container" style="list-style:none; padding:0; color:white;"></ul>
+                        <input type="hidden" name="video_urls" id="hidden-video-urls-input">
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button type="submit" class="btn-neon-auth" style="flex:2; background:var(--neon-primary); color:black; padding:12px; font-weight:bold; border:none; border-radius:8px;">حفظ التعديلات</button>
+                        <button type="button" id="delete-property-btn" style="flex:1; background:#ff4444; color:white; border:none; border-radius:8px;">مسح العقار</button>
+                    </div>
                 </form>
             </div>
         </div>
     </main>
 
-    <script src="dash.js"></script>
-    <script src="logout.js"></script>
-    <script src="utils.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="admin-edit.js"></script>
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
 </body>
 </html>

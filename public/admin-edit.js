@@ -1,251 +1,150 @@
+let map, marker;
+let currentVideoList = [];
+
 document.addEventListener('DOMContentLoaded', () => {
+    // تهيئة الخريطة
+    map = L.map('map').setView([30.0444, 31.2357], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(map);
+    map.on('click', (e) => updateMarker(e.latlng.lat, e.latlng.lng));
 
     const searchForm = document.getElementById('search-property-form');
     const editArea = document.getElementById('property-edit-area');
-    const searchMessageEl = document.getElementById('search-message');
     const editForm = document.getElementById('edit-property-form');
-    const deleteBtn = document.getElementById('delete-property-btn');
-    const editMessageEl = document.getElementById('edit-form-message');
     
-    // متغيرات الفيديوهات
-    const addVideoBtn = document.getElementById('add-video-btn');
-    const videoInput = document.getElementById('video-url-input');
-    const videoListContainer = document.getElementById('video-list-container');
-    const hiddenVideoInput = document.getElementById('hidden-video-urls-input');
-    
-    let currentPropertyId = null; 
-    let currentVideoList = []; // مصفوفة لتخزين الفيديوهات حالياً
-
-    async function safeFetchJson(url, options = {}) {
-        const response = await fetch(url, options);
-        const text = await response.text(); 
-        
-        let data;
-        try {
-            data = text ? JSON.parse(text) : {};
-        } catch (err) {
-            console.error("Non-JSON response:", text);
-            throw new Error(`خطأ في استجابة السيرفر: لم يتم إرجاع بيانات JSON صالحة.`);
-        }
-
-        if (!response.ok) {
-            throw new Error(data.message || `حدث خطأ: ${response.status}`);
-        }
-
-        return data;
-    }
-
+    // البحث
     searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const code = document.getElementById('search-code').value.trim();
+        if(!code) return alert("أدخل الكود");
         
-        if (!code) {
-            searchMessageEl.textContent = 'الرجاء إدخال كود للعقارات.';
-            searchMessageEl.className = 'error';
-            return;
-        }
-
-        searchMessageEl.textContent = 'جاري البحث...';
-        searchMessageEl.className = '';
-        editArea.style.display = 'none';
-
         try {
-            const result = await safeFetchJson(`/api/property-by-code/${code}`);
-            await loadPropertyDetailsForEdit(result.id);
-            
-            searchMessageEl.textContent = 'تم العثور على العقار.';
-            searchMessageEl.className = 'success';
+            const res = await fetch(`/api/property-by-code/${code}`);
+            if(!res.ok) throw new Error('لم يتم العثور على العقار');
+            const data = await res.json();
+            loadData(data);
             editArea.style.display = 'block';
-
-        } catch (error) {
-            console.error("Search Error:", error);
-            searchMessageEl.textContent = error.message;
-            searchMessageEl.className = 'error';
-        }
+        } catch(err) { alert(err.message); }
     });
 
-    async function loadPropertyDetailsForEdit(id) {
-        currentPropertyId = id;
-        try {
-            const property = await safeFetchJson(`/api/property/${id}`);
-
-            document.getElementById('edit-property-id').value = property.id;
-            document.getElementById('edit-property-title').textContent = property.title;
-            document.getElementById('edit-title').value = property.title;
-            document.getElementById('edit-hidden-code').value = property.hiddenCode;
-            document.getElementById('edit-price').value = property.price;
-            document.getElementById('edit-type').value = property.type;
-            document.getElementById('edit-area').value = property.area;
-            document.getElementById('edit-rooms').value = property.rooms;
-            document.getElementById('edit-bathrooms').value = property.bathrooms;
-            document.getElementById('edit-description').value = property.description;
-
-            // 1. التعامل مع الصور القديمة
-            renderExistingImages(property.imageUrls || []);
-
-            // 2. التعامل مع الفيديوهات (التعديل الجديد) 🎥
-            // نتأكد إنها مصفوفة، لو جاية null نخليها فاضية
-            currentVideoList = Array.isArray(property.video_urls) ? property.video_urls : [];
-            renderVideoListUI(); // رسم القائمة
-
-        } catch (error) {
-            console.error("Load Details Error:", error);
-            editMessageEl.textContent = 'فشل في تحميل تفاصيل العقار للتعديل.';
-            editMessageEl.className = 'error';
-        }
-    }
-    
-    // --- دوال الصور ---
-    function renderExistingImages(imageUrls) {
-        const container = document.getElementById('existing-images-container');
-        const hiddenInput = document.getElementById('existing-images-data');
-        container.innerHTML = '';
-        
-        imageUrls.forEach(url => {
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'existing-image-wrapper';
-            imgWrapper.innerHTML = `
-                <img src="${url}" class="preview-image" data-url="${url}" alt="صورة العقار">
-                <button type="button" class="remove-image-btn" data-url="${url}"><i class="fas fa-times"></i></button>
-            `;
-            container.appendChild(imgWrapper);
-        });
-
-        hiddenInput.value = JSON.stringify(imageUrls);
-        container.querySelectorAll('.remove-image-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const btn = e.target.closest('.remove-image-btn');
-                const urlToRemove = btn.dataset.url;
-                
-                btn.closest('.existing-image-wrapper').remove();
-                
-                let updatedUrls = JSON.parse(hiddenInput.value);
-                updatedUrls = updatedUrls.filter(url => url !== urlToRemove);
-                hiddenInput.value = JSON.stringify(updatedUrls);
-                
-                editMessageEl.textContent = 'تم إزالة الصورة من العرض (اضغط حفظ لتأكيد الحذف).';
-                editMessageEl.className = 'info';
-            });
-        });
-    }
-
-    // --- دوال الفيديوهات (الجديدة) 🎥 ---
-
-    // دالة لرسم قائمة الفيديوهات في الشاشة
-    function renderVideoListUI() {
-        videoListContainer.innerHTML = ''; // تفريغ القائمة
-        
-        currentVideoList.forEach((link, index) => {
-            const li = document.createElement('li');
-            li.style.cssText = "background: white; padding: 10px; margin-bottom: 5px; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;";
-            
-            li.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
-                    <span style="color: #e74c3c;"><i class="fab fa-youtube"></i></span>
-                    <a href="${link}" target="_blank" style="font-size: 13px; color: #333; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${link}</a>
-                </div>
-                <button type="button" class="remove-video-btn" data-index="${index}" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            videoListContainer.appendChild(li);
-        });
-
-        // تحديث الحقل المخفي اللي هيروح للداتابيز
-        // بنحول المصفوفة لنص JSON عشان تتبعت صح
-        hiddenVideoInput.value = JSON.stringify(currentVideoList);
-
-        // تفعيل زرار الحذف لكل فيديو
-        document.querySelectorAll('.remove-video-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const index = this.getAttribute('data-index');
-                removeVideo(index);
-            });
-        });
-    }
-
-    // إضافة فيديو جديد
-    if(addVideoBtn) {
-        addVideoBtn.addEventListener('click', () => {
-            const url = videoInput.value.trim();
-            if (url) {
-                currentVideoList.push(url); // إضافة للمصفوفة
-                renderVideoListUI(); // تحديث الشاشة
-                videoInput.value = ''; // تنظيف الخانة
-            }
-        });
-    }
-
-    // حذف فيديو
-    function removeVideo(index) {
-        currentVideoList.splice(index, 1); // حذف من المصفوفة
-        renderVideoListUI(); // تحديث الشاشة
-    }
-
-
-    // --- إرسال الفورم وحفظ التعديلات ---
+    // الحفظ
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const propertyId = document.getElementById('edit-property-id').value;
-        editMessageEl.textContent = 'جاري حفظ التعديلات...';
-        editMessageEl.className = '';
+        if(!confirm('حفظ التعديلات؟')) return;
         
+        const id = document.getElementById('edit-property-id').value;
         const formData = new FormData(editForm);
-
-        // ملحوظة: formData هيسحب قيمة hidden-video-urls-input أوتوماتيك
-        // لأننا اديناه name="video_urls"
-
+        
         try {
-            const response = await fetch(`/api/update-property/${propertyId}`, {
-                method: 'PUT',
-                body: formData,
-            });
-
-            const text = await response.text();
-            let data;
-            try { data = text ? JSON.parse(text) : {}; } catch(e) {}
-
-            if (!response.ok) {
-                throw new Error(data.message || 'فشل في حفظ التعديلات.');
-            }
-            
-            editMessageEl.textContent = data.message;
-            editMessageEl.className = 'success';
-            
-            // إعادة تحميل البيانات للتأكيد
-            loadPropertyDetailsForEdit(propertyId);
-
-        } catch (error) {
-            console.error(error);
-            editMessageEl.textContent = `خطأ: ${error.message}`;
-            editMessageEl.className = 'error';
-        }
+            const res = await fetch(`/api/update-property/${id}`, { method: 'PUT', body: formData });
+            const data = await res.json();
+            if(res.ok) alert('✅ تم الحفظ بنجاح');
+            else alert('❌ ' + data.message);
+        } catch(e) { alert('خطأ في الاتصال'); }
     });
 
-    deleteBtn.addEventListener('click', async () => {
-        const propertyId = document.getElementById('edit-property-id').value;
-        if (!confirm(`تحذير: هل أنت متأكد من مسح العقار رقم ${propertyId} نهائياً؟`)) {
-            return;
-        }
-
-        editMessageEl.textContent = 'جاري مسح العقار...';
-        editMessageEl.className = '';
-
+    // حذف العقار
+    document.getElementById('delete-property-btn').addEventListener('click', async () => {
+        const id = document.getElementById('edit-property-id').value;
+        if(!confirm('⚠️ هل أنت متأكد من المسح النهائي؟')) return;
+        
         try {
-            await safeFetchJson(`/api/property/${propertyId}`, {
-                method: 'DELETE',
-            });
-            
-            editMessageEl.textContent = 'تم مسح العقار بنجاح!';
-            editMessageEl.className = 'success';
-            editArea.style.display = 'none';
-            searchForm.reset();
-            searchMessageEl.textContent = '';
+            await fetch(`/api/property/${id}`, { method: 'DELETE' });
+            alert('تم المسح');
+            location.reload();
+        } catch(e) { alert('خطأ'); }
+    });
 
-        } catch (error) {
-            editMessageEl.textContent = `خطأ في المسح: ${error.message}`;
-            editMessageEl.className = 'error';
-        }
+    // منطق الفيديوهات
+    document.getElementById('add-video-btn').addEventListener('click', () => {
+        const url = document.getElementById('video-url-input').value;
+        if(url) { currentVideoList.push(url); renderVideos(); document.getElementById('video-url-input').value = ''; }
     });
 });
+
+function loadData(data) {
+    document.getElementById('edit-property-id').value = data.id;
+    document.getElementById('edit-title').value = data.title;
+    document.getElementById('edit-hidden-code').value = data.hiddenCode;
+    document.getElementById('edit-price').value = data.price;
+    document.getElementById('edit-area').value = data.area;
+    document.getElementById('edit-rooms').value = data.rooms || '';
+    document.getElementById('edit-bathrooms').value = data.bathrooms || '';
+    document.getElementById('edit-description').value = data.description;
+    
+    // الحقول الجديدة
+    document.getElementById('edit-category').value = data.category || 'apartment';
+    document.getElementById('edit-type').value = data.type;
+    document.getElementById('edit-finishing').value = data.finishing || '';
+    document.getElementById('edit-level').value = data.level || '';
+    document.getElementById('edit-floors').value = data.floors || '';
+
+    toggleEditFields(); // تحديث الحقول الظاهرة بناءً على الفئة
+
+    // الخريطة
+    if(data.latitude && data.longitude) {
+        updateMarker(data.latitude, data.longitude);
+        map.setView([data.latitude, data.longitude], 15);
+    }
+    setTimeout(() => map.invalidateSize(), 500); // إصلاح مشكلة تحميل الخريطة في العناصر المخفية
+
+    // الصور القديمة
+    const imgContainer = document.getElementById('existing-images-container');
+    imgContainer.innerHTML = '';
+    const urls = data.imageUrls || [];
+    document.getElementById('existing-images-data').value = JSON.stringify(urls);
+    
+    urls.forEach(url => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <img src="${url}" style="width:60px; height:60px; border-radius:5px;">
+            <span onclick="removeImg(this, '${url}')" style="color:red; cursor:pointer; font-weight:bold;">×</span>
+        `;
+        imgContainer.appendChild(div);
+    });
+
+    // الفيديوهات
+    currentVideoList = data.video_urls || [];
+    renderVideos();
+}
+
+function updateMarker(lat, lng) {
+    if(marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    document.getElementById('edit-lat').value = lat;
+    document.getElementById('edit-lng').value = lng;
+}
+
+function removeImg(el, url) {
+    el.parentElement.remove();
+    let urls = JSON.parse(document.getElementById('existing-images-data').value);
+    urls = urls.filter(u => u !== url);
+    document.getElementById('existing-images-data').value = JSON.stringify(urls);
+}
+
+function renderVideos() {
+    const list = document.getElementById('video-list-container');
+    list.innerHTML = '';
+    currentVideoList.forEach((v, i) => {
+        list.innerHTML += `<li><a href="${v}" target="_blank" style="color:#00d4ff;">${v}</a> <span onclick="deleteVideo(${i})" style="color:red; cursor:pointer;">[حذف]</span></li>`;
+    });
+    document.getElementById('hidden-video-urls-input').value = JSON.stringify(currentVideoList);
+}
+
+function deleteVideo(i) {
+    currentVideoList.splice(i, 1);
+    renderVideos();
+}
+
+function toggleEditFields() {
+    const cat = document.getElementById('edit-category').value;
+    const levelGroup = document.getElementById('edit-level-group');
+    const floorsGroup = document.getElementById('edit-floors-group');
+    
+    if(cat === 'apartment' || cat === 'office' || cat === 'store') {
+        levelGroup.style.display = 'block'; floorsGroup.style.display = 'none';
+    } else if (cat === 'villa' || cat === 'building' || cat === 'warehouse') {
+        levelGroup.style.display = 'none'; floorsGroup.style.display = 'block';
+    } else {
+        levelGroup.style.display = 'none'; floorsGroup.style.display = 'none';
+    }
+}
