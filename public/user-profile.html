@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+        html, body { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
 
         body.internal-page {
             background-color: #0f0f0f;
@@ -16,21 +15,28 @@
             min-height: 100vh;
             font-family: 'Cairo', sans-serif;
             color: white;
+            /* 🔥 المسافة */
+            padding-top: 85px !important;
         }
 
         .main-header {
-            position: fixed !important; top: 0; left: 0; width: 100%; height: 75px;
-            z-index: 9999; background: rgba(20, 20, 20, 0.98);
+            position: fixed !important;
+            top: 0; left: 0; right: 0;
+            width: 100%; height: 75px;
+            z-index: 9999;
+            background: rgba(28, 38, 48, 0.98);
             border-bottom: 1px solid rgba(0, 255, 136, 0.2);
-            padding: 0 15px; display: flex; align-items: center;
+            padding: 0 15px;
+            display: flex; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; }
-        .logo { height: 45px; border-radius: 50%; border: 2px solid #00ff88; }
-        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.85rem; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid #00ff88; }
+        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
+        .nav-button:hover { background: #00ff88; color: black; }
 
-        /* 🔥 الإصلاح: إزاحة الهيدر الخاص بالبروفايل */
+        /* Profile Specific */
         .profile-header {
-            margin-top: 80px !important; /* مسافة إجبارية */
             background: rgba(255,255,255,0.03); border-bottom: 1px solid #333;
             padding: 30px 20px; text-align: center; margin-bottom: 30px;
         }
@@ -40,7 +46,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 2.5rem; margin: 0 auto 15px;
         }
-        .profile-name { font-size: 1.6rem; margin: 0; color: white; }
+        .profile-name { font-size: 1.6rem; margin: 0; }
         .profile-stats { color: #888; font-size: 0.9rem; margin-top: 5px; }
 
         .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 20px; max-width: 1200px; margin: 0 auto; }
@@ -49,22 +55,22 @@
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px; overflow: hidden;
             transition: 0.3s; cursor: pointer;
         }
+        .property-card:hover { transform: translateY(-5px); border-color: #00ff88; }
         .card-img-wrapper { height: 180px; overflow: hidden; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
         .card-content { padding: 15px; }
-        .card-title { font-size: 1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:white; }
+        .card-title { font-size: 1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .card-price { color: #ffd700; font-weight: bold; }
+        .card-details { font-size: 0.8rem; color: #aaa; margin-top: 10px; border-top:1px solid #333; padding-top:10px; }
     </style>
 </head>
 <body class="internal-page">
 
     <header class="main-header">
         <div class="header-container">
-            <div class="logo-container">
-                <a href="home" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
-                    <img src="logo.jpg" alt="logo" class="logo">
-                    <span style="color:white; font-weight:bold;">عقارك</span>
-                </a>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="logo.jpg" alt="logo" class="logo">
+                <span style="font-weight:bold; font-size:1.2rem;">عقارك</span>
             </div>
             <nav class="main-nav">
                 <a href="home" class="nav-button">الرئيسية</a>
@@ -111,6 +117,7 @@
                             <div class="card-content">
                                 <h3 class="card-title">${prop.title}</h3>
                                 <div class="card-price">${price} ج.م</div>
+                                <div class="card-details"><i class="fas fa-bed"></i> ${prop.rooms} | <i class="fas fa-ruler"></i> ${prop.area} م²</div>
                             </div>
                         </div>`;
                 });
