@@ -23,23 +23,31 @@
         }
 
         body.internal-page {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            margin: 0; padding: 0;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            overflow-x: hidden;
-        }
+    background-color: #0f0f0f;
+    background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+    min-height: 100vh;
+    margin: 0 !important; /* هام جداً لإلغاء هوامش المتصفح البيضاء */
+    padding: 0 !important;
+    font-family: 'Cairo', sans-serif;
+    color: white;
+    overflow-x: hidden;
+    padding-top: 80px !important; /* 🔥 إضافة مسافة عشان المحتوى مايدخلش تحت الهيدر الثابت */
+}
 
-        /* --- Header --- */
-        .main-header {
-            position: sticky; top: 0; z-index: 1000;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-        }
+       /* --- Header الثابت في السقف --- */
+.main-header {
+    position: fixed; /* تثبيت العنصر بالنسبة للشاشة */
+    top: 0; 
+    left: 0;
+    width: 100%; /* العرض بالكامل */
+    z-index: 1000;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    box-sizing: border-box; /* لضمان حساب العرض مع البادنج */
+    margin: 0 !important; /* إلغاء أي هوامش خارجية إجبارياً */
+}
         .header-container {
             display: flex; justify-content: space-between; align-items: center;
             max-width: 1250px; margin: 0 auto;
@@ -54,7 +62,11 @@
         .logout-btn:hover { background: var(--neon-danger); color: white; }
 
         /* --- Dashboard Grid --- */
-        .main-content { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+       .main-content { 
+    max-width: 1200px; 
+    margin: 0 auto; /* إلغاء المارجن العلوي لأننا ضفنا padding-top للbody */
+    padding: 20px; 
+}
         .page-title { text-align: center; margin-bottom: 40px; font-size: 2rem; color: var(--neon-primary); text-shadow: 0 0 10px rgba(0,255,136,0.3); }
 
         .admin-dashboard-grid {
