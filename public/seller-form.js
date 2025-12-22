@@ -18,10 +18,12 @@ function initMap() {
     const defaultLat = 30.0444; 
     const defaultLng = 31.2357; 
 
+    // استخدام خرائط ذات طابع داكن قليلاً إذا أمكن، أو تقليل سطوع الخريطة الحالية عبر CSS
     map = L.map('map').setView([defaultLat, defaultLng], 13);
+    
+    // خريطة بتصميم Carto Dark ليتناسب مع الثيم الليلي (اختياري، أو نستخدم الفلتر الموجود في CSS)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-        subdomains: 'abcd',
+        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 20
     }).addTo(map);
 
@@ -53,7 +55,7 @@ async function searchLocation() {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Egypt')}&addressdetails=1&limit=5&accept-language=ar`;
 
     try {
-        resultsBox.innerHTML = '<div class="suggestion-item" style="justify-content:center;"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
+        resultsBox.innerHTML = '<div class="suggestion-item" style="justify-content:center; color:#00ff88;"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
         resultsBox.style.display = 'block';
 
         const response = await fetch(url);
@@ -108,10 +110,10 @@ async function handleLocationSelect(lat, lng) {
     await fetchNearbyServices(lat, lng);
 }
 
-// 🤖 جلب الخدمات
+// 🤖 جلب الخدمات (تحديث رسائل الحالة)
 async function fetchNearbyServices(lat, lng) {
     const statusMsg = document.getElementById('map-status-text');
-    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحليل المنطقة...';
+    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحليل المنطقة بالذكاء الاصطناعي...';
     statusMsg.style.color = '#00d4ff';
 
     const query = `
@@ -139,10 +141,10 @@ async function fetchNearbyServices(lat, lng) {
         document.getElementById('nearby_services').value = servicesArray.join(', ');
 
         if (servicesArray.length > 0) {
-            statusMsg.innerHTML = `✅ تم العثور على ${servicesArray.length} خدمات: (${servicesArray.slice(0, 3).join('، ')}...)`;
+            statusMsg.innerHTML = `<i class="fas fa-check-circle"></i> تم العثور على ${servicesArray.length} خدمات حيوية حول العقار!`;
             statusMsg.style.color = '#00ff88';
         } else {
-            statusMsg.innerHTML = '⚠️ المنطقة هادئة، سيتم الاعتماد على الموقع فقط.';
+            statusMsg.innerHTML = '⚠️ المنطقة هادئة، سيتم الاعتماد على الموقع الجغرافي فقط.';
             statusMsg.style.color = '#ff9800';
         }
     } catch (error) { statusMsg.innerText = "فشل التحليل التلقائي."; }
@@ -151,13 +153,13 @@ async function fetchNearbyServices(lat, lng) {
 window.locateUser = function() {
     const btn = document.querySelector('.locate-btn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
             handleLocationSelect(pos.coords.latitude, pos.coords.longitude);
             btn.innerHTML = originalText;
-        }, () => { alert("شغل الـ GPS!"); btn.innerHTML = originalText; });
-    } else { alert("غير مدعوم"); btn.innerHTML = originalText; }
+        }, () => { alert("يرجى تفعيل الـ GPS"); btn.innerHTML = originalText; });
+    } else { alert("المتصفح لا يدعم تحديد الموقع"); btn.innerHTML = originalText; }
 };
 
 // --- البيانات والصور والإرسال ---
@@ -176,32 +178,35 @@ const imgInput = document.getElementById('property-images');
 if (imgInput) {
     imgInput.addEventListener('change', function(e) {
         Array.from(e.target.files).forEach(file => selectedFiles.push(file));
-        if (selectedFiles.length > 10) selectedFiles = selectedFiles.slice(0, 10);
+        if (selectedFiles.length > 10) {
+            alert("الحد الأقصى 10 صور فقط");
+            selectedFiles = selectedFiles.slice(0, 10);
+        }
         renderPreviews();
         this.value = ''; 
     });
 }
 
+// 🖼️ دالة العرض المحسنة (تستخدم الـ CSS Classes الجديدة)
 function renderPreviews() {
     const container = document.getElementById('image-preview-container');
     container.innerHTML = '';
     selectedFiles.forEach((file, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position:relative; display:inline-block; margin:10px; width:100px; height:100px;';
+        const div = document.createElement('div');
+        div.className = 'preview-item'; // استخدام الكلاس الجديد
         
         const img = document.createElement('img');
-        img.style.cssText = `width:100%; height:100%; object-fit:cover; border-radius:8px; border: 1px solid #00ff88;`;
         const reader = new FileReader();
         reader.onload = (e) => img.src = e.target.result;
         reader.readAsDataURL(file);
         
         const btn = document.createElement('button');
-        btn.innerHTML = '×';
-        btn.style.cssText = 'position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; border:none; cursor:pointer; font-weight:bold; display:flex; justify-content:center; align-items:center;';
+        btn.className = 'btn-remove-img'; // استخدام كلاس الزر
+        btn.innerHTML = '<i class="fas fa-times"></i>';
         btn.onclick = (e) => { e.preventDefault(); selectedFiles.splice(index, 1); renderPreviews(); };
 
-        wrapper.appendChild(img); wrapper.appendChild(btn);
-        container.appendChild(wrapper);
+        div.appendChild(img); div.appendChild(btn);
+        container.appendChild(div);
     });
 }
 
@@ -212,12 +217,12 @@ document.getElementById('seller-form').addEventListener('submit', async function
     const originalText = btn.innerHTML;
 
     if (!document.getElementById('lat').value) {
-        alert("📍 حدد الموقع على الخريطة!");
+        alert("📍 من فضلك حدد موقع العقار على الخريطة لضمان وصول العملاء.");
         document.querySelector('.map-wrapper').scrollIntoView({ behavior: 'smooth' });
         return;
     }
 
-    btn.innerHTML = 'جاري النشر...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
     btn.disabled = true;
     if(msg) msg.textContent = '';
 
@@ -229,11 +234,14 @@ document.getElementById('seller-form').addEventListener('submit', async function
         const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
         const data = await response.json();
         if (response.ok) {
-            alert('🎉 تم النشر بنجاح!');
+            // يمكن استبدال الـ Alert بمودال نجاح مثل الموجود في صفحة التفاصيل
+            alert('🎉 تم نشر إعلانك بنجاح! سيتم تحويلك للصفحة الرئيسية.');
             window.location.href = 'home';
         } else { throw new Error(data.message); }
     } catch (error) {
-        if(msg) { msg.textContent = '❌ ' + error.message; msg.className = 'message error'; }
+        if(msg) { 
+            msg.innerHTML = `<span style="color:#ff4444"><i class="fas fa-exclamation-circle"></i> ${error.message}</span>`; 
+        }
     } finally {
         btn.innerHTML = originalText; btn.disabled = false;
     }
