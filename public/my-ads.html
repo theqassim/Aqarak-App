@@ -1,110 +1,106 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>إعلاناتي - عقارك</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* --- 🛠️ Reset & Fixes --- */
-        html, body { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إعلاناتي - عقارك</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        html, body { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
 
-        body.internal-page {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            /* 🔥 مسافة إجبارية لتعويض الهيدر الثابت */
-            padding-top: 85px !important;
-        }
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            /* 🔥 المسافة */
+            padding-top: 85px !important;
+        }
 
-        /* --- Header Fixed --- */
-        .main-header {
-            position: fixed !important;
-            top: 0; left: 0; right: 0;
-            width: 100%; height: 75px;
-            z-index: 9999;
-            background: rgba(28, 38, 48, 0.98);
-            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
-            padding: 0 15px;
-            display: flex; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; }
-        .logo { height: 40px; border-radius: 50%; border: 2px solid #00ff88; }
-        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
-        .nav-button:hover { background: #00ff88; color: black; }
+        .main-header {
+            position: fixed !important;
+            top: 0; left: 0; right: 0;
+            width: 100%; height: 75px;
+            z-index: 9999;
+            background: rgba(28, 38, 48, 0.98);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding: 0 15px;
+            display: flex; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid #00ff88; }
+        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
+        .nav-button:hover { background: #00ff88; color: black; }
 
-        /* --- المحتوى --- */
-        .main-content { max-width: 800px; margin: 20px auto; padding: 0 15px; }
-        .page-title { text-align: center; color: #00ff88; margin-bottom: 30px; font-size: 1.8rem; }
+        .main-content { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .page-title { text-align: center; color: #00ff88; margin-bottom: 30px; font-size: 1.8rem; }
 
-        .ads-list { display: flex; flex-direction: column; gap: 15px; }
-        
-        .ad-item {
-            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px;
-            display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: white; transition: 0.3s;
-        }
-        .ad-item:hover { border-color: #00ff88; transform: translateX(-5px); }
-        .ad-info h3 { font-size: 1.1rem; margin: 0 0 5px 0; }
-        .ad-price { color: #ffd700; font-weight: bold; }
-        
-        .status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; margin-right: 5px; }
-        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
-        .status-pending { background: rgba(255, 152, 0, 0.1); color: #ff9800; border: 1px solid #ff9800; }
-        .arrow-icon { color: #555; } .ad-item:hover .arrow-icon { color: #00ff88; }
-    </style>
+        .ads-list { display: flex; flex-direction: column; gap: 15px; }
+        
+        .ad-item {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: white; transition: 0.3s;
+        }
+        .ad-item:hover { border-color: #00ff88; transform: translateX(-5px); }
+        .ad-info h3 { font-size: 1.1rem; margin: 0 0 5px 0; }
+        .ad-price { color: #ffd700; font-weight: bold; }
+        .status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; margin-right: 5px; }
+        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
+        .status-pending { background: rgba(255, 152, 0, 0.1); color: #ff9800; border: 1px solid #ff9800; }
+        .arrow-icon { color: #555; } .ad-item:hover .arrow-icon { color: #00ff88; }
+    </style>
 </head>
 <body class="internal-page">
 
-    <header class="main-header">
-        <div class="header-container">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="logo.jpg" alt="logo" class="logo">
-                <span style="font-weight:bold; font-size:1.2rem;">إعلاناتي</span>
-            </div>
-            <nav class="main-nav">
-                <a href="user-dashboard" class="nav-button">رجوع</a>
-            </nav>
-        </div>
-    </header>
+    <header class="main-header">
+        <div class="header-container">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="logo.jpg" alt="logo" class="logo">
+                <span style="font-weight:bold; font-size:1.2rem;">إعلاناتي</span>
+            </div>
+            <nav class="main-nav">
+                <a href="user-dashboard" class="nav-button">رجوع</a>
+            </nav>
+        </div>
+    </header>
 
-    <main class="main-content">
-        <h1 class="page-title">إعلاناتي المنشورة</h1>
-        <div id="loading-spinner" style="text-align:center; color:#00ff88; margin-top:50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
-        <div class="ads-list" id="my-ads-container"></div>
-    </main>
+    <main class="main-content">
+        <h1 class="page-title">إعلاناتي المنشورة</h1>
+        <div id="loading-spinner" style="text-align:center; color:#00ff88; margin-top:50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
+        <div class="ads-list" id="my-ads-container"></div>
+    </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const container = document.getElementById('my-ads-container');
-            const spinner = document.getElementById('loading-spinner');
-            try {
-                const response = await fetch('/api/user/my-properties');
-                if (response.status === 401) { window.location.href = 'index'; return; }
-                const properties = await response.json();
-                spinner.style.display = 'none';
-                if (properties.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; color:#888; border:2px dashed #444; padding:30px; border-radius:15px;"><p>لم تنشر أي عقارات بعد.</p><a href="seller-dashboard" class="nav-button" style="display:inline-block; margin-top:10px;">انشر الآن</a></div>';
-                    return;
-                }
-                properties.forEach(prop => {
-                    const price = Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString();
-                    const statusHtml = prop.status === 'active' ? `<span class="status-badge status-active">نشط</span>` : `<span class="status-badge status-pending">قيد المراجعة</span>`;
-                    const link = prop.status === 'active' ? `property-details?id=${prop.id}` : '#';
-                    container.innerHTML += `
-                        <a href="${link}" class="ad-item" ${link === '#' ? 'onclick="alert(\'العقار قيد المراجعة\'); return false;"' : ''}>
-                            <div class="ad-info">
-                                <h3>${prop.title} ${statusHtml}</h3>
-                                <div class="ad-price">${price} ج.م</div>
-                            </div>
-                            <i class="fas fa-chevron-left arrow-icon"></i>
-                        </a>`;
-                });
-            } catch (error) { spinner.style.display = 'none'; container.innerHTML = '<p style="text-align:center; color:red;">خطأ في الاتصال</p>'; }
-        });
-    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('my-ads-container');
+            const spinner = document.getElementById('loading-spinner');
+            try {
+                const response = await fetch('/api/user/my-properties');
+                if (response.status === 401) { window.location.href = 'index'; return; }
+                const properties = await response.json();
+                spinner.style.display = 'none';
+                if (properties.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#888; border:2px dashed #444; padding:30px; border-radius:15px;"><p>لم تنشر أي عقارات بعد.</p><a href="seller-dashboard" class="nav-button" style="display:inline-block; margin-top:10px;">انشر الآن</a></div>';
+                    return;
+                }
+                properties.forEach(prop => {
+                    const price = Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString();
+                    const statusHtml = prop.status === 'active' ? `<span class="status-badge status-active">نشط</span>` : `<span class="status-badge status-pending">قيد المراجعة</span>`;
+                    const link = prop.status === 'active' ? `property-details?id=${prop.id}` : '#';
+                    container.innerHTML += `
+                        <a href="${link}" class="ad-item" ${link === '#' ? 'onclick="alert(\'العقار قيد المراجعة\'); return false;"' : ''}>
+                            <div class="ad-info">
+                                <h3>${prop.title} ${statusHtml}</h3>
+                                <div class="ad-price">${price} ج.م</div>
+                            </div>
+                            <i class="fas fa-chevron-left arrow-icon"></i>
+                        </a>`;
+                });
+            } catch (error) { spinner.style.display = 'none'; container.innerHTML = '<p style="text-align:center; color:red;">خطأ في الاتصال</p>'; }
+        });
+    </script>
 </body>
 </html>
