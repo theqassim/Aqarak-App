@@ -11,16 +11,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('search-property-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const code = document.getElementById('search-code').value.trim();
-        if(!code) return showModal('error', 'خطأ', 'يرجى إدخال الكود');
+        if(!code) return showModal('error', 'تنبيه', 'يرجى إدخال الكود السري للعقار');
         
         showModal('loading', 'جاري البحث...', '');
         
         try {
-            const res = await fetch(`/api/property-by-code/${code}`);
-            if(!res.ok) throw new Error('لم يتم العثور على العقار.');
-            
-            const data = await res.json();
-            loadData(data); // هنا الملء الفعلي
+            // الخطوة الأولى: نجيب الـ ID من الكود
+            const resCode = await fetch(`/api/property-by-code/${code}`);
+            if(!resCode.ok) throw new Error('لم يتم العثور على العقار.');
+            const basicData = await resCode.json();
+
+            // الخطوة الثانية: نجيب البيانات الكاملة بالـ ID
+            const resFull = await fetch(`/api/property/${basicData.id}`);
+            if(!resFull.ok) throw new Error('فشل جلب تفاصيل العقار.');
+            const fullData = await resFull.json();
+
+            loadData(fullData); // ملء البيانات
             
             closeModal();
             document.getElementById('property-edit-area').style.display = 'block';
@@ -32,20 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. الحفظ (زر المودال)
+    // 3. الحفظ
     document.getElementById('edit-property-form').addEventListener('submit', (e) => {
         e.preventDefault();
         showConfirm('حفظ التعديلات؟', 'هل أنت متأكد من حفظ البيانات الجديدة؟', async () => {
-            showModal('loading', 'جاري الحفظ', '');
+            showModal('loading', 'جاري الحفظ', 'يرجى الانتظار...');
             const id = document.getElementById('edit-property-id').value;
             try {
                 const res = await fetch(`/api/update-property/${id}`, { method: 'PUT', body: new FormData(e.target) });
                 const data = await res.json();
                 if(res.ok) {
-                    showModal('success', 'تم', 'تم التحديث بنجاح');
+                    showModal('success', 'تم الحفظ', 'تم تحديث بيانات العقار بنجاح');
                     window.scrollTo(0,0);
                 } else throw new Error(data.message);
-            } catch(err) { showModal('error', 'فشل', err.message); }
+            } catch(err) { showModal('error', 'فشل الحفظ', err.message); }
         });
     });
 
@@ -57,44 +63,57 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 5. الحذف
     document.getElementById('delete-property-btn').addEventListener('click', () => {
-        showConfirm('حذف نهائي', '⚠️ سيتم المسح بلا رجعة!', async () => {
+        showConfirm('حذف نهائي', '⚠️ سيتم مسح العقار من قاعدة البيانات ولن يمكن استعادته!', async () => {
+            showModal('loading', 'جاري الحذف', '');
             try {
                 await fetch(`/api/property/${document.getElementById('edit-property-id').value}`, { method: 'DELETE' });
-                showModal('success', 'تم', 'تم حذف العقار');
+                showModal('success', 'تم الحذف', 'تم مسح العقار بنجاح');
                 setTimeout(() => location.reload(), 2000);
-            } catch(e) { showModal('error', 'خطأ', 'فشل الحذف'); }
+            } catch(e) { showModal('error', 'خطأ', 'فشل عملية الحذف'); }
         });
     });
 });
 
-// 🔥 الدالة الأهم: ملء البيانات (مع فحص الأسماء المختلفة)
+// 🔥 الدالة السحرية: بتجيب القيمة حتى لو الاسم مختلف في الداتابيز
+function getVal(data, keys) {
+    for (let key of keys) {
+        if (data[key] !== undefined && data[key] !== null && data[key] !== 'null') {
+            return data[key];
+        }
+    }
+    return ''; 
+}
+
 function loadData(data) {
+    console.log("Full Data:", data); // للتأكد
+
     document.getElementById('edit-property-id').value = data.id;
     
-    // استخدام || عشان لو الاسم جاي مختلف من السيرفر
-    document.getElementById('edit-title').value = data.title || data.propertyTitle || '';
-    document.getElementById('edit-hidden-code').value = data.hiddenCode || '';
-    document.getElementById('edit-price').value = data.price || data.propertyPrice || '';
-    document.getElementById('edit-area').value = data.area || data.propertyArea || '';
-    document.getElementById('edit-rooms').value = data.rooms || data.propertyRooms || '';
-    document.getElementById('edit-bathrooms').value = data.bathrooms || data.propertyBathrooms || '';
-    
-    // إصلاح الوصف
-    document.getElementById('edit-description').value = data.description || data.propertyDescription || '';
+    // البيانات الأساسية
+    document.getElementById('edit-title').value = getVal(data, ['title', 'propertyTitle']);
+    document.getElementById('edit-hidden-code').value = getVal(data, ['hiddenCode']);
+    document.getElementById('edit-price').value = getVal(data, ['price', 'propertyPrice']);
+    document.getElementById('edit-area').value = getVal(data, ['area', 'propertyArea']);
+    document.getElementById('edit-rooms').value = getVal(data, ['rooms', 'propertyRooms']);
+    document.getElementById('edit-bathrooms').value = getVal(data, ['bathrooms', 'propertyBathrooms']);
+    document.getElementById('edit-description').value = getVal(data, ['description', 'propertyDescription']);
 
-    // القوائم
-    document.getElementById('edit-category').value = data.category || data.propertyCategory || 'apartment';
-    document.getElementById('edit-type').value = data.type || data.propertyType || 'بيع';
-    document.getElementById('edit-finishing').value = data.finishing || data.propertyFinishing || '';
-    document.getElementById('edit-level').value = data.level || data.propertyLevel || '';
-    document.getElementById('edit-floors').value = data.floors || data.propertyFloors || '';
+    // القوائم (أسماء الأعمدة الدقيقة من server.js)
+    document.getElementById('edit-category').value = getVal(data, ['category', 'propertyCategory']) || 'apartment';
+    document.getElementById('edit-type').value = getVal(data, ['type', 'propertyType']) || 'بيع';
+    document.getElementById('edit-finishing').value = getVal(data, ['finishing_type', 'finishing', 'propertyFinishing']);
+    document.getElementById('edit-level').value = getVal(data, ['level', 'propertyLevel']);
+    document.getElementById('edit-floors').value = getVal(data, ['floors_count', 'floors', 'propertyFloors']);
 
-    toggleEditFields(); // تحديث الحقول الظاهرة
+    toggleEditFields(); 
 
     // الخريطة
-    if(data.latitude && data.longitude) {
-        updateMarker(data.latitude, data.longitude);
-        map.setView([data.latitude, data.longitude], 16);
+    const lat = getVal(data, ['latitude', 'lat']);
+    const lng = getVal(data, ['longitude', 'lng']);
+    
+    if(lat && lng) {
+        updateMarker(lat, lng);
+        map.setView([lat, lng], 16);
     } else {
         if(marker) map.removeLayer(marker);
         map.setView([30.0444, 31.2357], 13);
@@ -103,7 +122,15 @@ function loadData(data) {
     // الصور القديمة
     const imgContainer = document.getElementById('existing-images-container');
     imgContainer.innerHTML = '';
-    const urls = data.imageUrls || []; 
+    let rawImages = getVal(data, ['imageUrls', 'images']);
+    let urls = [];
+
+    if (Array.isArray(rawImages)) {
+        urls = rawImages;
+    } else if (typeof rawImages === 'string') {
+        try { urls = JSON.parse(rawImages); } catch(e) { urls = []; }
+    }
+
     document.getElementById('existing-images-data').value = JSON.stringify(urls);
     
     urls.forEach(url => {
@@ -115,12 +142,20 @@ function loadData(data) {
         `;
     });
 
-    // 🔥 إصلاح الفيديوهات (التأكد من نوع البيانات)
-    if (data.video_urls) {
-        if (Array.isArray(data.video_urls)) {
-            currentVideoList = data.video_urls;
-        } else if (typeof data.video_urls === 'string') {
-            try { currentVideoList = JSON.parse(data.video_urls); } catch(e) { currentVideoList = []; }
+    // 🔥 إصلاح الفيديوهات (عمود video_urls)
+    let rawVideos = getVal(data, ['video_urls']);
+    
+    if (rawVideos) {
+        if (Array.isArray(rawVideos)) {
+            currentVideoList = rawVideos;
+        } else if (typeof rawVideos === 'string') {
+            try { 
+                // ممكن تيجي {url1,url2} من البوستجريس
+                let cleanStr = rawVideos.replace('{','').replace('}','');
+                if(cleanStr.includes(',')) currentVideoList = cleanStr.split(',');
+                else if(cleanStr) currentVideoList = [cleanStr];
+                else currentVideoList = [];
+            } catch(e) { currentVideoList = []; }
         }
     } else {
         currentVideoList = [];
@@ -160,10 +195,13 @@ function renderVideos() {
     const list = document.getElementById('video-list-container');
     list.innerHTML = '';
     currentVideoList.forEach((link, i) => {
+        let cleanLink = link.replace(/"/g, ''); 
         list.innerHTML += `
-            <li style="display:flex; justify-content:space-between; margin-bottom:5px; background:#222; padding:5px; border-radius:5px;">
-                <a href="${link}" target="_blank" style="color:#00d4ff; overflow:hidden; text-overflow:ellipsis;">${link}</a>
-                <span onclick="deleteVideo(${i})" style="color:red; cursor:pointer;">[حذف]</span>
+            <li style="display:flex; justify-content:space-between; margin-bottom:8px; background:#222; padding:10px; border-radius:8px; align-items:center;">
+                <a href="${cleanLink}" target="_blank" style="color:#fff; text-decoration:none; overflow:hidden; text-overflow:ellipsis; max-width:80%; font-size:0.9rem;">
+                    <i class="fab fa-youtube" style="color:red; margin-left:5px;"></i> ${cleanLink}
+                </a>
+                <span onclick="deleteVideo(${i})" style="color:red; cursor:pointer; font-weight:bold; font-size:1.1rem;">&times;</span>
             </li>
         `;
     });
@@ -172,7 +210,6 @@ function renderVideos() {
 
 function deleteVideo(i) { currentVideoList.splice(i, 1); renderVideos(); }
 
-// Modal Helpers
 function showModal(type, title, text) {
     const m = document.getElementById('adminModal');
     const i = document.getElementById('modalIcon');
@@ -180,11 +217,11 @@ function showModal(type, title, text) {
     m.style.display = 'flex';
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalText').textContent = text;
-    b.innerHTML = `<button onclick="closeModal()" class="modal-btn" style="background:#555; color:white;">إغلاق</button>`;
+    b.innerHTML = `<button onclick="closeModal()" class="modal-btn" style="background:#333; border:1px solid #555;">إغلاق</button>`;
     
-    if(type === 'success') { i.className = 'fas fa-check-circle'; i.style.color = '#00ff88'; }
-    else if(type === 'error') { i.className = 'fas fa-times-circle'; i.style.color = '#ff4444'; }
-    else { i.className = 'fas fa-spinner fa-spin'; i.style.color = '#00d4ff'; b.innerHTML=''; }
+    if(type === 'success') { i.className = 'fas fa-check-circle'; i.style.color = '#fff'; }
+    else if(type === 'error') { i.className = 'fas fa-times-circle'; i.style.color = '#ff3333'; }
+    else { i.className = 'fas fa-spinner fa-spin'; i.style.color = '#ccc'; b.innerHTML=''; }
 }
 
 function showConfirm(title, text, onYes) {
@@ -193,17 +230,18 @@ function showConfirm(title, text, onYes) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalText').textContent = text;
     document.getElementById('modalIcon').className = 'fas fa-question-circle';
-    document.getElementById('modalIcon').style.color = '#ff9800';
+    document.getElementById('modalIcon').style.color = '#fff';
     
     const b = document.getElementById('modalButtons');
     b.innerHTML = '';
     
     const yes = document.createElement('button');
-    yes.textContent = 'نعم'; yes.className = 'modal-btn'; yes.style.background = '#00ff88'; yes.style.color='black';
+    yes.textContent = 'نعم، نفذ'; yes.className = 'modal-btn'; yes.style.background = '#fff'; yes.style.color='black';
     yes.onclick = onYes;
     
     const no = document.createElement('button');
-    no.textContent = 'لا'; no.className = 'modal-btn'; no.style.background = '#555'; no.style.color='white';
+    no.textContent = 'إلغاء'; no.className = 'modal-btn'; no.style.background = '#333'; no.style.color='white';
+    no.style.border = '1px solid #555';
     no.onclick = closeModal;
     
     b.append(yes, no);

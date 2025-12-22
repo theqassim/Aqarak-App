@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Array.from(e.target.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                container.innerHTML += `<img src="${ev.target.result}" style="width:60px; height:60px; border-radius:5px; border:1px solid #555;">`;
+                container.innerHTML += `<img src="${ev.target.result}" style="width:70px; height:70px; border-radius:8px; border:1px solid #444; object-fit:cover;">`;
             };
             reader.readAsDataURL(file);
         });
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             
             if(res.ok) {
-                showModal('success', 'تم بنجاح', data.message);
+                showModal('success', 'تم النشر!', data.message);
                 e.target.reset();
                 document.getElementById('image-preview-container').innerHTML = '';
                 if(marker) map.removeLayer(marker);
