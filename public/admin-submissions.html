@@ -5,12 +5,153 @@
     <meta charset="UTF-8">
     <script src="admin-auth.js"></script>
     <title>عقارك - مراجعة طلبات العرض</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1c2630">
-<link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- 🛠️ 1. Reset & Global Styles --- */
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --neon-danger: #ff4444;
+            --neon-gold: #ffd700;
+            --card-bg: #1a1a1a;
+        }
+
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            overflow-x: hidden;
+            /* مسافة للهيدر الثابت */
+            padding-top: 100px !important; 
+        }
+
+        /* --- 🔒 2. الهيدر الثابت --- */
+        .main-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1250px; margin: 0 auto; width: 100%;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid var(--neon-gold); }
+        .logo-text { color: white; font-weight: bold; font-size: 1.1rem; }
+
+        .nav-button {
+            text-decoration: none; color: white; border: 1px solid var(--neon-secondary);
+            padding: 6px 20px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
+        }
+        .nav-button:hover { background: var(--neon-secondary); color: black; }
+
+        /* --- Main Content --- */
+        .main-content { max-width: 900px; margin: 0 auto; padding: 20px 15px; }
+        
+        .page-title { 
+            text-align: center; margin-bottom: 40px; font-size: 2rem; 
+            color: var(--neon-gold); text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        /* --- Submission Cards Design --- */
+        .submissions-container { display: flex; flex-direction: column; gap: 25px; }
+
+        .submission-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 25px;
+            position: relative; overflow: hidden;
+            transition: 0.3s;
+        }
+        
+        /* شريط ذهبي علوي للكارت */
+        .submission-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--neon-gold);
+        }
+
+        .submission-card:hover { border-color: var(--neon-gold); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.1); }
+
+        .submission-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;
+        }
+        .submission-title { color: white; font-size: 1.4rem; font-weight: bold; margin: 0; }
+        .submission-type { 
+            background: rgba(255, 215, 0, 0.1); color: var(--neon-gold); 
+            padding: 5px 12px; border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--neon-gold);
+        }
+
+        .info-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;
+            margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;
+        }
+        .info-item { color: #ccc; font-size: 0.95rem; }
+        .info-item strong { color: var(--neon-secondary); margin-left: 5px; }
+
+        .submission-desc { color: #aaa; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem; }
+
+        /* Images Gallery */
+        .gallery-container h4 { color: white; margin-bottom: 10px; font-size: 1rem; }
+        .thumbnails-flex { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .submission-thumbnail { 
+            width: 80px; height: 80px; object-fit: cover; border-radius: 8px; 
+            border: 1px solid #444; transition: 0.3s; cursor: pointer;
+        }
+        .submission-thumbnail:hover { transform: scale(1.05); border-color: var(--neon-primary); }
+
+        /* Buttons Actions */
+        .admin-actions { 
+            display: flex; gap: 15px; margin-top: 25px; border-top: 1px solid #333; padding-top: 20px; 
+        }
+        
+        .action-btn {
+            flex: 1; padding: 12px; border-radius: 50px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.3s; background: transparent; border: 1px solid transparent;
+        }
+
+        .btn-approve { border-color: var(--neon-primary); color: var(--neon-primary); }
+        .btn-approve:hover { background: var(--neon-primary); color: black; }
+
+        .btn-delete { border-color: var(--neon-danger); color: var(--neon-danger); }
+        .btn-delete:hover { background: var(--neon-danger); color: white; }
+
+        .empty-message { text-align: center; padding: 40px; color: #888; border: 2px dashed #333; border-radius: 15px; }
+        .empty-message.success { color: var(--neon-primary); border-color: var(--neon-primary); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body.internal-page { padding-top: 130px !important; }
+            .submission-header { flex-direction: column; gap: 10px; }
+            .admin-actions { flex-direction: column; }
+            .logo-text { display: none; }
+        }
+    </style>
 </head>
 <body class="internal-page">
 
@@ -19,25 +160,25 @@
             <div class="logo-container">
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
                 <span class="logo-text">طلبات العرض (Admin)</span>
-                 <nav class="main-nav">
-                <a href="admin-home" class="nav-button neon-button-white">العودة</a> 
-            </nav>
             </div>
+            <nav class="main-nav">
+                <a href="admin-home" class="nav-button">
+                    العودة للرئيسية <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
+                </a> 
+            </nav>
         </div>
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">مراجعة طلبات عرض العقارات الجديدة</h1>
+        <h1 class="page-title">مراجعة العقارات الجديدة</h1>
         
         <div class="submissions-container" id="submissions-container">
             <p class="empty-message">جاري تحميل الطلبات...</p>
         </div>
-
     </main>
 
-    <script src="dash.js"></script> 
-    <script src="logout.js"></script>
     <script src="admin-submissions.js"></script>
+    <script src="logout.js"></script>
     <script src="app.js"></script>
     <script src="reload.js"></script>
 </body>
