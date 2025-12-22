@@ -18,8 +18,8 @@
         :root {
             --bg-dark: #050505;
             --card-bg: #111111;
-            --neon-white: #ffffff;
-            --neon-red: #ff3333;
+            --neon-white: #ffffff; /* الأبيض */
+            --neon-red: #ff3333;   
         }
 
         body.internal-page {
@@ -30,36 +30,40 @@
             padding-top: 0 !important;
         }
 
-        /* --- الهيدر (متوافق مع الموبايل) --- */
+        /* --- الهيدر (أبيض + صف واحد) --- */
         .main-header {
             position: relative;
             background: #000;
-            border-bottom: 2px solid var(--neon-red);
+            border-bottom: 2px solid var(--neon-white); /* خط أبيض */
             padding: 10px 15px;
             box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
         }
 
         .header-container { 
-            display: flex; justify-content: space-between; align-items: center; 
-            max-width: 1200px; margin: 0 auto; 
-            flex-wrap: nowrap; /* 🔥 الزرار جنب الصورة غصب */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            flex-wrap: nowrap; /* 🔥 يمنع النزول لسطر جديد */
         }
         
         .logo-container { 
-            display: flex; align-items: center; gap: 10px; flex-shrink: 0; 
+            display: flex; align-items: center; gap: 10px; 
+            flex-shrink: 0; /* يحافظ على حجم اللوجو */
         }
-        .logo-container img { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-red); }
+        .logo { height: 45px; width: 45px; border-radius: 50%; border: 2px solid var(--neon-white); object-fit: cover; }
 
         .nav-button {
             text-decoration: none; color: white; 
-            border: 1px solid var(--neon-red);
+            border: 1px solid var(--neon-white);
             padding: 6px 15px; border-radius: 50px; 
-            font-size: 0.9rem; transition: 0.3s;
+            font-size: 0.85rem; transition: 0.3s;
             display: flex; align-items: center; gap: 5px;
-            background: rgba(255, 51, 51, 0.1);
-            white-space: nowrap; /* 🔥 النص ميكسرش السطر */
+            background: rgba(255, 255, 255, 0.1);
+            white-space: nowrap; /* 🔥 يمنع انقسام النص */
         }
-        .nav-button:hover { background: var(--neon-red); }
+        .nav-button:hover { background: var(--neon-white); color: black; }
 
         /* --- المحتوى --- */
         .main-content { padding: 30px 15px; max-width: 950px; margin: 0 auto; }
@@ -67,7 +71,7 @@
         .search-box {
             background: var(--card-bg); border: 1px solid #333; border-radius: 15px;
             padding: 30px; margin-bottom: 30px; text-align: center;
-            border-top: 4px solid var(--neon-red);
+            border-top: 4px solid var(--neon-white);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -123,8 +127,8 @@
         /* 🔥 تعديلات الموبايل للزرار والصورة */
         @media(max-width:480px){ 
             .form-grid { grid-template-columns: 1fr; } 
-            .nav-button { padding: 5px 12px; font-size: 0.8rem; }
-            .logo-text { display: none; } /* إخفاء النص عشان الصورة والزرار ياخدوا راحتهم */
+            .nav-button { padding: 6px 10px; font-size: 0.8rem; }
+            .logo-text { display: none; } /* إخفاء النص */
         }
     </style>
 </head>
@@ -133,7 +137,7 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="Logo">
+                <img src="logo.jpg" alt="Logo" class="logo">
                 <span class="logo-text" style="color:white; font-weight:bold;">تعديل</span>
             </div>
             <a href="admin-home" class="nav-button">
@@ -145,10 +149,10 @@
     <main class="main-content">
         
         <div class="search-box">
-            <h2 style="color:var(--neon-red); font-size:1.6rem;"><i class="fas fa-search"></i> بحث وتعديل العقار</h2>
+            <h2 style="color:var(--neon-white); font-size:1.6rem;"><i class="fas fa-search"></i> بحث وتعديل العقار</h2>
             <form id="search-property-form" style="display:flex; gap:10px; max-width:600px; margin:0 auto;">
                 <input type="text" id="search-code" class="neon-input-white" placeholder="أدخل الكود السري (Hidden Code)..." required>
-                <button type="submit" class="btn-white" style="width:auto; padding:0 35px; border-color:var(--neon-red); color:var(--neon-red);">بحث</button>
+                <button type="submit" class="btn-white" style="width:auto; padding:0 35px;">بحث</button>
             </form>
         </div>
         
@@ -184,17 +188,9 @@
                     </div>
 
                     <div class="form-grid">
-                        <div id="edit-level-group"><label>الدور</label>
-                            <select id="edit-level" name="level" class="neon-input-white">
-                                <option value="">اختر...</option><option value="أرضي">أرضي</option><option value="أخير">أخير</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6+">6+</option>
-                            </select>
-                        </div>
+                        <div id="edit-level-group"><label>الدور</label><select id="edit-level" name="level" class="neon-input-white"><option value="">اختر...</option><option value="أرضي">أرضي</option><option value="أخير">أخير</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6+">6+</option></select></div>
                         <div id="edit-floors-group" style="display:none;"><label>عدد الأدوار</label><input type="number" id="edit-floors" name="floors" class="neon-input-white"></div>
-                        <div><label>التشطيب</label>
-                            <select id="edit-finishing" name="finishing" class="neon-input-white">
-                                <option value="">اختر...</option><option value="بدون تشطيب">بدون تشطيب</option><option value="نص تشطيب">نص تشطيب</option><option value="تشطيب كامل">تشطيب كامل</option><option value="الترا لوكس">ألترا لوكس</option><option value="فرش فندقي">فرش فندقي</option>
-                            </select>
-                        </div>
+                        <div><label>التشطيب</label><select id="edit-finishing" name="finishing" class="neon-input-white"><option value="">اختر...</option><option value="بدون تشطيب">بدون تشطيب</option><option value="تشطيب كامل">تشطيب كامل</option><option value="الترا لوكس">ألترا لوكس</option><option value="فرش فندقي">فرش فندقي</option></select></div>
                     </div>
 
                     <div style="margin-bottom:20px;"><label>الوصف التفصيلي</label><textarea id="edit-description" name="description" rows="6" class="neon-input-white"></textarea></div>
@@ -209,7 +205,6 @@
                         <label>الصور الحالية</label>
                         <div id="existing-images-container" style="display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#000; border-radius:12px; border:1px solid #333;"></div>
                         <input type="hidden" name="existingImages" id="existing-images-data">
-                        
                         <label class="btn-white" style="display:block; text-align:center; margin-top:10px; border-style:dashed; color:#888; border-color:#555; font-size:0.9rem; padding:10px;">
                             <i class="fas fa-camera"></i> إضافة صور جديدة
                             <input type="file" name="propertyImages" multiple accept="image/*" style="display:none;">

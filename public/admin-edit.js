@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 🔥 الدالة السحرية: بتجيب القيمة حتى لو الاسم مختلف في الداتابيز
+// 🔥 الدالة السحرية
 function getVal(data, keys) {
     for (let key of keys) {
         if (data[key] !== undefined && data[key] !== null && data[key] !== 'null') {
@@ -85,7 +85,7 @@ function getVal(data, keys) {
 }
 
 function loadData(data) {
-    console.log("Full Data:", data); // للتأكد
+    console.log("Full Data:", data); 
 
     document.getElementById('edit-property-id').value = data.id;
     
@@ -98,9 +98,11 @@ function loadData(data) {
     document.getElementById('edit-bathrooms').value = getVal(data, ['bathrooms', 'propertyBathrooms']);
     document.getElementById('edit-description').value = getVal(data, ['description', 'propertyDescription']);
 
-    // القوائم (أسماء الأعمدة الدقيقة من server.js)
+    // القوائم (أسماء الأعمدة الدقيقة من السيرفر)
     document.getElementById('edit-category').value = getVal(data, ['category', 'propertyCategory']) || 'apartment';
     document.getElementById('edit-type').value = getVal(data, ['type', 'propertyType']) || 'بيع';
+    
+    // 🔥 هنا التغيير المهم
     document.getElementById('edit-finishing').value = getVal(data, ['finishing_type', 'finishing', 'propertyFinishing']);
     document.getElementById('edit-level').value = getVal(data, ['level', 'propertyLevel']);
     document.getElementById('edit-floors').value = getVal(data, ['floors_count', 'floors', 'propertyFloors']);
@@ -150,8 +152,8 @@ function loadData(data) {
             currentVideoList = rawVideos;
         } else if (typeof rawVideos === 'string') {
             try { 
-                // ممكن تيجي {url1,url2} من البوستجريس
-                let cleanStr = rawVideos.replace('{','').replace('}','');
+                // معالجة صيغة Postgres Array {url1,url2}
+                let cleanStr = rawVideos.replace('{','').replace('}','').replace(/"/g, '');
                 if(cleanStr.includes(',')) currentVideoList = cleanStr.split(',');
                 else if(cleanStr) currentVideoList = [cleanStr];
                 else currentVideoList = [];

@@ -18,8 +18,7 @@
         :root {
             --bg-dark: #0f0f0f;
             --card-bg: #181818;
-            --neon-main: #00ff88;
-            --neon-red: #ff4444;
+            --neon-main: #00ff88; /* الأخضر الأساسي */
             --text-main: #ffffff;
         }
 
@@ -31,13 +30,13 @@
             padding-top: 0 !important;
         }
 
-        /* --- الهيدر (متوافق مع الموبايل) --- */
+        /* --- الهيدر (أخضر + صف واحد) --- */
         .main-header {
             position: relative;
             background: #000;
-            border-bottom: 2px solid var(--neon-red);
-            padding: 10px 15px; /* تقليل الحواف عشان الموبايل */
-            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.1);
+            border-bottom: 2px solid var(--neon-main); /* خط أخضر */
+            padding: 10px 15px;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.1);
         }
 
         .header-container { 
@@ -46,25 +45,25 @@
             align-items: center; 
             max-width: 1200px; 
             margin: 0 auto; 
-            flex-wrap: nowrap; /* 🔥 منع نزول العناصر سطر جديد */
+            flex-wrap: nowrap; /* 🔥 يمنع النزول لسطر جديد */
         }
 
         .logo-container { 
             display: flex; align-items: center; gap: 10px; 
-            flex-shrink: 0; /* منع انكماش اللوجو */
+            flex-shrink: 0; /* يمنع انكماش اللوجو */
         }
-        .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-red); object-fit: cover; }
+        .logo { height: 45px; width: 45px; border-radius: 50%; border: 2px solid var(--neon-main); object-fit: cover; }
 
         .nav-button {
             text-decoration: none; color: white; 
-            border: 1px solid var(--neon-red);
+            border: 1px solid var(--neon-main);
             padding: 6px 15px; border-radius: 50px; 
-            font-size: 0.9rem; transition: 0.3s;
+            font-size: 0.85rem; transition: 0.3s;
             display: flex; align-items: center; gap: 5px;
-            background: rgba(255, 68, 68, 0.1);
-            white-space: nowrap; /* 🔥 منع التفاف النص */
+            background: rgba(0, 255, 136, 0.1);
+            white-space: nowrap; /* 🔥 يمنع النص من الانقسام */
         }
-        .nav-button:hover { background: var(--neon-red); color: white; }
+        .nav-button:hover { background: var(--neon-main); color: black; }
 
         /* --- المحتوى --- */
         .main-content { padding: 20px 15px; max-width: 900px; margin: 0 auto; }
@@ -116,7 +115,7 @@
         /* 🔥 تعديلات الموبايل للزرار والصورة */
         @media(max-width:480px){ 
             .form-grid { grid-template-columns: 1fr; } 
-            .nav-button { padding: 5px 12px; font-size: 0.8rem; }
+            .nav-button { padding: 6px 10px; font-size: 0.8rem; }
             .logo-text { display: none; } /* إخفاء اسم الموقع في الموبايل لتوفير مساحة */
         }
     </style>
@@ -127,7 +126,7 @@
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.jpg" alt="Logo" class="logo">
-                <span class="logo-text" style="font-weight:bold;">نشر عقار</span>
+                <span class="logo-text" style="font-weight:bold; color:white;">نشر عقار</span>
             </div>
             <a href="admin-home" class="nav-button">
                 العودة للرئيسية <i class="fas fa-arrow-left"></i>
@@ -143,7 +142,7 @@
                 
                 <div class="form-grid">
                     <div><label>عنوان العقار</label><input type="text" name="title" class="neon-input-white" required></div>
-                    <div><label style="color:var(--neon-red);">★ الكود السري</label><input type="text" name="hiddenCode" class="neon-input-white" style="border-color:var(--neon-red);" required></div>
+                    <div><label style="color:#ffd700;">★ الكود السري</label><input type="text" name="hiddenCode" class="neon-input-white" style="border-color:#ffd700;" required></div>
                 </div>
 
                 <div class="form-grid">
