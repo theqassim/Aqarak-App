@@ -1,371 +1,301 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
-    <title>جميع العقارات - عقارك</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="styles.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>جميع العقارات - عقارك</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="styles.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 🎨 إعدادات الصفحة (تصحيح الفراغات) --- */
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98); /* خلفية داكنة أكثر */
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --card-bg: #1a1a1a;
+        }
 
-    <style>
-    /* --- 🎨 إعدادات الصفحة (تصحيح الفراغات) --- */
-    :root {
-        --glass-bg: rgba(20, 20, 20, 0.98); /* خلفية داكنة أكثر */
-        --neon-primary: #00ff88;
-        --neon-secondary: #00d4ff;
-        --card-bg: #1a1a1a;
-    }
+        /* إجبار الصفحة على البدء من الأعلى */
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: block !important; /* لغينا الـ flex اللي كان بيوسطن المحتوى */
+        }
 
-    /* إجبار الصفحة على البدء من الأعلى */
-    body.internal-page {
-        background-color: #0f0f0f;
-        background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-        min-height: 100vh;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: block !important; /* لغينا الـ flex اللي كان بيوسطن المحتوى */
-        overflow-x: hidden;
-    }
+        /* --- 1. حاوية التحكم العلوية (Header + Search + Filters) --- */
+        .adv-control-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            
+            /* تظبيط المسافات */
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
 
-    /* --- 1. حاوية التحكم العلوية (Header + Search + Filters) --- */
-    .adv-control-bar {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        width: 100%;
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        /* الصف العلوي: زر العودة + اللوجو */
+        .nav-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* تظبيط المسافات */
-        padding: 10px 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+        .nav-logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
 
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-    }
+        .btn-back-home {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--neon-primary);
+            text-decoration: none;
+            padding: 6px 15px;
+            border-radius: 50px;
+            border: 1px solid var(--neon-primary);
+            font-size: 0.85rem;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-    /* الصف العلوي: زر العودة + اللوجو */
-    .nav-top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+        /* صف البحث والتبويبات */
+        .adv-main-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-    .nav-logo-area {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: white;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
+        .adv-search-wrapper {
+            flex: 2;
+            min-width: 200px;
+            position: relative;
+        }
 
-    .btn-back-home {
-        background: rgba(0, 255, 136, 0.1);
-        color: var(--neon-primary);
-        text-decoration: none;
-        padding: 6px 15px;
-        border-radius: 50px;
-        border: 1px solid var(--neon-primary);
-        font-size: 0.85rem;
-        transition: 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
+        .adv-search-input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9rem;
+            height: 40px;
+        }
 
-    /* صف البحث والتبويبات */
-    .adv-main-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
+        .adv-search-input:focus {
+            border-color: var(--neon-primary);
+            outline: none;
+        }
 
-    .adv-search-wrapper {
-        flex: 2;
-        min-width: 200px;
-        position: relative;
-    }
+        .adv-search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-primary);
+            font-size: 1rem;
+        }
 
-    .adv-search-input {
-        width: 100%;
-        padding: 10px 40px 10px 15px;
-        background: rgba(0,0,0,0.6);
-        border: 1px solid #444;
-        border-radius: 10px;
-        color: white;
-        font-size: 0.9rem;
-        height: 40px;
-    }
+        .adv-type-tabs {
+            background: rgba(0,0,0,0.6);
+            padding: 3px;
+            border-radius: 10px;
+            display: flex;
+            gap: 3px;
+            border: 1px solid #444;
+            height: 40px;
+        }
 
-    .adv-search-input:focus {
-        border-color: var(--neon-primary);
-        outline: none;
-    }
+        .adv-tab-btn {
+            padding: 0 15px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            height: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
 
-    .adv-search-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--neon-primary);
-        font-size: 1rem;
-    }
+        .adv-tab-btn.active {
+            background: var(--neon-primary);
+            color: #000;
+        }
 
-    .adv-type-tabs {
-        background: rgba(0,0,0,0.6);
-        padding: 3px;
-        border-radius: 10px;
-        display: flex;
-        gap: 3px;
-        border: 1px solid #444;
-        height: 40px;
-    }
+        /* الفلاتر السفلية */
+        .adv-filters-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            -webkit-overflow-scrolling: touch; /* تمرير ناعم للموبايل */
+        }
+        .adv-filters-row::-webkit-scrollbar { display: none; }
 
-    .adv-tab-btn {
-        padding: 0 15px;
-        border-radius: 8px;
-        border: none;
-        background: transparent;
-        color: #999;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 0.85rem;
-        transition: 0.2s;
-        height: 100%;
-        display: flex; align-items: center; justify-content: center;
-    }
+        .adv-select, .adv-num-input {
+            background: #222;
+            border: 1px solid #444;
+            color: white;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            height: 38px;
+            min-width: 90px;
+        }
 
-    .adv-tab-btn.active {
-        background: var(--neon-primary);
-        color: #000;
-    }
+        .adv-reset-btn {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            min-width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
 
-    /* الفلاتر السفلية */
-    .adv-filters-row {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 2px;
-        -webkit-overflow-scrolling: touch; /* تمرير ناعم للموبايل */
-    }
-    .adv-filters-row::-webkit-scrollbar { display: none; }
+        /* --- 2. شبكة العقارات --- */
+        .adv-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px 15px;
+            max-width: 1250px;
+            margin: 0 auto;
+        }
 
-    .adv-select, .adv-num-input {
-        background: #222;
-        border: 1px solid #444;
-        color: white;
-        padding: 0 10px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        height: 38px;
-        min-width: 90px;
-    }
+        /* الكارت */
+        .adv-card {
+            background: var(--card-bg); border-radius: 16px; overflow: hidden;
+            border: 1px solid #333; transition: 0.3s; position: relative;
+            display: flex; flex-direction: column;
+        }
+        .adv-card-img-box { height: 200px; position: relative; }
+        .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .adv-price-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.85); color: var(--neon-primary); padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid var(--neon-primary); font-size: 0.95rem; }
+        .adv-type-badge { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; color: black; }
+        .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
+        
+        .adv-card-body { padding: 12px; }
+        .adv-title { color: white; margin: 0 0 8px 0; font-size: 1rem; line-height: 1.4; }
+        .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.8rem; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .adv-feat-item i { color: var(--neon-secondary); }
+        
+        .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
 
-    .adv-reset-btn {
-        background: rgba(255, 68, 68, 0.2);
-        color: #ff4444;
-        border: 1px solid #ff4444;
-        min-width: 38px;
-        height: 38px;
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-    }
+        /* 🔥 تحسينات الموبايل القوية لإزالة الفراغ 🔥 */
+        @media (max-width: 768px) {
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow-x: hidden;
+            }
+            
+            body.internal-page {
+                padding-top: 0 !important; /* تأكيد عدم وجود مسافة علوية */
+            }
 
-    /* --- 2. شبكة العقارات (Grid System) --- */
-    .adv-grid-container {
-        display: grid !important; /* إجبار استخدام Grid */
-        /* توزيع الكروت بحد أدنى 300 بيكسل */
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
-        gap: 20px !important;
+            .adv-control-bar {
+                top: 0;
+                border-radius: 0 0 15px 15px; /* تدوير أقل للموبايل */
+                padding: 10px;
+                gap: 10px;
+            }
 
-        /* ضبط العرض والهوامش */
-        width: 100% !important;
-        max-width: 1250px !important;
-        margin: 0 auto !important;
-        padding: 20px 15px !important;
-
-        /* إلغاء أي توسيط قديم (Flex centering) */
-        justify-content: start !important; 
-        box-sizing: border-box;
-    }
-
-    /* تصميم الكارت */
-    .adv-card {
-        background: var(--card-bg); 
-        border-radius: 16px; 
-        overflow: hidden;
-        border: 1px solid #333; 
-        transition: 0.3s; 
-        position: relative;
-        display: flex; 
-        flex-direction: column; /* ترتيب العناصر عمودياً */
-        height: 100%; /* عشان الكروت كلها تبقى نفس الطول */
-    }
-
-    .adv-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--neon-primary);
-        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
-    }
-
-    .adv-card-img-box { height: 200px; position: relative; }
-    .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
-
-    .adv-price-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.85); color: var(--neon-primary); padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid var(--neon-primary); font-size: 0.95rem; }
-    .adv-type-badge { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; color: black; }
-    .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
-
-    /* جسم الكارت (يضمن تناسق الأزرار) */
-    .adv-card-body { 
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        flex: 1; /* يأخذ المساحة المتبقية */
-        justify-content: space-between; /* يدفع العناصر بعيداً عن بعض */
-    }
-
-    .adv-title { color: white; margin: 0 0 8px 0; font-size: 1rem; line-height: 1.4; }
-    .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.8rem; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px; }
-    .adv-feat-item i { color: var(--neon-secondary); }
-
-    .adv-details-btn { 
-        display: block; 
-        width: 100%; 
-        text-align: center; 
-        border: 1px solid var(--neon-primary); 
-        color: var(--neon-primary); 
-        padding: 8px; 
-        border-radius: 8px; 
-        text-decoration: none; 
-        font-weight: bold; 
-        font-size: 0.9rem; 
-        margin-top: auto; /* يدفع الزرار لأسفل الكارت دائماً */
-    }
-    .adv-details-btn:hover {
-        background: var(--neon-primary);
-        color: #000;
-    }
-
-    /* --- زر الشكوى العائم (مرفوع) --- */
-    .complaint-float-btn {
-        position: fixed;
-        bottom: 30px; /* مرفوع عن الحافة */
-        left: 20px; 
-        z-index: 9999;
-        background: rgba(255, 68, 68, 0.1);
-        color: #ff4444;
-        border: 1px solid #ff4444;
-        padding: 10px 20px;
-        border-radius: 50px;
-        font-weight: bold;
-        cursor: pointer;
-        backdrop-filter: blur(5px);
-        transition: 0.3s;
-    }
-    .complaint-float-btn:hover {
-        background: #ff4444;
-        color: white;
-    }
-
-    /* 🔥 تحسينات الموبايل 🔥 */
-    @media (max-width: 768px) {
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        body.internal-page {
-            padding-top: 0 !important;
-        }
-
-        .adv-control-bar {
-            top: 0;
-            border-radius: 0 0 15px 15px;
-            padding: 10px;
-            gap: 10px;
-        }
-
-        .adv-main-row { flex-direction: column; gap: 8px; }
-        .adv-filters-row { padding-bottom: 5px; }
-
-        .adv-grid-container {
-            padding: 15px 10px;
-            gap: 15px;
-            /* في الموبايل، الكارت ياخد عرض الشاشة */
-            grid-template-columns: 1fr !important;
-        }
-    }
-</style>
-
+            .adv-main-row { flex-direction: column; gap: 8px; }
+            .adv-filters-row { padding-bottom: 5px; }
+            
+            .adv-grid-container {
+                padding: 15px 10px; /* تقليل هوامش الشبكة */
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body class="internal-page">
 
-    <div class="adv-control-bar">
-        
-        <div class="nav-top-bar">
-            <div class="nav-logo-area">
-                <img src="logo.jpg" style="height: 32px; border-radius: 50%;">
-                <span>عقارك</span>
-            </div>
-            <a href="home" class="btn-back-home">
-                العودة <i class="fas fa-arrow-left"></i> 
-            </a>
-        </div>
+    <div class="adv-control-bar">
+        
+        <div class="nav-top-bar">
+            <div class="nav-logo-area">
+                <img src="logo.jpg" style="height: 32px; border-radius: 50%;">
+                <span>عقارك</span>
+            </div>
+            <a href="home" class="btn-back-home">
+                العودة <i class="fas fa-arrow-left"></i> 
+            </a>
+        </div>
 
-        <div class="adv-main-row">
-            <div class="adv-search-wrapper">
-                <i class="fas fa-search adv-search-icon"></i>
-                <input type="text" id="adv-search-input" class="adv-search-input" placeholder="بحث (منطقة، كومبوند، كود)...">
-            </div>
+        <div class="adv-main-row">
+            <div class="adv-search-wrapper">
+                <i class="fas fa-search adv-search-icon"></i>
+                <input type="text" id="adv-search-input" class="adv-search-input" placeholder="بحث (منطقة، كومبوند، كود)...">
+            </div>
 
-            <div class="adv-type-tabs">
-                <button class="adv-tab-btn active" id="adv-btn-all" onclick="updateAdvType('all')">الكل</button>
-                <button class="adv-tab-btn" id="adv-btn-buy" onclick="updateAdvType('buy')">شراء</button>
-                <button class="adv-tab-btn" id="adv-btn-rent" onclick="updateAdvType('rent')">إيجار</button>
-            </div>
-        </div>
+            <div class="adv-type-tabs">
+                <button class="adv-tab-btn active" id="adv-btn-all" onclick="updateAdvType('all')">الكل</button>
+                <button class="adv-tab-btn" id="adv-btn-buy" onclick="updateAdvType('buy')">شراء</button>
+                <button class="adv-tab-btn" id="adv-btn-rent" onclick="updateAdvType('rent')">إيجار</button>
+            </div>
+        </div>
 
-        <div class="adv-filters-row">
-            <select id="adv-rooms-select" class="adv-select" style="flex:1;">
-                <option value="">الغرف: الكل</option>
-                <option value="1">1 غرفة</option>
-                <option value="2">2 غرفة</option>
-                <option value="3">3 غرف</option>
-            </select>
+        <div class="adv-filters-row">
+            <select id="adv-rooms-select" class="adv-select" style="flex:1;">
+                <option value="">الغرف: الكل</option>
+                <option value="1">1 غرفة</option>
+                <option value="2">2 غرفة</option>
+                <option value="3">3 غرف</option>
+            </select>
 
-            <input type="number" id="adv-price-min" class="adv-num-input" placeholder="من (سعر)" style="flex:1;">
-            <input type="number" id="adv-price-max" class="adv-num-input" placeholder="إلى (سعر)" style="flex:1;">
+            <input type="number" id="adv-price-min" class="adv-num-input" placeholder="من (سعر)" style="flex:1;">
+            <input type="number" id="adv-price-max" class="adv-num-input" placeholder="إلى (سعر)" style="flex:1;">
 
-            <button class="adv-reset-btn" onclick="resetAdvFilters()">
-                <i class="fas fa-undo"></i>
-            </button>
-        </div>
-    </div>
+            <button class="adv-reset-btn" onclick="resetAdvFilters()">
+                <i class="fas fa-undo"></i>
+            </button>
+        </div>
+    </div>
 
-    <main class="adv-grid-container" id="adv-properties-container">
-        <div class="adv-loader" style="grid-column: 1/-1; text-align: center; color: white; padding-top: 50px;">
-            <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--neon-primary); margin-bottom: 20px;"></i>
-            <h3>جاري البحث...</h3>
-        </div>
-    </main>
+    <main class="adv-grid-container" id="adv-properties-container">
+        <div class="adv-loader" style="grid-column: 1/-1; text-align: center; color: white; padding-top: 50px;">
+            <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--neon-primary); margin-bottom: 20px;"></i>
+            <h3>جاري البحث...</h3>
+        </div>
+    </main>
 
-    <footer class="main-footer">
-        <div class="footer-content">
-            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
-        </div>
-    </footer>
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+        </div>
+    </footer>
 
-    <script src="all-properties.js"></script>
-    <script src="utils.js"></script>
-    <script src="guest.js"></script>
+    <script src="all-properties.js"></script>
+    <script src="utils.js"></script>
+    <script src="guest.js"></script>
 </body>
 </html>
