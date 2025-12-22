@@ -3,13 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>عقارك - خدماتنا</title>
+    <title>عقارك - خدماتنا وشركاؤنا</title>
     <link rel="icon" type="image/png" href="logo.png">
+    
     <link rel="stylesheet" href="styles.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
-        html, body { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
+        /* --- 🛠️ تصفير الهوامش للإجبار على الالتصاق --- */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* --- 🎨 Design System --- */
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --card-bg: #1a1a1a;
+            --text-main: #ffffff;
+        }
 
         body.internal-page {
             background-color: #0f0f0f;
@@ -17,65 +33,114 @@
             min-height: 100vh;
             font-family: 'Cairo', sans-serif;
             color: white;
-            /* 🔥 المسافة التعويضية */
-            padding-top: 85px !important;
+            /* 🔥 مسافة لتعويض الهيدر الثابت */
+            padding-top: 80px !important;
         }
 
+        /* --- Header الثابت --- */
         .main-header {
-            position: fixed !important;
-            top: 0; left: 0; right: 0;
-            width: 100%; height: 75px;
+            position: fixed !important; /* تثبيت في السقف */
+            top: 0 !important; 
+            left: 0 !important; 
+            right: 0 !important;
+            width: 100% !important;
             z-index: 9999;
-            background: rgba(28, 38, 48, 0.98);
-            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
-            padding: 0 15px;
-            display: flex; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 0 !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        
-        .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1250px; margin: 0 auto; }
-        .logo { height: 40px; border-radius: 50%; border: 2px solid #00ff88; }
-        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
-        .nav-button:hover { background: #00ff88; color: black; }
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1250px; margin: 0 auto;
+        }
+        .nav-button {
+            text-decoration: none; color: white; border: 1px solid var(--neon-primary);
+            padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .nav-button:hover { background: var(--neon-primary); color: black; }
 
-        /* المحتوى */
-        .services-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .section-header { text-align: center; margin-bottom: 40px; }
-        .section-header h1 { color: #00ff88; font-size: 2.2rem; margin-bottom: 10px; }
-        .section-header p { color: #aaa; }
+        /* --- Services Content --- */
+        .services-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
 
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-header h1 {
+            color: var(--neon-primary); font-size: 2.5rem; margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        .section-header p { color: #aaa; font-size: 1.1rem; }
 
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px; justify-content: center;
+        }
+
+        /* Cards Design */
         .service-card {
-            background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 30px;
-            text-align: center; transition: 0.3s; text-decoration: none; display: block;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
         }
-        .service-card:hover { transform: translateY(-5px); border-color: #00d4ff; }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--neon-secondary);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+        }
 
         .card-logo-wrapper {
-            width: 100px; height: 100px; margin: 0 auto 20px; background: #fff; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; border: 3px solid #333;
+            width: 100px; height: 100px; margin: 0 auto 20px;
+            background: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid #333; transition: 0.3s;
         }
-        .card-logo-wrapper img { max-width: 70%; }
-        .card-title { color: white; font-size: 1.4rem; margin-bottom: 10px; font-weight: bold; }
-        .card-desc { color: #ccc; font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px; }
-        
-        .visit-btn { display: inline-block; padding: 8px 20px; border: 1px solid #00d4ff; color: #00d4ff; border-radius: 50px; transition: 0.3s; }
-        .service-card:hover .visit-btn { background: #00d4ff; color: black; }
+        .service-card:hover .card-logo-wrapper { border-color: var(--neon-secondary); box-shadow: 0 0 15px var(--neon-secondary); }
+        .card-logo-wrapper img { max-width: 70%; max-height: 70%; object-fit: contain; }
 
-        .coming-soon { opacity: 0.6; pointer-events: none; }
+        .card-title { color: white; font-size: 1.5rem; margin-bottom: 10px; font-weight: bold; }
+        .card-desc { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
+
+        .visit-btn {
+            display: inline-block; padding: 10px 25px;
+            background: transparent; border: 1px solid var(--neon-secondary);
+            color: var(--neon-secondary); border-radius: 50px;
+            font-weight: bold; transition: 0.3s;
+        }
+        .service-card:hover .visit-btn { background: var(--neon-secondary); color: black; }
+
+        .coming-soon { opacity: 0.6; cursor: default; }
+        .coming-soon:hover { transform: none; box-shadow: none; border-color: #333; }
+        .coming-soon .card-logo-wrapper { border-color: #444 !important; box-shadow: none !important; }
+        .coming-soon .visit-btn { border-color: #555; color: #555; pointer-events: none; }
     </style>
 </head>
 <body class="internal-page">
 
     <header class="main-header">
         <div class="header-container">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="logo.jpg" alt="logo" class="logo">
-                <span style="font-weight:bold; font-size:1.2rem;">الخدمات</span>
+            <div class="logo-container">
+                <a href="home" style="display: flex; align-items: center; text-decoration: none; gap: 10px;">
+                    <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary);">
+                    <span style="color: white; font-weight: bold; font-size: 1.2rem;">الخدمات</span>
+                </a>
             </div>
             <nav class="main-nav">
-                <a href="home" class="nav-button">الرئيسية</a>
+                <a href="home" class="nav-button">الرئيسية <i class="fas fa-home"></i></a>
             </nav>
         </div>
     </header>
@@ -83,31 +148,35 @@
     <main class="services-container">
         <div class="section-header">
             <h1>شركاء النجاح</h1>
-            <p>أفضل الخدمات المتكاملة لعقارك</p>
+            <p>نقدم لك أفضل الخدمات المتكاملة لعقارك من خلال شركائنا الموثوقين</p>
         </div>
 
         <div class="services-grid">
             <a href="https://elhandaseya-gallery.onrender.com" target="_blank" class="service-card">
                 <div class="card-logo-wrapper">
-                    <img src="photo_2025-12-05_20-58-48.png" alt="الهندسية">
+                    <img src="photo_2025-12-05_20-58-48.png" alt="لوجو الهندسية ميتال">
                 </div>
                 <h3 class="card-title">الهندسية ميتال</h3>
-                <p class="card-desc">أعمال الألوميتال والواجهات بجودة عالمية.</p>
+                <p class="card-desc">الخيار الأول لأعمال الألوميتال والواجهات. جودة عالية، تصميمات عصرية، وتشطيبات تليق بمنزلك.</p>
                 <span class="visit-btn">زيارة الموقع <i class="fas fa-arrow-left"></i></span>
             </a>
 
             <div class="service-card coming-soon">
-                <div class="card-logo-wrapper" style="background:#222;"><i class="fas fa-paint-roller" style="font-size:40px; color:#555;"></i></div>
-                <h3 class="card-title" style="color:#777;">تشطيبات</h3>
-                <p class="card-desc">قريباً..</p>
-                <span class="visit-btn" style="border-color:#555; color:#555;">قريباً</span>
+                <div class="card-logo-wrapper" style="background:#222;">
+                    <i class="fas fa-paint-roller" style="font-size: 40px; color: #555;"></i>
+                </div>
+                <h3 class="card-title" style="color: #777;">تشطيبات وديكور</h3>
+                <p class="card-desc">قريباً.. سنقوم بإضافة أفضل شركات الديكور والتشطيبات الداخلية.</p>
+                <span class="visit-btn">قريباً</span>
             </div>
-            
+
             <div class="service-card coming-soon">
-                <div class="card-logo-wrapper" style="background:#222;"><i class="fas fa-truck-moving" style="font-size:40px; color:#555;"></i></div>
-                <h3 class="card-title" style="color:#777;">نقل أثاث</h3>
-                <p class="card-desc">قريباً..</p>
-                <span class="visit-btn" style="border-color:#555; color:#555;">قريباً</span>
+                <div class="card-logo-wrapper" style="background:#222;">
+                    <i class="fas fa-truck-moving" style="font-size: 40px; color: #555;"></i>
+                </div>
+                <h3 class="card-title" style="color: #777;">نقل أثاث</h3>
+                <p class="card-desc">قريباً.. خدمات نقل الأثاث بأمان واحترافية لضمان سلامة منقولاتك.</p>
+                <span class="visit-btn">قريباً</span>
             </div>
         </div>
     </main>
