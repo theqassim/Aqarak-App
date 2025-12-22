@@ -4,40 +4,143 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>إحصائيات المستخدمين - الأدمن</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="admin-auth.js"></script>
+
     <style>
+        /* --- 🛠️ 1. Reset & Global Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --neon-pink: #e91e63; /* اللون الأساسي لهذه الصفحة */
+            --card-bg: #1a1a1a;
+        }
+
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            overflow-x: hidden;
+            /* 🔥 مسافة للهيدر الثابت */
+            padding-top: 100px !important; 
+        }
+
+        /* --- 🔒 2. الهيدر الثابت --- */
+        .main-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1250px; margin: 0 auto; width: 100%;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid var(--neon-pink); }
+        .logo-text { color: white; font-weight: bold; font-size: 1.1rem; }
+
+        .nav-button {
+            text-decoration: none; color: white; border: 1px solid var(--neon-pink);
+            padding: 6px 20px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
+        }
+        .nav-button:hover { background: var(--neon-pink); color: white; }
+
+        /* --- Main Content --- */
+        .main-content { max-width: 1100px; margin: 0 auto; padding: 20px 15px; }
+
         .stats-container {
-            max-width: 1000px;
-            margin: 30px auto;
-            background: #1c2630;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid #e91e63;
-            box-shadow: 0 0 20px rgba(233, 30, 99, 0.2);
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 25px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.1);
         }
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; color: white; min-width: 600px; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #333; white-space: nowrap; }
-        th { background-color: rgba(233, 30, 99, 0.1); color: #e91e63; font-size: 1rem; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+        
+        /* شريط وردي علوي */
+        .stats-container::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--neon-pink);
+        }
+
+        .section-title {
+            text-align: center; margin-bottom: 25px; color: white; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .section-title i { color: var(--neon-pink); }
+
+        /* --- Table Styling --- */
+        .table-responsive { 
+            overflow-x: auto; 
+            border-radius: 10px; 
+            background: rgba(0,0,0,0.2);
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        
+        th {
+            background: rgba(233, 30, 99, 0.15); color: var(--neon-pink);
+            padding: 15px; text-align: right; font-weight: bold; font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 15px; border-bottom: 1px solid #333; color: #ddd; vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.03); }
+
+        /* User Info & Ranks */
+        .username-tag { color: #888; font-size: 0.8rem; display: block; margin-top: 3px; font-family: monospace; }
+        .banned-tag { color: #ff4444; font-size: 0.75rem; border: 1px solid #ff4444; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
+
         .rank-badge {
-            width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
-            border-radius: 50%; font-weight: bold;
+            width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-weight: bold; font-size: 0.9rem;
         }
-        .rank-1 { background: gold; color: black; box-shadow: 0 0 10px gold; }
-        .rank-2 { background: silver; color: black; box-shadow: 0 0 10px silver; }
-        .rank-3 { background: #cd7f32; color: black; box-shadow: 0 0 10px #cd7f32; }
-        .rank-normal { background: #333; color: white; }
-        .username-tag { color: #aaa; font-size: 0.85rem; display: block; margin-top: 2px; }
-        .btn-view-profile { padding: 8px 15px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
+        .rank-1 { background: linear-gradient(45deg, gold, orange); color: black; box-shadow: 0 0 10px gold; }
+        .rank-2 { background: linear-gradient(45deg, silver, grey); color: black; box-shadow: 0 0 10px silver; }
+        .rank-3 { background: linear-gradient(45deg, #cd7f32, #8b4513); color: black; box-shadow: 0 0 10px #cd7f32; }
+        .rank-normal { background: #333; color: #aaa; border: 1px solid #555; }
+
+        /* Action Buttons */
+        .btn-action {
+            padding: 6px 15px; border-radius: 50px; font-size: 0.8rem; cursor: pointer;
+            border: 1px solid transparent; background: transparent; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+
+        .btn-view { border-color: var(--neon-secondary); color: var(--neon-secondary); }
+        .btn-view:hover { background: var(--neon-secondary); color: black; }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .stats-container { padding: 10px; margin: 10px; }
-            th, td { padding: 10px 8px; font-size: 0.9rem; }
-            .btn-view-profile span { display: none; }
-            .btn-view-profile i { margin: 0; font-size: 1.1rem; }
-            .btn-view-profile { padding: 8px; border-radius: 50%; width: 35px; height: 35px; }
+            body.internal-page { padding-top: 130px !important; }
+            .logo-text { display: none; }
+            .stats-container { padding: 15px; }
+            th, td { padding: 12px 10px; }
+            .btn-action span { display: none; } /* إخفاء النص في الأزرار للموبايل */
+            .btn-action i { font-size: 1rem; margin: 0; }
         }
     </style>
 </head>
@@ -47,41 +150,43 @@
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">الإحصائيات</span>
+                <span class="logo-text">الإحصائيات (Admin)</span>
             </div>
             <nav class="main-nav">
-                <a href="admin-home" class="nav-button neon-button-white">عودة</a> 
+                <a href="admin-home" class="nav-button">
+                    العودة للرئيسية <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
+                </a> 
             </nav>
         </div>
     </header>
 
     <main class="main-content">
         <div class="stats-container">
-            <h2 style="text-align: center; margin-bottom: 20px; color: white;">
-                <i class="fas fa-chart-bar" style="color: #e91e63;"></i> ترتيب النشاط والحظر
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i> ترتيب النشاط والحظر
             </h2>
 
-            <div id="loading" style="text-align:center; color:#e91e63; margin: 30px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري التحميل...
+            <div id="loading" style="text-align:center; color:var(--neon-pink); margin: 40px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br><span style="margin-top:10px; display:block;">جاري تحليل البيانات...</span>
             </div>
 
             <div class="table-responsive">
                 <table id="stats-table" style="display: none;">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">#</th>
+                            <th style="width: 60px;">#</th>
                             <th>المستخدم</th>
                             <th>الهاتف</th>
-                            <th>النشاط</th>
-                            <th>إجراءات</th>
+                            <th>العقارات</th>
+                            <th style="text-align:center;">إجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="stats-body"></tbody>
                 </table>
             </div>
             
-            <p id="empty-msg" style="display:none; text-align:center; color:#777; margin-top:20px;">
-                لا توجد بيانات.
+            <p id="empty-msg" style="display:none; text-align:center; color:#777; margin-top:30px; border:1px dashed #444; padding:20px; border-radius:10px;">
+                لا يوجد مستخدمين مسجلين حالياً.
             </p>
         </div>
     </main>
@@ -99,7 +204,7 @@
             const response = await fetch('/api/admin/users-stats');
             
             if (response.status === 401 || response.status === 403) {
-                window.location.href = 'index'; // لو مش أدمن اطرده
+                window.location.href = 'index'; // طرد لو مش أدمن
                 return;
             }
 
@@ -115,41 +220,45 @@
             tbody.innerHTML = '';
 
             users.forEach((user, index) => {
+                // تحديد لون وترتيب المستخدم
                 let rankClass = 'rank-normal';
                 let rankContent = index + 1;
-                if (index === 0) { rankClass = 'rank-1'; rankContent = '1'; }
+                
+                if (index === 0) { rankClass = 'rank-1'; rankContent = '<i class="fas fa-trophy"></i>'; }
                 else if (index === 1) { rankClass = 'rank-2'; rankContent = '2'; }
                 else if (index === 2) { rankClass = 'rank-3'; rankContent = '3'; }
 
                 const isBanned = user.is_banned;
                 const banBtnText = isBanned ? 'فك الحظر' : 'حظر';
-                const banBtnColor = isBanned ? '#4caf50' : '#f44336'; 
+                const banBtnColor = isBanned ? '#4caf50' : '#ff4444'; 
+                const banIcon = isBanned ? 'fa-unlock' : 'fa-ban';
                 
-                // هنا بندي ID مميز لكل زرار عشان نعرف نغيره
                 const btnId = `ban-btn-${user.phone}`; 
                 const rowId = `row-${user.phone}`;
 
                 const row = `
-                    <tr id="${rowId}" style="${isBanned ? 'background: rgba(244, 67, 54, 0.1);' : ''}">
-                        <td><span class="rank-badge ${rankClass}">${rankContent}</span></td>
+                    <tr id="${rowId}" style="${isBanned ? 'background: rgba(255, 68, 68, 0.1);' : ''}">
+                        <td><div class="rank-badge ${rankClass}">${rankContent}</div></td>
                         <td>
-                            <div style="font-weight:bold;">${user.name || 'غير محدد'}</div>
-                            <div class="username-tag">@${user.username || '-'}</div>
-                            <span id="ban-tag-${user.phone}" style="color:red; font-size:0.8rem; display:${isBanned ? 'inline' : 'none'}">(محظور)</span>
+                            <div style="font-weight:bold; color:white;">
+                                ${user.name || 'مستخدم'}
+                                ${isBanned ? '<span class="banned-tag" id="ban-tag-'+user.phone+'">محظور</span>' : '<span id="ban-tag-'+user.phone+'" style="display:none;" class="banned-tag">محظور</span>'}
+                            </div>
+                            <span class="username-tag">@${user.username || 'unknown'}</span>
                         </td>
-                        <td style="direction: ltr; text-align: right;">${user.phone}</td>
-                        <td><span style="color: #00ff88;">${user.property_count} عقار</span></td>
+                        <td style="direction: ltr; text-align: right; font-family:monospace; color:#ccc;">${user.phone}</td>
+                        <td><span style="color: var(--neon-primary); font-weight:bold;">${user.property_count} عقار</span></td>
                         <td>
-                            <div style="display:flex; gap:5px; justify-content:center;">
-                                <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-neon-auth btn-view-profile" style="font-size:0.8rem; padding:5px 10px;">
-                                    <i class="fas fa-eye"></i>
+                            <div style="display:flex; gap:8px; justify-content:center;">
+                                <a href="user-profile.html?u=${user.username}" target="_blank" class="btn-action btn-view">
+                                    <i class="fas fa-eye"></i> <span>بروفايل</span>
                                 </a>
                                 <button id="${btnId}" 
                                         onclick="toggleBan('${user.phone}')" 
-                                        class="btn-neon-auth" 
+                                        class="btn-action" 
                                         data-banned="${isBanned}"
-                                        style="border-color: ${banBtnColor}; color: ${banBtnColor}; font-size:0.8rem; padding:5px 10px;">
-                                    ${banBtnText}
+                                        style="border-color: ${banBtnColor}; color: ${banBtnColor};">
+                                    <i class="fas ${banIcon}"></i> <span>${banBtnText}</span>
                                 </button>
                             </div>
                         </td>
@@ -160,7 +269,7 @@
 
         } catch (error) {
             console.error(error);
-            loading.innerHTML = '<span style="color:red">خطأ في الاتصال</span>';
+            loading.innerHTML = '<span style="color:#ff4444"><i class="fas fa-exclamation-triangle"></i> فشل تحميل البيانات</span>';
         }
     }
 
@@ -169,15 +278,13 @@
         const row = document.getElementById(`row-${phone}`);
         const tag = document.getElementById(`ban-tag-${phone}`);
         
-        // قراءة الحالة الحالية من الزرار نفسه
         const isCurrentlyBanned = btn.getAttribute('data-banned') === 'true';
-        const action = !isCurrentlyBanned; // العكس (لو محظور هنفك، لو لا هنحظر)
+        const action = !isCurrentlyBanned; 
 
-        if(!confirm(action ? "هل أنت متأكد من حظر هذا المستخدم؟" : "هل تريد فك الحظر؟")) return;
+        if(!confirm(action ? "🚫 هل أنت متأكد من حظر هذا المستخدم؟\nسيتم منعه من دخول الموقع." : "✅ هل تريد فك الحظر عن هذا المستخدم؟")) return;
 
-        // تغيير شكل الزرار مؤقتاً لحد ما السيرفر يرد
-        const oldText = btn.innerText;
-        btn.innerText = '...';
+        const oldContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
 
         try {
@@ -189,29 +296,28 @@
             const data = await res.json();
             
             if(data.success) {
-                // تحديث الزرار والشكل فوراً بدون ريفرش
                 btn.setAttribute('data-banned', action);
                 
                 if (action) { // تم الحظر
-                    btn.innerText = 'فك الحظر';
+                    btn.innerHTML = '<i class="fas fa-unlock"></i> <span>فك الحظر</span>';
                     btn.style.borderColor = '#4caf50';
                     btn.style.color = '#4caf50';
-                    row.style.background = 'rgba(244, 67, 54, 0.1)';
-                    tag.style.display = 'inline';
+                    row.style.background = 'rgba(255, 68, 68, 0.1)';
+                    tag.style.display = 'inline-block';
                 } else { // تم فك الحظر
-                    btn.innerText = 'حظر';
-                    btn.style.borderColor = '#f44336';
-                    btn.style.color = '#f44336';
+                    btn.innerHTML = '<i class="fas fa-ban"></i> <span>حظر</span>';
+                    btn.style.borderColor = '#ff4444';
+                    btn.style.color = '#ff4444';
                     row.style.background = 'transparent';
                     tag.style.display = 'none';
                 }
             } else {
-                alert("حدث خطأ: " + data.message);
-                btn.innerText = oldText; // رجع النص القديم لو فشل
+                alert("❌ حدث خطأ: " + data.message);
+                btn.innerHTML = oldContent;
             }
         } catch(e) { 
             alert("خطأ في الاتصال");
-            btn.innerText = oldText;
+            btn.innerHTML = oldContent;
         } finally {
             btn.disabled = false;
         }

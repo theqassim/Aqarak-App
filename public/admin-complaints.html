@@ -4,37 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة الشكاوي - عقارك</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="admin-auth.js"></script>
+
     <style>
-        .complaint-card {
-            background: #252f38;
-            border: 1px solid #444;
-            border-right: 4px solid #ff4444;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+        /* --- 🛠️ 1. Reset & Global Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --neon-danger: #ff4444; /* اللون الأساسي لهذه الصفحة */
+            --card-bg: #1a1a1a;
+        }
+
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
             color: white;
-            transition: all 0.3s ease;
+            overflow-x: hidden;
+            /* مسافة للهيدر الثابت */
+            padding-top: 100px !important; 
         }
-        .complaint-header {
+
+        /* --- 🔒 2. الهيدر الثابت --- */
+        .main-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .header-container {
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px;
+            max-width: 1250px; margin: 0 auto; width: 100%;
         }
-        .user-phone { color: #00ff88; font-family: monospace; }
-        .complaint-body { font-size: 1.1rem; line-height: 1.6; color: #ddd; }
-        .complaint-date { font-size: 0.8rem; color: #666; margin-top: 10px; text-align: left; }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid var(--neon-danger); }
+        .logo-text { color: white; font-weight: bold; font-size: 1.1rem; }
+
+        .nav-button {
+            text-decoration: none; color: white; border: 1px solid var(--neon-danger);
+            padding: 6px 20px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
+        }
+        .nav-button:hover { background: var(--neon-danger); color: white; }
+
+        /* --- Main Content --- */
+        .main-content { max-width: 800px; margin: 0 auto; padding: 20px 15px; }
         
-        /* زر الحذف الجديد */
-        .btn-delete {
-            background: #ff4444; color: white; border: none;
-            padding: 8px 15px; border-radius: 5px; cursor: pointer;
-            margin-top: 15px; width: 100%; font-weight: bold;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: 0.2s;
+        .page-title { 
+            text-align: center; margin-bottom: 40px; font-size: 2rem; 
+            color: var(--neon-danger); text-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
         }
-        .btn-delete:hover { background: #cc0000; }
+
+        /* --- Complaint Cards Design --- */
+        #complaints-list { display: flex; flex-direction: column; gap: 20px; }
+
+        .complaint-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 25px;
+            position: relative; overflow: hidden;
+            transition: 0.3s;
+        }
+        
+        /* شريط أحمر علوي */
+        .complaint-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--neon-danger);
+        }
+
+        .complaint-card:hover { border-color: var(--neon-danger); box-shadow: 0 5px 20px rgba(255, 68, 68, 0.15); }
+
+        .complaint-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;
+        }
+        
+        .user-info h3 { font-size: 1.2rem; color: white; margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px; }
+        .user-phone { color: #888; font-family: monospace; font-size: 0.95rem; display: block; }
+        
+        .complaint-date { font-size: 0.8rem; color: #666; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px; }
+
+        .complaint-body {
+            font-size: 1rem; line-height: 1.7; color: #ddd; background: rgba(255, 68, 68, 0.05);
+            padding: 15px; border-radius: 10px; border: 1px dashed rgba(255, 68, 68, 0.3); margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .action-btn {
+            flex: 1; padding: 10px; border-radius: 50px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.3s; text-decoration: none; font-size: 0.9rem;
+            min-width: 140px;
+        }
+
+        .btn-whatsapp { 
+            background: transparent; border: 1px solid #25d366; color: #25d366; 
+        }
+        .btn-whatsapp:hover { background: #25d366; color: white; }
+
+        .btn-delete { 
+            background: transparent; border: 1px solid var(--neon-danger); color: var(--neon-danger); 
+        }
+        .btn-delete:hover { background: var(--neon-danger); color: white; }
+
+        .empty-message { text-align: center; padding: 40px; color: #888; border: 2px dashed #333; border-radius: 15px; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body.internal-page { padding-top: 130px !important; }
+            .complaint-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .logo-text { display: none; }
+            .actions-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body class="internal-page">
@@ -43,18 +143,21 @@
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">صندوق الشكاوي</span>
+                <span class="logo-text">صندوق الشكاوي (Admin)</span>
             </div>
             <nav class="main-nav">
-                <a href="admin-home" class="nav-button neon-button-white">عودة</a>
+                <a href="admin-home" class="nav-button">
+                    العودة للرئيسية <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
+                </a>
             </nav>
         </div>
     </header>
 
-    <main class="main-content" style="max-width: 800px; margin: 20px auto;">
-        <h2 style="color: white; margin-bottom: 20px; text-align: center;">الشكاوي الواردة 📥</h2>
+    <main class="main-content">
+        <h1 class="page-title">الشكاوي الواردة 📥</h1>
+        
         <div id="complaints-list">
-            <p style="text-align:center; color:#888;">جاري التحميل...</p>
+            <p class="empty-message" style="color:var(--neon-danger)">جاري تحميل الشكاوي <i class="fas fa-spinner fa-spin"></i></p>
         </div>
     </main>
 
@@ -71,56 +174,63 @@
                 
                 list.innerHTML = '';
                 if(complaints.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; padding:40px; border:1px dashed #555; border-radius:10px;"><i class="fas fa-check-circle" style="font-size:3rem; color:#00ff88; margin-bottom:15px;"></i><p style="color:#aaa;">لا توجد شكاوي جديدة!</p></div>';
+                    list.innerHTML = `
+                        <div class="empty-message">
+                            <i class="fas fa-check-double" style="font-size:3rem; color:var(--neon-primary); margin-bottom:15px; display:block;"></i>
+                            لا توجد شكاوي جديدة حالياً.
+                        </div>`;
                     return;
                 }
 
                 complaints.forEach(c => {
-                    const date = new Date(c.created_at).toLocaleDateString('ar-EG') + ' ' + new Date(c.created_at).toLocaleTimeString('ar-EG');
+                    const date = new Date(c.created_at).toLocaleDateString('ar-EG') + ' ' + new Date(c.created_at).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
                     
-                    // 🟢 تجهيز رقم الواتساب (إزالة أي رموز وإضافة كود مصر لو مش موجود)
-                    let cleanPhone = c.user_phone.replace(/\D/g, ''); // مسح أي حاجة مش رقم
-                    if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone; // إضافة 2 لو الرقم بدايته 01
+                    // 🟢 تجهيز رقم الواتساب
+                    let cleanPhone = c.user_phone.replace(/\D/g, ''); 
+                    if (cleanPhone.startsWith('01')) cleanPhone = '2' + cleanPhone; 
                     const waLink = `https://wa.me/${cleanPhone}`;
 
                     const html = `
                         <div class="complaint-card" id="card-${c.id}">
                             <div class="complaint-header">
-                                <div>
-                                    <span style="font-weight:bold; color:white;">${c.user_name || 'مجهول'}</span>
-                                    <br>
-                                    <span class="user-phone">${c.user_phone}</span>
+                                <div class="user-info">
+                                    <h3><i class="fas fa-user-circle"></i> ${c.user_name || 'مستخدم'}</h3>
+                                    <span class="user-phone"><i class="fas fa-phone-alt"></i> ${c.user_phone}</span>
                                 </div>
-                                
-                                <a href="${waLink}" target="_blank" class="btn-neon-auth" style="padding: 5px 15px; font-size: 0.85rem; background:#25d366; border-color:#25d366; color:white; display:flex; align-items:center; gap:5px; text-decoration:none;">
-                                    <i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> واتساب
-                                </a>
+                                <div class="complaint-date"><i class="far fa-clock"></i> ${date}</div>
                             </div>
+
                             <div class="complaint-body">
+                                <i class="fas fa-quote-right" style="color:var(--neon-danger); margin-left:5px; opacity:0.5;"></i>
                                 ${c.content}
                             </div>
-                            <div class="complaint-date">${date}</div>
                             
-                            <button onclick="deleteComplaint(${c.id})" class="btn-delete">
-                                <i class="fas fa-trash-alt"></i> تم التعامل (حذف)
-                            </button>
+                            <div class="actions-row">
+                                <a href="${waLink}" target="_blank" class="action-btn btn-whatsapp">
+                                    <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> تواصل واتساب
+                                </a>
+                                <button onclick="deleteComplaint(${c.id})" class="action-btn btn-delete">
+                                    <i class="fas fa-trash-alt"></i> تم الحل (حذف)
+                                </button>
+                            </div>
                         </div>
                     `;
                     list.innerHTML += html;
                 });
 
             } catch(e) {
-                list.innerHTML = '<p style="color:red; text-align:center;">فشل تحميل الشكاوي.</p>';
+                list.innerHTML = `<p class="empty-message" style="color:red;">حدث خطأ أثناء تحميل البيانات.</p>`;
             }
         }
 
         // دالة الحذف
         async function deleteComplaint(id) {
-            if(!confirm('هل أنت متأكد من حذف هذه الشكوى؟')) return;
+            if(!confirm('⚠️ هل أنت متأكد من حذف هذه الشكوى؟\nسيتم حذفها نهائياً.')) return;
 
             const btn = document.querySelector(`#card-${id} .btn-delete`);
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'جاري الحذف...';
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...';
             btn.disabled = true;
 
             try {
@@ -128,23 +238,22 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // تأثير اختفاء بسيط
+                    // تأثير بصري للحذف
                     const card = document.getElementById(`card-${id}`);
                     card.style.opacity = '0';
-                    card.style.transform = 'scale(0.9)';
+                    card.style.transform = 'translateY(20px)';
                     setTimeout(() => {
                         card.remove();
-                        // لو مفيش كروت تانية، نعيد تحميل القائمة عشان تظهر رسالة "لا توجد شكاوي"
                         if(document.querySelectorAll('.complaint-card').length === 0) loadComplaints();
                     }, 300);
                 } else {
                     alert('❌ خطأ: ' + data.message);
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originalHTML;
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert('خطأ في الاتصال بالسيرفر');
-                btn.innerHTML = originalText;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }
         }
