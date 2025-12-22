@@ -179,14 +179,22 @@
         }
 
         /* --- 2. شبكة العقارات --- */
-        .adv-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            padding: 20px 15px;
-            max-width: 1250px;
-            margin: 0 auto;
-        }
+        /* --- تعديل شبكة العقارات لتملأ الشاشة --- */
+.adv-grid-container {
+    display: grid;
+    /* السطر ده هو السحر: بيحط كروت قد ما الشاشة تشيل بحد أدنى 300 بيكسل للكارت */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    
+    gap: 25px; /* مسافة بين الكروت */
+    padding: 20px 15px;
+    
+    /* 🔥 التعديل المهم جداً 🔥 */
+    width: 100% !important;  /* لازم ياخد عرض الشاشة */
+    max-width: 1250px !important; /* أقصى عرض عشان ميبوظش في الشاشات العملاقة */
+    margin: 0 auto; /* توسيط الحاوية نفسها */
+    
+    box-sizing: border-box; /* عشان ال padding ميوسعش الصفحة */
+}
 
         /* الكارت */
         .adv-card {
