@@ -178,15 +178,35 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- 2. شبكة العقارات --- */
         .adv-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            padding: 20px 15px;
-            max-width: 1250px;
-            margin: 0 auto;
-        }
+    display: grid;
+    /* التعديل هنا: قللنا العرض الأدنى من 320 إلى 270 ليسمح بظهور 4 كروت */
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 20px;
+    
+    /* ضبط الحاوية */
+    width: 100%;       /* ضروري جداً لملء العرض */
+    max-width: 1250px;
+    margin: 20px auto;
+    padding: 0 15px;
+    
+    /* لضمان التناسق داخل الفليكس (في حال طبقت الحل السابق) */
+    flex-grow: 1;
+}
+
+/* (اختياري) إجبار المتصفح على عرض 4 كروت في الشاشات الكبيرة جداً */
+@media (min-width: 1200px) {
+    .adv-grid-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* (اختياري) إجبار المتصفح على عرض 3 كروت في الشاشات المتوسطة/اللابتوب */
+@media (min-width: 900px) and (max-width: 1199px) {
+    .adv-grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
 
         /* الكارت */
         .adv-card {
