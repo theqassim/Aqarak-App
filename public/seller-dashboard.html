@@ -4,55 +4,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>عقارك - اعرض عقارك</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        /* تحسين شكل حاوية الخريطة */
-        .map-container {
-            position: relative;
+        /* --- تخصيص الخريطة والبحث (Style Update) --- */
+        .map-wrapper {
             border-radius: 15px;
             overflow: hidden;
-            border: 2px solid #333;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 2px solid #333; /* حدود متناسقة مع الثيم */
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-top: 10px;
         }
+
         #map { 
             height: 400px; 
             width: 100%; 
             z-index: 1; 
+            background: #1a1a1a; /* لون احتياطي */
         }
+
+        /* شريط البحث العائم فوق الخريطة */
+        .map-search-bar {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.95); /* خلفية داكنة قوية */
+            border-radius: 50px;
+            padding: 5px 5px 5px 15px;
+            border: 1px solid #00ff88; /* حدود نيون خضراء */
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.15);
+            backdrop-filter: blur(5px);
+        }
+
+        .map-search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        
+        .map-search-input::placeholder { color: #888; }
+
+        .map-search-btn {
+            background: #00ff88;
+            color: black;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            margin-right: 5px;
+        }
+        .map-search-btn:hover { 
+            background: white; 
+            transform: scale(1.05);
+        }
+
+        /* قائمة الاقتراحات (Autocomplete) */
+        .search-suggestions {
+            position: absolute;
+            top: 65px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: #1c2630;
+            border: 1px solid #444;
+            border-radius: 12px;
+            z-index: 1001;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .suggestion-item {
+            padding: 12px 15px;
+            color: #ddd;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .suggestion-item i { color: #00ff88; font-size: 0.8rem; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+
+        /* زر "موقعي الحالي" */
         .locate-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            bottom: 20px;
+            right: 15px;
             z-index: 1000;
             background: white;
             color: #333;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
+            padding: 8px 15px;
+            border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.85rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 6px;
             transition: 0.3s;
         }
-        .locate-btn:hover { background: #f0f0f0; }
-        
+        .locate-btn:hover { background: #f0f0f0; transform: translateY(-2px); }
+
+        /* صندوق الملاحظة */
         .map-note { 
-            background: rgba(0, 0, 0, 0.3); 
-            border: 1px solid #444; 
+            background: rgba(0, 255, 136, 0.05); 
+            border: 1px dashed #00ff88; 
             color: #ccc; 
-            padding: 12px; 
-            border-radius: 8px; 
+            padding: 15px; 
+            border-radius: 10px; 
             font-size: 0.9rem; 
-            margin-bottom: 10px; 
+            margin-bottom: 15px; 
             display: flex; 
             align-items: flex-start; 
-            gap: 10px; 
+            gap: 12px; 
         }
-        .map-note i { color: #00ff88; margin-top: 3px; }
     </style>
 </head>
 <body class="internal-page custom-body">
@@ -60,8 +151,10 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">عقارك مضمون!</span>
+                <a href="home" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                    <span class="logo-text" style="color: white; font-weight: bold;">عقارك مضمون!</span>
+                </a>
             </div>
             <nav class="main-nav">
                 <a href="home" class="nav-button neon-button-white">الرئيسية</a> 
@@ -70,23 +163,27 @@
     </header>
 
     <main class="main-content">
-        <div class="seller-form-container neon-glow centered-page-content" style="max-width: 800px;">
-            <h2><i class="fas fa-home"></i> نموذج عرض عقار</h2>
-            <p>املأ البيانات بدقة لضمان وصول عقارك للمهتمين.</p>
+        <div class="seller-form-container neon-glow centered-page-content" style="max-width: 850px;">
+            <h2 style="color: var(--neon-primary); margin-bottom: 10px;"><i class="fas fa-home"></i> نموذج عرض عقار</h2>
+            <p style="color: #aaa; margin-bottom: 30px;">املأ البيانات بدقة لضمان وصول عقارك للمهتمين.</p>
 
             <form id="seller-form" enctype="multipart/form-data" class="auth-form"> 
 
                 <div class="form-grid">
                     <div class="input-group">
                         <label>اسمك</label>
-                        <input type="text" id="seller-name" name="sellerName" class="neon-input-white" readonly required style="background:#333; cursor:not-allowed;">
+                        <input type="text" id="seller-name" name="sellerName" class="neon-input-white" 
+                               style="background-color: #2a2a2a; color: #bbb; cursor: not-allowed; border-color: #444;" readonly required>
                     </div>
+
                     <div class="input-group">
                         <label>رقم تليفونك</label>
-                        <input type="tel" id="seller-phone" name="sellerPhone" class="neon-input-white" readonly required style="background:#333; cursor:not-allowed;">
+                        <input type="tel" id="seller-phone" name="sellerPhone" class="neon-input-white" 
+                               style="background-color: #2a2a2a; color: #bbb; cursor: not-allowed; border-color: #444;" readonly required>
                     </div>
+
                     <div class="input-group">
-                        <label>فئة العقار</label>
+                        <label><i class="fas fa-building"></i> فئة العقار</label>
                         <select id="property-category" name="propertyCategory" class="neon-input-white" onchange="toggleFields()" required>
                             <option value="apartment" selected>شقة / دوبلكس</option>
                             <option value="villa">فيلا / شاليه</option>
@@ -97,6 +194,7 @@
                             <option value="warehouse">مخزن / مصنع</option>
                         </select>
                     </div>
+
                     <div class="input-group">
                         <label>نوع العرض</label>
                         <select name="propertyType" class="neon-input-white" required>
@@ -104,45 +202,95 @@
                             <option value="إيجار">إيجار</option>
                         </select>
                     </div>
+
                     <div class="input-group full-width">
                         <label>عنوان الإعلان</label>
-                        <input type="text" name="propertyTitle" class="neon-input-white" required>
+                        <input type="text" name="propertyTitle" class="neon-input-white" placeholder="مثال: شقة لقطة بمدينة نصر..." required>
                     </div>
+
                     <div class="input-group">
                         <label>السعر (جنيه)</label>
-                        <input type="number" name="propertyPrice" class="neon-input-white" required>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyPrice" class="neon-input-white" required>
                     </div>
+
                     <div class="input-group">
                         <label>المساحة (م²)</label>
-                        <input type="number" name="propertyArea" class="neon-input-white" required>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyArea" class="neon-input-white" required>
                     </div>
-                    
-                    <div class="input-group" id="finishing-group"><label>التشطيب</label><select name="propertyFinishing" class="neon-input-white"><option value="">اختر...</option><option value="بدون تشطيب">بدون تشطيب</option><option value="نص تشطيب">نص تشطيب</option><option value="تشطيب كامل">تشطيب كامل</option><option value="الترا لوكس">ألترا لوكس</option></select></div>
-                    <div class="input-group" id="rooms-group"><label>الغرف</label><input type="number" name="propertyRooms" class="neon-input-white"></div>
-                    <div class="input-group" id="bath-group"><label>الحمامات</label><input type="number" name="propertyBathrooms" class="neon-input-white"></div>
-                    <div class="input-group" id="level-group" style="display:none;"><label>الدور</label><select name="propertyLevel" id="property-level" class="neon-input-white"><option value="">اختر...</option><option value="أرضي">أرضي</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6+">6+</option><option value="أخير">أخير</option></select></div>
-                    <div class="input-group" id="floors-count-group" style="display:none;"><label>عدد الأدوار</label><input type="number" name="propertyFloors" class="neon-input-white"></div>
+
+                    <div class="input-group" id="finishing-group">
+                        <label>نوع التشطيب</label>
+                        <select name="propertyFinishing" id="property-finishing" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="بدون تشطيب">بدون تشطيب (طوب أحمر)</option>
+                            <option value="نص تشطيب">نص تشطيب (محارة)</option>
+                            <option value="تشطيب كامل">تشطيب كامل</option>
+                            <option value="الترا لوكس">ألترا سوبر لوكس</option>
+                            <option value="فرش فندقي">مفروش / فندقي</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="rooms-group">
+                        <label>عدد الغرف</label>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0">
+                    </div>
+
+                    <div class="input-group" id="bath-group">
+                        <label>عدد الحمامات</label>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0">
+                    </div>
+
+                    <div class="input-group" id="level-group" style="display:none;">
+                        <label>الدور الكام؟</label>
+                        <select name="propertyLevel" id="property-level" class="neon-input-white">
+                            <option value="">اختر...</option>
+                            <option value="أرضي">أرضي</option>
+                            <option value="1">الأول</option>
+                            <option value="2">الثاني</option>
+                            <option value="3">الثالث</option>
+                            <option value="4">الرابع</option>
+                            <option value="5">الخامس</option>
+                            <option value="6+">أعلى من الخامس</option>
+                            <option value="أخير">الدور الأخير (رووف)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="floors-count-group" style="display:none;">
+                        <label>عدد الأدوار</label>
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" name="propertyFloors" id="property-floors" class="neon-input-white">
+                    </div>
                 </div>
 
                 <div class="input-group full-width">
                     <label>وصف تفصيلي</label>
-                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب تفاصيل العقار..."></textarea>
+                    <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب كل التفاصيل المهمة (المميزات، العيوب، الاتجاهات)..."></textarea>
                 </div>
 
                 <div class="input-group full-width">
-                    <label><i class="fas fa-map-marked-alt" style="color:#00ff88;"></i> موقع العقار (حدده بدقة)</label>
+                    <label><i class="fas fa-map-marked-alt" style="color:#00ff88;"></i> موقع العقار (هام جداً)</label>
                     
                     <div class="map-note">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-robot" style="font-size: 1.5rem; color: #00ff88;"></i>
                         <div style="flex:1;">
-                            <strong>ليه تحدد الموقع؟</strong><br>
-                            <span id="map-status-text" style="color:#aaa; font-size:0.85rem;">عشان السيستم بتاعنا يقدر يجيب الخدمات القريبة (مدارس، جوامع، ماركت) ويعرضها للمشتري أوتوماتيك!</span>
+                            <strong style="color: white;">مساعد عقارك الذكي:</strong><br>
+                            <span id="map-status-text" style="color:#aaa;">ابحث عن المنطقة في الشريط (مثلاً: "ميدان الحصري") أو اضغط على الخريطة. السيستم هيحدد الخدمات القريبة أوتوماتيك!</span>
                         </div>
                     </div>
 
-                    <div class="map-container">
+                    <div class="map-wrapper">
+                        <div class="map-search-bar">
+                            <input type="text" id="map-search-input" class="map-search-input" placeholder="اكتب اسم المنطقة أو الشارع..." autocomplete="off">
+                            <button type="button" class="map-search-btn" onclick="searchLocation()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="search-suggestions" class="search-suggestions"></div>
+
                         <div id="map"></div>
-                        <button type="button" class="locate-btn" onclick="locateUser()">📍 موقعي الحالي</button>
+                        <button type="button" class="locate-btn" onclick="locateUser()">
+                            <i class="fas fa-crosshairs"></i> موقعي الحالي
+                        </button>
                     </div>
 
                     <input type="hidden" name="latitude" id="lat">
@@ -153,12 +301,23 @@
                 <div class="input-group full-width">
                     <label>صور العقار</label>
                     <label for="property-images" class="file-upload-label btn-neon-auth">
-                        <i class="fas fa-camera"></i> اختر الصور (حد أقصى 10)
+                        <i class="fas fa-camera"></i> اضغط لاختيار الصور
                     </label>
                     <input type="file" id="property-images" name="images[]" multiple accept="image/*" style="display:none;"> 
                     <div class="image-preview-container" id="image-preview-container"></div>
                 </div>
                 
+                <div class="whatsapp-note-box neon-glow" style="margin: 20px 0; padding: 15px; border: 1px dashed #25d366; border-radius: 10px; background: rgba(37, 211, 102, 0.1); text-align: center;">
+                    <p style="color: #fff; margin-bottom: 5px; font-weight: bold;">
+                        <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.2rem;"></i> عندك فيديو للعقار؟
+                    </p>
+                    <p style="color: #ccc; font-size: 0.9rem; margin: 0;">
+                        بعد نشر الإعلان، ابعت الفيديو على واتساب 
+                        <a href="https://wa.me/201008102237" target="_blank" style="color: #25d366; text-decoration: underline; font-weight: bold; direction: ltr; display: inline-block;">01008102237</a> 
+                        واحنا هنضيفهولك!
+                    </p>
+                </div>
+
                 <button type="submit" class="btn-neon-large-green">نشر الإعلان الآن 🚀</button>
             </form>
             <p id="seller-form-message" class="message"></p> 
@@ -166,7 +325,9 @@
     </main>
 
     <footer class="main-footer">
-        <div class="footer-content"><p>جميع الحقوق محفوظة © 2025 - عقارك</p></div>
+        <div class="footer-content">
+            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+        </div>
     </footer>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
