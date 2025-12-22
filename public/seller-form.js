@@ -18,10 +18,8 @@ function initMap() {
     const defaultLat = 30.0444; 
     const defaultLng = 31.2357; 
 
-    // استخدام خرائط ذات طابع داكن قليلاً إذا أمكن، أو تقليل سطوع الخريطة الحالية عبر CSS
     map = L.map('map').setView([defaultLat, defaultLng], 13);
     
-    // خريطة بتصميم Carto Dark ليتناسب مع الثيم الليلي (اختياري، أو نستخدم الفلتر الموجود في CSS)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 20
@@ -110,7 +108,7 @@ async function handleLocationSelect(lat, lng) {
     await fetchNearbyServices(lat, lng);
 }
 
-// 🤖 جلب الخدمات (تحديث رسائل الحالة)
+// 🤖 جلب الخدمات
 async function fetchNearbyServices(lat, lng) {
     const statusMsg = document.getElementById('map-status-text');
     statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحليل المنطقة بالذكاء الاصطناعي...';
@@ -176,24 +174,39 @@ async function fetchUserData() {
 
 const imgInput = document.getElementById('property-images');
 if (imgInput) {
+    // 🛡️ التعديل هنا: منع الصور الأكبر من 10 ميجا
     imgInput.addEventListener('change', function(e) {
-        Array.from(e.target.files).forEach(file => selectedFiles.push(file));
+        const MAX_SIZE = 10 * 1024 * 1024; // 10 ميجا بايت
+        let rejectedCount = 0;
+
+        Array.from(e.target.files).forEach(file => {
+            if (file.size > MAX_SIZE) {
+                rejectedCount++;
+            } else {
+                selectedFiles.push(file);
+            }
+        });
+
+        if (rejectedCount > 0) {
+            alert(`⚠️ تم رفض ${rejectedCount} صورة لأن حجمها أكبر من 10 ميجا. يرجى اختيار صور أصغر.`);
+        }
+
         if (selectedFiles.length > 10) {
-            alert("الحد الأقصى 10 صور فقط");
+            alert("⚠️ الحد الأقصى 10 صور فقط، سيتم استخدام أول 10 صور.");
             selectedFiles = selectedFiles.slice(0, 10);
         }
+        
         renderPreviews();
         this.value = ''; 
     });
 }
 
-// 🖼️ دالة العرض المحسنة (تستخدم الـ CSS Classes الجديدة)
 function renderPreviews() {
     const container = document.getElementById('image-preview-container');
     container.innerHTML = '';
     selectedFiles.forEach((file, index) => {
         const div = document.createElement('div');
-        div.className = 'preview-item'; // استخدام الكلاس الجديد
+        div.className = 'preview-item'; 
         
         const img = document.createElement('img');
         const reader = new FileReader();
@@ -201,7 +214,7 @@ function renderPreviews() {
         reader.readAsDataURL(file);
         
         const btn = document.createElement('button');
-        btn.className = 'btn-remove-img'; // استخدام كلاس الزر
+        btn.className = 'btn-remove-img'; 
         btn.innerHTML = '<i class="fas fa-times"></i>';
         btn.onclick = (e) => { e.preventDefault(); selectedFiles.splice(index, 1); renderPreviews(); };
 
@@ -222,19 +235,26 @@ document.getElementById('seller-form').addEventListener('submit', async function
         return;
     }
 
+    if (selectedFiles.length === 0) {
+        alert("📸 يرجى إضافة صورة واحدة على الأقل للعقار.");
+        return;
+    }
+
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
     btn.disabled = true;
     if(msg) msg.textContent = '';
 
     const formData = new FormData(e.target);
     formData.delete('images[]'); 
-    selectedFiles.forEach(file => { if (file.size <= 10 * 1024 * 1024) formData.append('images', file); });
+    // تأكيد إضافي قبل الإرسال (اختياري لأننا منعنا الإضافة أصلاً)
+    selectedFiles.forEach(file => { 
+        if (file.size <= 10 * 1024 * 1024) formData.append('images', file); 
+    });
 
     try {
         const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
         const data = await response.json();
         if (response.ok) {
-            // يمكن استبدال الـ Alert بمودال نجاح مثل الموجود في صفحة التفاصيل
             alert('🎉 تم نشر إعلانك بنجاح! سيتم تحويلك للصفحة الرئيسية.');
             window.location.href = 'home';
         } else { throw new Error(data.message); }

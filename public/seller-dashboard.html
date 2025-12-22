@@ -106,27 +106,40 @@
         }
         #map { height: 100%; width: 100%; z-index: 1; filter: grayscale(20%) invert(90%); } /* خريطة داكنة */
 
-        .map-search-bar {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; width: 90%; max-width: 500px;
-            display: flex; align-items: center;
-            background: rgba(20, 20, 20, 0.95);
-            border-radius: 50px; padding: 5px 5px 5px 15px;
-            border: 1px solid var(--neon-primary);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-        }
-        .map-search-input {
-            flex: 1; background: transparent; border: none;
-            color: white; font-family: 'Cairo'; font-size: 0.95rem; outline: none;
-        }
-        .map-search-btn {
-            background: var(--neon-primary); color: black; border: none;
-            width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: 0.3s;
-        }
-        .map-search-btn:hover { background: white; }
+        /* --- تعديل شريط البحث (لحل مشكلة الموبايل) --- */
+.map-search-bar {
+    position: absolute;
+    top: 15px; left: 50%; transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%; max-width: 500px;
+    display: flex; align-items: center;
+    background: rgba(20, 20, 20, 0.95);
+    border-radius: 50px;
+    padding: 6px; /* تقليل البادنج ليكون متناسق */
+    border: 1px solid var(--neon-primary);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
 
+.map-search-input {
+    flex: 1; /* يأخذ المساحة المتبقية */
+    background: transparent; border: none;
+    color: white; font-family: 'Cairo'; font-size: 0.95rem; outline: none;
+    padding: 0 10px; /* مسافة للنص */
+    min-width: 0; /* مهم جداً: يسمح للنص بالاختفاء بدلاً من كسر التصميم */
+}
+
+.map-search-btn {
+    background: var(--neon-primary); color: black; border: none;
+    width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.3s;
+    
+    /* 🔥 الحل السحري هنا 🔥 */
+    flex-shrink: 0; /* يمنع الزر من الانكماش مهما ضاقت المساحة */
+}
+
+.map-search-btn:hover { background: white; }
         /* Suggestions Dropdown */
         .search-suggestions {
             position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
@@ -230,7 +243,7 @@
     <main class="main-content">
         <div class="seller-form-container">
             <h2 style="color: var(--neon-primary); margin-bottom: 10px; border-right: 4px solid var(--neon-primary); padding-right: 15px;">اعرض عقارك</h2>
-            <p style="color: #aaa; margin-bottom: 30px; font-size: 0.95rem;">املأ البيانات وسيقوم الذكاء الاصطناعي بتحديد خدمات المنطقة.</p>
+            <p style="color: #aaa; margin-bottom: 30px; font-size: 0.95rem;">املأ البيانات وسنقوم بتحديد خدمات المنطقة.</p>
 
             <form id="seller-form" enctype="multipart/form-data"> 
 
