@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. المتغيرات
-    // بنستخدم localStorage بس عشان نعرف نعرض الرقم في المودال، لكن التوثيق الحقيقي بيتم في السيرفر
     const userPhone = localStorage.getItem('userPhone'); 
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
@@ -21,15 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchFavorites() {
         if (!favoritesContainer) return;
         
-        favoritesContainer.innerHTML = '<p class="empty-message info">جاري تحميل المفضلة...</p>';
+        favoritesContainer.innerHTML = '<p style="text-align:center; color:#00d4ff;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل العقارات...</p>';
 
         try {
-            // 🟢 تعديل هام: طلب المفضلة بدون إرسال بارامترات في الرابط
-            // السيرفر هيقرا التوكن من الكوكيز ويعرف مين المستخدم
             const response = await fetch('/api/favorites');
             
             if (response.status === 401) {
-                favoritesContainer.innerHTML = '<p class="empty-message error">انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.</p>';
+                favoritesContainer.innerHTML = '<p style="text-align:center; color:#ff4444;">انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.</p>';
                 return;
             }
             
@@ -39,29 +36,42 @@ document.addEventListener('DOMContentLoaded', () => {
             favoritesContainer.innerHTML = '';
 
             if (properties.length === 0) {
-                favoritesContainer.innerHTML = `<div class="empty-message neon-glow" style="background: none;">
-                    <i class="fas fa-heart" style="color: var(--neon-color); font-size: 2em;"></i>
-                    <p style="color: var(--text-color); margin-top: 10px;">لا يوجد عقارات في المفضلة حالياً.</p>
-                </div>`;
+                favoritesContainer.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 15px; border: 1px dashed #444;">
+                        <i class="far fa-heart" style="font-size: 3rem; color: #444; margin-bottom: 15px;"></i>
+                        <p style="color: #888;">لم تقم بإضافة أي عقارات للمفضلة بعد.</p>
+                        <a href="home" style="color: #00ff88; text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-block;">تصفح العقارات الآن</a>
+                    </div>`;
                 return;
             }
 
+            // رسم الكروت بالشكل الجديد (Grid Card)
             properties.forEach(property => {
-                const formattedPrice = window.formatPrice ? window.formatPrice(property.price, property.type) : property.price;
-                const typeTag = window.getTypeTag ? window.getTypeTag(property.type) : '';
-
+                // تنسيق السعر
+                const priceFormatted = Number(property.price).toLocaleString('ar-EG');
+                
                 const cardHTML = `
-                    <div class="property-card" id="fav-card-${property.id}">
-                        <img src="${property.imageUrl || 'logo.png'}" alt="${property.title}">
-                        <div class="card-content">
-                            <h3>${property.title} ${typeTag}</h3> 
-                            <p class="price">${formattedPrice}</p> 
-                            <p>${property.rooms} غرف | ${property.bathrooms} حمام | ${property.area} م²</p>
+                    <div class="fav-property-card" id="fav-card-${property.id}">
+                        <div class="fav-img-box">
+                            <img src="${property.imageUrl || 'logo.png'}" alt="${property.title}">
+                            <span style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); color:white; padding:3px 8px; border-radius:6px; font-size:0.8rem;">
+                                ${property.type === 'rent' || property.type === 'إيجار' ? 'للإيجار' : 'للبيع'}
+                            </span>
+                        </div>
+                        <div class="fav-content">
+                            <h3 class="fav-title">${property.title}</h3> 
+                            <p class="fav-price">${priceFormatted} ج.م</p> 
+                            <p style="color:#888; font-size:0.85rem; margin-bottom:10px;">
+                                <i class="fas fa-bed"></i> ${property.rooms || 0} غرف &nbsp;|&nbsp; 
+                                <i class="fas fa-ruler-combined"></i> ${property.area} م²
+                            </p>
                             
-                            <a href="property-details?id=${property.id}" class="btn">عرض التفاصيل</a>
-                            <button class="btn-neon-red remove-favorite-btn" data-id="${property.id}" style="margin-top: 10px;">
-                                <i class="fas fa-trash"></i> إزالة من المفضلة
-                            </button>
+                            <div class="fav-actions">
+                                <a href="property-details.html?id=${property.id}" class="btn-view">التفاصيل</a>
+                                <button class="btn-remove remove-favorite-btn" data-id="${property.id}" title="إزالة من المفضلة">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -72,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error fetching favorites:', error);
-            favoritesContainer.innerHTML = `<p class="empty-message error">حدث خطأ: ${error.message}</p>`;
+            favoritesContainer.innerHTML = `<p style="text-align:center; color:#ff4444;">حدث خطأ: ${error.message}</p>`;
         }
     }
 
@@ -82,50 +92,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 const btn = e.currentTarget; 
                 const propertyId = btn.dataset.id;
 
-                if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
+                if (!confirm('إزالة من المفضلة؟')) return;
 
-                // تغيير شكل الزرار أثناء التحميل
-                const originalText = btn.innerHTML;
+                const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
                 try {
-                    // 🟢 تعديل هام: الحذف بدون بارامترات إضافية
-                    const response = await fetch(`/api/favorites/${propertyId}`, {
-                        method: 'DELETE'
-                    });
-
+                    const response = await fetch(`/api/favorites/${propertyId}`, { method: 'DELETE' });
                     if (!response.ok) throw new Error('فشل الإزالة.');
 
-                    // إزالة الكارت من الشاشة فوراً
                     const card = document.getElementById(`fav-card-${propertyId}`);
-                    if (card) card.remove();
-                    
-                    // لو مفيش كروت باقية، نعيد التحميل لإظهار رسالة "فارغة"
-                    if (document.querySelectorAll('.property-card').length === 0) {
-                        fetchFavorites();
+                    if (card) {
+                        card.style.transform = 'scale(0.9)';
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            // إعادة التحميل لو القائمة فضيت
+                            if (document.querySelectorAll('.fav-property-card').length === 0) fetchFavorites();
+                        }, 300);
                     }
 
                 } catch (error) {
                     alert(`خطأ: ${error.message}`);
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originalHTML;
                 }
             });
         });
     }
 
-    // 3. منطق زرار تغيير كلمة المرور
+    // 3. منطق المودال (نفس المنطق القديم مع تحسينات بسيطة)
     const openModalBtn = document.getElementById('open-password-modal');
     if(openModalBtn) {
         openModalBtn.addEventListener('click', () => {
             modal.style.display = "block";
-            
-            // محاولة جلب الرقم من التوكن لو مش موجود في اللوكل ستوريج
             checkAuthAndFillPhone(userPhone);
         });
     }
 });
 
-// دالة مساعدة للتأكد من الرقم
+// دوال مساعدة (Global)
+window.closeModal = () => { document.getElementById("passwordModal").style.display = "none"; };
+
+window.switchPassMode = (mode) => {
+    const normalDiv = document.getElementById('normal-change-mode');
+    const otpDiv = document.getElementById('otp-change-mode');
+    const msgs = document.querySelectorAll('.message');
+    msgs.forEach(m => m.textContent = ''); 
+
+    if (mode === 'otp') {
+        normalDiv.style.display = 'none';
+        otpDiv.style.display = 'block';
+    } else {
+        otpDiv.style.display = 'none';
+        normalDiv.style.display = 'block';
+    }
+};
+
 async function checkAuthAndFillPhone(storedPhone) {
     const phoneInput = document.getElementById('reset-phone');
     if (!phoneInput) return;
@@ -134,55 +156,29 @@ async function checkAuthAndFillPhone(storedPhone) {
         phoneInput.value = storedPhone;
         switchPassMode('normal');
     } else {
-        // لو مفيش رقم في اللوكل، نحاول نجيبه من السيرفر
         try {
             const res = await fetch('/api/auth/me');
             const data = await res.json();
             if (data.isAuthenticated) {
                 phoneInput.value = data.phone;
                 switchPassMode('normal');
-            } else {
-                switchPassMode('otp');
-            }
+            } else { switchPassMode('otp'); }
         } catch (e) { switchPassMode('otp'); }
     }
 }
 
-// === دوال المودال ===
-
-function closeModal() {
-    document.getElementById("passwordModal").style.display = "none";
-}
-
-function switchPassMode(mode) {
-    const normalDiv = document.getElementById('normal-change-mode');
-    const otpDiv = document.getElementById('otp-change-mode');
-    const msgs = document.querySelectorAll('.message');
-    msgs.forEach(m => m.textContent = ''); 
-
-    if (mode === 'otp') {
-        normalDiv.classList.add('hidden');
-        otpDiv.classList.remove('hidden');
-    } else {
-        otpDiv.classList.add('hidden');
-        normalDiv.classList.remove('hidden');
-    }
-}
-
-// أ) تغيير الباسورد بالطريقة العادية
+// أ) تغيير الباسورد العادي
 async function changePasswordNormal() {
     const msg = document.getElementById('pass-msg');
-    
-    // هنجيب الرقم من الانبوت نفسه عشان نكون متأكدين
     const phoneVal = document.getElementById('reset-phone').value; 
     const currentPassword = document.getElementById('current-pass').value;
     const newPassword = document.getElementById('new-pass-1').value;
 
     if (!currentPassword || !newPassword) {
-        msg.textContent = 'املأ جميع الحقول'; msg.style.color = 'red'; return;
+        msg.textContent = 'املأ جميع الحقول'; msg.style.color = '#ff4444'; return;
     }
 
-    msg.textContent = 'جاري التحديث...';
+    msg.textContent = 'جاري التحديث...'; msg.style.color = '#00d4ff';
 
     try {
         const response = await fetch('/api/user/change-password', {
@@ -195,14 +191,12 @@ async function changePasswordNormal() {
         if (data.success) {
             msg.textContent = '✅ تم تغيير كلمة المرور بنجاح';
             msg.style.color = '#00ff88';
-            setTimeout(closeModal, 2000);
+            setTimeout(closeModal, 1500);
         } else {
             msg.textContent = '❌ ' + data.message;
-            msg.style.color = 'red';
+            msg.style.color = '#ff4444';
         }
-    } catch (e) {
-        msg.textContent = 'خطأ في الاتصال'; msg.style.color = 'red';
-    }
+    } catch (e) { msg.textContent = 'خطأ في الاتصال'; msg.style.color = '#ff4444'; }
 }
 
 // ب) إرسال كود OTP
@@ -210,11 +204,9 @@ async function sendResetOTP() {
     const phoneInput = document.getElementById('reset-phone').value;
     const msg = document.getElementById('otp-msg');
     
-    if (!phoneInput) {
-        msg.textContent = 'أدخل رقم الواتساب أولاً'; msg.style.color = 'red'; return;
-    }
+    if (!phoneInput) { msg.textContent = 'أدخل الرقم أولاً'; msg.style.color = '#ff4444'; return; }
 
-    msg.textContent = 'جاري إرسال الكود...';
+    msg.textContent = 'جاري إرسال الكود...'; msg.style.color = '#00d4ff';
 
     try {
         const response = await fetch('/api/auth/send-otp', {
@@ -225,17 +217,15 @@ async function sendResetOTP() {
         const data = await response.json();
         
         if (data.success) {
-            msg.textContent = '✅ تم الإرسال! أدخل الكود بالأسفل.';
+            msg.textContent = '✅ تم الإرسال! أدخل الكود.';
             msg.style.color = '#00ff88';
-            document.getElementById('step-send-otp').classList.add('hidden');
-            document.getElementById('step-verify-otp').classList.remove('hidden');
+            document.getElementById('step-send-otp').style.display = 'none';
+            document.getElementById('step-verify-otp').style.display = 'block';
         } else {
             msg.textContent = '❌ ' + data.message;
-            msg.style.color = 'red';
+            msg.style.color = '#ff4444';
         }
-    } catch (e) {
-        msg.textContent = 'خطأ في الاتصال'; msg.style.color = 'red';
-    }
+    } catch (e) { msg.textContent = 'خطأ في الاتصال'; msg.style.color = '#ff4444'; }
 }
 
 // ج) تأكيد الكود
@@ -245,9 +235,7 @@ async function resetPasswordViaOTP() {
     const newPassword = document.getElementById('new-pass-2').value;
     const msg = document.getElementById('otp-msg');
 
-    if (!otp || !newPassword) {
-        msg.textContent = 'اكتب الكود والباسورد الجديد'; return;
-    }
+    if (!otp || !newPassword) { msg.textContent = 'أكمل البيانات'; return; }
 
     try {
         const response = await fetch('/api/auth/reset-password', {
@@ -258,14 +246,12 @@ async function resetPasswordViaOTP() {
         const data = await response.json();
 
         if (data.success) {
-            msg.textContent = '🎉 تم تغيير كلمة المرور بنجاح!';
+            msg.textContent = '🎉 تم تغيير كلمة المرور!';
             msg.style.color = '#00ff88';
-            setTimeout(closeModal, 2000);
+            setTimeout(closeModal, 1500);
         } else {
             msg.textContent = '❌ ' + data.message;
-            msg.style.color = 'red';
+            msg.style.color = '#ff4444';
         }
-    } catch (e) {
-        msg.textContent = 'حدث خطأ'; msg.style.color = 'red';
-    }
+    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = '#ff4444'; }
 }
