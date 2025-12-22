@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        /* ستايلات موحدة */
+        /* --- نفس ستايلات الأدمن --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root {
             --glass-bg: rgba(20, 20, 20, 0.98);
             --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
             --card-bg: #1a1a1a;
             --input-bg: #111;
         }
@@ -33,21 +35,53 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 15px;
         }
         .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; }
-        .nav-button { color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; text-decoration: none; }
-        .nav-button:hover { background: var(--neon-primary); color: black; }
+        .nav-button { color: white; border: 1px solid var(--neon-secondary); padding: 6px 15px; border-radius: 50px; text-decoration: none; }
+        .nav-button:hover { background: var(--neon-secondary); color: black; }
 
         .search-box, .edit-container {
-            background: var(--card-bg); border-radius: 16px; padding: 25px;
-            border: 1px solid #333; max-width: 800px; margin: 20px auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background: var(--card-bg); border-radius: 16px; padding: 30px;
+            border: 1px solid #333; max-width: 900px; margin: 0 auto 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); position: relative;
         }
-        .neon-input-white { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid #444; color: white; border-radius: 8px; }
+        .search-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--neon-secondary); }
+        .edit-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--neon-primary); }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .neon-input-white { 
+            width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid #444; 
+            color: white; border-radius: 8px; outline: none; font-family: inherit; transition:0.3s;
+        }
+        .neon-input-white:focus { border-color: var(--neon-primary); }
+        .btn-neon-auth { width: 100%; padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; border:none; transition:0.3s; }
+        .btn-neon-auth:hover { transform: scale(1.02); }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .map-wrapper { height: 300px; border: 1px solid #00d4ff; border-radius: 10px; margin-top: 10px; }
+        .map-wrapper { height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #444; margin-top: 10px; }
         #map { width: 100%; height: 100%; }
+        .preview-image { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #555; }
+        .existing-image-wrapper { position: relative; display: inline-block; margin: 5px; }
+        .remove-image-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; }
+
+        /* --- ✨ Modal Styles --- */
+        .custom-modal {
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center;
+        }
+        .custom-modal-content {
+            background: #1a1a1a; padding: 35px; border-radius: 20px; border: 1px solid #333;
+            text-align: center; max-width: 400px; width: 90%;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6); animation: popIn 0.3s;
+        }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+        .modal-title { font-size: 1.4rem; color: white; margin-bottom: 10px; font-weight: bold; }
+        .modal-text { color: #ccc; font-size: 1rem; margin-bottom: 25px; }
+        .modal-btn { padding: 10px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; margin: 5px; }
+        .modal-btn-success { background: var(--neon-primary); color: black; }
+        .modal-btn-error { background: #ff4444; color: white; }
+        .modal-btn-cancel { background: #555; color: white; }
         
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } body.internal-page { padding-top: 130px !important; } }
+        @keyframes popIn { from{transform:scale(0.7);opacity:0;} to{transform:scale(1);opacity:1;} }
+        @media(max-width:768px){ body.internal-page{ padding-top:130px !important; } }
     </style>
 </head>
 <body class="internal-page">
@@ -55,7 +89,7 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height:40px; border-radius:50%; border:2px solid var(--neon-primary);">
+                <img src="logo.jpg" alt="Logo" style="height:40px; border-radius:50%; border:2px solid var(--neon-secondary);">
                 <span style="color:white; font-weight:bold; margin-right:10px;">تعديل (Admin)</span>
             </div>
             <nav class="main-nav">
@@ -67,35 +101,27 @@
     <main class="main-content" style="padding: 20px;">
         
         <div class="search-box">
-            <h2><i class="fas fa-search"></i> البحث بالكود السري</h2>
-            <p id="search-message" class="message"></p>
+            <h2 style="color:white; margin-bottom:15px;"><i class="fas fa-search"></i> البحث بالكود</h2>
             <form id="search-property-form" style="display:flex; gap:10px;">
                 <input type="text" id="search-code" class="neon-input-white" placeholder="أدخل كود العقار..." required>
-                <button type="submit" class="btn-neon-auth" style="background:var(--neon-primary); color:black; border:none; padding:0 20px; border-radius:8px;">بحث</button>
+                <button type="submit" class="btn-neon-auth" style="width:auto; padding:0 30px; background:var(--neon-secondary); color:black;">بحث</button>
             </form>
         </div>
         
         <div id="property-edit-area" style="display:none;">
             <div class="edit-container">
                 <h2 style="color:var(--neon-primary); margin-bottom:20px;">تعديل البيانات</h2>
-                <p id="edit-form-message" class="message"></p>
                 
                 <form id="edit-property-form" enctype="multipart/form-data">
                     <input type="hidden" id="edit-property-id">
 
-                    <div class="grid-2">
-                        <div class="input-group">
-                            <label>العنوان</label>
-                            <input type="text" id="edit-title" name="title" class="neon-input-white" required>
-                        </div>
-                        <div class="input-group">
-                            <label style="color:#ffd700;">الكود السري</label>
-                            <input type="text" id="edit-hidden-code" name="hiddenCode" class="neon-input-white" style="border-color:#ffd700;" required>
-                        </div>
+                    <div class="form-grid">
+                        <div><label>العنوان</label><input type="text" id="edit-title" name="title" class="neon-input-white" required></div>
+                        <div><label style="color:#ffd700;">★ الكود السري</label><input type="text" id="edit-hidden-code" name="hiddenCode" class="neon-input-white" style="border-color:#ffd700;" required></div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="input-group">
+                    <div class="form-grid">
+                        <div>
                             <label>الفئة</label>
                             <select id="edit-category" name="category" class="neon-input-white" onchange="toggleEditFields()">
                                 <option value="apartment">شقة / دوبلكس</option>
@@ -107,7 +133,7 @@
                                 <option value="warehouse">مخزن / مصنع</option>
                             </select>
                         </div>
-                        <div class="input-group">
+                        <div>
                             <label>النوع</label>
                             <select id="edit-type" name="type" class="neon-input-white">
                                 <option value="بيع">بيع</option>
@@ -116,94 +142,79 @@
                         </div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="input-group">
-                            <label>السعر</label>
-                            <input type="text" id="edit-price" name="price" class="neon-input-white" required>
+                    <div class="form-grid">
+                        <div><label>السعر</label><input type="text" id="edit-price" name="price" class="neon-input-white" required></div>
+                        <div><label>المساحة</label><input type="number" id="edit-area" name="area" class="neon-input-white" required></div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div><label>الغرف</label><input type="number" id="edit-rooms" name="rooms" class="neon-input-white"></div>
+                        <div><label>الحمامات</label><input type="number" id="edit-bathrooms" name="bathrooms" class="neon-input-white"></div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div id="edit-level-group">
+                            <label>الدور</label>
+                            <select id="edit-level" name="level" class="neon-input-white">
+                                <option value="">اختر...</option><option value="أرضي">أرضي</option><option value="أخير">أخير</option>
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6+">6+</option>
+                            </select>
                         </div>
-                        <div class="input-group">
-                            <label>المساحة</label>
-                            <input type="number" id="edit-area" name="area" class="neon-input-white" required>
+                        <div id="edit-floors-group" style="display:none;"><label>عدد الأدوار</label><input type="number" id="edit-floors" name="floors" class="neon-input-white"></div>
+                        <div>
+                            <label>التشطيب</label>
+                            <select id="edit-finishing" name="finishing" class="neon-input-white">
+                                <option value="">اختر...</option><option value="بدون تشطيب">بدون تشطيب</option><option value="تشطيب كامل">تشطيب كامل</option><option value="الترا لوكس">ألترا لوكس</option><option value="فرش فندقي">فرش فندقي</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="input-group">
-                            <label>الغرف</label>
-                            <input type="number" id="edit-rooms" name="rooms" class="neon-input-white">
-                        </div>
-                        <div class="input-group">
-                            <label>الحمامات</label>
-                            <input type="number" id="edit-bathrooms" name="bathrooms" class="neon-input-white">
-                        </div>
-                    </div>
+                    <div><label>الوصف</label><textarea id="edit-description" name="description" rows="5" class="neon-input-white"></textarea></div>
 
-                    <div class="input-group" id="edit-level-group">
-                        <label>الدور</label>
-                        <select id="edit-level" name="level" class="neon-input-white">
-                            <option value="">اختر...</option>
-                            <option value="أرضي">أرضي</option> <option value="أخير">أخير</option>
-                            <option value="1">1</option> <option value="2">2</option> <option value="3">3</option>
-                        </select>
-                    </div>
-                    <div class="input-group" id="edit-floors-group" style="display:none;">
-                        <label>عدد الأدوار</label>
-                        <input type="number" id="edit-floors" name="floors" class="neon-input-white">
-                    </div>
-
-                    <div class="input-group">
-                        <label>التشطيب</label>
-                        <select id="edit-finishing" name="finishing" class="neon-input-white">
-                            <option value="">اختر...</option>
-                            <option value="بدون تشطيب">بدون تشطيب</option>
-                            <option value="تشطيب كامل">تشطيب كامل</option>
-                            <option value="الترا لوكس">ألترا سوبر لوكس</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>الوصف</label>
-                        <textarea id="edit-description" name="description" rows="5" class="neon-input-white"></textarea>
-                    </div>
-
-                    <div class="input-group">
+                    <div style="margin-top:15px;">
                         <label><i class="fas fa-map-marker-alt"></i> تعديل الموقع</label>
-                        <div class="map-wrapper" id="edit-map-container">
-                            <div id="map"></div>
-                        </div>
-                        <input type="hidden" name="latitude" id="edit-lat">
-                        <input type="hidden" name="longitude" id="edit-lng">
+                        <div class="map-wrapper"><div id="map"></div></div>
+                        <input type="hidden" name="latitude" id="edit-lat"><input type="hidden" name="longitude" id="edit-lng">
                     </div>
 
-                    <div class="input-group">
+                    <div style="margin-top:15px;">
                         <label>الصور الحالية</label>
-                        <div id="existing-images-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
+                        <div id="existing-images-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"></div>
                         <input type="hidden" name="existingImages" id="existing-images-data">
                         
-                        <label class="btn-neon-auth" style="display:block; text-align:center; padding:10px; cursor:pointer;">
-                            <i class="fas fa-plus"></i> إضافة صور جديدة
+                        <label class="btn-neon-auth" style="display:block; text-align:center; margin-top:10px; font-size:0.9rem; background:#333; color:white; border:1px solid #555;">
+                            <i class="fas fa-camera"></i> رفع صور جديدة
                             <input type="file" name="propertyImages" multiple accept="image/*" style="display:none;">
                         </label>
                     </div>
 
-                    <div class="input-group" style="background:#222; padding:15px; border-radius:10px; margin-top:20px;">
+                    <div style="background:#222; padding:15px; border-radius:10px; border:1px dashed #555; margin-top:20px;">
                         <label style="color:#e91e63;"><i class="fab fa-youtube"></i> روابط يوتيوب</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <input type="text" id="video-url-input" class="neon-input-white" placeholder="رابط الفيديو...">
-                            <button type="button" id="add-video-btn" style="background:#27ae60; color:white; border:none; padding:0 15px; border-radius:5px;">إضافة</button>
+                            <button type="button" id="add-video-btn" style="background:#00c853; color:white; border:none; padding:0 15px; border-radius:8px;">إضافة</button>
                         </div>
-                        <ul id="video-list-container" style="list-style:none; padding:0; color:white;"></ul>
+                        <ul id="video-list-container" style="list-style:none; padding:0; color:#ddd; font-size:0.9rem;"></ul>
                         <input type="hidden" name="video_urls" id="hidden-video-urls-input">
                     </div>
 
-                    <div style="display:flex; gap:10px; margin-top:20px;">
-                        <button type="submit" class="btn-neon-auth" style="flex:2; background:var(--neon-primary); color:black; padding:12px; font-weight:bold; border:none; border-radius:8px;">حفظ التعديلات</button>
-                        <button type="button" id="delete-property-btn" style="flex:1; background:#ff4444; color:white; border:none; border-radius:8px;">مسح العقار</button>
+                    <div style="display:flex; gap:15px; margin-top:30px;">
+                        <button type="submit" class="btn-neon-auth" style="flex:2; background:var(--neon-primary); color:black;">حفظ التعديلات</button>
+                        <button type="button" id="delete-property-btn" class="btn-neon-auth" style="flex:1; background:#ff4444; color:white; border:none;">مسح العقار</button>
                     </div>
                 </form>
             </div>
         </div>
     </main>
+
+    <div id="adminModal" class="custom-modal">
+        <div class="custom-modal-content">
+            <i id="modalIcon" class="modal-icon"></i>
+            <h3 id="modalTitle" class="modal-title"></h3>
+            <p id="modalText" class="modal-text"></p>
+            <div id="modalButtons"></div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="admin-edit.js"></script>

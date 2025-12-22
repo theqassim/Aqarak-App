@@ -889,10 +889,60 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     } catch (err) { console.error(err); res.status(500).json({ message: 'خطأ' }); }
 });
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { 
-    const files = req.files || []; const data = req.body; const urls = files.map(f => f.path);
-    const sql = `INSERT INTO properties (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`; 
-    const params = [data.title, data.price, parseFloat(data.price.replace(/[^0-9.]/g,'')), safeInt(data.rooms), safeInt(data.bathrooms), safeInt(data.area), data.description, urls[0], JSON.stringify(urls), data.type, data.hiddenCode, "Admin", ADMIN_EMAIL, "admin", false, false]; 
-    try { const result = await pgQuery(sql, params); res.status(201).json({ success: true, id: result.rows[0].id }); } catch (err) { res.status(400).json({ message: 'Error' }); } 
+    const files = req.files || []; 
+    const data = req.body; 
+    const urls = files.map(f => f.path);
+
+    // تجهيز البيانات
+    const latVal = data.latitude ? parseFloat(data.latitude) : null;
+    const lngVal = data.longitude ? parseFloat(data.longitude) : null;
+
+    const sql = `
+        INSERT INTO properties (
+            title, price, "numericPrice", rooms, bathrooms, area, description, 
+            "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", 
+            "isFeatured", "isLegal", "video_urls",
+            "level", "floors_count", "finishing_type", "latitude", "longitude"
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, 
+            $8, $9, $10, $11, $12, $13, $14, 
+            $15, $16, $17,
+            $18, $19, $20, $21, $22
+        ) RETURNING id
+    `;
+    
+    const params = [
+        data.title, 
+        data.price, 
+        parseFloat((data.price || '0').replace(/[^0-9.]/g,'')), 
+        safeInt(data.rooms), 
+        safeInt(data.bathrooms), 
+        safeInt(data.area), 
+        data.description, 
+        urls[0] || 'logo.png', // الصورة الرئيسية
+        JSON.stringify(urls), 
+        data.type, 
+        data.hiddenCode, 
+        "Admin", 
+        ADMIN_EMAIL, 
+        "admin", 
+        false, 
+        false, 
+        '{}', // فيديو فارغ مبدئياً
+        data.level || '', 
+        safeInt(data.floors), 
+        data.finishing || '',
+        latVal, 
+        lngVal
+    ]; 
+
+    try { 
+        const result = await pgQuery(sql, params); 
+        res.status(201).json({ success: true, message: 'تم نشر العقار بنجاح! 🎉', id: result.rows[0].id }); 
+    } catch (err) { 
+        console.error("Add Property Error:", err);
+        res.status(400).json({ message: 'حدث خطأ أثناء النشر: ' + err.message }); 
+    } 
 });
 
 app.put('/api/admin/toggle-badge/:id', async (req, res) => { const token = req.cookies.auth_token; try { const decoded = jwt.verify(token, JWT_SECRET); if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); } try { await pgQuery(`UPDATE properties SET "${req.body.type}" = $1 WHERE id = $2`, [req.body.value, req.params.id]); res.json({ success: true }); } catch (err) { res.status(500).json({ message: 'Error' }); } });
@@ -942,7 +992,65 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         res.status(201).json({ success: true, id: result.rows[0].id });
     } catch (err) { console.error("Publish Error:", err); res.status(400).json({ message: 'Error' }); }
 });
-app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { const { title, price, rooms, bathrooms, area, description, type, hiddenCode, existingImages, video_urls } = req.body; let oldUrls = []; try { oldUrls = JSON.parse((Array.isArray(existingImages) ? existingImages[0] : existingImages) || '[]'); } catch(e) {} const newUrls = req.files ? req.files.map(f => f.path) : []; const allUrls = [...oldUrls, ...newUrls]; let videoUrlsArr = []; try { videoUrlsArr = JSON.parse(video_urls || '[]'); } catch(e) {} const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11, "video_urls"=$12 WHERE id=$13`; const params = [title, price, parseFloat((price||'0').replace(/,/g,'')), safeInt(rooms), safeInt(bathrooms), safeInt(area), description, allUrls[0], JSON.stringify(allUrls), type, hiddenCode, videoUrlsArr, req.params.id]; try { await pgQuery(sql, params); res.status(200).json({ message: 'تم التحديث' }); } catch (err) { res.status(400).json({ message: `خطأ` }); } });
+app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { 
+    const { 
+        title, price, rooms, bathrooms, area, description, type, hiddenCode, 
+        existingImages, video_urls,
+        level, floors, finishing, latitude, longitude // البيانات الجديدة
+    } = req.body; 
+
+    // معالجة الصور
+    let oldUrls = []; 
+    try { oldUrls = JSON.parse((Array.isArray(existingImages) ? existingImages[0] : existingImages) || '[]'); } catch(e) {} 
+    const newUrls = req.files ? req.files.map(f => f.path) : []; 
+    const allUrls = [...oldUrls, ...newUrls]; 
+    const mainImg = allUrls.length > 0 ? allUrls[0] : 'logo.png';
+
+    // معالجة الفيديو
+    let videoUrlsArr = []; 
+    try { videoUrlsArr = JSON.parse(video_urls || '[]'); } catch(e) {} 
+
+    // معالجة الموقع
+    const latVal = latitude ? parseFloat(latitude) : null;
+    const lngVal = longitude ? parseFloat(longitude) : null;
+
+    const sql = `
+        UPDATE properties SET 
+            title=$1, price=$2, "numericPrice"=$3, rooms=$4, bathrooms=$5, area=$6, description=$7, 
+            "imageUrl"=$8, "imageUrls"=$9, type=$10, "hiddenCode"=$11, "video_urls"=$12,
+            "level"=$13, "floors_count"=$14, "finishing_type"=$15, "latitude"=$16, "longitude"=$17
+        WHERE id=$18
+    `; 
+    
+    const params = [
+        title, 
+        price, 
+        parseFloat((price||'0').replace(/[^0-9.]/g,'')), 
+        safeInt(rooms), 
+        safeInt(bathrooms), 
+        safeInt(area), 
+        description, 
+        mainImg, 
+        JSON.stringify(allUrls), 
+        type, 
+        hiddenCode, 
+        videoUrlsArr,
+        level || '',
+        safeInt(floors),
+        finishing || '',
+        latVal,
+        lngVal,
+        req.params.id
+    ]; 
+
+    try { 
+        await pgQuery(sql, params); 
+        res.status(200).json({ message: 'تم تحديث بيانات العقار بنجاح! ✅' }); 
+    } catch (err) { 
+        console.error("Update Error:", err);
+        res.status(400).json({ message: `فشل التحديث: ${err.message}` }); 
+    } 
+});
 app.post('/api/request-property', async (req, res) => { const { name, phone, email, specifications } = req.body; try { await pgQuery(`INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`, [name, phone, email, specifications, new Date().toISOString()]); await sendDiscordNotification("📩 طلب عقار مخصص", [{ name: "👤 الاسم", value: name }, { name: "📝 المواصفات", value: specifications }], 15158332); res.status(200).json({ success: true }); } catch (err) { throw err; } });
 app.get('/api/admin/seller-submissions', async (req, res) => { try { const r = await pgQuery("SELECT * FROM seller_submissions WHERE status = 'pending' ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });
 app.get('/api/admin/property-requests', async (req, res) => { try { const r = await pgQuery("SELECT * FROM property_requests ORDER BY \"submissionDate\" DESC"); res.json(r.rows); } catch (err) { throw err; } });

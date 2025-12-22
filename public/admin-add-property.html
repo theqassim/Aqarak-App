@@ -7,12 +7,13 @@
     <title>عقارك - نشر عقار جديد</title>
     
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
 
     <style>
-        /* نفس ستايلات الأدمن الموحدة */
+        /* ستايل الأدمن الموحد (Dark Neon) */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root {
             --glass-bg: rgba(20, 20, 20, 0.98);
             --neon-primary: #00ff88;
@@ -20,51 +21,66 @@
             --card-bg: #1a1a1a;
             --input-bg: #111;
         }
-
         body.internal-page {
             background-color: #0f0f0f;
             background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
             min-height: 100vh;
             font-family: 'Cairo', sans-serif;
             color: white;
-            padding-top: 100px !important; /* مسافة الهيدر الثابت */
+            padding-top: 100px !important;
         }
-
         .main-header {
             position: fixed !important; top: 0; width: 100%; z-index: 9999;
             background: var(--glass-bg); backdrop-filter: blur(15px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 15px;
         }
-        
         .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; }
-        .nav-button { color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; text-decoration: none; transition: 0.3s; }
+        .nav-button { color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; text-decoration: none; }
         .nav-button:hover { background: var(--neon-primary); color: black; }
 
         .seller-form-container {
             background: var(--card-bg); border-radius: 16px; padding: 30px;
-            border: 1px solid #333; max-width: 900px; margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5); position: relative;
+            border: 1px solid #333; max-width: 900px; margin: 0 auto 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        
+        .input-group label { display: block; margin-bottom: 8px; color: #ccc; }
         .neon-input-white { 
             width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid #444; 
-            color: white; border-radius: 8px; outline: none; transition: 0.3s; font-family: 'Cairo';
+            color: white; border-radius: 8px; outline: none; font-family: inherit; transition:0.3s;
         }
-        .neon-input-white:focus { border-color: var(--neon-primary); box-shadow: 0 0 10px rgba(0, 255, 136, 0.1); }
+        .neon-input-white:focus { border-color: var(--neon-primary); }
+        
+        .map-wrapper { height: 350px; border-radius: 10px; border: 1px solid #444; margin-top:10px; position: relative; }
+        #map { width: 100%; height: 100%; }
+        
+        .btn-neon-auth { width: 100%; padding: 12px; background: var(--neon-primary); border: none; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1.1rem; margin-top: 20px; transition:0.3s; }
+        .btn-neon-auth:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,255,136,0.3); }
 
-        /* Map Styles */
-        .map-wrapper { position: relative; height: 350px; border-radius: 12px; overflow: hidden; border: 1px solid var(--neon-secondary); margin-top: 10px; }
-        #map { height: 100%; width: 100%; }
-        
-        .map-search-bar {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
-            width: 90%; max-width: 400px; display: flex; background: rgba(0,0,0,0.9); border-radius: 50px; border: 1px solid var(--neon-primary);
+        /* --- ✨ Custom Modal Styles (بديل الـ Alert) --- */
+        .custom-modal {
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center;
         }
-        .map-search-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; outline: none; }
-        .map-search-btn { background: var(--neon-primary); border: none; padding: 0 20px; border-radius: 50px; cursor: pointer; }
+        .custom-modal-content {
+            background: #1c2630; padding: 35px; border-radius: 20px; border: 1px solid #333;
+            text-align: center; max-width: 400px; width: 90%;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+        .modal-title { font-size: 1.4rem; color: white; margin-bottom: 10px; font-weight: bold; }
+        .modal-text { color: #ccc; font-size: 1rem; line-height: 1.5; margin-bottom: 25px; }
+        .modal-btn {
+            padding: 10px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s;
+            font-size: 1rem;
+        }
+        .modal-btn-success { background: var(--neon-primary); color: black; }
+        .modal-btn-error { background: #ff4444; color: white; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } body.internal-page { padding-top: 130px !important; } }
+        @keyframes popIn { from{transform:scale(0.7);opacity:0;} to{transform:scale(1);opacity:1;} }
+        @media(max-width:768px){ body.internal-page{ padding-top:130px !important; } }
     </style>
 </head>
 <body class="internal-page">
@@ -72,36 +88,35 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height:40px; border-radius:50%; border:2px solid var(--neon-primary);">
-                <span class="logo-text" style="color:white; font-weight:bold; margin-right:10px;">نشر عقار (Admin)</span>
+                <img src="logo.jpg" alt="Logo" style="height:40px; border-radius:50%; border:2px solid var(--neon-primary);">
+                <span style="color:white; font-weight:bold; margin-right:10px;">نشر عقار (Admin)</span>
             </div>
             <nav class="main-nav">
-                <a href="admin-home" class="nav-button">العودة <i class="fas fa-arrow-left"></i></a> 
+                <a href="admin-home" class="nav-button">العودة</a> 
             </nav>
         </div>
     </header>
 
     <main class="main-content" style="padding: 20px;">
-        <div class="seller-form-container">
-            <h2 style="color: var(--neon-primary); margin-bottom: 20px; text-align: center;">نشر عقار جديد (إداري)</h2>
-            <p id="add-form-message" class="message"></p> 
-
+        <div class="seller-form-container neon-glow">
+            <h2 style="color: var(--neon-primary); margin-bottom: 20px; text-align: center;">إضافة عقار جديد</h2>
+            
             <form id="add-property-form" enctype="multipart/form-data">
                 
-                <div class="grid-2">
+                <div class="form-grid">
                     <div class="input-group">
-                        <label>عنوان العقار</label>
-                        <input type="text" id="property-title" name="title" class="neon-input-white" required>
+                        <label>العنوان</label>
+                        <input type="text" name="title" class="neon-input-white" required>
                     </div>
                     <div class="input-group">
-                        <label style="color: #ffd700;">★ الكود السري (Admin)</label>
-                        <input type="text" id="hidden-code" name="hiddenCode" class="neon-input-white" style="border-color: #ffd700;" required>
+                        <label style="color:#ffd700;">★ الكود السري</label>
+                        <input type="text" name="hiddenCode" class="neon-input-white" style="border-color:#ffd700;" required>
                     </div>
                 </div>
 
-                <div class="grid-2">
+                <div class="form-grid">
                     <div class="input-group">
-                        <label>فئة العقار</label>
+                        <label>الفئة</label>
                         <select id="property-category" name="category" class="neon-input-white" onchange="toggleFields()">
                             <option value="apartment">شقة / دوبلكس</option>
                             <option value="villa">فيلا / شاليه</option>
@@ -113,7 +128,7 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>نوع العرض</label>
+                        <label>النوع</label>
                         <select name="type" class="neon-input-white" required>
                             <option value="بيع">بيع</option>
                             <option value="إيجار">إيجار</option>
@@ -121,90 +136,68 @@
                     </div>
                 </div>
 
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>السعر (جنيه)</label>
-                        <input type="number" id="property-price" name="price" class="neon-input-white" required>
-                    </div>
-                    <div class="input-group">
-                        <label>المساحة (م²)</label>
-                        <input type="number" id="property-area" name="area" class="neon-input-white" required>
-                    </div>
+                <div class="form-grid">
+                    <div class="input-group"><label>السعر (ج.م)</label><input type="number" name="price" class="neon-input-white" required></div>
+                    <div class="input-group"><label>المساحة (م²)</label><input type="number" name="area" class="neon-input-white" required></div>
                 </div>
 
-                <div class="input-group" id="finishing-group">
-                    <label>نوع التشطيب</label>
-                    <select name="finishing" class="neon-input-white">
-                        <option value="">غير محدد</option>
-                        <option value="بدون تشطيب">بدون تشطيب</option>
-                        <option value="نص تشطيب">نص تشطيب</option>
-                        <option value="تشطيب كامل">تشطيب كامل</option>
-                        <option value="الترا لوكس">ألترا سوبر لوكس</option>
-                        <option value="فرش فندقي">مفروش / فندقي</option>
-                    </select>
+                <div class="form-grid">
+                    <div class="input-group"><label>الغرف</label><input type="number" name="rooms" class="neon-input-white"></div>
+                    <div class="input-group"><label>الحمامات</label><input type="number" name="bathrooms" class="neon-input-white"></div>
                 </div>
 
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>عدد الغرف</label>
-                        <input type="number" id="property-rooms" name="rooms" class="neon-input-white">
+                <div class="form-grid">
+                    <div id="level-group" class="input-group">
+                        <label>الدور</label>
+                        <select name="level" class="neon-input-white">
+                            <option value="">اختر...</option><option value="أرضي">أرضي</option><option value="أخير">أخير</option>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6+">6+</option>
+                        </select>
+                    </div>
+                    <div id="floors-count-group" class="input-group" style="display:none;">
+                        <label>عدد الأدوار</label>
+                        <input type="number" name="floors" class="neon-input-white">
                     </div>
                     <div class="input-group">
-                        <label>عدد الحمامات</label>
-                        <input type="number" id="property-bathrooms" name="bathrooms" class="neon-input-white">
+                        <label>التشطيب</label>
+                        <select name="finishing" class="neon-input-white">
+                            <option value="">اختر...</option><option value="بدون تشطيب">بدون تشطيب</option><option value="تشطيب كامل">تشطيب كامل</option><option value="الترا لوكس">ألترا لوكس</option><option value="فرش فندقي">فرش فندقي</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="input-group" id="level-group" style="display:none;">
-                    <label>الدور</label>
-                    <select name="level" class="neon-input-white">
-                        <option value="">اختر...</option>
-                        <option value="أرضي">أرضي</option>
-                        <option value="1">1</option> <option value="2">2</option> <option value="3">3</option>
-                        <option value="4">4</option> <option value="5">5</option> <option value="6+">6+</option>
-                        <option value="أخير">رووف</option>
-                    </select>
-                </div>
-
-                <div class="input-group" id="floors-count-group" style="display:none;">
-                    <label>عدد الأدوار (للمباني)</label>
-                    <input type="number" name="floors" class="neon-input-white">
-                </div>
+                <div class="input-group"><label>الوصف</label><textarea name="description" rows="5" class="neon-input-white"></textarea></div>
 
                 <div class="input-group">
-                    <label>وصف تفصيلي</label>
-                    <textarea id="property-description" name="description" rows="5" class="neon-input-white"></textarea>
-                </div>
-
-                <div class="input-group">
-                    <label><i class="fas fa-map-marked-alt" style="color:var(--neon-primary);"></i> الموقع الجغرافي</label>
+                    <label><i class="fas fa-map-marker-alt"></i> الموقع الجغرافي</label>
                     <div class="map-wrapper">
-                        <div class="map-search-bar">
-                            <input type="text" id="map-search-input" class="map-search-input" placeholder="ابحث عن منطقة...">
-                            <button type="button" class="map-search-btn" onclick="searchLocation()"><i class="fas fa-search"></i></button>
-                        </div>
                         <div id="map"></div>
                     </div>
-                    <input type="hidden" name="latitude" id="lat">
-                    <input type="hidden" name="longitude" id="lng">
-                    <input type="hidden" name="nearby_services" id="nearby_services">
+                    <input type="hidden" name="latitude" id="lat"><input type="hidden" name="longitude" id="lng">
                 </div>
 
                 <div class="input-group">
-                    <label>صور العقار</label>
-                    <label for="property-images" class="btn-neon-auth" style="display:block; text-align:center; padding:15px; cursor:pointer;">
-                        <i class="fas fa-upload"></i> اضغط لاختيار الصور
+                    <label>الصور</label>
+                    <label class="btn-neon-auth" style="background:transparent; border:1px solid #555; color:#ccc; display:block; text-align:center; padding:15px; margin-top:5px;">
+                        <i class="fas fa-upload"></i> اختر الصور
+                        <input type="file" id="property-images" name="propertyImages" multiple accept="image/*" style="display:none;">
                     </label>
-                    <input type="file" id="property-images" name="propertyImages" multiple accept="image/*" style="display:none;">
-                    <div class="image-preview-grid" id="image-preview-container" style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;"></div>
+                    <div id="image-preview-container" style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;"></div>
                 </div>
                 
-                <button type="submit" class="btn-neon-auth" style="width:100%; font-size:1.2em; margin-top:20px; background:var(--neon-primary); color:black;">
-                    <i class="fas fa-plus-circle"></i> نشر العقار
-                </button>
+                <button type="submit" class="btn-neon-auth">نشر العقار الآن</button>
             </form>
         </div>
     </main>
+
+    <div id="adminModal" class="custom-modal">
+        <div class="custom-modal-content">
+            <i id="modalIcon" class="modal-icon"></i>
+            <h3 id="modalTitle" class="modal-title"></h3>
+            <p id="modalText" class="modal-text"></p>
+            <button onclick="closeModal()" id="modalBtn" class="modal-btn"></button>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="admin-add.js"></script>
