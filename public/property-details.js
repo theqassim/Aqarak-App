@@ -449,6 +449,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
 
                         ${videoSectionHTML}
+
+                        ${property.nearby_services ? `
+<div class="ai-insight-box neon-glow">
+    <div class="ai-header">
+        <i class="fas fa-robot ai-icon"></i>
+        <div>
+            <h4>تحليل موقع العقار</h4>
+            <span class="ai-subtitle">تم البحث بواسطة فريق عقارك 🛡️</span>
+        </div>
+    </div>
+    <div class="ai-content">
+        <p>
+            <i class="fas fa-map-marker-alt" style="color:var(--neon-primary); margin-left:5px;"></i>
+            يتميز هذا العقار بموقع استراتيجي، حيث يحيط به الخدمات التالية:
+        </p>
+        <div class="services-tags">
+            ${property.nearby_services.split(',').map(service => `
+                <span class="service-tag"><i class="fas fa-check-circle"></i> ${service.trim()}</span>
+            `).join('')}
+        </div>
+        <p style="font-size:0.8rem; color:#888; margin-top:10px;">
+            * هذه البيانات تقريبية بناءً على الموقع الجغرافي المسجل لدينا.
+        </p>
+    </div>
+</div>
+` : ''}
                         
                         <div class="property-description-box" style="margin-top:20px;">
                             <h3 style="color:#00ff88; margin-bottom:10px;">الوصف</h3>

@@ -214,6 +214,82 @@
     .input-group label { display: block; color: #aaa; margin-bottom: 5px; }
     .neon-input-white { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
     .btn-offer-submit { width: 100%; background: var(--neon-primary); border: none; padding: 12px; border-radius: 50px; font-weight: bold; cursor: pointer; }
+    /* --- 🧠 صندوق تحليل الـ AI --- */
+.ai-insight-box {
+    background: rgba(0, 212, 255, 0.03); /* خلفية زرقاء خفيفة جداً */
+    border: 1px solid var(--neon-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 25px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+}
+
+.ai-icon {
+    font-size: 2.5rem;
+    color: var(--neon-secondary);
+    animation: float 3s ease-in-out infinite; /* حركة طفو */
+}
+
+.ai-header h4 {
+    margin: 0;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.ai-subtitle {
+    font-size: 0.8rem;
+    color: var(--neon-secondary);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.ai-content p {
+    color: #ddd;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.services-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.service-tag {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #444;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.3s;
+}
+
+.service-tag i { color: var(--neon-primary); }
+
+.service-tag:hover {
+    border-color: var(--neon-secondary);
+    background: rgba(0, 212, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
 </style>
 </head>
 <body class="internal-page">
