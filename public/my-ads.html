@@ -4,26 +4,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>إعلاناتي - عقارك</title>
     <link rel="icon" type="image/png" href="logo.png">
-    
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
     <style>
         /* --- 🛠️ Reset --- */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        /* --- 🎨 Design System --- */
-        :root {
-            --glass-bg: rgba(20, 20, 20, 0.98);
-            --neon-primary: #00ff88;
-            --neon-gold: #ffd700;
-            --card-bg: #1a1a1a;
-        }
+        html, body { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
 
         body.internal-page {
             background-color: #0f0f0f;
@@ -31,95 +16,63 @@
             min-height: 100vh;
             font-family: 'Cairo', sans-serif;
             color: white;
-            /* 🔥 مسافة لتعويض الهيدر الثابت */
-            padding-top: 80px !important;
+            /* 🔥 الحل النهائي للإزاحة */
+            padding-top: 85px !important;
         }
 
-        /* --- Header الثابت --- */
+        /* --- Header Fixed --- */
         .main-header {
             position: fixed !important;
-            top: 0 !important; 
-            left: 0 !important; 
-            right: 0 !important;
-            width: 100% !important;
+            top: 0; left: 0; right: 0;
+            width: 100%; height: 75px;
             z-index: 9999;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            margin: 0 !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            background: rgba(28, 38, 48, 0.98);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding: 0 15px;
+            display: flex; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
-        .nav-button { text-decoration: none; color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
-        .nav-button:hover { background: var(--neon-primary); color: black; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid #00ff88; }
+        .nav-button { text-decoration: none; color: white; border: 1px solid #00ff88; padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
+        .nav-button:hover { background: #00ff88; color: black; }
 
-        /* --- List Styles --- */
-        .main-content { max-width: 700px; margin: 20px auto; padding: 0 15px; }
-        .page-title { text-align: center; color: var(--neon-primary); margin-bottom: 30px; font-size: 1.8rem; }
+        /* --- المحتوى --- */
+        .main-content { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .page-title { text-align: center; color: #00ff88; margin-bottom: 30px; font-size: 1.8rem; }
 
         .ads-list { display: flex; flex-direction: column; gap: 15px; }
         
         .ad-item {
-            background: var(--card-bg);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.3s;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            position: relative;
-            overflow: hidden;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: white; transition: 0.3s;
         }
-
-        .ad-item:hover {
-            border-color: var(--neon-primary);
-            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
-            transform: translateX(-5px);
-        }
-
-        .ad-info h3 { font-size: 1.1rem; font-weight: bold; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; }
-        .ad-price { font-size: 1rem; color: var(--neon-gold); font-weight: bold; }
-        
-        .status-badge {
-            font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: normal;
-        }
-        .status-active { border: 1px solid var(--neon-primary); color: var(--neon-primary); background: rgba(0, 255, 136, 0.1); }
-        .status-pending { border: 1px solid #ff9800; color: #ff9800; background: rgba(255, 152, 0, 0.1); }
-
-        .arrow-icon { color: #555; font-size: 1.2rem; transition: 0.3s; }
-        .ad-item:hover .arrow-icon { color: var(--neon-primary); }
-        
-        .empty-ads { text-align: center; color: #888; margin-top: 50px; border: 2px dashed #333; padding: 40px; border-radius: 15px; }
+        .ad-item:hover { border-color: #00ff88; transform: translateX(-5px); }
+        .ad-info h3 { font-size: 1.1rem; margin: 0 0 5px 0; }
+        .ad-price { color: #ffd700; font-weight: bold; }
+        .status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; margin-right: 5px; }
+        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
+        .status-pending { background: rgba(255, 152, 0, 0.1); color: #ff9800; border: 1px solid #ff9800; }
+        .arrow-icon { color: #555; } .ad-item:hover .arrow-icon { color: #00ff88; }
     </style>
 </head>
 <body class="internal-page">
 
     <header class="main-header">
         <div class="header-container">
-            <div class="logo-container">
-                <a href="home" style="display: flex; align-items: center; text-decoration: none; gap: 10px;">
-                    <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary);">
-                    <span style="color: white; font-weight: bold; font-size: 1.2rem;">إعلاناتي</span>
-                </a>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="logo.jpg" alt="logo" class="logo">
+                <span style="font-weight:bold; font-size:1.2rem;">إعلاناتي</span>
             </div>
             <nav class="main-nav">
-                <a href="user-dashboard" class="nav-button">العودة للقائمة</a>
+                <a href="user-dashboard" class="nav-button">رجوع</a>
             </nav>
         </div>
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">عقارات قمت بنشرها</h1>
-        
-        <div id="loading-spinner" style="text-align:center; color:var(--neon-primary); margin-top:50px;">
-            <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><span style="margin-top:10px; display:block;">جاري التحميل...</span>
-        </div>
-
+        <h1 class="page-title">إعلاناتي المنشورة</h1>
+        <div id="loading-spinner" style="text-align:center; color:#00ff88; margin-top:50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
         <div class="ads-list" id="my-ads-container"></div>
     </main>
 
@@ -127,59 +80,29 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const container = document.getElementById('my-ads-container');
             const spinner = document.getElementById('loading-spinner');
-
             try {
                 const response = await fetch('/api/user/my-properties');
-                
-                if (response.status === 401) {
-                    window.location.href = 'index'; return;
-                }
-
+                if (response.status === 401) { window.location.href = 'index'; return; }
                 const properties = await response.json();
                 spinner.style.display = 'none';
-
                 if (properties.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-ads">
-                            <i class="fas fa-box-open fa-3x" style="margin-bottom:15px; color:#444;"></i>
-                            <p>لم تقم بنشر أي عقارات حتى الآن.</p>
-                            <a href="seller-dashboard" class="nav-button" style="margin-top:20px; display:inline-block; background:transparent;">اعرض عقارك الآن</a>
-                        </div>
-                    `;
+                    container.innerHTML = '<div style="text-align:center; color:#888; border:2px dashed #444; padding:30px; border-radius:15px;"><p>لم تنشر أي عقارات بعد.</p><a href="seller-dashboard" class="nav-button" style="display:inline-block; margin-top:10px;">انشر الآن</a></div>';
                     return;
                 }
-
                 properties.forEach(prop => {
-                    const cleanPrice = prop.price.replace(/[^0-9.]/g, ''); 
-                    const price = Number(cleanPrice).toLocaleString('ar-EG');
-                    const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'بيع' : 'إيجار';
-                    
-                    let statusHtml = '', link = '#', clickAction = '';
-
-                    if (prop.status === 'active') {
-                        statusHtml = `<span class="status-badge status-active">نشط <i class="fas fa-check"></i></span>`;
-                        link = `property-details?id=${prop.id}`;
-                    } else {
-                        statusHtml = `<span class="status-badge status-pending">قيد المراجعة <i class="fas fa-clock"></i></span>`;
-                        clickAction = `onclick="alert('جاري مراجعة هذا العقار من قبل الإدارة، سيتم نشره قريباً.'); return false;"`;
-                    }
-
-                    const itemHTML = `
-                        <a href="${link}" ${clickAction} class="ad-item">
+                    const price = Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString();
+                    const statusHtml = prop.status === 'active' ? `<span class="status-badge status-active">نشط</span>` : `<span class="status-badge status-pending">قيد المراجعة</span>`;
+                    const link = prop.status === 'active' ? `property-details?id=${prop.id}` : '#';
+                    container.innerHTML += `
+                        <a href="${link}" class="ad-item" ${link === '#' ? 'onclick="alert(\'العقار قيد المراجعة\'); return false;"' : ''}>
                             <div class="ad-info">
                                 <h3>${prop.title} ${statusHtml}</h3>
-                                <div class="ad-price">${price} ج.م <span style="font-size:0.85rem; color:#888; font-weight:normal;">(${typeLabel})</span></div>
+                                <div class="ad-price">${price} ج.م</div>
                             </div>
                             <i class="fas fa-chevron-left arrow-icon"></i>
-                        </a>
-                    `;
-                    container.innerHTML += itemHTML;
+                        </a>`;
                 });
-
-            } catch (error) {
-                spinner.style.display = 'none';
-                container.innerHTML = '<p style="text-align:center; color:#ff4444;">حدث خطأ في الاتصال.</p>';
-            }
+            } catch (error) { spinner.style.display = 'none'; container.innerHTML = '<p style="text-align:center; color:red;">خطأ في الاتصال</p>'; }
         });
     </script>
 </body>
