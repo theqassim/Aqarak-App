@@ -796,12 +796,17 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     const publisherUsername = realUser.username; 
 
+    // ✅ استقبال البيانات الجديدة (الموقع والخدمات)
     const { 
         propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
         propertyRooms, propertyBathrooms, 
         propertyLevel, propertyFloors, propertyFinishing,
-        nearby_services // 🆕 استلام الخدمات
+        nearby_services, latitude, longitude 
     } = req.body;
+
+    // ✅ معالجة الموقع (لو فاضي نخليه null عشان الداتابيز متضربش)
+    const latVal = latitude ? parseFloat(latitude) : null;
+    const lngVal = longitude ? parseFloat(longitude) : null;
 
     const files = req.files || [];
     const paths = files.map(f => f.path).join(' | ');
@@ -822,30 +827,31 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             isPublic = true;          
         }
 
-        // 3. الحفظ في الأرشيف (تم إضافة nearby_services)
+        // 3. الحفظ في الأرشيف (تم إضافة latitude, longitude)
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
              "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate", status,
-             "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note", "nearby_services") 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+             "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note", 
+             "nearby_services", "latitude", "longitude") 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
         `, [
             sellerName, sellerPhone, propertyTitle, propertyType, englishPrice,
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), finalStatus,
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
             aiReview.reason || 'No automated note',
-            nearby_services || '' // 🆕 تخزين الخدمات
+            nearby_services || '', latVal, lngVal // ✅ تخزين الموقع
         ]);
 
-        // 4. النشر الفوري (تم إضافة nearby_services)
+        // 4. النشر الفوري (تم إضافة latitude, longitude)
         if (isPublic) {
             const pubRes = await pgQuery(`
                 INSERT INTO properties 
                 (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, 
                  "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal", "video_urls",
-                 "level", "floors_count", "finishing_type", "nearby_services")
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, '{}', $15, $16, $17, $18)
+                 "level", "floors_count", "finishing_type", "nearby_services", "latitude", "longitude")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, '{}', $15, $16, $17, $18, $19, $20)
                 RETURNING id
             `, [
                 propertyTitle, englishPrice, numericPrice,
@@ -853,7 +859,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 files.length > 0 ? files[0].path : 'logo.png', JSON.stringify(files.map(f => f.path)), 
                 propertyType, code, sellerName, sellerPhone, publisherUsername,
                 propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-                nearby_services || '' // 🆕 نشر الخدمات
+                nearby_services || '', latVal, lngVal // ✅ نشر الموقع
             ]);
             
             checkAndNotifyMatches({
@@ -869,7 +875,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         await sendDiscordNotification(`📢 طلب عقار جديد (${aiReview.status === 'approved' ? '✅ تم النشر' : '⚠️ تحت المراجعة'})`, [
             { name: "👤 المالك", value: sellerName },
             { name: "🏠 العقار", value: propertyTitle },
-            { name: "💰 السعر", value: englishPrice },
+            { name: "📍 الموقع", value: latVal ? "تم التحديد" : "غير محدد" },
             { name: "🤖 تقرير AI", value: aiReview.reason }
         ], aiReview.status === 'approved' ? 3066993 : 15158332, files[0]?.path);
 
@@ -907,17 +913,18 @@ app.post('/api/admin/publish-submission', async (req, res) => {
         
         const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean);
         
+        // ✅ نقلنا الـ latitude و longitude للجدول الرئيسي
         const sql = `
             INSERT INTO properties (
                 title, price, "numericPrice", rooms, bathrooms, area, description, 
                 "imageUrl", "imageUrls", type, "hiddenCode", "sellerName", "sellerPhone", 
                 "publisherUsername", "isFeatured", "isLegal", "video_urls",
-                "level", "floors_count", "finishing_type", "nearby_services"
+                "level", "floors_count", "finishing_type", "nearby_services", "latitude", "longitude"
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, 
                 $8, $9, $10, $11, $12, $13, 
                 $14, false, false, '{}',
-                $15, $16, $17, $18
+                $15, $16, $17, $18, $19, $20
             ) RETURNING id
         `;
         const params = [
@@ -926,7 +933,7 @@ app.post('/api/admin/publish-submission', async (req, res) => {
             imageUrls[0] || '', JSON.stringify(imageUrls), sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone, 
             publisherUsername,
             sub.propertyLevel, safeInt(sub.propertyFloors), sub.propertyFinishing,
-            sub.nearby_services || '' // 🆕 نقل الخدمات
+            sub.nearby_services || '', sub.latitude, sub.longitude // ✅ البيانات الجديدة
         ];
         
         const result = await pgQuery(sql, params);
@@ -1340,15 +1347,20 @@ app.delete('/api/admin/complaint/:id', async (req, res) => {
 // ==========================================================
 // 🛠️ 7. رابط تحديث الداتابيز (شغله مرة واحدة فقط)
 // ==========================================================
-app.get('/update-db-services', async (req, res) => {
+// ==========================================================
+// 🛠️ رابط تحديث اللوكيشن (شغله مرة واحدة لإنشاء الأعمدة)
+// ==========================================================
+app.get('/update-db-location', async (req, res) => {
     try {
-        // إضافة العمود لجدول العقارات
-        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "nearby_services" TEXT`);
+        // إضافة أعمدة الموقع لجدول العقارات الأساسي
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "latitude" DOUBLE PRECISION`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "longitude" DOUBLE PRECISION`);
         
-        // إضافة العمود لجدول طلبات النشر
-        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "nearby_services" TEXT`);
-        
-        res.send('✅ تم تحديث قاعدة البيانات وإضافة خانة الخدمات بنجاح!');
+        // إضافة أعمدة الموقع لجدول طلبات البائعين
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "latitude" DOUBLE PRECISION`);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "longitude" DOUBLE PRECISION`);
+
+        res.send('✅ تم تحديث قاعدة البيانات وإضافة خانات الموقع (Latitude/Longitude) بنجاح!');
     } catch (error) {
         res.status(500).send('❌ حدث خطأ: ' + error.message);
     }
