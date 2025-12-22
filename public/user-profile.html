@@ -7,102 +7,101 @@
     
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* --- 🛠️ Reset --- */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100%;
-            overflow-x: hidden;
-        }
+   <style>
+    /* --- 🛠️ Reset --- */
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        overflow-x: hidden;
+    }
 
-        /* --- 🎨 Design System --- */
-        :root {
-            --glass-bg: rgba(20, 20, 20, 0.98);
-            --neon-primary: #00ff88;
-            --neon-secondary: #00d4ff;
-            --card-bg: #1a1a1a;
-        }
+    /* --- 🎨 Design System --- */
+    :root {
+        --glass-bg: rgba(20, 20, 20, 0.98);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --card-bg: #1a1a1a;
+    }
 
-        body.internal-page {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            /* 🔥 مسافة لتعويض الهيدر الثابت */
-            padding-top: 80px !important;
-        }
+    body.internal-page {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+        min-height: 100vh;
+        font-family: 'Cairo', sans-serif;
+        color: white;
+        /* 🔥 تعديل: إلغاء المسافة لأن الهيدر أصبح جزء من الصفحة */
+        padding-top: 0 !important; 
+    }
 
-        /* --- Header الثابت --- */
-        .main-header {
-            position: fixed !important;
-            top: 0 !important; 
-            left: 0 !important; 
-            right: 0 !important;
-            width: 100% !important;
-            z-index: 9999;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            margin: 0 !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
-        .nav-button { text-decoration: none; color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
-        .nav-button:hover { background: var(--neon-primary); color: black; }
+    /* --- Header (تم التعديل ليتحرك مع السكرول) --- */
+    .main-header {
+        position: relative !important; /* 🔥 تغيير من fixed لـ relative */
+        width: 100% !important;
+        z-index: 9999;
+        background: var(--glass-bg);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px;
+        margin: 0 !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
 
-        /* Profile Header */
-        .profile-header {
-            background: rgba(255,255,255,0.03);
-            border-bottom: 1px solid #333;
-            padding: 40px 20px;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .profile-avatar {
-            width: 100px; height: 100px;
-            background: var(--card-bg); color: var(--neon-primary);
-            border: 2px solid var(--neon-primary);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; margin: 0 auto 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-        }
+    .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+    .nav-button { text-decoration: none; color: white; border: 1px solid var(--neon-primary); padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s; }
+    .nav-button:hover { background: var(--neon-primary); color: black; }
 
-        .profile-name { color: #fff; margin: 0; font-size: 1.8rem; font-weight:bold; }
-        .profile-stats { color: #888; margin-top: 10px; font-size: 0.95rem; }
-        .profile-stats span { color: var(--neon-primary); font-weight: bold; }
+    /* Profile Header */
+    .profile-header {
+        background: rgba(255,255,255,0.03);
+        border-bottom: 1px solid #333;
+        padding: 40px 20px;
+        text-align: center;
+        margin-bottom: 40px;
+        /* اضافة بسيطة عشان ميكونش لازق في الهيدر اوي */
+        margin-top: 0; 
+    }
+    
+    .profile-avatar {
+        width: 100px; height: 100px;
+        background: var(--card-bg); color: var(--neon-primary);
+        border: 2px solid var(--neon-primary);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 3rem; margin: 0 auto 15px;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+    }
 
-        /* Listings Grid */
-        .listings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            padding: 0 20px 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    .profile-name { color: #fff; margin: 0; font-size: 1.8rem; font-weight:bold; }
+    .profile-stats { color: #888; margin-top: 10px; font-size: 0.95rem; }
+    .profile-stats span { color: var(--neon-primary); font-weight: bold; }
 
-        .property-card {
-            background: var(--card-bg); border: 1px solid #333; border-radius: 16px; overflow: hidden;
-            transition: all 0.3s ease; position: relative; cursor: pointer;
-        }
-        .property-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .card-img-wrapper { height: 200px; position: relative; overflow: hidden; }
-        .card-img { width: 100%; height: 100%; object-fit: cover; transition:0.5s; }
-        .property-card:hover .card-img { transform: scale(1.1); }
-        
-        .card-content { padding: 20px; }
-        .card-title { font-size: 1.1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:white; }
-        .card-price { color: #ffd700; font-weight: bold; font-size: 1.2rem; }
-        .card-details { color: #aaa; font-size: 0.85rem; margin-top: 10px; border-top:1px solid #333; padding-top:10px; }
-        
-        .main-footer { text-align: center; padding: 20px; color: #666; border-top: 1px solid #333; margin-top: 50px; }
-    </style>
+    /* Listings Grid */
+    .listings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+        padding: 0 20px 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .property-card {
+        background: var(--card-bg); border: 1px solid #333; border-radius: 16px; overflow: hidden;
+        transition: all 0.3s ease; position: relative; cursor: pointer;
+    }
+    .property-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    
+    .card-img-wrapper { height: 200px; position: relative; overflow: hidden; }
+    .card-img { width: 100%; height: 100%; object-fit: cover; transition:0.5s; }
+    .property-card:hover .card-img { transform: scale(1.1); }
+    
+    .card-content { padding: 20px; }
+    .card-title { font-size: 1.1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:white; }
+    .card-price { color: #ffd700; font-weight: bold; font-size: 1.2rem; }
+    .card-details { color: #aaa; font-size: 0.85rem; margin-top: 10px; border-top:1px solid #333; padding-top:10px; }
+    
+    .main-footer { text-align: center; padding: 20px; color: #666; border-top: 1px solid #333; margin-top: 50px; }
+</style>
 </head>
 <body class="internal-page">
 

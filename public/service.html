@@ -33,20 +33,16 @@
         min-height: 100vh;
         font-family: 'Cairo', sans-serif;
         color: white;
-        /* 🔥 تعديل: زيادة المسافة للديسك توب لتكون مريحة */
-        padding-top: 100px !important;
+        /* 🔥 تعديل هام: شيلنا المسافة الكبيرة لأن الهيدر بقى جزء من الصفحة مش طاير فوقها */
+        padding-top: 0 !important;
     }
 
-    /* --- Header الثابت --- */
+    /* --- Header (التعديل هنا) --- */
     .main-header {
-        position: fixed !important; /* تثبيت في السقف */
-        top: 0 !important; 
-        left: 0 !important; 
-        right: 0 !important;
+        position: relative !important; /* 🔥 تغيير من fixed لـ relative */
         width: 100% !important;
         z-index: 9999;
         background: var(--glass-bg);
-        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         padding: 10px 15px;
         margin: 0 !important;
@@ -68,7 +64,8 @@
     /* --- Services Content --- */
     .services-container {
         max-width: 1200px;
-        margin: 20px auto;
+        /* 🔥 مسافة صغيرة من فوق عشان الكلام ميكونش لازق في الهيدر */
+        margin: 40px auto 20px; 
         padding: 0 20px;
     }
 
@@ -131,20 +128,14 @@
     .coming-soon .card-logo-wrapper { border-color: #444 !important; box-shadow: none !important; }
     .coming-soon .visit-btn { border-color: #555; color: #555; pointer-events: none; }
 
-    /* --- 📱 Media Queries (تعديلات الموبايل) --- */
+    /* --- Media Queries --- */
     @media (max-width: 768px) {
-        body.internal-page {
-            /* 🔥 هنا الحل: زيادة المسافة في الموبايل عشان الهيدر ميبقاش فوق الكلام */
-            padding-top: 150px !important;
-        }
-
         .section-header h1 {
-            font-size: 2rem; /* تصغير العنوان شوية عشان الموبايل */
+            font-size: 2rem;
             margin-top: 10px;
         }
-        
         .services-container {
-            padding: 0 15px; /* تقليل الحواف الجانبية للاستفادة من المساحة */
+            padding: 0 15px;
         }
     }
 </style>
