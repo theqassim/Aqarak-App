@@ -809,71 +809,80 @@ window.showStatusModal = (type, title, subtitle, note = '') => {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 // ============================================================
-// 💎 Premium Feature Modal (الجزء الناقص: منطق باقات التميز)
+// 💎 Premium Feature Modal (كود المودال والزرار الناقص)
 // ============================================================
 function injectFeatureModal() {
-    // 1. إزالة أي نسخة قديمة
     const old = document.getElementById('feature-modal-overlay');
     if (old) old.remove();
 
-    // 2. HTML المودال (بدون ستايل داخلي لأننا حطيناه في CSS)
     const html = `
-        <div id="feature-modal-overlay" class="glass-modal-overlay">
+        <div id="feature-modal-overlay" class="glass-modal-overlay" style="z-index: 10001;">
             <div class="glass-card">
                 <span class="close-modal" onclick="document.getElementById('feature-modal-overlay').style.display='none'" style="position:absolute; top:15px; right:20px; color:#aaa; font-size:1.5rem; cursor:pointer;">&times;</span>
+                <div class="crown-3d-container"><i class="fas fa-crown"></i></div>
+                <h2 style="color: white; margin-bottom: 10px; font-weight:800; letter-spacing:1px;">باقات التميز</h2>
+                <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 25px; line-height:1.6;">ميز عقارك ليظهر في المقدمة ويحقق 5 أضعاف المشاهدات. 🚀</p>
                 
-                <div class="crown-3d-container">
-                    <i class="fas fa-crown"></i>
-                </div>
-                
-                <h2 style="color: white; margin-bottom: 10px; font-weight:800;">باقات التميز</h2>
-                <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 25px;">
-                    ميز عقارك ليظهر في المقدمة ويحقق 5 أضعاف المشاهدات. 🚀
-                </p>
-
                 <div style="text-align: right;">
                     <input type="radio" name="feature_plan" id="plan1" value="1" class="plan-radio-input" checked>
                     <label for="plan1" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-calendar-alt" style="color:#FFD700; font-size:1.2rem;"></i>
-                            <div>
-                                <span class="plan-title">أسبوعين (14 يوم)</span>
-                                <span class="plan-sub">بداية قوية لبيع أسرع</span>
-                            </div>
-                        </div>
-                        <span class="plan-price">20 نقطة</span>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-calendar-alt" style="color:#FFD700;"></i><div><strong style="display:block; color:white;">أسبوعين (14 يوم)</strong><span style="font-size:0.8rem; color:#aaa;">بداية قوية لبيع أسرع</span></div></div>
+                        <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">20 نقطة</span>
                     </label>
 
                     <input type="radio" name="feature_plan" id="plan2" value="2" class="plan-radio-input">
                     <label for="plan2" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-calendar-check" style="color:#FFD700; font-size:1.2rem;"></i>
-                            <div>
-                                <span class="plan-title">شهر كامل (30 يوم)</span>
-                                <span class="plan-sub">الأكثر طلباً ومبيعاً</span>
-                            </div>
-                        </div>
-                        <span class="plan-price">30 نقطة</span>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-calendar-check" style="color:#FFD700;"></i><div><strong style="display:block; color:white;">شهر كامل (30 يوم)</strong><span style="font-size:0.8rem; color:#aaa;">الأكثر طلباً ومبيعاً</span></div></div>
+                        <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">30 نقطة</span>
                     </label>
 
                     <input type="radio" name="feature_plan" id="plan3" value="3" class="plan-radio-input">
                     <label for="plan3" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-fire" style="color:#ff4444; font-size:1.2rem;"></i>
-                            <div>
-                                <span class="plan-title">6 أسابيع (عرض خاص)</span>
-                                <span class="plan-sub">أقصى ظهور وضمان وصول</span>
-                            </div>
-                        </div>
-                        <span class="plan-price">45 نقطة</span>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-fire" style="color:#ff4444;"></i><div><strong style="display:block; color:white;">6 أسابيع (عرض خاص)</strong><span style="font-size:0.8rem; color:#aaa;">أقصى ظهور وضمان وصول</span></div></div>
+                        <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">45 نقطة</span>
                     </label>
                 </div>
 
-                <button onclick="submitFeatureRequest()" class="btn-gold-3d">
-                    تفعيل التميز الآن <i class="fas fa-rocket"></i>
-                </button>
+                <button onclick="submitFeatureRequest()" class="btn-gold-3d">تفعيل التميز الآن <i class="fas fa-arrow-left" style="margin-right:5px;"></i></button>
             </div>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', html);
 }
+
+// تعريف الدوال لتكون متاحة للـ HTML
+window.openFeatureModal = (propId) => {
+    window.currentFeaturePropId = propId;
+    const modal = document.getElementById('feature-modal-overlay');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.submitFeatureRequest = async () => {
+    const selected = document.querySelector('input[name="feature_plan"]:checked');
+    if (!selected) return alert('اختر باقة');
+    const planId = selected.value;
+    const propId = window.currentFeaturePropId;
+    const btn = document.querySelector('button[onclick="submitFeatureRequest()"]');
+    
+    if (!confirm('سيتم خصم قيمة الباقة من رصيدك فوراً. هل أنت متأكد؟')) return;
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التفعيل...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/user/feature-property', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: propId, planId: planId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('feature-modal-overlay').style.display = 'none';
+            window.showStatusModal('success', 'تم التمييز بنجاح! 🌟', data.message);
+        } else {
+            if (res.status === 402) alert('❌ ' + data.message + '\nيرجى شحن رصيدك.');
+            else alert('❌ خطأ: ' + data.message);
+        }
+    } catch (err) { console.error(err); alert('خطأ في الاتصال'); } 
+    finally { btn.innerHTML = 'تفعيل التميز الآن <i class="fas fa-arrow-left"></i>'; btn.disabled = false; }
+};
