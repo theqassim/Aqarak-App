@@ -49,62 +49,70 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- جلب المفضلة ---
-    async function fetchFavorites() {
-        if (!favoritesContainer) return;
-        favoritesContainer.innerHTML = '<p class="empty-message info" style="text-align:center; color:#00d4ff;">جاري تحميل المفضلة...</p>';
+   // --- جلب المفضلة (تم التحديث) ---
+async function fetchFavorites() {
+    const favoritesContainer = document.getElementById('favorites-listings');
+    if (!favoritesContainer) return;
+    
+    favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';
 
-        try {
-            const response = await fetch('/api/favorites');
-            if (response.status === 401) {
-                favoritesContainer.innerHTML = '<p class="empty-message error" style="text-align:center; color:red;">انتهت الجلسة.</p>';
-                return;
-            }
-            const properties = await response.json();
-            favoritesContainer.innerHTML = '';
+    try {
+        const response = await fetch('/api/favorites');
+        
+        if (response.status === 401) {
+            favoritesContainer.innerHTML = '<p class="empty-message error" style="text-align:center; color:red;">انتهت الجلسة.</p>';
+            return;
+        }
+        
+        const properties = await response.json();
+        favoritesContainer.innerHTML = '';
 
-            if (properties.length === 0) {
-                favoritesContainer.innerHTML = `<div style="text-align:center; padding:20px; border:1px dashed #444; border-radius:10px;">
-                    <i class="fas fa-heart" style="color: #444; font-size: 2em;"></i>
-                    <p style="color: #888; margin-top: 10px;">لا يوجد عقارات في المفضلة.</p>
-                </div>`;
-                return;
-            }
+        if (properties.length === 0) {
+            favoritesContainer.innerHTML = `
+                <div style="text-align:center; padding:40px; border:1px dashed #444; border-radius:15px; grid-column: 1 / -1;">
+                    <i class="fas fa-heart-broken" style="color: #444; font-size: 3rem; margin-bottom:15px;"></i>
+                    <p style="color: #888; font-size:1.1rem;">لا يوجد عقارات في المفضلة حالياً.</p>
+                    <a href="home" style="color:var(--neon-secondary); margin-top:10px; display:inline-block;">تصفح العقارات</a>
+                </div>`;
+            return;
+        }
 
-            properties.forEach(property => {
-                const price = Number(property.price).toLocaleString();
-                const cardHTML = `
-                    <div style="background:#1a1a1a; border:1px solid #333; border-radius:12px; overflow:hidden; margin-bottom:15px; display:flex; align-items:center; padding:10px;">
-                        <img src="${property.imageUrl || 'logo.png'}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; margin-left:15px;">
-                        <div style="flex:1;">
-                            <h3 style="font-size:1rem; margin:0; color:white;">${property.title}</h3> 
-                            <p style="color:#00ff88; font-weight:bold; margin:5px 0;">${price} ج.م</p> 
-                            <div style="display:flex; gap:10px;">
-                                <a href="property-details?id=${property.id}" style="color:#00d4ff; text-decoration:none; font-size:0.9rem;">التفاصيل</a>
-                                <button class="remove-favorite-btn" data-id="${property.id}" style="background:none; border:none; color:#ff4444; cursor:pointer;">حذف</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                favoritesContainer.innerHTML += cardHTML;
-            });
-            addRemoveFavoriteListeners();
-        } catch (error) { favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">خطأ: ${error.message}</p>`; }
-    }
+        properties.forEach(property => {
+            const price = Number(property.price).toLocaleString();
+            // استخدام صورة افتراضية لو مفيش صورة
+            const imgUrl = property.imageUrl || 'logo.png';
+            
+            const cardHTML = `
+                <div class="fav-card">
+                    <a href="property-details?id=${property.id}" class="fav-img-link">
+                        <img src="${imgUrl}" alt="${property.title}" class="fav-img">
+                    </a>
+                    
+                    <div class="fav-content">
+                        <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
+                        <p class="fav-price">${price} ج.م</p> 
+                        
+                        <div class="fav-actions">
+                            <a href="property-details?id=${property.id}" class="btn-fav-view">
+                                <i class="fas fa-eye"></i> التفاصيل
+                            </a>
+                            <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" title="حذف من المفضلة">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            favoritesContainer.innerHTML += cardHTML;
+        });
+        
+        addRemoveFavoriteListeners();
 
-    function addRemoveFavoriteListeners() {
-        document.querySelectorAll('.remove-favorite-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                if (!confirm('حذف من المفضلة؟')) return;
-                const btn = e.currentTarget; 
-                try {
-                    await fetch(`/api/favorites/${btn.dataset.id}`, { method: 'DELETE' });
-                    btn.parentElement.parentElement.parentElement.remove();
-                    if (favoritesContainer.children.length === 0) fetchFavorites();
-                } catch (error) { alert('فشل الحذف'); }
-            });
-        });
-    }
+    } catch (error) { 
+        favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">حدث خطأ أثناء التحميل.</p>`; 
+        console.error(error);
+    }
+}
 
     // Modal Logic
     const openModalBtn = document.getElementById('open-password-modal');
