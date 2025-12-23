@@ -724,6 +724,7 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // 🟢 استقبال طلب بيع (النسخة المحدثة مع المطابقة ورأي AI)
 // 🟢 استقبال طلب بيع (تم إصلاح مشكلة السعر 0)
 // 🟢 استقبال طلب بيع (النسخة الاحترافية - Modal + AI + Match Maker)
+// 🟢 استقبال طلب بيع (مع نظام الخصم من الرصيد)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ success: false, message: 'سجل دخول أولاً' });
@@ -739,6 +740,49 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     const publisherUsername = realUser.username; 
 
+    // --- 💰 بداية منطق الدفع والخصم ---
+    try {
+        // 1. جلب إعدادات الدفع
+        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
+        let isPaidSystem = false;
+        
+        if (settingsRes.rows.length > 0) {
+            const config = JSON.parse(settingsRes.rows[0].setting_value);
+            isPaidSystem = config.is_active; // هل النظام مدفوع؟
+        }
+
+        if (isPaidSystem) {
+            const COST_PER_AD = 1; // تكلفة الإعلان الواحد (نقطة واحدة)
+
+            // 2. التحقق من رصيد المستخدم
+            const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [sellerPhone]);
+            const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
+
+            if (currentBalance < COST_PER_AD) {
+                // ⛔ الرصيد غير كافي
+                return res.status(402).json({ 
+                    success: false, 
+                    message: 'عفواً، رصيد نقاطك لا يكفي لنشر العقار. يرجى شحن رصيدك أولاً.',
+                    needCharge: true // علامة عشان نفتحله بوب-أب الشحن في الفرونت إند
+                });
+            }
+
+            // 3. خصم الرصيد
+            await pgQuery("UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2", [COST_PER_AD, sellerPhone]);
+            
+            // 4. تسجيل العملية في السجل
+            await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', 'خصم تكلفة نشر عقار', $3)`, 
+                [sellerPhone, COST_PER_AD, new Date().toISOString()]);
+                
+            console.log(`💰 تم خصم ${COST_PER_AD} نقطة من ${sellerPhone}`);
+        }
+    } catch (paymentError) {
+        console.error("Payment Error:", paymentError);
+        return res.status(500).json({ success: false, message: 'حدث خطأ في نظام الدفع' });
+    }
+    // --- 💰 نهاية منطق الدفع والخصم ---
+
+    // ... باقي كود النشر العادي (زي ما هو) ...
     const { 
         propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
         propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing,
@@ -757,16 +801,14 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         console.log("🤖 AI جاري فحص العقار وتحليل البيانات...");
         const imageUrls = files.map(f => f.path);
         
-        // 1️⃣ استدعاء الذكاء الاصطناعي (الدالة اللي طورناها)
         const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls);
 
-        let finalStatus = aiReview.status; // approved / rejected / pending
+        let finalStatus = aiReview.status; 
         let isPublic = (finalStatus === 'approved');
         
-        // استخدام الوصف التسويقي لو AI وافق، غير كدة نستخدم وصف المستخدم
-        // const finalDescription = isPublic ? aiReview.marketing_description : propertyDescription;
+        // استخدام وصف AI لو مقبول
+        const finalDescription = isPublic ? (aiReview.marketing_description || propertyDescription) : propertyDescription;
 
-        // 2️⃣ الحفظ في أرشيف الطلبات (seller_submissions)
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
@@ -779,11 +821,10 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             finalDescription, paths, new Date().toISOString(), finalStatus,
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-            aiReview.user_message, // حفظ الرسالة الموجهة للمستخدم للرجوع إليها
+            aiReview.user_message,
             nearby_services || '', latVal, lngVal
         ]);
 
-        // 3️⃣ النشر الفوري + تشغيل الـ Match Maker (فقط لو approved)
         if (isPublic) {
             const pubRes = await pgQuery(`
                 INSERT INTO properties 
@@ -801,7 +842,6 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 nearby_services || '', latVal, lngVal
             ]);
 
-            // 🔥 تشغيل ميزة الـ Match Maker للبحث عن مشترين مهتمين
             checkAndNotifyMatches({
                 id: pubRes.rows[0].id,
                 title: propertyTitle,
@@ -812,19 +852,17 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             }, code);
         }
 
-        // 4️⃣ تنبيه ديسكورد للإدارة
         await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
             { name: "👤 المالك", value: sellerName },
             { name: "🤖 تقرير AI", value: aiReview.reason },
-            { name: "📍 الموقع", value: aiReview.detected_location || "غير محدد" }
-        ], isPublic ? 3066993 : (finalStatus === 'pending' ? 16776960 : 15158332), files[0]?.path);
+            { name: "💰 حالة الدفع", value: "تم خصم نقطة واحدة" }
+        ], isPublic ? 3066993 : 16776960, files[0]?.path);
 
-        // 5️⃣ الرد النهائي اللي هيروح للـ Frontend عشان يظهر الـ Modal
         res.status(200).json({ 
             success: true, 
-            status: finalStatus, // (approved / rejected / pending)
-            title: isPublic ? "تم النشر بنجاح! 🎉" : (finalStatus === 'pending' ? "طلبك قيد المراجعة ⏳" : "عذراً، لم يتم النشر ⚠️"),
-            message: aiReview.user_message, // الرسالة اللي صاغها AI بالعامية
+            status: finalStatus, 
+            title: isPublic ? "تم النشر وتم خصم 1 نقطة 🎉" : "طلبك قيد المراجعة (تم خصم نقطة)",
+            message: aiReview.user_message,
             marketing_desc: isPublic ? aiReview.marketing_description : null,
             location: aiReview.detected_location
         }); 
