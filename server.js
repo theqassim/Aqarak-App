@@ -764,7 +764,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         let isPublic = (finalStatus === 'approved');
         
         // استخدام الوصف التسويقي لو AI وافق، غير كدة نستخدم وصف المستخدم
-        const finalDescription = isPublic ? aiReview.marketing_description : propertyDescription;
+        // const finalDescription = isPublic ? aiReview.marketing_description : propertyDescription;
 
         // 2️⃣ الحفظ في أرشيف الطلبات (seller_submissions)
         await pgQuery(`
