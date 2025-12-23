@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------
 
     // أ. جلب بيانات المستخدم
+    // أ. جلب بيانات المستخدم
     async function loadUserData() {
         try {
             const response = await fetch('/api/auth/me', { headers: { 'Cache-Control': 'no-cache' } });
@@ -47,27 +48,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const data = await response.json();
             
-            // 1. عرض الرصيد
-            if (data.isAuthenticated && data.balance !== undefined) {
-                const balanceEl = document.getElementById('user-balance-display');
-                const numberEl = document.getElementById('balance-number');
-                if (balanceEl && numberEl) {
-                    balanceEl.style.display = 'flex';
-                    balanceEl.style.alignItems = 'center';
-                    balanceEl.style.gap = '5px';
-                    numberEl.textContent = data.balance;
+            if (data.isAuthenticated) {
+                // 1. تغيير عنوان الصفحة بالاسم
+                const titleEl = document.getElementById('welcome-title');
+                if (titleEl && data.name) {
+                    titleEl.textContent = `لوحة التحكم الخاصة بـ ${data.name}`;
                 }
-            }
 
-            // 2. كارت الأدمن
-            if (data.isAuthenticated === true && data.role === 'admin') {
-                const adminCard = document.getElementById('admin-card');
-                if (adminCard) adminCard.style.display = 'block';
+                // 2. عرض الرصيد (فقط لو الدفع مفعل من الأدمن)
+                // data.isPaymentActive دي اللي ضفناها في السيرفر
+                if (data.isPaymentActive === true && data.balance !== undefined) {
+                    const balanceEl = document.getElementById('user-balance-display');
+                    const numberEl = document.getElementById('balance-number');
+                    if (balanceEl && numberEl) {
+                        balanceEl.style.display = 'flex';
+                        balanceEl.style.alignItems = 'center';
+                        balanceEl.style.gap = '5px';
+                        numberEl.textContent = data.balance;
+                    }
+                } else {
+                    // إخفاء الرصيد لو الدفع واقف
+                    const balanceEl = document.getElementById('user-balance-display');
+                    if (balanceEl) balanceEl.style.display = 'none';
+                }
+
+                // 3. كارت الأدمن
+                if (data.role === 'admin') {
+                    const adminCard = document.getElementById('admin-card');
+                    if (adminCard) adminCard.style.display = 'block';
+                }
             }
 
         } catch (e) { console.error('Failed to load user data:', e); }
     }
-    
     // ب. جلب المفضلة
     async function fetchFavorites() {
         if (!favoritesContainer) return;

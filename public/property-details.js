@@ -250,6 +250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 userRole = authData.role; 
                 currentUserPhone = authData.phone;
                 isAuthenticated = true; 
+                // ✅ حفظنا حالة الدفع هنا عشان نستخدمها وقت التعديل
+                window.isPaymentActive = authData.isPaymentActive; 
             }
         } catch (e) { console.log("Guest User"); }
 
@@ -349,11 +351,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (isOwner || isAdmin) {
                 const controlTitle = isAdmin ? 'تحكم الإدارة 🛡️' : 'أنت صاحب هذا العقار 👑';
+                
+                // زرار التمييز (يظهر فقط لو العقار مش مميز)
+                let featureBtnHTML = '';
+                if (!property.isFeatured) {
+                    featureBtnHTML = `
+                        <button onclick="openFeatureModal(${property.id})" class="btn-neon-auth" style="background: linear-gradient(45deg, #FFD700, #FFA500); border:none; color: black; flex: 1.5; margin-bottom:10px; width:100%;">
+                            <i class="fas fa-crown"></i> ترقية لمميز (زيادة المشاهدات)
+                        </button>
+                    `;
+                } else {
+                     featureBtnHTML = `
+                        <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid #FFD700; color: #FFD700; padding: 8px; border-radius: 50px; margin-bottom: 10px; font-size: 0.9rem;">
+                            <i class="fas fa-check-circle"></i> هذا العقار مميز حالياً
+                        </div>
+                    `;
+                }
+
                 ownerControlsHTML = `
                     <div style="margin-top: 20px; padding: 15px; border: 1px solid ${isAdmin ? '#e91e63' : '#00ff88'}; border-radius: 10px; background: rgba(0, 0, 0, 0.2); text-align: center;">
                         <p style="color: ${isAdmin ? '#e91e63' : '#00ff88'}; font-weight: bold; margin-bottom: 15px;">
                             ${controlTitle}
                         </p>
+                        
+                        ${featureBtnHTML}
+
                         <div style="display: flex; gap: 10px; justify-content: center;">
                             <button onclick="openEditPropertyModal()" class="btn-neon-auth" style="background: #2196F3; border-color: #2196F3; color: white; flex: 1;">
                                 <i class="fas fa-edit"></i> تعديل
@@ -365,8 +387,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
                 injectEditModal(property);
+                injectFeatureModal(); // تفعيل مودال الباقات
             }
-
             let isFav = false;
             try { const favRes = await fetch(`/api/favorites`); if(favRes.ok) { const favs = await favRes.json(); isFav = favs.some(f => f.id === property.id); } } catch(e) {}
             const favClass = isFav ? 'is-favorite' : '';
@@ -660,6 +682,11 @@ function injectEditModal(prop) {
 
     document.getElementById('edit-property-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (window.isPaymentActive) {
+            if (!confirm('⚠️ تنبيه هام:\nتعديل العقار سيخصم 1 نقطة من رصيدك.\n\nهل أنت متأكد من المتابعة؟')) {
+                return; // إلغاء العملية لو داس Cancel
+            }
+        }
         const btn = e.target.querySelector('.btn-save');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; 
@@ -774,4 +801,109 @@ window.showStatusModal = (type, title, subtitle, note = '') => {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+// ============================================================
+// 🌟 Feature Modal Logic (مودال باقات التميز)
+// ============================================================
+function injectFeatureModal() {
+    // إزالة القديم إن وجد
+    const old = document.getElementById('feature-modal-overlay');
+    if (old) old.remove();
+
+    const html = `
+        <div id="feature-modal-overlay" class="modal-overlay" style="z-index: 10001;">
+            <div class="modal-content" style="max-width: 400px; border-color: #FFD700;">
+                <span class="close-modal" onclick="document.getElementById('feature-modal-overlay').style.display='none'">&times;</span>
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <i class="fas fa-crown" style="font-size: 3rem; color: #FFD700; margin-bottom: 10px;"></i>
+                    <h3 style="color: white;">ميّز عقارك الآن!</h3>
+                    <p style="color: #ccc; font-size: 0.9rem;">العقارات المميزة تظهر في أعلى الصفحة الرئيسية وتحصل على مشاهدات أكثر 5 أضعاف.</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label class="plan-option" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #444; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <input type="radio" name="feature_plan" value="1" checked>
+                            <span style="color: white; font-weight: bold; margin-right: 10px;">أسبوعين (14 يوم)</span>
+                        </div>
+                        <span style="color: #FFD700; font-weight: bold;">20 نقطة</span>
+                    </label>
+
+                    <label class="plan-option" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #444; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <input type="radio" name="feature_plan" value="2">
+                            <span style="color: white; font-weight: bold; margin-right: 10px;">شهر كامل (30 يوم)</span>
+                        </div>
+                        <span style="color: #FFD700; font-weight: bold;">30 نقطة</span>
+                    </label>
+
+                    <label class="plan-option" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #444; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <input type="radio" name="feature_plan" value="3">
+                            <span style="color: white; font-weight: bold; margin-right: 10px;">6 أسابيع (عرض خاص)</span>
+                        </div>
+                        <span style="color: #FFD700; font-weight: bold;">45 نقطة</span>
+                    </label>
+                </div>
+
+                <button onclick="submitFeatureRequest()" class="btn-neon-auth" style="background: #FFD700; color: black; border: none; margin-top: 20px; width: 100%;">
+                    تأكيد وخصم النقاط
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// دالة فتح المودال
+window.openFeatureModal = (propId) => {
+    // تخزين الـ ID في زرار التأكيد عشان نستخدمه
+    window.currentFeaturePropId = propId;
+    const modal = document.getElementById('feature-modal-overlay');
+    if (modal) modal.style.display = 'flex';
+};
+
+// دالة إرسال الطلب للسيرفر
+window.submitFeatureRequest = async () => {
+    const selected = document.querySelector('input[name="feature_plan"]:checked');
+    if (!selected) return alert('اختر باقة');
+
+    const planId = selected.value;
+    const propId = window.currentFeaturePropId;
+    const btn = document.querySelector('button[onclick="submitFeatureRequest()"]');
+    
+    // تأكيد من المستخدم
+    if (!confirm('سيتم خصم قيمة الباقة من رصيدك فوراً. هل أنت متأكد؟')) return;
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التفعيل...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/user/feature-property', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: propId, planId: planId })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById('feature-modal-overlay').style.display = 'none';
+            window.showStatusModal('success', 'تم التمييز بنجاح! 🌟', data.message);
+        } else {
+            if (res.status === 402) {
+                // رصيد غير كافي
+                alert('❌ ' + data.message + '\nيرجى شحن رصيدك.');
+            } else {
+                alert('❌ خطأ: ' + data.message);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        alert('خطأ في الاتصال');
+    } finally {
+        btn.innerHTML = 'تأكيد وخصم النقاط';
+        btn.disabled = false;
+    }
 };
