@@ -1,15 +1,57 @@
+// متغيرات الدفع العامة
+let selectedMethod = 'card'; 
+let PRICE_PER_POINT = 1; // قيمة ابتدائية هتتغير لما نجيب السعر من السيرفر
+
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // 🔥 1. تحميل بيانات المستخدم (رصيد + صلاحيات)
+    // ----------------------------------------------------
+    // 💰 1. إعدادات الدفع والتحقق من المعاملات (Paymob)
+    // ----------------------------------------------------
+    
+    // أ. جلب سعر النقطة الحالي من الأدمن
+    try {
+        const res = await fetch('/api/config/payment-price');
+        const data = await res.json();
+        PRICE_PER_POINT = data.pointPrice || 1;
+        // console.log(`Current Point Price: ${PRICE_PER_POINT} EGP`);
+    } catch (e) {
+        console.error("Failed to fetch price");
+    }
+
+    // ب. فحص نتيجة الدفع (لو المستخدم راجع من Paymob)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+
+    if (paymentStatus === 'success') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // عرض رسالة نجاح
+        // نستخدم setTimeout عشان نضمن إن المودال ستايل اتحمل
+        setTimeout(() => {
+            if(window.showStatusModal) window.showStatusModal('success', 'تم الشحن بنجاح! 💰', 'تمت إضافة النقاط إلى محفظتك.');
+            else alert('تم الشحن بنجاح!');
+        }, 500);
+    } else if (paymentStatus === 'failed') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+            if(window.showStatusModal) window.showStatusModal('rejected', 'فشلت العملية', 'لم يتم خصم أي مبلغ.');
+            else alert('فشلت عملية الدفع.');
+        }, 500);
+    }
+
+    // ----------------------------------------------------
+    // 👤 2. بيانات المستخدم والواجهة الأساسية
+    // ----------------------------------------------------
+
+    // تحميل بيانات المستخدم (رصيد + صلاحيات)
     await loadUserData();
 
-    // 2. تعريف العناصر
+    // تعريف العناصر
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
     const favoritesContainer = document.getElementById('favorites-listings');
     const modal = document.getElementById("passwordModal");
 
-    // 3. تشغيل زر عرض المفضلة
+    // تشغيل زر عرض المفضلة
     if (favoritesBtn) {
         favoritesBtn.addEventListener('click', () => {
             if (favoritesArea) {
@@ -20,10 +62,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. تشغيل مودال تسجيل الخروج الفخم
+    // تشغيل مودال تسجيل الخروج الفخم
     setupLogoutModal();
 
-    // 5. تشغيل مودال تغيير كلمة المرور
+    // تشغيل مودال تغيير كلمة المرور
     const openModalBtn = document.getElementById('open-password-modal');
     if(openModalBtn) {
         openModalBtn.addEventListener('click', () => {
@@ -36,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // الدوال الداخلية (Functions)
+    // 🔥 الدوال الداخلية (Functions)
     // ----------------------------------------------------
 
     // أ. جلب بيانات المستخدم
@@ -48,14 +90,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             
             if (data.isAuthenticated) {
-                // 1. تغيير عنوان الصفحة بالاسم
+                // تغيير العنوان
                 const titleEl = document.getElementById('welcome-title');
                 if (titleEl && data.name) {
                     titleEl.textContent = `لوحة التحكم الخاصة بـ ${data.name}`;
                 }
 
-                // 2. عرض الرصيد (فقط لو الدفع مفعل من الأدمن)
-                // data.isPaymentActive دي اللي ضفناها في السيرفر
+                // عرض الرصيد (لو الدفع مفعل)
                 if (data.isPaymentActive === true && data.balance !== undefined) {
                     const balanceEl = document.getElementById('user-balance-display');
                     const numberEl = document.getElementById('balance-number');
@@ -64,20 +105,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                         balanceEl.style.alignItems = 'center';
                         balanceEl.style.gap = '5px';
                         numberEl.textContent = data.balance;
+                        
+                        // إضافة زر الشحن (+) لو مش موجود
+                        if (!document.getElementById('add-balance-btn')) {
+                            const addBtn = document.createElement('i');
+                            addBtn.id = 'add-balance-btn';
+                            addBtn.className = 'fas fa-plus-circle';
+                            addBtn.style.cssText = 'color: #00ff88; cursor: pointer; margin-right: 5px; font-size: 1.1rem;';
+                            addBtn.onclick = openChargeModal; // ربط زر الشحن
+                            balanceEl.prepend(addBtn);
+                        }
                     }
                 } else {
-                    // إخفاء الرصيد لو الدفع واقف
                     const balanceEl = document.getElementById('user-balance-display');
                     if (balanceEl) balanceEl.style.display = 'none';
                 }
 
-                // 3. كارت الأدمن
+                // كارت الأدمن
                 if (data.role === 'admin') {
                     const adminCard = document.getElementById('admin-card');
                     if (adminCard) adminCard.style.display = 'block';
                 }
             }
-
         } catch (e) { console.error('Failed to load user data:', e); }
     }
     
@@ -118,12 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
                             <p class="fav-price">${price} ج.م</p> 
                             <div class="fav-actions">
-                                <a href="property-details?id=${property.id}" class="btn-fav-view">
-                                    <i class="fas fa-eye"></i> التفاصيل
-                                </a>
-                                <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" title="حذف من المفضلة">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                                <a href="property-details?id=${property.id}" class="btn-fav-view"><i class="fas fa-eye"></i> التفاصيل</a>
+                                <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" title="حذف من المفضلة"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </div>
                     </div>
@@ -135,21 +180,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) { 
             favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">حدث خطأ أثناء التحميل.</p>`; 
-            console.error(error);
         }
     }
 
-    // ج. تفعيل أزرار الحذف
+    // ج. تفعيل أزرار الحذف للمفضلة
     function addRemoveFavoriteListeners() {
         document.querySelectorAll('.remove-favorite-btn').forEach(button => {
             button.addEventListener('click', async (e) => {
                 if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
-                
                 const btn = e.currentTarget; 
                 const card = btn.closest('.fav-card'); 
                 try {
                     await fetch(`/api/favorites/${btn.dataset.id}`, { method: 'DELETE' });
-                    
                     if(card) {
                         card.style.transition = 'all 0.3s ease';
                         card.style.opacity = '0';
@@ -220,10 +262,108 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
     }
 
-}); // ✅ هنا الإغلاق الصحيح لنهاية الملف
+}); // ✅ نهاية DOMContentLoaded
 
 // ----------------------------------------------------
-// دوال عامة (Global Helpers) للأزرار المباشرة
+// 💰 دوال الدفع (Payment Logic) - الجديد
+// ----------------------------------------------------
+
+// فتح مودال الشحن
+function openChargeModal() {
+    const modal = document.getElementById('charge-modal');
+    if(modal) {
+        modal.style.display = 'block';
+        calculatePrice(); // تحديث السعر الافتراضي
+    } else {
+        alert('جاري تحميل نظام الدفع...');
+    }
+}
+
+// حساب السعر بناءً على سعر النقطة من السيرفر
+function calculatePrice() {
+    const pointsInput = document.getElementById('charge-points');
+    const priceDisplay = document.getElementById('price-display');
+    if (!pointsInput || !priceDisplay) return;
+
+    const points = pointsInput.value;
+    if(points && points >= 0) {
+        // الحساب بناءً على السعر اللي جاي من الداتابيز
+        priceDisplay.innerText = (points * PRICE_PER_POINT).toLocaleString();
+    } else {
+        priceDisplay.innerText = '0';
+    }
+}
+
+// تبديل طريقة الدفع (فيزا / محفظة)
+function selectPaymentMethod(method) {
+    selectedMethod = method;
+    
+    // تغيير شكل الزراير
+    const cardBtn = document.getElementById('btn-card');
+    const walletBtn = document.getElementById('btn-wallet');
+    
+    if(cardBtn) cardBtn.classList.toggle('active', method === 'card');
+    if(walletBtn) walletBtn.classList.toggle('active', method === 'wallet');
+
+    // إظهار/إخفاء حقل رقم المحفظة
+    const walletInput = document.getElementById('wallet-input-container');
+    if (walletInput) {
+        walletInput.style.display = (method === 'wallet') ? 'block' : 'none';
+    }
+}
+
+// بدء عملية الشحن
+async function startChargeProcess() {
+    const points = document.getElementById('charge-points').value;
+    const btn = document.querySelector('button[onclick="startChargeProcess()"]');
+    
+    // التحقق من النقاط
+    if (!points || points < 10) return alert('أقل عدد نقاط للشحن هو 10');
+
+    // التحقق من رقم المحفظة لو اختار فودافون كاش
+    let mobileNumber = null;
+    if (selectedMethod === 'wallet') {
+        mobileNumber = document.getElementById('wallet-number').value;
+        if (!mobileNumber || mobileNumber.length < 11) return alert('يرجى كتابة رقم محفظة صحيح');
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاتصال...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/payment/charge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                points: points, 
+                method: selectedMethod,
+                mobileNumber: mobileNumber
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            if (data.iframeUrl) {
+                // لو فيزا -> Iframe
+                window.location.href = data.iframeUrl;
+            } else if (data.redirectUrl) {
+                // لو محفظة -> Redirect
+                window.location.href = data.redirectUrl;
+            }
+        } else {
+            alert('❌ ' + (data.message || 'حدث خطأ'));
+        }
+    } catch (e) {
+        console.error(e);
+        alert('خطأ في الاتصال');
+    } finally {
+        btn.innerHTML = 'تأكيد وشراء النقاط <i class="fas fa-check-circle"></i>';
+        btn.disabled = false;
+    }
+}
+
+// ----------------------------------------------------
+// 🔐 دوال الأمان (تغيير كلمة المرور)
 // ----------------------------------------------------
 
 async function checkAuthAndFillPhone(storedPhone) {

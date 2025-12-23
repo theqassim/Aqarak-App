@@ -8,6 +8,7 @@ const fs = require('fs');
 const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 
 // 🟢 إضافات الواتساب
 const { Client, LocalAuth } = require('whatsapp-web.js');
@@ -79,6 +80,11 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY;
+const PAYMOB_HMAC = process.env.PAYMOB_HMAC;
+const PAYMOB_INTEGRATION_CARD = process.env.PAYMOB_INTEGRATION_CARD;
+const PAYMOB_IFRAME_ID = process.env.PAYMOB_IFRAME_ID;
+const PAYMOB_INTEGRATION_WALLET = process.env.PAYMOB_INTEGRATION_WALLET;
 
 const publicVapidKey = 'BABE4bntVm_6RWE3zuv305i65FfcTN8xd6C3d4jdEwML8d7yLwoVywbgvhS7U-q2KE3cmKqDbgvZ8rK97C3gKp4';
 const privateVapidKey = 'cFJCSJoigPkZb-y4CxPsY9ffahOTxdlxAec3FVC3aKI';
@@ -1565,114 +1571,83 @@ app.get('/update-db-location', async (req, res) => {
 // 💰 8. نظام إعدادات الدفع والنقاط (جديد)
 // ==========================================================
 
-// جلب إعدادات الدفع الحالية
+// ============================================================
+// ⚙️ Admin Dashboard APIs (إعدادات الدفع والشحن اليدوي)
+// ============================================================
+
+// 1. GET Payment Settings (جلب الإعدادات الحالية عند فتح الصفحة)
 app.get('/api/admin/payment-settings', async (req, res) => {
     const token = req.cookies.auth_token;
-    try {
-        // التأكد إنه أدمن
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
 
-        // جلب الإعدادات من الداتابيز
-        const result = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
-        
-        if (result.rows.length > 0) {
-            res.json(JSON.parse(result.rows[0].setting_value));
-        } else {
-            // الإعدادات الافتراضية لو لسه مفيش حاجة متسجلة (مجاني)
-            res.json({ is_active: false, point_price: 1.0 });
-        }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        const priceRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'point_price'");
+        const activeRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+
+        res.json({
+            point_price: priceRes.rows[0]?.setting_value || 1,
+            is_active: activeRes.rows[0]?.setting_value === 'true' // تحويل النص لـ boolean
+        });
     } catch (error) {
-        console.error("Get Payment Settings Error:", error);
+        console.error(error);
         res.status(500).json({ message: 'خطأ سيرفر' });
     }
 });
 
-// حفظ تعديلات الدفع
+// 2. POST Payment Settings (حفظ التعديلات من الأدمن)
 app.post('/api/admin/payment-settings', async (req, res) => {
     const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
 
-        const { is_active, point_price } = req.body;
+        const { point_price, is_active } = req.body;
 
-        // تجهيز البيانات كـ JSON
-        const configValue = JSON.stringify({
-            is_active: is_active, // true or false
-            point_price: parseFloat(point_price) // تأكيد إنه رقم
-        });
+        // تحديث السعر
+        await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ('point_price', $1) 
+                       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1`, [point_price]);
 
-        // حفظ أو تحديث في الداتابيز
-        await pgQuery(`
-            INSERT INTO bot_settings (setting_key, setting_value) 
-            VALUES ('payment_config', $1) 
-            ON CONFLICT (setting_key) 
-            DO UPDATE SET setting_value = $1
-        `, [configValue]);
+        // تحديث حالة التفعيل
+        await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ('payment_active', $1) 
+                       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1`, [is_active]);
 
-        res.json({ success: true, message: 'تم حفظ إعدادات الدفع بنجاح ✅' });
-
+        res.json({ success: true, message: 'تم تحديث إعدادات الدفع بنجاح ✅' });
     } catch (error) {
-        console.error("Save Payment Settings Error:", error);
+        console.error(error);
         res.status(500).json({ message: 'خطأ سيرفر' });
     }
 });
-// ==========================================================
-// 💰 9. نظام المحفظة والشحن اليدوي
-// ==========================================================
 
-// 1. رابط لإنشاء عمود الرصيد في الداتابيز (شغله مرة واحدة)
-app.get('/update-db-wallet', async (req, res) => {
-    try {
-        // إضافة عمود الرصيد (الافتراضي 0)
-        await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_balance NUMERIC DEFAULT 0`);
-        
-        // إنشاء جدول سجل المعاملات (عشان نعرف مين شحن لمين وامتى)
-        await pgQuery(`CREATE TABLE IF NOT EXISTS transactions (
-            id SERIAL PRIMARY KEY,
-            user_phone TEXT,
-            amount NUMERIC,
-            type TEXT, -- 'deposit' (شحن) or 'withdraw' (خصم)
-            description TEXT,
-            date TEXT
-        )`);
-
-        res.send('✅ تم تفعيل نظام المحفظة وإنشاء جداول الرصيد بنجاح!');
-    } catch (error) {
-        res.status(500).send('❌ خطأ: ' + error.message);
-    }
-});
-
-// 2. API الشحن اليدوي (للأدمن فقط)
+// 3. POST Manual Charge (الشحن اليدوي لرقم معين)
 app.post('/api/admin/manual-charge', async (req, res) => {
     const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
     try {
-        // التأكد إنه أدمن
         const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
 
         const { phone, amount } = req.body;
-        const points = parseFloat(amount);
+        
+        // التحقق من وجود المستخدم
+        const userRes = await pgQuery('SELECT id FROM users WHERE phone = $1', [phone]);
+        if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'رقم الهاتف غير مسجل في الموقع ❌' });
+        
+        const userId = userRes.rows[0].id;
 
-        // التأكد إن الرقم موجود
-        const userCheck = await pgQuery("SELECT id, name FROM users WHERE phone = $1", [phone]);
-        if (userCheck.rows.length === 0) return res.status(404).json({ message: 'رقم الهاتف غير مسجل' });
+        // إضافة الرصيد للمستخدم
+        await pgQuery('UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2', [amount, userId]);
 
-        const userName = userCheck.rows[0].name;
+        // تسجيل المعاملة في السجل (عشان تظهرله في كشف الحساب)
+        await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'deposit', 'مكافأة إدارية (شحن يدوي)', $3)`, 
+            [phone, amount, new Date().toISOString()]);
 
-        // 1. تزويد الرصيد
-        await pgQuery("UPDATE users SET wallet_balance = wallet_balance + $1 WHERE phone = $2", [points, phone]);
-
-        // 2. تسجيل العملية في التاريخ (Log)
-        await pgQuery("INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'deposit', 'شحن يدوي من الأدمن', $3)", 
-            [phone, points, new Date().toISOString()]);
-
-        // 3. إرسال رسالة واتساب للمستخدم (اختياري - لو الواتساب شغال)
-        // const msg = `🎉 مبروك يا ${userName}!\nتم شحن رصيدك بـ ${points} نقطة بنجاح.\nاستمتع بخدمات عقارك!`;
-        // await sendWhatsAppMessage(phone, msg);
-
-        res.json({ success: true, message: `✅ تم شحن ${points} نقطة للمستخدم: ${userName}` });
+        res.json({ success: true, message: `تم شحن ${amount} نقطة للرقم ${phone} بنجاح 🚀` });
 
     } catch (error) {
         console.error("Manual Charge Error:", error);
@@ -1777,6 +1752,207 @@ app.post('/api/user/feature-property', async (req, res) => {
         await pgQuery('ROLLBACK');
         console.error("Feature Error:", error);
         res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
+// ============================================================
+// 💳 1. API بدء عملية الشحن (Charge Request)
+// ============================================================
+app.post('/api/payment/charge', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { points, method, mobileNumber } = req.body; // method: 'card' or 'wallet'
+
+        if (!points || points < 10) return res.status(400).json({ message: 'أقل عدد نقاط هو 10' });
+
+        // 1. جلب سعر النقطة الحالي من الداتابيز
+        const settingRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'point_price'");
+        const pricePerPoint = parseFloat(settingRes.rows[0]?.setting_value || 1); // الافتراضي 1 جنيه
+        
+        const amountEGP = points * pricePerPoint; // المبلغ الإجمالي
+
+        // 2. تحديد نوع وسيلة الدفع (Integration ID)
+        let integrationId;
+        if (method === 'wallet') {
+            integrationId = process.env.PAYMOB_INTEGRATION_WALLET;
+            if (!mobileNumber) return res.status(400).json({ message: 'رقم المحفظة مطلوب لفودافون كاش' });
+        } else {
+            integrationId = process.env.PAYMOB_INTEGRATION_CARD;
+        }
+
+        // 3. (Paymob Step 1) Authentication Request
+        const authRes = await axios.post('https://accept.paymob.com/api/auth/tokens', {
+            "api_key": process.env.PAYMOB_API_KEY
+        });
+        const authToken = authRes.data.token;
+
+        // 4. (Paymob Step 2) Order Registration
+        const orderRes = await axios.post('https://accept.paymob.com/api/ecommerce/orders', {
+            "auth_token": authToken,
+            "delivery_needed": "false",
+            "amount_cents": amountEGP * 100, // المبلغ بالقروش
+            "currency": "EGP",
+            "items": []
+        });
+        const paymobOrderId = orderRes.data.id;
+
+        // 💾 حفظ الطلب في الداتابيز عندنا (Pending)
+        await pgQuery(
+            `INSERT INTO payment_orders (user_id, paymob_order_id, amount_egp, points_amount, payment_method, status) 
+             VALUES ($1, $2, $3, $4, $5, 'pending')`,
+            [decoded.id, paymobOrderId, amountEGP, points, method]
+        );
+
+        // 5. (Paymob Step 3) Payment Key Request
+        // بنجيب بيانات المستخدم عشان Paymob بيطلبها (حتى لو وهمية)
+        const userRes = await pgQuery('SELECT * FROM users WHERE id = $1', [decoded.id]);
+        const user = userRes.rows[0];
+
+        const keyRes = await axios.post('https://accept.paymob.com/api/acceptance/payment_keys', {
+            "auth_token": authToken,
+            "amount_cents": amountEGP * 100,
+            "expiration": 3600, // صلاحية الدفع ساعة
+            "order_id": paymobOrderId,
+            "billing_data": {
+                "apartment": "NA", "email": "user@aqarak.com", "floor": "NA", 
+                "first_name": user.name || "Client", "street": "NA", "building": "NA", 
+                "phone_number": mobileNumber || user.phone || "01000000000", 
+                "shipping_method": "NA", "postal_code": "NA", "city": "Cairo", 
+                "country": "EG", "last_name": "Aqarak", "state": "NA"
+            },
+            "currency": "EGP",
+            "integration_id": integrationId
+        });
+        const paymentToken = keyRes.data.token;
+
+        // 6. الرد حسب النوع
+        if (method === 'wallet') {
+            // لو محفظة: بنطلب رابط الدفع المباشر
+            const walletPayRes = await axios.post('https://accept.paymob.com/api/acceptance/payments/pay', {
+                "source": { "identifier": mobileNumber, "subtype": "WALLET" },
+                "payment_token": paymentToken
+            });
+            // توجيه المستخدم لصفحة فودافون كاش
+            return res.json({ success: true, redirectUrl: walletPayRes.data.redirect_url });
+        } else {
+            // لو فيزا: بنرجع رابط الـ Iframe
+            return res.json({ 
+                success: true, 
+                iframeUrl: `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${paymentToken}` 
+            });
+        }
+
+    } catch (error) {
+        console.error("Paymob Error:", error.response?.data || error.message);
+        res.status(500).json({ message: 'فشل الاتصال ببوابة الدفع' });
+    }
+});
+
+// ============================================================
+// 🔄 2. API استقبال النتيجة (Callback)
+// ============================================================
+// ده الرابط اللي Paymob هترجع المستخدم عليه بعد الدفع
+app.get('/api/payment/callback', async (req, res) => {
+    try {
+        const { success, id, order, hmac } = req.query;
+
+        // لو العملية ناجحة (success=true)
+        if (success === "true") {
+            // 1. ندور على الطلب في الداتابيز عندنا برقم الأوردر
+            const orderRes = await pgQuery(`SELECT * FROM payment_orders WHERE paymob_order_id = $1`, [order]);
+            
+            if (orderRes.rows.length > 0) {
+                const pendingOrder = orderRes.rows[0];
+
+                // 2. نتأكد إنه لسه pending عشان منضفش الرصيد مرتين
+                if (pendingOrder.status === 'pending') {
+                    
+                    // أ. تحديث حالة الطلب لـ success
+                    await pgQuery(`UPDATE payment_orders SET status = 'success' WHERE id = $1`, [pendingOrder.id]);
+
+                    // ب. إضافة "النقاط" للمستخدم (مش الفلوس)
+                    await pgQuery(`UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2`, 
+                        [pendingOrder.points_amount, pendingOrder.user_id]);
+
+                    // ج. تسجيل معاملة في السجل
+                    const userPhoneRes = await pgQuery('SELECT phone FROM users WHERE id = $1', [pendingOrder.user_id]);
+                    await pgQuery(
+                        `INSERT INTO transactions (user_phone, amount, type, description, date) 
+                         VALUES ($1, $2, 'deposit', $3, $4)`,
+                        [
+                            userPhoneRes.rows[0].phone, 
+                            pendingOrder.points_amount, 
+                            `شحن ${pendingOrder.points_amount} نقطة (${pendingOrder.payment_method})`,
+                            new Date().toISOString()
+                        ]
+                    );
+                    
+                    // إشعار ديسكورد (اختياري)
+                    await sendDiscordNotification("💰 عملية شحن ناجحة", [
+                        { name: "المستخدم", value: userPhoneRes.rows[0].phone },
+                        { name: "النقاط", value: `${pendingOrder.points_amount}` },
+                        { name: "المبلغ", value: `${pendingOrder.amount_egp} EGP` }
+                    ], 3066993);
+                }
+            }
+            // توجيه لصفحة النجاح
+            res.redirect('/user-dashboard.html?payment=success'); 
+        } else {
+            // توجيه لصفحة الفشل
+            res.redirect('/user-dashboard.html?payment=failed');
+        }
+
+    } catch (error) {
+        console.error("Callback Error:", error);
+        res.redirect('/user-dashboard.html?payment=error');
+    }
+});
+
+
+// ============================================================
+// ⚙️ إعدادات النظام (Admin Settings)
+// ============================================================
+
+// 1. (للأدمن) حفظ إعدادات الدفع
+app.post('/api/admin/settings/payment', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        const { pointPrice, isActive } = req.body;
+
+        // تحديث سعر النقطة
+        await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ('point_price', $1) 
+                       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1`, [pointPrice]);
+
+        // تحديث حالة الدفع (شغال ولا لا)
+        await pgQuery(`INSERT INTO bot_settings (setting_key, setting_value) VALUES ('payment_active', $1) 
+                       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1`, [isActive]);
+
+        res.json({ success: true, message: 'تم حفظ الإعدادات بنجاح ✅' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+
+// 2. (للمستخدم) معرفة سعر النقطة الحالي
+app.get('/api/config/payment-price', async (req, res) => {
+    try {
+        const priceRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'point_price'");
+        const activeRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+        
+        const price = parseFloat(priceRes.rows[0]?.setting_value || 1); // الافتراضي 1
+        const isActive = activeRes.rows[0]?.setting_value === 'true';
+
+        res.json({ pointPrice: price, isPaymentActive: isActive });
+    } catch (error) {
+        res.json({ pointPrice: 1, isPaymentActive: false }); // قيم افتراضية لو حصل خطأ
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
