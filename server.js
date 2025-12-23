@@ -1277,28 +1277,15 @@ app.post('/api/submit-complaint', async (req, res) => {
 // 5. استبدال API إحصائيات المستخدمين القديم ليجلب حالة الحظر
 app.get('/api/admin/users-stats', async (req, res) => {
     const token = req.cookies.auth_token;
-   if (req.user.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
-    
     try {
-        // 🔥 جلب حالة الحظر is_banned بشكل صريح
-        const sql = `
-            SELECT id, name, phone, username, lifetime_posts as property_count, is_banned 
-            FROM users 
-            ORDER BY id DESC
-        `;
-        const result = await pgQuery(sql);
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
         
-        // تحويل القيمة لضمان وصولها كـ boolean للواجهة
-        const users = result.rows.map(u => ({
-            ...u,
-            is_banned: (u.is_banned === true || u.is_banned === 1)
-        }));
-
-        res.json(users);
-    } catch (error) { 
-        console.error(error);
-        res.status(500).json({ message: 'خطأ سيرفر' }); 
-    }
+        // جلب حالة الحظر is_banned
+        const sql = `SELECT name, phone, username, lifetime_posts as property_count, is_banned FROM users WHERE lifetime_posts >= 0 ORDER BY lifetime_posts DESC`;
+        const result = await pgQuery(sql);
+        res.json(result.rows);
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
 // 2. تحديث API جلب الشكاوي (ليطبع الخطأ في الترمينال)
