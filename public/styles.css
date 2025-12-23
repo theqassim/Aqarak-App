@@ -1,4 +1,4 @@
-/* :root {
+:root {
     --neon-color: #ffffff;      
     --primary-color: #1c2630;   
     --secondary-color: #2a3847; 
@@ -3078,4 +3078,4 @@ a[href="seller-dashboard"]:hover {
             display: flex;
             align-items: center;
             gap: 6px;
-        } */
+        }
