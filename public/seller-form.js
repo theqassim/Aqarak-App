@@ -15,58 +15,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initMap();
 });
+// ✅ دالة إظهار المودال الاحترافي المحدثة
+function showStatusModal(type, title, subtitle, note = '', marketingDesc = '', location = '') {
+    // إزالة أي مودال قديم موجود
+    const oldModal = document.querySelector('.status-modal-overlay');
+    if (oldModal) oldModal.remove();
 
-// ✅ دالة إظهار المودال الاحترافي
-function showStatusModal(type, title, subtitle, note = '') {
     let config = {};
-    // إعدادات الألوان حسب الحالة
-    if (type === 'review') { // حالة المراجعة (برتقالي)
-        config = {
-            color: '#ff9800', 
-            bgIcon: '#ff9800',
-            icon: 'fas fa-clipboard-check',
-            btnGradient: 'linear-gradient(to right, #ff9800 0%, #ff5722 51%, #ff9800 100%)'
-        };
-    } else if (type === 'success') { // حالة الموافقة (أخضر)
-        config = {
-            color: '#00ff88', 
-            bgIcon: '#00c853',
-            icon: 'fas fa-check-circle',
-            btnGradient: 'linear-gradient(to right, #00ff88 0%, #00cc6a 51%, #00ff88 100%)'
-        };
+    if (type === 'review') { // حالة المراجعة البشرية (Pending)
+        config = { color: '#ffc107', bgIcon: '#ffc107', icon: 'fas fa-hourglass-half', btnText: 'فهمت، شكراً' };
+    } else if (type === 'success') { // حالة القبول الفوري (Approved)
+        config = { color: '#00ff88', bgIcon: '#00c853', icon: 'fas fa-check-double', btnText: 'روعة، تمام!' };
+    } else if (type === 'error') { // حالة الرفض (Rejected)
+        config = { color: '#ff4444', bgIcon: '#d32f2f', icon: 'fas fa-exclamation-triangle', btnText: 'حاول مجدداً' };
     }
 
-    // بناء كود المودال
     const modalHTML = `
         <div class="status-modal-overlay">
-            <div class="status-modal-content" style="border-color: ${config.color}; box-shadow: 0 0 20px ${config.color}40;">
-                
-                <div class="status-icon-wrapper" style="background: ${config.bgIcon};">
-                    <i class="${config.icon}"></i>
+            <div class="status-modal-content" style="border-color: ${config.color}; box-shadow: 0 0 30px ${config.color}30;">
+                <div class="status-icon-wrapper" style="background: ${config.bgIcon}; box-shadow: 0 0 20px ${config.bgIcon}60;">
+                    <i class="${config.icon} fa-beat-gradient"></i>
                 </div>
-
                 <h3 class="status-title">${title}</h3>
                 <p class="status-subtitle">${subtitle}</p>
 
-                ${note ? `
-                <div class="status-note-box" style="border-right-color: ${config.color};">
-                    <strong style="color: #fff; display:block; margin-bottom:5px; font-size:0.9rem;">
-                        <i class="fas fa-lightbulb" style="color:${config.color}; margin-left:5px;"></i> ملحوظة النظام:
+                ${marketingDesc ? `
+                <div class="status-note-box" style="border-right-color: #00ff88; background: rgba(0,255,136,0.05);">
+                    <strong style="color: #00ff88; display:block; margin-bottom:5px; font-size:0.85rem;">
+                        <i class="fas fa-magic"></i> وصف تسويقي ذكي (AI):
                     </strong>
-                    <span style="color: #ccc; font-size: 0.9rem;">${note}</span>
+                    <span style="color: #eee; font-size: 0.9rem; font-style: italic;">"${marketingDesc}"</span>
                 </div>` : ''}
 
-                <button onclick="window.location.href='home'" class="btn-status-action" 
-                    style="background-image: ${config.btnGradient}; box-shadow: 0 5px 15px ${config.color}60;">
-                    عودة للرئيسية
+                ${location ? `<p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;"><i class="fas fa-map-pin"></i> المنطقة: ${location}</p>` : ''}
+
+                <button onclick="${type === 'error' ? 'closeModal()' : "window.location.href='home'"}" 
+                    class="btn-status-action" 
+                    style="background: ${config.bgIcon};">
+                    ${config.btnText}
                 </button>
             </div>
         </div>
     `;
-
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
+function closeModal() {
+    const modal = document.querySelector('.status-modal-overlay');
+    if (modal) modal.remove();
+}
 // --- 🔢 دالة دعم الأرقام العربية ---
 function setupArabicNumbersSupport() {
     // الحقول المستهدفة
@@ -299,11 +296,9 @@ function renderPreviews() {
     });
 }
 
-// 🚀 زر الإرسال (الموقع اختياري + المودال)
 document.getElementById('seller-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
-    const msg = document.getElementById('seller-form-message');
     const originalText = btn.innerHTML;
 
     if (selectedFiles.length === 0) {
@@ -311,44 +306,49 @@ document.getElementById('seller-form').addEventListener('submit', async function
         return;
     }
 
-    // ⚠️ تم إيقاف التحقق الإلزامي من الموقع (أصبح اختيارياً)
-    /*
-    if (!document.getElementById('lat').value) {
-        alert("📍 من فضلك حدد الموقع...");
-        return;
-    }
-    */
-
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
+    btn.innerHTML = '<i class="fas fa-robot fa-spin"></i> جاري الفحص الذكي...';
     btn.disabled = true;
-    if(msg) msg.textContent = '';
 
     const formData = new FormData(e.target);
     formData.delete('images[]'); 
-    selectedFiles.forEach(file => { if (file.size <= 10 * 1024 * 1024) formData.append('images', file); });
+    selectedFiles.forEach(file => formData.append('images', file));
 
     try {
         const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
-        const data = await response.json();
+        const result = await response.json();
         
-        if (response.ok) {
-            // 🎉 إظهار المودال الاحترافي
+        // التحقق من حالة الرد وإظهار المودال المناسب
+        if (result.status === 'approved') {
+            showStatusModal(
+                'success', 
+                result.title, 
+                result.message, 
+                '', 
+                result.marketing_desc, 
+                result.location
+            );
+        } else if (result.status === 'pending') {
             showStatusModal(
                 'review', 
-                'تم استلام الطلب', 
-                'عقارك الآن قيد المراجعة اليدوية من قبل فريقنا لضمان الجودة.',
-                'سيتم إرسال إشعار لك فور الموافقة على النشر.'
+                result.title, 
+                result.message, 
+                'تم تحويل طلبك للمراجعة اليدوية للتأكد من بعض التفاصيل.'
             );
-        } else { 
-            throw new Error(data.message); 
+        } else {
+            // حالة الرفض (Rejected) أو الخطأ
+            showStatusModal(
+                'error', 
+                result.title || 'عذراً، مرفوض', 
+                result.message || 'الإعلان لا يطابق سياسات النشر.'
+            );
         }
+
     } catch (error) {
-        if(msg) { msg.innerHTML = `<span style="color:#ff4444"><i class="fas fa-exclamation-circle"></i> ${error.message}</span>`; }
+        showStatusModal('error', 'خطأ في الاتصال', 'تعذر الوصول للسيرفر، يرجى التحقق من الإنترنت.');
     } finally {
         btn.innerHTML = originalText; btn.disabled = false;
     }
 });
-
 function toggleFields() {
     const cat = document.getElementById('property-category').value;
     const levelGroup = document.getElementById('level-group');
