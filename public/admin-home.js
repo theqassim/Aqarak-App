@@ -43,3 +43,53 @@ async function fetchAdminCounts() {
         console.error('Error fetching admin counts:', error);
     }
 }
+// --- Payment & Points Logic ---
+
+// دالة لتغيير النص واللون عند الضغط على الزر
+function togglePaymentStatus() {
+    const toggle = document.getElementById('payment-toggle');
+    const statusText = document.getElementById('payment-status-text');
+    
+    if (toggle.checked) {
+        statusText.textContent = "مدفوع (شغال)";
+        statusText.className = "status-active";
+    } else {
+        statusText.textContent = "مجاني (موقف)";
+        statusText.className = "status-inactive";
+    }
+}
+
+// دالة حفظ الإعدادات (هنا هنربط بالـ API لاحقاً)
+async function savePaymentSettings() {
+    const isPaid = document.getElementById('payment-toggle').checked;
+    const price = document.getElementById('point-price').value;
+    const btn = document.querySelector('#payment-settings-box .btn-neon-auth');
+
+    // تأثير بسيط عشان تعرف إنه بيحفظ
+    const originalText = btn.textContent;
+    btn.textContent = "جاري الحفظ...";
+    btn.style.opacity = "0.7";
+
+    try {
+        // TODO: هنا هنحط كود إرسال البيانات للسيرفر (Backend)
+        console.log(`Settings Saved: Paid=${isPaid}, Price=${price}`);
+
+        // محاكاة انتظار السيرفر
+        await new Promise(r => setTimeout(r, 1000));
+
+        alert('✅ تم حفظ إعدادات الدفع بنجاح!');
+
+    } catch (error) {
+        console.error(error);
+        alert('❌ حدث خطأ أثناء الحفظ');
+    } finally {
+        btn.textContent = originalText;
+        btn.style.opacity = "1";
+    }
+}
+
+// تشغيل الدالة مرة عند فتح الصفحة عشان تظبط الحالة الافتراضية
+document.addEventListener('DOMContentLoaded', () => {
+    // (لاحقاً هنجيب الحالة الحقيقية من الداتا بيز هنا)
+    togglePaymentStatus(); 
+});

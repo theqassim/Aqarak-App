@@ -200,6 +200,80 @@
             .logo-text { display: none; } /* إخفاء النص لتوفير مساحة */
             .logo { height: 40px; }
         }
+        /* --- 🛠️ ستايلات كارت التحكم في الدفع --- */
+.payment-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    text-align: right; /* عشان النصوص تكون عربي مظبوطة */
+    margin-bottom: 15px;
+}
+
+.control-group {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.control-label { font-size: 0.9rem; color: #ccc; }
+
+/* شكل زرار التبديل (Switch) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+/* لما يكون شغال */
+input:checked + .slider { background-color: var(--neon-primary); }
+input:checked + .slider:before { transform: translateX(26px); }
+
+/* حقل سعر النقطة */
+.price-input {
+    background: #000;
+    border: 1px solid #555;
+    color: var(--neon-gold);
+    padding: 5px 10px;
+    border-radius: 5px;
+    width: 80px;
+    text-align: center;
+    font-weight: bold;
+    outline: none;
+}
+.price-input:focus { border-color: var(--neon-gold); }
+
+/* نص الحالة (مفعل/متوقف) */
+#payment-status-text {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 10px;
+}
+.status-active { color: var(--neon-primary); }
+.status-inactive { color: var(--neon-danger); }
     </style>
 </head>
 <body class="internal-page">
@@ -263,6 +337,31 @@
                 <p>البحث وتعديل العقارات المنشورة بالكود.</p>
                 <a href="admin-edit-property" class="btn-neon-auth">بحث وتعديل</a>
             </div>
+
+            <div class="dashboard-card" id="payment-settings-box" style="--card-color: #ff9f43;">
+    <i class="fas fa-coins icon-large"></i>
+    <h2 class="card-title">إعدادات الدفع</h2>
+    
+    <div class="payment-controls">
+        <div class="control-group">
+            <label class="control-label">نظام الدفع:</label>
+            <div style="display:flex; align-items:center;">
+                <span id="payment-status-text" class="status-inactive">مجاني</span>
+                <label class="switch">
+                    <input type="checkbox" id="payment-toggle" onchange="togglePaymentStatus()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">سعر النقطة (ج.م):</label>
+            <input type="number" id="point-price" class="price-input" step="0.1" value="1.0">
+        </div>
+    </div>
+
+    <button onclick="savePaymentSettings()" class="btn-neon-auth">حفظ التعديلات</button>
+</div>
 
         </div>
     </main>
