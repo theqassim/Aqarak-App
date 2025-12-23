@@ -649,6 +649,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع
 // تعديل API التحقق (Real-time Ban Check)
 // تعديل API التحقق (يعالج مشكلة خروج الأدمن)
+// ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع (Real-time Check)
 app.get('/api/auth/me', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
@@ -656,7 +657,7 @@ app.get('/api/auth/me', async (req, res) => {
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // 🟢 استثناء للأدمن (عشان هو مش موجود في جدول المستخدمين)
+        // 🟢 استثناء للأدمن
         if (decoded.role === 'admin' || decoded.id === 0) {
              return res.json({ 
                  isAuthenticated: true, 
@@ -667,8 +668,8 @@ app.get('/api/auth/me', async (req, res) => {
              });
         }
 
-        // 🔥 فحص المستخدمين العاديين من الداتابيز (عشان البان)
-        const userRes = await pgQuery('SELECT role, phone, username, name FROM users WHERE id = $1', [decoded.id]);
+        // 🔥 التعديل هنا: لازم نطلب عمود is_banned صراحةً
+        const userRes = await pgQuery('SELECT role, phone, username, name, is_banned FROM users WHERE id = $1', [decoded.id]);
         
         if (userRes.rows.length === 0) {
             return res.json({ isAuthenticated: false, role: 'guest' });
@@ -676,26 +677,20 @@ app.get('/api/auth/me', async (req, res) => {
 
         const user = userRes.rows[0];
 
-        // لو واخد بان، نطرده
-        if (user.role === 'banned') {
-            return res.json({ isAuthenticated: true, role: 'banned', forceLogout: true });
+        // ⛔ لو المستخدم واخد بان (is_banned = true)
+        if (user.is_banned) {
+            return res.status(403).json({ 
+                isAuthenticated: false, // نعتبره غير مسجل دخول
+                banned: true, // علامة مميزة لملف الجافاسكريبت ban-check.js
+                username: user.username,
+                phone: user.phone
+            });
         }
 
         res.json({ isAuthenticated: true, role: user.role, phone: user.phone, username: user.username, name: user.name }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });
-app.put('/api/user/change-password', async (req, res) => {
-    const { phone, currentPassword, newPassword } = req.body;
-    try {
-        const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
-        if (!r.rows[0] || !(await bcrypt.compare(currentPassword, r.rows[0].password))) return res.status(401).json({ success: false, message: 'كلمة المرور الحالية خطأ' });
-        const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
-        await pgQuery(`UPDATE users SET password = $1 WHERE id = $2`, [hash, r.rows[0].id]);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false, message: 'خطأ سيرفر' }); }
-});
-
 app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json({ success: true }); });
 
 // ==========================================================
