@@ -809,148 +809,76 @@ window.showStatusModal = (type, title, subtitle, note = '') => {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 // ============================================================
-// 💎 Premium 3D Feature Modal (تصميم زجاجي فخم)
+// 💎 Premium Feature Modal (الجزء الناقص: منطق باقات التميز)
 // ============================================================
 function injectFeatureModal() {
     const old = document.getElementById('feature-modal-overlay');
     if (old) old.remove();
 
-    // 1. حقن الـ CSS الخاص بالمودال والأنيميشن
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .glass-modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 10001;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(8px); /* تعتيم الخلفية */
-            perspective: 1000px; /* للـ 3D */
-        }
-        
-        .glass-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 215, 0, 0.05);
-            border-radius: 25px;
-            padding: 40px 30px;
-            width: 90%; max-width: 420px;
-            text-align: center;
-            position: relative;
-            transform-style: preserve-3d;
-            animation: cardFloat 6s ease-in-out infinite;
-        }
-
-        /* تاج 3D بيتحرك */
-        .crown-3d-container {
-            font-size: 4rem;
-            color: #FFD700;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-            animation: crownRotate 5s infinite linear;
-            display: inline-block;
-            transform-style: preserve-3d;
-        }
-
-        /* خيارات الباقات */
-        .plan-radio-label {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #444;
-            padding: 15px; border-radius: 12px;
-            margin-bottom: 12px; cursor: pointer;
-            transition: 0.3s; position: relative; overflow: hidden;
-        }
-        .plan-radio-label:hover { border-color: #FFD700; background: rgba(255, 215, 0, 0.05); transform: translateX(-5px); }
-        
-        /* لما يختار باقة */
-        .plan-radio-input:checked + .plan-radio-label {
-            border-color: #FFD700;
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-        }
-
-        .plan-radio-input { display: none; } /* إخفاء الراديو الأصلي */
-
-        /* زر التأكيد الذهبي */
-        .btn-gold-3d {
-            background: linear-gradient(45deg, #FFD700, #FDB931);
-            color: #000; border: none; padding: 15px; width: 100%;
-            border-radius: 50px; font-weight: bold; font-size: 1.1rem;
-            cursor: pointer; margin-top: 25px;
-            box-shadow: 0 5px 15px rgba(253, 185, 49, 0.4);
-            transition: 0.3s; position: relative;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-gold-3d:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 25px rgba(253, 185, 49, 0.6); }
-
-        @keyframes crownRotate {
-            0% { transform: rotateY(0deg); }
-            25% { transform: rotateY(20deg); }
-            50% { transform: rotateY(0deg); }
-            75% { transform: rotateY(-20deg); }
-            100% { transform: rotateY(0deg); }
-        }
-        @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    `;
-    document.head.appendChild(style);
-
-    // 2. HTML المودال
     const html = `
-        <div id="feature-modal-overlay" class="glass-modal-overlay">
+        <div id="feature-modal-overlay" class="glass-modal-overlay" style="z-index: 10001;">
             <div class="glass-card">
                 <span class="close-modal" onclick="document.getElementById('feature-modal-overlay').style.display='none'" style="position:absolute; top:15px; right:20px; color:#aaa; font-size:1.5rem; cursor:pointer;">&times;</span>
-                
-                <div class="crown-3d-container">
-                    <i class="fas fa-crown"></i>
-                </div>
-                
+                <div class="crown-3d-container"><i class="fas fa-crown"></i></div>
                 <h2 style="color: white; margin-bottom: 10px; font-weight:800; letter-spacing:1px;">باقات التميز</h2>
-                <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 25px; line-height:1.6;">
-                    ميز عقارك ليظهر في المقدمة ويحقق 5 أضعاف المشاهدات. 🚀
-                </p>
-
+                <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 25px; line-height:1.6;">ميز عقارك ليظهر في المقدمة ويحقق 5 أضعاف المشاهدات. 🚀</p>
                 <div style="text-align: right;">
                     <input type="radio" name="feature_plan" id="plan1" value="1" class="plan-radio-input" checked>
                     <label for="plan1" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-calendar-alt" style="color:#FFD700;"></i>
-                            <div>
-                                <strong style="display:block; color:white;">أسبوعين (14 يوم)</strong>
-                                <span style="font-size:0.8rem; color:#aaa;">بداية قوية لبيع أسرع</span>
-                            </div>
-                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-calendar-alt" style="color:#FFD700;"></i><div><strong style="display:block; color:white;">أسبوعين (14 يوم)</strong><span style="font-size:0.8rem; color:#aaa;">بداية قوية لبيع أسرع</span></div></div>
                         <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">20 نقطة</span>
                     </label>
-
                     <input type="radio" name="feature_plan" id="plan2" value="2" class="plan-radio-input">
                     <label for="plan2" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-calendar-check" style="color:#FFD700;"></i>
-                            <div>
-                                <strong style="display:block; color:white;">شهر كامل (30 يوم)</strong>
-                                <span style="font-size:0.8rem; color:#aaa;">الأكثر طلباً ومبيعاً</span>
-                            </div>
-                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-calendar-check" style="color:#FFD700;"></i><div><strong style="display:block; color:white;">شهر كامل (30 يوم)</strong><span style="font-size:0.8rem; color:#aaa;">الأكثر طلباً ومبيعاً</span></div></div>
                         <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">30 نقطة</span>
                     </label>
-
                     <input type="radio" name="feature_plan" id="plan3" value="3" class="plan-radio-input">
                     <label for="plan3" class="plan-radio-label">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <i class="fas fa-fire" style="color:#ff4444;"></i>
-                            <div>
-                                <strong style="display:block; color:white;">6 أسابيع (عرض خاص)</strong>
-                                <span style="font-size:0.8rem; color:#aaa;">أقصى ظهور وضمان وصول</span>
-                            </div>
-                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-fire" style="color:#ff4444;"></i><div><strong style="display:block; color:white;">6 أسابيع (عرض خاص)</strong><span style="font-size:0.8rem; color:#aaa;">أقصى ظهور وضمان وصول</span></div></div>
                         <span style="color:#FFD700; font-weight:bold; font-size:1.1rem;">45 نقطة</span>
                     </label>
                 </div>
-
-                <button onclick="submitFeatureRequest()" class="btn-gold-3d">
-                    تفعيل التميز الآن <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
-                </button>
+                <button onclick="submitFeatureRequest()" class="btn-gold-3d">تفعيل التميز الآن <i class="fas fa-arrow-left" style="margin-right:5px;"></i></button>
             </div>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', html);
 }
+
+// تعريف الدوال لتكون متاحة للـ HTML onclick
+window.openFeatureModal = (propId) => {
+    window.currentFeaturePropId = propId;
+    const modal = document.getElementById('feature-modal-overlay');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.submitFeatureRequest = async () => {
+    const selected = document.querySelector('input[name="feature_plan"]:checked');
+    if (!selected) return alert('اختر باقة');
+    const planId = selected.value;
+    const propId = window.currentFeaturePropId;
+    const btn = document.querySelector('button[onclick="submitFeatureRequest()"]');
+    
+    if (!confirm('سيتم خصم قيمة الباقة من رصيدك فوراً. هل أنت متأكد؟')) return;
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التفعيل...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/user/feature-property', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: propId, planId: planId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('feature-modal-overlay').style.display = 'none';
+            window.showStatusModal('success', 'تم التمييز بنجاح! 🌟', data.message);
+        } else {
+            if (res.status === 402) alert('❌ ' + data.message + '\nيرجى شحن رصيدك.');
+            else alert('❌ خطأ: ' + data.message);
+        }
+    } catch (err) { console.error(err); alert('خطأ في الاتصال'); } 
+    finally { btn.innerHTML = 'تفعيل التميز الآن <i class="fas fa-arrow-left"></i>'; btn.disabled = false; }
+};
