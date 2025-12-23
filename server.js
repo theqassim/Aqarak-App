@@ -1465,4 +1465,65 @@ app.post('/api/admin/payment-settings', async (req, res) => {
         res.status(500).json({ message: 'خطأ سيرفر' });
     }
 });
+// ==========================================================
+// 💰 9. نظام المحفظة والشحن اليدوي
+// ==========================================================
+
+// 1. رابط لإنشاء عمود الرصيد في الداتابيز (شغله مرة واحدة)
+app.get('/update-db-wallet', async (req, res) => {
+    try {
+        // إضافة عمود الرصيد (الافتراضي 0)
+        await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_balance NUMERIC DEFAULT 0`);
+        
+        // إنشاء جدول سجل المعاملات (عشان نعرف مين شحن لمين وامتى)
+        await pgQuery(`CREATE TABLE IF NOT EXISTS transactions (
+            id SERIAL PRIMARY KEY,
+            user_phone TEXT,
+            amount NUMERIC,
+            type TEXT, -- 'deposit' (شحن) or 'withdraw' (خصم)
+            description TEXT,
+            date TEXT
+        )`);
+
+        res.send('✅ تم تفعيل نظام المحفظة وإنشاء جداول الرصيد بنجاح!');
+    } catch (error) {
+        res.status(500).send('❌ خطأ: ' + error.message);
+    }
+});
+
+// 2. API الشحن اليدوي (للأدمن فقط)
+app.post('/api/admin/manual-charge', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        // التأكد إنه أدمن
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+
+        const { phone, amount } = req.body;
+        const points = parseFloat(amount);
+
+        // التأكد إن الرقم موجود
+        const userCheck = await pgQuery("SELECT id, name FROM users WHERE phone = $1", [phone]);
+        if (userCheck.rows.length === 0) return res.status(404).json({ message: 'رقم الهاتف غير مسجل' });
+
+        const userName = userCheck.rows[0].name;
+
+        // 1. تزويد الرصيد
+        await pgQuery("UPDATE users SET wallet_balance = wallet_balance + $1 WHERE phone = $2", [points, phone]);
+
+        // 2. تسجيل العملية في التاريخ (Log)
+        await pgQuery("INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'deposit', 'شحن يدوي من الأدمن', $3)", 
+            [phone, points, new Date().toISOString()]);
+
+        // 3. إرسال رسالة واتساب للمستخدم (اختياري - لو الواتساب شغال)
+        // const msg = `🎉 مبروك يا ${userName}!\nتم شحن رصيدك بـ ${points} نقطة بنجاح.\nاستمتع بخدمات عقارك!`;
+        // await sendWhatsAppMessage(phone, msg);
+
+        res.json({ success: true, message: `✅ تم شحن ${points} نقطة للمستخدم: ${userName}` });
+
+    } catch (error) {
+        console.error("Manual Charge Error:", error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

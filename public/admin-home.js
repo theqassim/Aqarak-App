@@ -123,3 +123,48 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAdminCounts(); // دالتك القديمة
     fetchPaymentSettings(); // الدالة الجديدة
 });
+
+// --- Manual Charge Logic ---
+async function manualCharge() {
+    const phone = document.getElementById('charge-phone').value.trim();
+    const amount = document.getElementById('charge-amount').value;
+    const btn = document.querySelector('button[onclick="manualCharge()"]');
+
+    if (!phone || !amount) {
+        alert('⚠️ يرجى كتابة الرقم وعدد النقاط');
+        return;
+    }
+
+    if (!confirm(`هل أنت متأكد من شحن ${amount} نقطة للرقم ${phone}؟`)) return;
+
+    // تأثير التحميل
+    const originalText = btn.textContent;
+    btn.textContent = "جاري الشحن...";
+    btn.style.opacity = "0.7";
+
+    try {
+        const response = await fetch('/api/admin/manual-charge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, amount })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert(result.message);
+            // تفريغ الخانات
+            document.getElementById('charge-phone').value = '';
+            document.getElementById('charge-amount').value = '';
+        } else {
+            alert('❌ خطأ: ' + (result.message || 'فشلت العملية'));
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert('❌ خطأ في الاتصال');
+    } finally {
+        btn.textContent = originalText;
+        btn.style.opacity = "1";
+    }
+}
