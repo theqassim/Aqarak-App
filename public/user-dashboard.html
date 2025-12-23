@@ -4,11 +4,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>عقارك - لوحة التحكم</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+<script type="application/ld+json">
+     {
+
+  "@context": "https://schema.org",
+
+  "@type": "RealEstateAgent",
+
+  "name": "منصة عقارك - Aqarak",
+
+  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+
+  "url": "https://aqarakeg.com",
+
+  "logo": "https://aqarakeg.com/logo.jpg",
+
+  "image": "https://aqarakeg.com/logo.jpg",
+
+  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+
+  "address": {
+
+    "@type": "PostalAddress",
+
+    "addressLocality": "Cairo",
+
+    "addressCountry": "EG"
+
+  },
+
+  "priceRange": "$",
+
+  "contactPoint": {
+
+    "@type": "ContactPoint",
+
+    "telephone": "+201008102237",
+
+    "contactType": "customer service",
+
+    "areaServed": "EG",
+
+    "availableLanguage": ["Arabic"]
+
+  },
+
+  "sameAs": [
+
+    "https://www.facebook.com/share/1ADgNDLXc6/",
+
+    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
+
+    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+
+  ]
+
+}
+    </script>
     <style>
         /* --- 🛠️ 1. Reset & Global Styles --- */
         * {
@@ -368,48 +424,7 @@
     </div>
 
     <script src="user-dashboard.js"></script>
-    <script>
-     document.addEventListener('DOMContentLoaded', () => {
-    
-    // إعادة تحميل الصفحة عند العودة للخلف (لمنع ظهور صفحات الكاش للمستخدم المسجل خروجه)
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            window.location.reload();
-        }
-    });
-
-    const logoutButtons = document.querySelectorAll('.logout-btn');
-    
-    logoutButtons.forEach(button => {
-        button.addEventListener('click', async (e) => {
-            e.preventDefault();
-            
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                try {
-                    // 1. 🟢 خطوة مهمة: طلب للسيرفر لمسح كوكيز الجلسة
-                    await fetch('/api/logout', { method: 'POST' });
-
-                    // 2. مسح البيانات المحلية
-                    localStorage.removeItem('userEmail');
-                    localStorage.removeItem('userRole');
-                    localStorage.removeItem('userPhone');
-                    localStorage.removeItem('username');
-                    localStorage.clear();
-                    
-                    // 3. التوجيه للصفحة الرئيسية
-                    window.location.href = 'index'; // أو 'login' حسب رغبتك
-                    
-                } catch (error) {
-                    console.error('Logout failed:', error);
-                    // في حالة حدوث خطأ، نمسح المحلي ونخرج برضو
-                    localStorage.clear();
-                    window.location.href = 'index';
-                }
-            }
-        });
-    });
-});
-    </script>
+    <script src="logout.js"></script>
     <script src="dash.js"></script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
