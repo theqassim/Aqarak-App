@@ -1,15 +1,14 @@
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // 🔥 1. فحص صلاحية الأدمن (من الباك اند مباشرة)
-    await checkAdminRoleFromBackend();
+    // 🔥 1. تحميل بيانات المستخدم (رصيد + صلاحيات)
+    await loadUserData();
 
-    // 2. تعريف العناصر
+    // 2. تعريف العناصر وتشغيل باقي الصفحة (زي ما هو)
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
     const favoritesContainer = document.getElementById('favorites-listings');
     const modal = document.getElementById("passwordModal");
 
-    // 3. تشغيل زر عرض المفضلة
     if (favoritesBtn) {
         favoritesBtn.addEventListener('click', () => {
             if (favoritesArea) {
@@ -20,10 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. تشغيل مودال تسجيل الخروج الفخم
     setupLogoutModal();
 
-    // 5. تشغيل مودال تغيير كلمة المرور
     const openModalBtn = document.getElementById('open-password-modal');
     if(openModalBtn) {
         openModalBtn.addEventListener('click', () => {
@@ -34,23 +31,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // الدوال الداخلية (Functions)
+    // الدوال المحدثة
     // ----------------------------------------------------
 
-    // أ. التحقق من الأدمن
-    async function checkAdminRoleFromBackend() {
+    // أ. جلب بيانات المستخدم (الرصيد والصلاحية)
+    async function loadUserData() {
         try {
             const response = await fetch('/api/auth/me', { headers: { 'Cache-Control': 'no-cache' } });
             if (!response.ok) return;
+            
             const data = await response.json();
+            
+            // 1. عرض الرصيد لو موجود
+            if (data.isAuthenticated && data.balance !== undefined) {
+                const balanceEl = document.getElementById('user-balance-display');
+                const numberEl = document.getElementById('balance-number');
+                if (balanceEl && numberEl) {
+                    balanceEl.style.display = 'flex'; // إظهار العنصر
+                    balanceEl.style.alignItems = 'center';
+                    balanceEl.style.gap = '5px';
+                    numberEl.textContent = data.balance; // كتابة الرقم
+                }
+            }
+
+            // 2. التحقق لو أدمن (لإظهار كارت الأدمن المخفي)
             if (data.isAuthenticated === true && data.role === 'admin') {
                 const adminCard = document.getElementById('admin-card');
                 if (adminCard) adminCard.style.display = 'block';
             }
-        } catch (e) { console.error('Security Check Failed:', e); }
-    }
 
-    // ب. جلب ورسم كروت المفضلة (التصميم الأفقي الجديد)
+        } catch (e) { console.error('Failed to load user data:', e); }
+    }
+    
+    // ... باقي الدوال (fetchFavorites, etc) تفضل زي ما هي ...
+});
     async function fetchFavorites() {
         if (!favoritesContainer) return;
         favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';

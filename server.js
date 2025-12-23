@@ -680,19 +680,21 @@ app.get('/api/auth/me', async (req, res) => {
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // 🟢 استثناء للأدمن
+        // لو أدمن
         if (decoded.role === 'admin' || decoded.id === 0) {
              return res.json({ 
                  isAuthenticated: true, 
                  role: 'admin', 
                  phone: decoded.phone, 
                  username: 'admin', 
-                 name: 'المدير العام' 
+                 name: 'المدير العام',
+                 balance: 999999 // رصيد وهمي للأدمن
              });
         }
 
-        // 🔥 التعديل هنا: لازم نطلب عمود is_banned صراحةً
-        const userRes = await pgQuery('SELECT role, phone, username, name, is_banned FROM users WHERE id = $1', [decoded.id]);
+        // لو مستخدم عادي: نجيب رصيده الحقيقي من الداتابيز
+        // 👇 التعديل هنا: ضفنا wallet_balance في الاستعلام
+        const userRes = await pgQuery('SELECT role, phone, username, name, is_banned, wallet_balance FROM users WHERE id = $1', [decoded.id]);
         
         if (userRes.rows.length === 0) {
             return res.json({ isAuthenticated: false, role: 'guest' });
@@ -700,17 +702,24 @@ app.get('/api/auth/me', async (req, res) => {
 
         const user = userRes.rows[0];
 
-        // ⛔ لو المستخدم واخد بان (is_banned = true)
         if (user.is_banned) {
             return res.status(403).json({ 
-                isAuthenticated: false, // نعتبره غير مسجل دخول
-                banned: true, // علامة مميزة لملف الجافاسكريبت ban-check.js
+                isAuthenticated: false, 
+                banned: true, 
                 username: user.username,
                 phone: user.phone
             });
         }
 
-        res.json({ isAuthenticated: true, role: user.role, phone: user.phone, username: user.username, name: user.name }); 
+        // 👇 التعديل هنا: بنبعت balance في الرد
+        res.json({ 
+            isAuthenticated: true, 
+            role: user.role, 
+            phone: user.phone, 
+            username: user.username, 
+            name: user.name,
+            balance: parseFloat(user.wallet_balance || 0) // الرقم
+        }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
 });

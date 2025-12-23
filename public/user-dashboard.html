@@ -323,7 +323,10 @@
                     <span style="color: white; font-weight: bold; font-size: 1.2rem;">القائمة</span>
                 </a>
             </div>
-            <nav class="main-nav">
+                <nav class="main-nav" style="display: flex; align-items: center; gap: 10px;">
+    <div id="user-balance-display" style="display:none; color: var(--neon-gold); font-weight: bold; font-size: 0.95rem; border: 1px solid var(--neon-gold); padding: 5px 12px; border-radius: 50px; background: rgba(255, 215, 0, 0.1);">
+        <span id="balance-number">0</span> <i class="fas fa-coins"></i>
+    </div>
                 <a href="home" class="nav-button">الرئيسية <i class="fas fa-home"></i></a> 
                 <a href="#" class="nav-button logout-btn" onclick="logoutUser()">خروج <i class="fas fa-sign-out-alt"></i></a>
             </nav>
