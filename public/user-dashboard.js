@@ -3,12 +3,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 🔥 1. تحميل بيانات المستخدم (رصيد + صلاحيات)
     await loadUserData();
 
-    // 2. تعريف العناصر وتشغيل باقي الصفحة (زي ما هو)
+    // 2. تعريف العناصر
     const favoritesBtn = document.getElementById('show-favorites');
     const favoritesArea = document.getElementById('favorites-area');
     const favoritesContainer = document.getElementById('favorites-listings');
     const modal = document.getElementById("passwordModal");
 
+    // 3. تشغيل زر عرض المفضلة
     if (favoritesBtn) {
         favoritesBtn.addEventListener('click', () => {
             if (favoritesArea) {
@@ -19,22 +20,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // 4. تشغيل مودال تسجيل الخروج
     setupLogoutModal();
 
+    // 5. تشغيل مودال تغيير كلمة المرور
     const openModalBtn = document.getElementById('open-password-modal');
     if(openModalBtn) {
         openModalBtn.addEventListener('click', () => {
             if(modal) modal.style.display = "block";
             const userPhone = localStorage.getItem('userPhone');
-            checkAuthAndFillPhone(userPhone);
+            if (typeof checkAuthAndFillPhone === 'function') {
+                checkAuthAndFillPhone(userPhone);
+            }
         });
     }
 
     // ----------------------------------------------------
-    // الدوال المحدثة
+    // الدوال الداخلية (Functions) - كلها داخل النطاق الآن
     // ----------------------------------------------------
 
-    // أ. جلب بيانات المستخدم (الرصيد والصلاحية)
+    // أ. جلب بيانات المستخدم
     async function loadUserData() {
         try {
             const response = await fetch('/api/auth/me', { headers: { 'Cache-Control': 'no-cache' } });
@@ -42,19 +47,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const data = await response.json();
             
-            // 1. عرض الرصيد لو موجود
+            // 1. عرض الرصيد
             if (data.isAuthenticated && data.balance !== undefined) {
                 const balanceEl = document.getElementById('user-balance-display');
                 const numberEl = document.getElementById('balance-number');
                 if (balanceEl && numberEl) {
-                    balanceEl.style.display = 'flex'; // إظهار العنصر
+                    balanceEl.style.display = 'flex';
                     balanceEl.style.alignItems = 'center';
                     balanceEl.style.gap = '5px';
-                    numberEl.textContent = data.balance; // كتابة الرقم
+                    numberEl.textContent = data.balance;
                 }
             }
 
-            // 2. التحقق لو أدمن (لإظهار كارت الأدمن المخفي)
+            // 2. كارت الأدمن
             if (data.isAuthenticated === true && data.role === 'admin') {
                 const adminCard = document.getElementById('admin-card');
                 if (adminCard) adminCard.style.display = 'block';
@@ -63,8 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { console.error('Failed to load user data:', e); }
     }
     
-    // ... باقي الدوال (fetchFavorites, etc) تفضل زي ما هي ...
-});
+    // ب. جلب المفضلة
     async function fetchFavorites() {
         if (!favoritesContainer) return;
         favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';
@@ -92,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const price = Number(property.price).toLocaleString();
                 const imgUrl = property.imageUrl || 'logo.png';
                 
-                // 🔥 الكود المحدث للكارت الأفقي
                 const cardHTML = `
                     <div class="fav-card">
                         <a href="property-details?id=${property.id}" class="fav-img-link">
@@ -101,7 +104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="fav-content">
                             <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
                             <p class="fav-price">${price} ج.م</p> 
-                            
                             <div class="fav-actions">
                                 <a href="property-details?id=${property.id}" class="btn-fav-view">
                                     <i class="fas fa-eye"></i> التفاصيل
@@ -116,7 +118,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 favoritesContainer.innerHTML += cardHTML;
             });
             
-            // ✅ استدعاء الدالة المفقودة
             addRemoveFavoriteListeners();
 
         } catch (error) { 
@@ -125,25 +126,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ج. تفعيل أزرار الحذف (الدالة التي كانت مفقودة)
+    // ج. تفعيل أزرار الحذف
     function addRemoveFavoriteListeners() {
         document.querySelectorAll('.remove-favorite-btn').forEach(button => {
             button.addEventListener('click', async (e) => {
                 if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
                 
                 const btn = e.currentTarget; 
-                const card = btn.closest('.fav-card'); // تحديد الكارت بالكامل
+                const card = btn.closest('.fav-card'); 
                 try {
                     await fetch(`/api/favorites/${btn.dataset.id}`, { method: 'DELETE' });
                     
-                    // حذف الكارت بتأثير حركي
                     if(card) {
                         card.style.transition = 'all 0.3s ease';
                         card.style.opacity = '0';
                         card.style.transform = 'translateX(20px)';
                         setTimeout(() => {
                             card.remove();
-                            // لو القائمة فضيت، نعيد التحميل لإظهار رسالة "لا يوجد عقارات"
                             if (favoritesContainer.children.length === 0) fetchFavorites();
                         }, 300);
                     }
@@ -152,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // د. إعداد مودال الخروج الفخم
+    // د. إعداد مودال الخروج
     function setupLogoutModal() {
         if (!document.getElementById('luxLogoutModal')) {
             const logoutHTML = `
@@ -208,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         modal.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
     }
 
-});
+}); // ✅ هنا الإغلاق الصحيح لنهاية الملف
 
 // ----------------------------------------------------
 // دوال عامة (Global Helpers) للأزرار المباشرة
