@@ -1,188 +1,266 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // 🔥 1. فحص صلاحية الأدمن (من الباك اند مباشرة)
-    // لا نعتمد على أي شيء مخزن محلياً لهذا الغرض الأمني
-    await checkAdminRoleFromBackend();
-
-    // 2. باقي المنطق (المفضلة، المودال)
-    const userPhone = localStorage.getItem('userPhone'); // هذا فقط لتسهيل الكتابة في المودال وليس للتحقق
-    const favoritesBtn = document.getElementById('show-favorites');
-    const favoritesArea = document.getElementById('favorites-area');
-    const favoritesContainer = document.getElementById('favorites-listings');
-    const modal = document.getElementById("passwordModal");
-
-    if (favoritesBtn) {
-        favoritesBtn.addEventListener('click', () => {
-            if (favoritesArea) {
-                favoritesArea.style.display = 'block';
-                favoritesArea.scrollIntoView({ behavior: 'smooth' });
-            }
-            fetchFavorites();
-        });
-    }
-
-    // --- دالة التحقق الأمني ---
-    async function checkAdminRoleFromBackend() {
-        try {
-            // طلب مباشر للسيرفر للتحقق من الجلسة (Session) الحالية
-            const response = await fetch('/api/auth/me', {
-                method: 'GET',
-                headers: { 
-                    'Cache-Control': 'no-cache', // منع الكاش لضمان دقة المعلومة
-                    'Pragma': 'no-cache'
-                }
-            });
-
-            if (!response.ok) return; // لو السيرفر مرجعش OK، يبقى مش أدمن
-
-            const data = await response.json();
-            
-            // الشرط: مسجل دخول + الرتبة أدمن (من قاعدة البيانات مباشرة)
-            if (data.isAuthenticated === true && data.role === 'admin') {
-                const adminCard = document.getElementById('admin-card');
-                if (adminCard) {
-                    adminCard.style.display = 'block'; // إظهار الكارت
-                }
-            }
-        } catch (e) {
-            console.error('Security Check Failed:', e);
-        }
-    }
-
-   // --- جلب المفضلة (تم التحديث) ---
-async function fetchFavorites() {
-    const favoritesContainer = document.getElementById('favorites-listings');
-    if (!favoritesContainer) return;
     
-    favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';
+    // 🔥 1. فحص صلاحية الأدمن (من الباك اند مباشرة)
+    await checkAdminRoleFromBackend();
 
-    try {
-        const response = await fetch('/api/favorites');
-        
-        if (response.status === 401) {
-            favoritesContainer.innerHTML = '<p class="empty-message error" style="text-align:center; color:red;">انتهت الجلسة.</p>';
-            return;
-        }
-        
-        const properties = await response.json();
-        favoritesContainer.innerHTML = '';
+    // 2. تعريف العناصر
+    const favoritesBtn = document.getElementById('show-favorites');
+    const favoritesArea = document.getElementById('favorites-area');
+    const favoritesContainer = document.getElementById('favorites-listings');
+    const modal = document.getElementById("passwordModal");
 
-        if (properties.length === 0) {
-            favoritesContainer.innerHTML = `
-                <div style="text-align:center; padding:40px; border:1px dashed #444; border-radius:15px; grid-column: 1 / -1;">
-                    <i class="fas fa-heart-broken" style="color: #444; font-size: 3rem; margin-bottom:15px;"></i>
-                    <p style="color: #888; font-size:1.1rem;">لا يوجد عقارات في المفضلة حالياً.</p>
-                    <a href="home" style="color:var(--neon-secondary); margin-top:10px; display:inline-block;">تصفح العقارات</a>
-                </div>`;
-            return;
-        }
+    // 3. تشغيل زر عرض المفضلة
+    if (favoritesBtn) {
+        favoritesBtn.addEventListener('click', () => {
+            if (favoritesArea) {
+                favoritesArea.style.display = 'block';
+                favoritesArea.scrollIntoView({ behavior: 'smooth' });
+            }
+            fetchFavorites();
+        });
+    }
 
-        properties.forEach(property => {
-            const price = Number(property.price).toLocaleString();
-            // استخدام صورة افتراضية لو مفيش صورة
-            const imgUrl = property.imageUrl || 'logo.png';
+    // 4. تشغيل مودال تسجيل الخروج الفخم
+    setupLogoutModal();
+
+    // 5. تشغيل مودال تغيير كلمة المرور
+    const openModalBtn = document.getElementById('open-password-modal');
+    if(openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+            if(modal) modal.style.display = "block";
+            const userPhone = localStorage.getItem('userPhone');
+            checkAuthAndFillPhone(userPhone);
+        });
+    }
+
+    // ----------------------------------------------------
+    // الدوال الداخلية (Functions)
+    // ----------------------------------------------------
+
+    // أ. التحقق من الأدمن
+    async function checkAdminRoleFromBackend() {
+        try {
+            const response = await fetch('/api/auth/me', { headers: { 'Cache-Control': 'no-cache' } });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (data.isAuthenticated === true && data.role === 'admin') {
+                const adminCard = document.getElementById('admin-card');
+                if (adminCard) adminCard.style.display = 'block';
+            }
+        } catch (e) { console.error('Security Check Failed:', e); }
+    }
+
+    // ب. جلب ورسم كروت المفضلة (التصميم الأفقي الجديد)
+    async function fetchFavorites() {
+        if (!favoritesContainer) return;
+        favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';
+
+        try {
+            const response = await fetch('/api/favorites');
+            if (response.status === 401) {
+                favoritesContainer.innerHTML = '<p class="empty-message error" style="text-align:center; color:red;">انتهت الجلسة.</p>';
+                return;
+            }
+            const properties = await response.json();
+            favoritesContainer.innerHTML = '';
+
+            if (properties.length === 0) {
+                favoritesContainer.innerHTML = `
+                    <div style="text-align:center; padding:40px; border:1px dashed #444; border-radius:15px; width:100%;">
+                        <i class="fas fa-heart-broken" style="color: #444; font-size: 3rem; margin-bottom:15px;"></i>
+                        <p style="color: #888; font-size:1.1rem;">لا يوجد عقارات في المفضلة حالياً.</p>
+                        <a href="home" style="color:var(--neon-secondary); margin-top:10px; display:inline-block; text-decoration:none;">تصفح العقارات</a>
+                    </div>`;
+                return;
+            }
+
+            properties.forEach(property => {
+                const price = Number(property.price).toLocaleString();
+                const imgUrl = property.imageUrl || 'logo.png';
+                
+                // 🔥 الكود المحدث للكارت الأفقي
+                const cardHTML = `
+                    <div class="fav-card">
+                        <a href="property-details?id=${property.id}" class="fav-img-link">
+                            <img src="${imgUrl}" alt="${property.title}" class="fav-img">
+                        </a>
+                        <div class="fav-content">
+                            <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
+                            <p class="fav-price">${price} ج.م</p> 
+                            
+                            <div class="fav-actions">
+                                <a href="property-details?id=${property.id}" class="btn-fav-view">
+                                    <i class="fas fa-eye"></i> التفاصيل
+                                </a>
+                                <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" title="حذف من المفضلة">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                favoritesContainer.innerHTML += cardHTML;
+            });
             
-            const cardHTML = `
-                <div class="fav-card">
-                    <a href="property-details?id=${property.id}" class="fav-img-link">
-                        <img src="${imgUrl}" alt="${property.title}" class="fav-img">
-                    </a>
+            // ✅ استدعاء الدالة المفقودة
+            addRemoveFavoriteListeners();
+
+        } catch (error) { 
+            favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">حدث خطأ أثناء التحميل.</p>`; 
+            console.error(error);
+        }
+    }
+
+    // ج. تفعيل أزرار الحذف (الدالة التي كانت مفقودة)
+    function addRemoveFavoriteListeners() {
+        document.querySelectorAll('.remove-favorite-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
+                
+                const btn = e.currentTarget; 
+                const card = btn.closest('.fav-card'); // تحديد الكارت بالكامل
+                try {
+                    await fetch(`/api/favorites/${btn.dataset.id}`, { method: 'DELETE' });
                     
-                    <div class="fav-content">
-                        <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
-                        <p class="fav-price">${price} ج.م</p> 
-                        
-                        <div class="fav-actions">
-                            <a href="property-details?id=${property.id}" class="btn-fav-view">
-                                <i class="fas fa-eye"></i> التفاصيل
-                            </a>
-                            <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" title="حذف من المفضلة">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                    // حذف الكارت بتأثير حركي
+                    if(card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            card.remove();
+                            // لو القائمة فضيت، نعيد التحميل لإظهار رسالة "لا يوجد عقارات"
+                            if (favoritesContainer.children.length === 0) fetchFavorites();
+                        }, 300);
+                    }
+                } catch (error) { alert('فشل الحذف'); }
+            });
+        });
+    }
+
+    // د. إعداد مودال الخروج الفخم
+    function setupLogoutModal() {
+        if (!document.getElementById('luxLogoutModal')) {
+            const logoutHTML = `
+                <style>
+                    #luxLogoutModal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
+                    .lux-logout-card { background: linear-gradient(145deg, #1a1a1a, #111); padding: 40px; border-radius: 25px; border: 1px solid #ff4444; box-shadow: 0 0 50px rgba(255, 68, 68, 0.15); text-align: center; max-width: 90%; width: 400px; animation: popIn 0.4s; }
+                    .lux-logout-icon { font-size: 3.5rem; color: #ff4444; margin-bottom: 20px; }
+                    .lux-logout-title { color: white; font-size: 1.6rem; margin-bottom: 10px; font-weight: bold; }
+                    .lux-logout-desc { color: #ccc; margin-bottom: 30px; font-size: 1.1rem; }
+                    .lux-logout-btns { display: flex; gap: 15px; justify-content: center; }
+                    .lux-btn { padding: 12px 35px; border-radius: 50px; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; font-size: 1rem; }
+                    .lux-btn-yes { background: #ff4444; color: white; }
+                    .lux-btn-yes:hover { background: #ff2222; transform: translateY(-2px); }
+                    .lux-btn-no { background: transparent; color: white; border: 1px solid #555; }
+                    .lux-btn-no:hover { background: rgba(255, 255, 255, 0.1); }
+                    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                </style>
+                <div id="luxLogoutModal">
+                    <div class="lux-logout-card">
+                        <i class="fas fa-sign-out-alt lux-logout-icon"></i>
+                        <h3 class="lux-logout-title">تسجيل الخروج</h3>
+                        <p class="lux-logout-desc">هل أنت متأكد أنك تريد المغادرة؟</p>
+                        <div class="lux-logout-btns">
+                            <button id="confirmLogoutBtn" class="lux-btn lux-btn-yes">نعم، خروج</button>
+                            <button id="cancelLogoutBtn" class="lux-btn lux-btn-no">إلغاء</button>
                         </div>
                     </div>
                 </div>
             `;
-            favoritesContainer.innerHTML += cardHTML;
-        });
+            document.body.insertAdjacentHTML('beforeend', logoutHTML);
+        }
+
+        const modal = document.getElementById('luxLogoutModal');
+        const confirmBtn = document.getElementById('confirmLogoutBtn');
+        const cancelBtn = document.getElementById('cancelLogoutBtn');
         
-        addRemoveFavoriteListeners();
+        document.querySelectorAll('.logout-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.style.display = 'flex';
+                confirmBtn.onclick = async () => {
+                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    try {
+                        await fetch('/api/logout', { method: 'POST' });
+                        localStorage.clear();
+                        window.location.href = 'index';
+                    } catch (e) { window.location.href = 'index'; }
+                };
+            });
+        });
 
-    } catch (error) { 
-        favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">حدث خطأ أثناء التحميل.</p>`; 
-        console.error(error);
+        cancelBtn.onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
     }
-}
 
-    // Modal Logic
-    const openModalBtn = document.getElementById('open-password-modal');
-    if(openModalBtn) {
-        openModalBtn.addEventListener('click', () => {
-            modal.style.display = "block";
-            checkAuthAndFillPhone(userPhone);
-        });
-    }
 });
 
-// Helper Functions
+// ----------------------------------------------------
+// دوال عامة (Global Helpers) للأزرار المباشرة
+// ----------------------------------------------------
+
 async function checkAuthAndFillPhone(storedPhone) {
-    const phoneInput = document.getElementById('reset-phone');
-    if (!phoneInput) return;
-    if (storedPhone) { phoneInput.value = storedPhone; switchPassMode('normal'); } 
-    else { switchPassMode('otp'); }
+    const phoneInput = document.getElementById('reset-phone');
+    if (!phoneInput) return;
+    if (storedPhone) { phoneInput.value = storedPhone; switchPassMode('normal'); } 
+    else { switchPassMode('otp'); }
 }
 
-function closeModal() { document.getElementById("passwordModal").style.display = "none"; }
+function closeModal() { 
+    const m = document.getElementById("passwordModal");
+    if(m) m.style.display = "none"; 
+}
 
 function switchPassMode(mode) {
-    const normalDiv = document.getElementById('normal-change-mode');
-    const otpDiv = document.getElementById('otp-change-mode');
-    document.querySelectorAll('.message').forEach(m => m.textContent = ''); 
-    if (mode === 'otp') { normalDiv.style.display='none'; otpDiv.style.display='block'; } 
-    else { otpDiv.style.display='none'; normalDiv.style.display='block'; }
+    const normalDiv = document.getElementById('normal-change-mode');
+    const otpDiv = document.getElementById('otp-change-mode');
+    document.querySelectorAll('.message').forEach(m => m.textContent = ''); 
+    if (mode === 'otp') { normalDiv.style.display='none'; otpDiv.style.display='block'; } 
+    else { otpDiv.style.display='none'; normalDiv.style.display='block'; }
 }
 
 async function changePasswordNormal() {
-    const msg = document.getElementById('pass-msg');
-    const phoneVal = document.getElementById('reset-phone').value; 
-    const currentPassword = document.getElementById('current-pass').value;
-    const newPassword = document.getElementById('new-pass-1').value;
-    if (!currentPassword || !newPassword) { msg.textContent = 'املأ الحقول'; msg.style.color = 'red'; return; }
-    msg.textContent = 'جاري التحديث...';
-    try {
-        const response = await fetch('/api/user/change-password', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneVal, currentPassword, newPassword }) });
-        const data = await response.json();
-        if (data.success) { msg.textContent = '✅ تم التغيير'; msg.style.color = '#00ff88'; setTimeout(closeModal, 1500); } 
-        else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
-    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
+    const msg = document.getElementById('pass-msg');
+    const phoneVal = document.getElementById('reset-phone').value; 
+    const currentPassword = document.getElementById('current-pass').value;
+    const newPassword = document.getElementById('new-pass-1').value;
+    if (!currentPassword || !newPassword) { msg.textContent = 'املأ الحقول'; msg.style.color = 'red'; return; }
+    msg.textContent = 'جاري التحديث...';
+    try {
+        const response = await fetch('/api/user/change-password', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneVal, currentPassword, newPassword }) });
+        const data = await response.json();
+        if (data.success) { msg.textContent = '✅ تم التغيير'; msg.style.color = '#00ff88'; setTimeout(closeModal, 1500); } 
+        else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
+    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
 }
 
 async function sendResetOTP() {
-    const phoneInput = document.getElementById('reset-phone').value;
-    const msg = document.getElementById('otp-msg');
-    if (!phoneInput) { msg.textContent = 'رقم الهاتف مطلوب'; msg.style.color = 'red'; return; }
-    msg.textContent = 'جاري الإرسال...';
-    try {
-        const response = await fetch('/api/auth/send-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneInput }) });
-        const data = await response.json();
-        if (data.success) { 
-            msg.textContent = '✅ تم الإرسال'; msg.style.color = '#00ff88'; 
-            document.getElementById('step-send-otp').style.display='none'; 
-            document.getElementById('step-verify-otp').style.display='block'; 
-        } else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
-    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
+    const phoneInput = document.getElementById('reset-phone').value;
+    const msg = document.getElementById('otp-msg');
+    if (!phoneInput) { msg.textContent = 'رقم الهاتف مطلوب'; msg.style.color = 'red'; return; }
+    msg.textContent = 'جاري الإرسال...';
+    try {
+        const response = await fetch('/api/auth/send-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneInput, type: 'reset' }) });
+        const data = await response.json();
+        if (data.success) { 
+            msg.textContent = '✅ تم الإرسال'; msg.style.color = '#00ff88'; 
+            document.getElementById('step-send-otp').style.display='none'; 
+            document.getElementById('step-verify-otp').style.display='block'; 
+        } else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
+    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
 }
 
 async function resetPasswordViaOTP() {
-    const phoneInput = document.getElementById('reset-phone').value;
-    const otp = document.getElementById('otp-code').value;
-    const newPassword = document.getElementById('new-pass-2').value;
-    const msg = document.getElementById('otp-msg');
-    if (!otp || !newPassword) { msg.textContent = 'اكمل البيانات'; return; }
-    try {
-        const response = await fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneInput, otp, newPassword }) });
-        const data = await response.json();
-        if (data.success) { msg.textContent = '🎉 تم التغيير!'; msg.style.color = '#00ff88'; setTimeout(closeModal, 1500); } 
-        else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
-    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
+    const phoneInput = document.getElementById('reset-phone').value;
+    const otp = document.getElementById('otp-code').value;
+    const newPassword = document.getElementById('new-pass-2').value;
+    const msg = document.getElementById('otp-msg');
+    if (!otp || !newPassword) { msg.textContent = 'اكمل البيانات'; return; }
+    try {
+        const response = await fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneInput, otp, newPassword }) });
+        const data = await response.json();
+        if (data.success) { msg.textContent = '🎉 تم التغيير!'; msg.style.color = '#00ff88'; setTimeout(closeModal, 1500); } 
+        else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
+    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
 }
