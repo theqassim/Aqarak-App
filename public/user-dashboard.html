@@ -309,5 +309,44 @@
     <script src="logout.js"></script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
+    <div id="charge-modal" class="modal" style="z-index: 20001;">
+    <div class="modal-content" style="border-color: var(--neon-primary); max-width: 450px;">
+        <span class="close" onclick="document.getElementById('charge-modal').style.display='none'">&times;</span>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-wallet" style="font-size: 3rem; color: var(--neon-primary); margin-bottom: 10px;"></i>
+            <h2 style="color: white;">شحن المحفظة</h2>
+            <p style="color: #aaa; font-size: 0.9rem;">اشحن رصيدك لتتمكن من تمييز عقاراتك ونشر المزيد.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="btn-card" onclick="selectPaymentMethod('card')" class="btn-neon-auth active" style="flex: 1; border-radius: 10px;">
+                <i class="far fa-credit-card"></i> بطاقة بنكية
+            </button>
+            <button id="btn-wallet" onclick="selectPaymentMethod('wallet')" class="btn-neon-auth" style="flex: 1; border-radius: 10px; border-color: #ff4444; color: #ff4444;">
+                <i class="fas fa-mobile-alt"></i> محفظة إلكترونية
+            </button>
+        </div>
+
+        <div class="input-group">
+            <label style="color: #ccc; display: block; margin-bottom: 5px;">عدد النقاط المراد شحنها</label>
+            <input type="number" id="charge-points" class="neon-input-white" placeholder="أقل عدد 10 نقاط" min="10" oninput="calculatePrice()">
+        </div>
+
+        <div id="wallet-input-container" class="input-group" style="display: none;">
+            <label style="color: #ccc; display: block; margin-bottom: 5px;">رقم المحفظة (فودافون/اتصالات..)</label>
+            <input type="tel" id="wallet-number" class="neon-input-white" placeholder="01xxxxxxxxx">
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #ccc;">إجمالي المبلغ:</span>
+            <span style="font-size: 1.4rem; font-weight: bold; color: var(--neon-gold);"><span id="price-display">0</span> ج.م</span>
+        </div>
+
+        <button onclick="startChargeProcess()" class="btn-neon-auth" style="background: var(--neon-primary); color: black; font-weight: bold; width: 100%;">
+            تأكيد وشراء النقاط <i class="fas fa-check-circle"></i>
+        </button>
+    </div>
+</div>
 </body>
 </html>
