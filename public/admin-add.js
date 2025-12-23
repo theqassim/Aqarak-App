@@ -5,18 +5,20 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleFields();
     document.getElementById('property-category').addEventListener('change', toggleFields);
 
+    // معاينة الصور
     document.getElementById('property-images').addEventListener('change', (e) => {
         const container = document.getElementById('image-preview-container');
         container.innerHTML = '';
         Array.from(e.target.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                container.innerHTML += `<img src="${ev.target.result}" style="width:70px; height:70px; border-radius:8px; border:1px solid #444; object-fit:cover;">`;
+                container.innerHTML += `<img src="${ev.target.result}" style="width:100px; height:100px; border-radius:8px; border:1px solid #444; object-fit:cover;">`;
             };
             reader.readAsDataURL(file);
         });
     });
 
+    // الإرسال
     document.getElementById('add-property-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         showModal('loading', 'جاري النشر', 'يرجى الانتظار...');
@@ -44,11 +46,11 @@ function toggleFields() {
     
     if(levelGroup && floorsGroup) {
         if (['villa', 'building', 'warehouse'].includes(cat)) {
-            level.style.display = 'none'; floorsGroup.style.display = 'block';
+            levelGroup.style.display = 'none'; floorsGroup.style.display = 'block';
         } else if (cat === 'land') {
-            level.style.display = 'none'; floorsGroup.style.display = 'none';
+            levelGroup.style.display = 'none'; floorsGroup.style.display = 'none';
         } else {
-            level.style.display = 'block'; floorsGroup.style.display = 'none';
+            levelGroup.style.display = 'block'; floorsGroup.style.display = 'none';
         }
     }
 }

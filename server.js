@@ -446,72 +446,6 @@ function expandSearchKeywords(message) {
     return [...new Set(expandedKeywords)];
 }
 
-async function searchPropertiesInDB(query) {
-    const keywords = expandSearchKeywords(query);
-    if (keywords.length === 0) return null;
-    const conditions = keywords.map((_, i) => `(title ILIKE $${i+1} OR description ILIKE $${i+1})`).join(' OR ');
-    const params = keywords.map(k => `%${k}%`);
-    try {
-        const result = await pgQuery(`SELECT id, title, price, type, rooms, bathrooms, area, description FROM properties WHERE ${conditions} LIMIT 10`, params);
-        let propertiesData = [];
-        if (result.rows.length > 0) {
-            propertiesData = result.rows.map(p => ({ id: p.id, title: p.title, price: p.price, type: p.type, rooms: p.rooms, bathrooms: p.bathrooms, area: p.area }));
-        }
-        return { count: propertiesData.length, data: JSON.stringify(propertiesData) };
-    } catch (e) { return null; }
-}
-
-async function searchPropertiesInDBGeneral() {
-    try {
-        const result = await pgQuery(`SELECT title, description FROM properties ORDER BY id DESC LIMIT 1000`);
-        if (result.rows.length === 0) return { total: 0, report: "لا توجد عقارات حالياً." };
-        let cityCounts = {};
-        let totalCount = result.rows.length;
-        let classifiedCount = 0;
-        result.rows.forEach(prop => {
-            const text = normalizeText(prop.title + " " + prop.description);
-            let matched = false;
-            for (const [gov, cities] of Object.entries(EGYPT_LOCATIONS)) {
-                for (const city of cities) {
-                    if (text.includes(normalizeText(city))) {
-                        if (!cityCounts[city]) cityCounts[city] = 0;
-                        cityCounts[city]++;
-                        matched = true;
-                        break; 
-                    }
-                }
-                if (matched) break;
-            }
-            if (!matched) {
-                for (const gov of Object.keys(EGYPT_LOCATIONS)) {
-                    if (text.includes(normalizeText(gov))) {
-                        if (!cityCounts[gov]) cityCounts[gov] = 0;
-                        cityCounts[gov]++;
-                        matched = true;
-                        break;
-                    }
-                }
-            }
-            if (matched) classifiedCount++;
-        });
-        if (totalCount > classifiedCount) cityCounts["مناطق أخرى"] = totalCount - classifiedCount;
-        const sorted = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
-        const top5 = sorted.slice(0, 5);
-        let reportParts = top5.map(([city, count]) => `${count} في ${city}`);
-        if (sorted.length > 5) reportParts.push("ومناطق أخرى");
-        return { total: totalCount, report: reportParts.join("، ") };
-    } catch (e) { return { total: 0, report: "خطأ." }; }
-}
-
-const DEFAULT_SYSTEM_INSTRUCTION = `
-أنت "مساعد عقارك" الذكي 🏠.
-تتحدث باللهجة المصرية الودودة.
-⛔ قواعد صارمة:
-1. الالتزام بالبيانات.
-2. البحث العام: اعرض أعداد فقط.
-3. البحث المخصص: اعرض كروت.
-`;
-
 // ==========================================================
 // 🧠 5. API الشات والتعليم
 // ==========================================================
@@ -590,20 +524,6 @@ app.post('/api/chat', async (req, res) => {
         const potentialKeywords = expandSearchKeywords(message);
         if (potentialKeywords.length > 0) intendedLocation = true;
 
-        if (intendedLocation) {
-            const searchResult = await searchPropertiesInDB(message);
-            if (searchResult && searchResult.count > 0) {
-                dbContext = `\n[SPECIFIC_DATA: وجدت (${searchResult.count}) عقارات: ${searchResult.data}. اشرح واعرض الكروت.]`;
-            } else { dbContext = `\n[SPECIFIC_DATA: بحثت عن المكان ولم أجد (العدد 0). اعتذر.]`; }
-        } else if (message.includes("متاح") || message.includes("عقارات") || message.includes("شقق") || message.includes("ايه") || message.includes("وريني") || message.includes("شوف") || message.includes("قاعدة") || message.includes("بيانات") || message.includes("تحديث") || message.includes("جديد")) {
-            const generalStats = await searchPropertiesInDBGeneral();
-            if (generalStats.total > 0) {
-                dbContext = `\n[GENERAL_STATS: إحصائيات المتاح: "${generalStats.report}".
-                ⚠️ **تنبيه صارم:** المستخدم يسأل بشكل عام. اعرض عليه ملخص الأعداد هذا فقط.
-                🛑 **ممنوع نهائياً** عرض أي كروت أو تفاصيل في هذا الرد.
-                اسأله عن المدينة التي يريد تفاصيلها.]`;
-            } else { dbContext = `\n[GENERAL_STATS: لا توجد عقارات حالياً. اعتذر.]`; }
-        }
 
         finalPrompt = message + dbContext;
         const chatSession = modelChat.startChat({ history: chatHistories[sessionId].history, generationConfig: { maxOutputTokens: 2000, temperature: 0.0 }, });
@@ -1117,18 +1037,6 @@ app.get('/api/admin/counts', async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
-app.get('/api/admin/users-stats', async (req, res) => {
-    const token = req.cookies.auth_token;
-    if (!token) return res.status(401).json({ message: 'غير مصرح' });
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
-        const sql = `SELECT name, phone, username, lifetime_posts as property_count FROM users WHERE lifetime_posts > 0 ORDER BY lifetime_posts DESC`;
-        const result = await pgQuery(sql);
-        res.json(result.rows);
-    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
-});
-
 app.get('/api/public/profile/:username', async (req, res) => { const { username } = req.params; try { const userRes = await pgQuery('SELECT name, phone FROM users WHERE username = $1', [username.toLowerCase()]); if (userRes.rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود' }); const user = userRes.rows[0]; const propsRes = await pgQuery(`SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`, [username.toLowerCase(), user.phone]); res.json({ name: user.name, properties: propsRes.rows }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
 
 // ==========================================================
@@ -1369,15 +1277,28 @@ app.post('/api/submit-complaint', async (req, res) => {
 // 5. استبدال API إحصائيات المستخدمين القديم ليجلب حالة الحظر
 app.get('/api/admin/users-stats', async (req, res) => {
     const token = req.cookies.auth_token;
+   if (req.user.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+    
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
-        
-        // جلب حالة الحظر is_banned
-        const sql = `SELECT name, phone, username, lifetime_posts as property_count, is_banned FROM users WHERE lifetime_posts >= 0 ORDER BY lifetime_posts DESC`;
+        // 🔥 جلب حالة الحظر is_banned بشكل صريح
+        const sql = `
+            SELECT id, name, phone, username, lifetime_posts as property_count, is_banned 
+            FROM users 
+            ORDER BY id DESC
+        `;
         const result = await pgQuery(sql);
-        res.json(result.rows);
-    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
+        
+        // تحويل القيمة لضمان وصولها كـ boolean للواجهة
+        const users = result.rows.map(u => ({
+            ...u,
+            is_banned: (u.is_banned === true || u.is_banned === 1)
+        }));
+
+        res.json(users);
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ message: 'خطأ سيرفر' }); 
+    }
 });
 
 // 2. تحديث API جلب الشكاوي (ليطبع الخطأ في الترمينال)

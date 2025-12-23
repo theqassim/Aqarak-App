@@ -16,17 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
         showModal('loading', 'جاري البحث...', '');
         
         try {
-            // الخطوة الأولى: نجيب الـ ID من الكود
-            const resCode = await fetch(`/api/property-by-code/${code}`);
-            if(!resCode.ok) throw new Error('لم يتم العثور على العقار.');
-            const basicData = await resCode.json();
-
-            // الخطوة الثانية: نجيب البيانات الكاملة بالـ ID
-            const resFull = await fetch(`/api/property/${basicData.id}`);
-            if(!resFull.ok) throw new Error('فشل جلب تفاصيل العقار.');
-            const fullData = await resFull.json();
-
-            loadData(fullData); // ملء البيانات
+            const res = await fetch(`/api/property-by-code/${code}`);
+            if(!res.ok) throw new Error('لم يتم العثور على العقار.');
+            
+            const data = await res.json();
+            loadData(data); // هنا الملء الفعلي
             
             closeModal();
             document.getElementById('property-edit-area').style.display = 'block';
@@ -74,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 🔥 الدالة السحرية
+// 🔥 دالة getVal لجلب البيانات بذكاء
 function getVal(data, keys) {
     for (let key of keys) {
         if (data[key] !== undefined && data[key] !== null && data[key] !== 'null') {
@@ -98,14 +92,14 @@ function loadData(data) {
     document.getElementById('edit-bathrooms').value = getVal(data, ['bathrooms', 'propertyBathrooms']);
     document.getElementById('edit-description').value = getVal(data, ['description', 'propertyDescription']);
 
-    // القوائم (أسماء الأعمدة الدقيقة من السيرفر)
+    // القوائم (تم التأكد من server.js)
     document.getElementById('edit-category').value = getVal(data, ['category', 'propertyCategory']) || 'apartment';
     document.getElementById('edit-type').value = getVal(data, ['type', 'propertyType']) || 'بيع';
     
-    // 🔥 هنا التغيير المهم
-    document.getElementById('edit-finishing').value = getVal(data, ['finishing_type', 'finishing', 'propertyFinishing']);
+    // ⚠️ أسماء الأعمدة الدقيقة في الداتابيز
+    document.getElementById('edit-finishing').value = getVal(data, ['finishing_type', 'finishing']);
     document.getElementById('edit-level').value = getVal(data, ['level', 'propertyLevel']);
-    document.getElementById('edit-floors').value = getVal(data, ['floors_count', 'floors', 'propertyFloors']);
+    document.getElementById('edit-floors').value = getVal(data, ['floors_count', 'floors']);
 
     toggleEditFields(); 
 

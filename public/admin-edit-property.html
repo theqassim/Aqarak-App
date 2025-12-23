@@ -30,12 +30,12 @@
             padding-top: 0 !important;
         }
 
-        /* --- الهيدر (أبيض + صف واحد) --- */
+        /* --- الهيدر (رفيع - صف واحد) --- */
         .main-header {
             position: relative;
             background: #000;
-            border-bottom: 2px solid var(--neon-white); /* خط أبيض */
-            padding: 10px 15px;
+            border-bottom: 2px solid var(--neon-white);
+            padding: 8px 15px; /* رفيع */
             box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
         }
 
@@ -45,14 +45,14 @@
             align-items: center; 
             max-width: 1200px; 
             margin: 0 auto; 
-            flex-wrap: nowrap; /* 🔥 يمنع النزول لسطر جديد */
+            flex-wrap: nowrap; /* 🔥 الزرار جنب الصورة غصب */
         }
         
         .logo-container { 
             display: flex; align-items: center; gap: 10px; 
-            flex-shrink: 0; /* يحافظ على حجم اللوجو */
+            flex-shrink: 0; 
         }
-        .logo { height: 45px; width: 45px; border-radius: 50%; border: 2px solid var(--neon-white); object-fit: cover; }
+        .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-white); object-fit: cover; }
 
         .nav-button {
             text-decoration: none; color: white; 
@@ -61,7 +61,7 @@
             font-size: 0.85rem; transition: 0.3s;
             display: flex; align-items: center; gap: 5px;
             background: rgba(255, 255, 255, 0.1);
-            white-space: nowrap; /* 🔥 يمنع انقسام النص */
+            white-space: nowrap; /* 🔥 منع التفاف النص */
         }
         .nav-button:hover { background: var(--neon-white); color: black; }
 
@@ -112,23 +112,44 @@
         .map-wrapper { height: 350px; border-radius: 12px; border: 1px solid #444; overflow: hidden; margin-top: 10px; }
         #map { width: 100%; height: 100%; filter: grayscale(100%); }
 
-        .existing-image-wrapper { position: relative; display: inline-block; margin: 8px; }
+        /* حاوية الصور (الوضع العادي) */
+        #existing-images-container {
+            display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; background: #000; border-radius: 12px; border: 1px solid #333;
+        }
+
+        .existing-image-wrapper { position: relative; display: inline-block; margin: 0; }
         .preview-image { width: 80px; height: 80px; border-radius: 10px; border: 1px solid #555; object-fit: cover; }
         .remove-img-btn { 
             position: absolute; top: -8px; right: -8px; 
             background: var(--neon-red); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; 
-            cursor: pointer; display:flex; align-items:center; justify-content:center;
+            cursor: pointer; display:flex; align-items:center; justify-content:center; z-index: 2;
         }
 
         /* Modal */
         .custom-modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .custom-modal-content { background: #1a1a1a; padding: 40px; border-radius: 25px; text-align: center; max-width: 450px; width: 90%; border: 1px solid var(--neon-white); }
         
-        /* 🔥 تعديلات الموبايل للزرار والصورة */
+        /* 🔥🔥🔥 تعديلات الموبايل الحاسمة 🔥🔥🔥 */
         @media(max-width:480px){ 
+            /* 1. إصلاح الصور: 2 في كل صف */
+            #existing-images-container {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important; /* عمودين */
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+            .existing-image-wrapper { width: 100% !important; }
+            .preview-image {
+                width: 100% !important;
+                height: 100px !important; 
+            }
+
+            /* 2. إصلاح الهيدر */
+            .logo-text { display: none; } 
+            .nav-button { padding: 5px 12px; font-size: 0.8rem; }
+            
             .form-grid { grid-template-columns: 1fr; } 
-            .nav-button { padding: 6px 10px; font-size: 0.8rem; }
-            .logo-text { display: none; } /* إخفاء النص */
+            .edit-container, .search-box { padding: 25px 20px; }
         }
     </style>
 </head>
@@ -171,7 +192,13 @@
                     <div class="form-grid">
                         <div><label>الفئة</label>
                             <select id="edit-category" name="category" class="neon-input-white" onchange="toggleEditFields()">
-                                <option value="apartment">شقة</option><option value="villa">فيلا</option><option value="office">مكتب</option><option value="store">محل</option><option value="building">عمارة</option><option value="land">أرض</option><option value="warehouse">مخزن</option>
+                                <option value="apartment">شقة / دوبلكس</option>
+                                <option value="villa">فيلا / شاليه</option>
+                                <option value="office">مكتب / عيادة</option>
+                                <option value="store">محل تجاري</option>
+                                <option value="building">عمارة بالكامل</option>
+                                <option value="land">أرض</option>
+                                <option value="warehouse">مخزن / مصنع</option>
                             </select>
                         </div>
                         <div><label>النوع</label><select id="edit-type" name="type" class="neon-input-white"><option value="بيع">بيع</option><option value="إيجار">إيجار</option></select></div>
@@ -203,7 +230,7 @@
 
                     <div style="margin-bottom:25px;">
                         <label>الصور الحالية</label>
-                        <div id="existing-images-container" style="display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#000; border-radius:12px; border:1px solid #333;"></div>
+                        <div id="existing-images-container"></div>
                         <input type="hidden" name="existingImages" id="existing-images-data">
                         <label class="btn-white" style="display:block; text-align:center; margin-top:10px; border-style:dashed; color:#888; border-color:#555; font-size:0.9rem; padding:10px;">
                             <i class="fas fa-camera"></i> إضافة صور جديدة
