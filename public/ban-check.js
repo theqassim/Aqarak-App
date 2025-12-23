@@ -1,66 +1,110 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // التحقق من حالة المستخدم
         const response = await fetch('/api/auth/me');
         
-        // لو السيرفر رد بـ 403 معناه محظور (حسب كود السيرفر اللي عملناه)
+        // في السيرفر اللي عملناه، المستخدم المحظور بيرجع كود 403
         if (response.status === 403) {
             const data = await response.json();
 
             if (data.banned) {
-                // 1. تجهيز رسالة الواتساب
-                const message = `مرحباً فريق عقارك،\nحسابي (@${data.username}) تم حظره وأريد الاستفسار.\nرقم الهاتف: ${data.phone}`;
+                // 1. تجهيز رابط الواتساب والرسالة
+                const message = `مرحباً دعم عقارك،\nحسابي (@${data.username}) تم حظره وأريد الاستفسار.\nرقم الهاتف: ${data.phone}`;
                 const waUrl = `https://wa.me/201008102237?text=${encodeURIComponent(message)}`;
 
-                // 2. استبدال محتوى الصفحة بالكامل بشاشة الحظر (فكرتك)
+                // 2. استبدال محتوى الصفحة بتصميم المودال العصري
                 document.body.innerHTML = `
                     <style>
-                        body { margin: 0; padding: 0; background-color: #0f0f0f; font-family: 'Cairo', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-                        .ban-container {
-                            text-align: center; background: #1a1a1a; padding: 50px; border-radius: 20px;
-                            border: 2px solid #ff4444; box-shadow: 0 0 50px rgba(255, 68, 68, 0.2);
-                            max-width: 90%; width: 500px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        /* إعدادات الصفحة للحظر */
+                        body { 
+                            margin: 0; padding: 0; 
+                            background-color: #050505; 
+                            background-image: radial-gradient(circle at 50% 0%, #1a0000 0%, #050505 70%);
+                            font-family: 'Cairo', sans-serif; 
+                            height: 100vh; 
+                            overflow: hidden; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
                         }
-                        .ban-icon { font-size: 5rem; color: #ff4444; margin-bottom: 20px; display: block; }
-                        h1 { color: white; font-size: 2rem; margin-bottom: 15px; }
-                        p { color: #ccc; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; }
-                        
+
+                        /* كارت الحظر */
+                        .ban-card {
+                            background: rgba(20, 20, 20, 0.95);
+                            padding: 50px 40px;
+                            border-radius: 25px;
+                            border: 1px solid #333;
+                            border-top: 4px solid #ff4444;
+                            box-shadow: 0 0 50px rgba(255, 68, 68, 0.15);
+                            text-align: center;
+                            max-width: 90%;
+                            width: 480px;
+                            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+                            position: relative;
+                        }
+
+                        /* الأيقونة */
+                        .icon-wrapper {
+                            width: 100px; height: 100px;
+                            background: rgba(255, 68, 68, 0.1);
+                            border-radius: 50%;
+                            display: flex; align-items: center; justify-content: center;
+                            margin: 0 auto 25px;
+                            box-shadow: 0 0 30px rgba(255, 68, 68, 0.2);
+                        }
+                        .ban-icon { font-size: 3.5rem; color: #ff4444; }
+
+                        /* النصوص */
+                        h1 { color: white; font-size: 2rem; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
+                        p { color: #aaa; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; }
+
+                        /* الأزرار */
                         .btn-wa {
                             display: flex; align-items: center; justify-content: center; gap: 10px;
-                            background: #25d366; color: white; text-decoration: none; padding: 15px 30px;
-                            border-radius: 50px; font-weight: bold; font-size: 1.1rem; transition: 0.3s;
-                            margin-bottom: 15px; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+                            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+                            color: white; text-decoration: none; padding: 15px;
+                            border-radius: 50px; font-weight: bold; font-size: 1.1rem;
+                            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+                            transition: transform 0.3s;
+                            margin-bottom: 15px;
                         }
-                        .btn-wa:hover { background: #128c7e; transform: translateY(-2px); }
-                        
-                        .btn-logout {
-                            background: transparent; color: #ff4444; border: 1px solid #ff4444;
-                            padding: 10px 25px; border-radius: 50px; cursor: pointer; font-size: 0.9rem;
-                            transition: 0.3s; width: 100%;
-                        }
-                        .btn-logout:hover { background: rgba(255, 68, 68, 0.1); }
+                        .btn-wa:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.4); }
 
+                        .btn-logout {
+                            background: transparent; color: #888; border: 1px solid #444;
+                            padding: 12px; border-radius: 50px; cursor: pointer; font-size: 1rem;
+                            transition: 0.3s; width: 100%; font-family: inherit;
+                        }
+                        .btn-logout:hover { border-color: #ff4444; color: #ff4444; background: rgba(255, 68, 68, 0.05); }
+
+                        /* الأنيميشن */
                         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                     </style>
 
-                    <div class="ban-container">
-                        <i class="fas fa-ban ban-icon"></i> <h1>⛔ حسابك محظور</h1>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+                    
+                    <div class="ban-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-user-slash ban-icon"></i>
+                        </div>
+                        <h1>حسابك محظور</h1>
                         <p>
-                            عذراً، تم إيقاف حسابك لمخالفة سياسات الموقع.
-                            <br>إذا كان لديك استفسار، تواصل مع الدعم الفني.
+                            عذراً، تم إيقاف حسابك مؤقتاً لمخالفة سياسات الموقع.
+                            <br>إذا كنت تعتقد أن هناك خطأ، تواصل معنا.
                         </p>
                         
-                        <a href="${waUrl}" target="_blank" class="btn-wa">
-                            <i class="fab fa-whatsapp"></i> تواصل مع الدعم عبر واتساب
+                        <a href="${waUrl}" class="btn-wa">
+                            <i class="fab fa-whatsapp"></i> تواصل مع الدعم الفني
                         </a>
 
-                        <button id="force-logout-btn" class="btn-logout">
-                            تسجيل خروج
+                        <button id="forceLogoutBtn" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                         </button>
                     </div>
                 `;
 
                 // 3. تشغيل زر الخروج
-                document.getElementById('force-logout-btn').addEventListener('click', async () => {
+                document.getElementById('forceLogoutBtn').addEventListener('click', async () => {
                     await fetch('/api/logout', { method: 'POST' });
                     window.location.href = '/'; 
                 });
