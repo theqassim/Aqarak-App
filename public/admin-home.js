@@ -43,14 +43,16 @@ async function fetchAdminCounts() {
         console.error('Error fetching admin counts:', error);
     }
 }
-// --- Payment & Points Logic ---
+// --- Payment & Points Logic (Linked to Server) ---
 
-// دالة لتغيير النص واللون عند الضغط على الزر
-function togglePaymentStatus() {
+// دالة تحديث الشكل بناءً على الحالة
+function updatePaymentUI(isActive) {
     const toggle = document.getElementById('payment-toggle');
     const statusText = document.getElementById('payment-status-text');
     
-    if (toggle.checked) {
+    toggle.checked = isActive; // ضبط الزرار
+    
+    if (isActive) {
         statusText.textContent = "مدفوع (شغال)";
         statusText.className = "status-active";
     } else {
@@ -59,37 +61,65 @@ function togglePaymentStatus() {
     }
 }
 
-// دالة حفظ الإعدادات (هنا هنربط بالـ API لاحقاً)
+// دالة التغيير اليدوي (لما تدوس كليك)
+function togglePaymentStatus() {
+    const toggle = document.getElementById('payment-toggle');
+    updatePaymentUI(toggle.checked);
+}
+
+// 1. جلب الإعدادات من السيرفر عند فتح الصفحة
+async function fetchPaymentSettings() {
+    try {
+        const response = await fetch('/api/admin/payment-settings');
+        if (response.ok) {
+            const data = await response.json();
+            
+            // تحديث الزرار والسعر بالبيانات اللي جاية من الداتابيز
+            document.getElementById('point-price').value = data.point_price || 1;
+            updatePaymentUI(data.is_active);
+        }
+    } catch (error) {
+        console.error('فشل جلب إعدادات الدفع:', error);
+    }
+}
+
+// 2. حفظ الإعدادات في السيرفر
 async function savePaymentSettings() {
-    const isPaid = document.getElementById('payment-toggle').checked;
+    const isActive = document.getElementById('payment-toggle').checked;
     const price = document.getElementById('point-price').value;
     const btn = document.querySelector('#payment-settings-box .btn-neon-auth');
 
-    // تأثير بسيط عشان تعرف إنه بيحفظ
+    // تأثير التحميل
     const originalText = btn.textContent;
     btn.textContent = "جاري الحفظ...";
     btn.style.opacity = "0.7";
 
     try {
-        // TODO: هنا هنحط كود إرسال البيانات للسيرفر (Backend)
-        console.log(`Settings Saved: Paid=${isPaid}, Price=${price}`);
+        const response = await fetch('/api/admin/payment-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: isActive, point_price: price })
+        });
 
-        // محاكاة انتظار السيرفر
-        await new Promise(r => setTimeout(r, 1000));
+        const result = await response.json();
 
-        alert('✅ تم حفظ إعدادات الدفع بنجاح!');
+        if (response.ok && result.success) {
+            alert(result.message);
+        } else {
+            alert('❌ حدث خطأ: ' + (result.message || 'غير معروف'));
+        }
 
     } catch (error) {
         console.error(error);
-        alert('❌ حدث خطأ أثناء الحفظ');
+        alert('❌ حدث خطأ في الاتصال بالسيرفر');
     } finally {
         btn.textContent = originalText;
         btn.style.opacity = "1";
     }
 }
 
-// تشغيل الدالة مرة عند فتح الصفحة عشان تظبط الحالة الافتراضية
+// تشغيل الدالة عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    // (لاحقاً هنجيب الحالة الحقيقية من الداتا بيز هنا)
-    togglePaymentStatus(); 
+    fetchAdminCounts(); // دالتك القديمة
+    fetchPaymentSettings(); // الدالة الجديدة
 });

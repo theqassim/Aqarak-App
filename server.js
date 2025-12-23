@@ -1407,4 +1407,62 @@ app.get('/update-db-location', async (req, res) => {
         res.status(500).send('❌ حدث خطأ: ' + error.message);
     }
 });
+
+// ==========================================================
+// 💰 8. نظام إعدادات الدفع والنقاط (جديد)
+// ==========================================================
+
+// جلب إعدادات الدفع الحالية
+app.get('/api/admin/payment-settings', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        // التأكد إنه أدمن
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+
+        // جلب الإعدادات من الداتابيز
+        const result = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
+        
+        if (result.rows.length > 0) {
+            res.json(JSON.parse(result.rows[0].setting_value));
+        } else {
+            // الإعدادات الافتراضية لو لسه مفيش حاجة متسجلة (مجاني)
+            res.json({ is_active: false, point_price: 1.0 });
+        }
+    } catch (error) {
+        console.error("Get Payment Settings Error:", error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
+
+// حفظ تعديلات الدفع
+app.post('/api/admin/payment-settings', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+
+        const { is_active, point_price } = req.body;
+
+        // تجهيز البيانات كـ JSON
+        const configValue = JSON.stringify({
+            is_active: is_active, // true or false
+            point_price: parseFloat(point_price) // تأكيد إنه رقم
+        });
+
+        // حفظ أو تحديث في الداتابيز
+        await pgQuery(`
+            INSERT INTO bot_settings (setting_key, setting_value) 
+            VALUES ('payment_config', $1) 
+            ON CONFLICT (setting_key) 
+            DO UPDATE SET setting_value = $1
+        `, [configValue]);
+
+        res.json({ success: true, message: 'تم حفظ إعدادات الدفع بنجاح ✅' });
+
+    } catch (error) {
+        console.error("Save Payment Settings Error:", error);
+        res.status(500).json({ message: 'خطأ سيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
