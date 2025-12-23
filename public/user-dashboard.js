@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. تشغيل مودال تسجيل الخروج
+    // 4. تشغيل مودال تسجيل الخروج الفخم
     setupLogoutModal();
 
     // 5. تشغيل مودال تغيير كلمة المرور
@@ -36,10 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------
-    // الدوال الداخلية (Functions) - كلها داخل النطاق الآن
+    // الدوال الداخلية (Functions)
     // ----------------------------------------------------
 
-    // أ. جلب بيانات المستخدم
     // أ. جلب بيانات المستخدم
     async function loadUserData() {
         try {
@@ -81,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (e) { console.error('Failed to load user data:', e); }
     }
+    
     // ب. جلب المفضلة
     async function fetchFavorites() {
         if (!favoritesContainer) return;
