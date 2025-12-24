@@ -686,12 +686,12 @@ app.get('/api/auth/me', async (req, res) => {
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
 
-        // 1. جلب حالة الدفع (عشان الفرونت إند يعرف يخفي النقط ولا لأ)
+        // ✅ تصحيح: قراءة المفتاح الصحيح (payment_active) بدلاً من (payment_config)
         let isPaymentActive = false;
-        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
+        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
         if (settingsRes.rows.length > 0) {
-            const config = JSON.parse(settingsRes.rows[0].setting_value);
-            isPaymentActive = config.is_active;
+            // القيمة مخزنة كنص 'true' أو 'false'
+            isPaymentActive = settingsRes.rows[0].setting_value === 'true';
         }
         
         // لو أدمن
@@ -727,7 +727,7 @@ app.get('/api/auth/me', async (req, res) => {
             username: user.username, 
             name: user.name,
             balance: parseFloat(user.wallet_balance || 0),
-            isPaymentActive: isPaymentActive // ✅ بنبعت الحالة هنا
+            isPaymentActive: isPaymentActive // ✅ إرسال الحالة الصحيحة
         }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
