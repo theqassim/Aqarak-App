@@ -825,7 +825,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         let isPublic = (finalStatus === 'approved');
         
         // استخدام وصف AI لو مقبول
-        const finalDescription = isPublic ? (aiReview.marketing_description || propertyDescription) : propertyDescription;
+        // استخدام وصف المستخدم دائماً (تم إلغاء اقتراح AI)
+        const finalDescription = propertyDescription;
 
         await pgQuery(`
             INSERT INTO seller_submissions 
