@@ -869,6 +869,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 level: propertyLevel,
                 sellerPhone: sellerPhone
             }, code);
+            // ✅ 2. الإضافة الجديدة: إشعار لكل المستخدمين (Web Push)
+            notifyAllUsers(`عقار جديد: ${propertyTitle}`, `تم نشر عقار ${propertyType} بسعر ${englishPrice}`, `/property-details?id=${pubRes.rows[0].id}`);
         }
 
         await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
@@ -881,10 +883,14 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             success: true, 
             status: finalStatus, 
             title: isPublic ? "تم النشر وتم خصم 1 نقطة 🎉" : "طلبك قيد المراجعة (تم خصم نقطة)",
-            message: aiReview.user_message,
-            marketing_desc: isPublic ? aiReview.marketing_description : null,
+           message: isPublic 
+                ? "تم نشر عقارك بنجاح ويظهر الآن لجميع المستخدمين." 
+                : "تم استلام طلبك وسيقوم فريق المراجعة بفحصه في أقرب وقت.",
+            
+            // وممكن كمان تلغي وصف التسويق خالص من الرد عشان ميظهرش في أي حتة بالغلط
+            marketing_desc: null, 
             location: aiReview.detected_location
-        }); 
+        });
 
     } catch (err) { 
         console.error("Route Error:", err); 
