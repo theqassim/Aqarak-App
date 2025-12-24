@@ -431,6 +431,58 @@
 @keyframes crownRotate { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
 @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes goldShine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+/* --- 🛠️ إصلاح أسهم معرض الصور (Gallery Arrows Fix) --- */
+    .main-image-container {
+        position: relative !important; /* ضروري عشان الأسهم تفضل جوه الصندوق */
+        overflow: hidden; /* يمنع خروج الصورة عن الحواف */
+    }
+
+    .gallery-nav-btn {
+        position: absolute !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 10 !important; /* يرفع الأسهم فوق الصورة وأي بادجات */
+        width: 45px !important;   /* تكبير الزر قليلاً */
+        height: 45px !important;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6) !important; /* خلفية داكنة واضحة */
+        color: white !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        display: flex !important;       /* فليكس بوكس لتوسيط السهم نفسه */
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .gallery-nav-btn:hover {
+        background: var(--neon-primary) !important;
+        color: black !important;
+        border-color: var(--neon-primary) !important;
+    }
+
+    /* تحديد مكان السهم اليمين واليسار بدقة */
+    .prev-btn {
+        left: 15px !important;   /* تثبيت في اليسار */
+        right: auto !important;  /* إلغاء أي قيمة لليمين */
+    }
+
+    .next-btn {
+        right: 15px !important;  /* تثبيت في اليمين */
+        left: auto !important;   /* إلغاء أي قيمة للييسار */
+    }
+
+    /* في الموبايل نصغرهم شوية عشان مايغطوش الصورة */
+    @media (max-width: 600px) {
+        .gallery-nav-btn {
+            width: 35px !important;
+            height: 35px !important;
+            font-size: 0.9rem !important;
+        }
+        .prev-btn { left: 10px !important; }
+        .next-btn { right: 10px !important; }
+    }
 </style>
 </head>
 <body class="internal-page">
