@@ -758,37 +758,39 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     const publisherUsername = realUser.username; 
 
-    // --- 💰 بداية منطق الدفع والخصم ---
+    // ✅ 1. تعريف المتغير هنا ليكون مرئياً في نهاية الدالة
+    let isPaidSystem = false; 
+
+    // --- 💰 منطق الدفع والخصم ---
     try {
-        // 1. جلب إعدادات الدفع
+        // جلب إعدادات الدفع
         const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
-        let isPaidSystem = false;
         
         if (settingsRes.rows.length > 0) {
             const config = JSON.parse(settingsRes.rows[0].setting_value);
-            isPaidSystem = config.is_active; // هل النظام مدفوع؟
+            isPaidSystem = config.is_active; // تحديث حالة النظام
         }
 
+        // لو النظام مدفوع، نخصم الرصيد
         if (isPaidSystem) {
-            const COST_PER_AD = 1; // تكلفة الإعلان الواحد (نقطة واحدة)
+            const COST_PER_AD = 1; // تكلفة الإعلان الواحد
 
-            // 2. التحقق من رصيد المستخدم
+            // التحقق من رصيد المستخدم
             const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [sellerPhone]);
             const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
 
             if (currentBalance < COST_PER_AD) {
-                // ⛔ الرصيد غير كافي
                 return res.status(402).json({ 
                     success: false, 
                     message: 'عفواً، رصيد نقاطك لا يكفي لنشر العقار. يرجى شحن رصيدك أولاً.',
-                    needCharge: true // علامة عشان نفتحله بوب-أب الشحن في الفرونت إند
+                    needCharge: true 
                 });
             }
 
-            // 3. خصم الرصيد
+            // خصم الرصيد
             await pgQuery("UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2", [COST_PER_AD, sellerPhone]);
             
-            // 4. تسجيل العملية في السجل
+            // تسجيل العملية
             await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', 'خصم تكلفة نشر عقار', $3)`, 
                 [sellerPhone, COST_PER_AD, new Date().toISOString()]);
                 
@@ -798,9 +800,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         console.error("Payment Error:", paymentError);
         return res.status(500).json({ success: false, message: 'حدث خطأ في نظام الدفع' });
     }
-    // --- 💰 نهاية منطق الدفع والخصم ---
+    // --- نهاية منطق الدفع ---
 
-    // ... باقي كود النشر العادي (زي ما هو) ...
     const { 
         propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
         propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing,
@@ -824,8 +825,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         let finalStatus = aiReview.status; 
         let isPublic = (finalStatus === 'approved');
         
-        // استخدام وصف AI لو مقبول
-        // استخدام وصف المستخدم دائماً (تم إلغاء اقتراح AI)
+        // ✅ 2. استخدام وصف المستخدم دائماً (إلغاء اقتراح AI)
         const finalDescription = propertyDescription;
 
         await pgQuery(`
@@ -861,6 +861,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 nearby_services || '', latVal, lngVal
             ]);
 
+            // إشعار المطابقة (واتساب)
             checkAndNotifyMatches({
                 id: pubRes.rows[0].id,
                 title: propertyTitle,
@@ -869,28 +870,34 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 level: propertyLevel,
                 sellerPhone: sellerPhone
             }, code);
-            // ✅ 2. الإضافة الجديدة: إشعار لكل المستخدمين (Web Push)
+
+            // ✅ 3. إرسال إشعار لكل المستخدمين (Web Push)
             notifyAllUsers(`عقار جديد: ${propertyTitle}`, `تم نشر عقار ${propertyType} بسعر ${englishPrice}`, `/property-details?id=${pubRes.rows[0].id}`);
         }
 
         await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
             { name: "👤 المالك", value: sellerName },
             { name: "🤖 تقرير AI", value: aiReview.reason },
-            { name: "💰 حالة الدفع", value: "تم خصم نقطة واحدة" }
+            { name: "💰 حالة الدفع", value: isPaidSystem ? "تم خصم نقطة واحدة" : "مجاني" }
         ], isPublic ? 3066993 : 16776960, files[0]?.path);
 
+        // ✅ 4. الرد النهائي الديناميكي (حسب حالة الدفع + إلغاء رسالة AI)
         res.status(200).json({ 
             success: true, 
             status: finalStatus, 
-            title: isPublic ? "تم النشر وتم خصم 1 نقطة 🎉" : "طلبك قيد المراجعة (تم خصم نقطة)",
-           message: isPublic 
+            // العنوان يتغير حسب المجاني/المدفوع وحسب القبول/المراجعة
+            title: isPublic 
+                ? (isPaidSystem ? "تم النشر وتم خصم 1 نقطة 🎉" : "تم النشر بنجاح 🎉") 
+                : (isPaidSystem ? "طلبك قيد المراجعة (تم خصم نقطة)" : "طلبك قيد المراجعة"),
+            
+            // الرسالة ثابتة من السيستم بدلاً من كلام AI
+            message: isPublic 
                 ? "تم نشر عقارك بنجاح ويظهر الآن لجميع المستخدمين." 
                 : "تم استلام طلبك وسيقوم فريق المراجعة بفحصه في أقرب وقت.",
             
-            // وممكن كمان تلغي وصف التسويق خالص من الرد عشان ميظهرش في أي حتة بالغلط
             marketing_desc: null, 
             location: aiReview.detected_location
-        });
+        }); 
 
     } catch (err) { 
         console.error("Route Error:", err); 
