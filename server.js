@@ -761,14 +761,14 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     // ✅ 1. تعريف المتغير هنا ليكون مرئياً في نهاية الدالة
     let isPaidSystem = false; 
 
-    // --- 💰 منطق الدفع والخصم ---
+    // --- 💰 منطق الدفع والخصم (المصحح) ---
     try {
-        // جلب إعدادات الدفع
-        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
+        // ✅ قراءة المفتاح الصحيح المتوافق مع لوحة الأدمن
+        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
         
         if (settingsRes.rows.length > 0) {
-            const config = JSON.parse(settingsRes.rows[0].setting_value);
-            isPaidSystem = config.is_active; // تحديث حالة النظام
+            // القيمة تخزن كنص 'true' أو 'false'
+            isPaidSystem = settingsRes.rows[0].setting_value === 'true';
         }
 
         // لو النظام مدفوع، نخصم الرصيد
@@ -881,7 +881,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             { name: "💰 حالة الدفع", value: isPaidSystem ? "تم خصم نقطة واحدة" : "مجاني" }
         ], isPublic ? 3066993 : 16776960, files[0]?.path);
 
-        // ✅ 4. الرد النهائي الديناميكي (حسب حالة الدفع + إلغاء رسالة AI)
+        // ✅ 4. الرد النهائي الديناميكي (إصلاح رسالة الخصم)
         res.status(200).json({ 
             success: true, 
             status: finalStatus, 
