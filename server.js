@@ -2350,4 +2350,45 @@ app.delete('/api/user/notification/:id', async (req, res) => {
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
+
+// ============================================================
+// 🔐 تغيير كلمة المرور يدوياً (من داخل الحساب)
+// ============================================================
+app.post('/api/user/change-password-manual', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ success: false, message: 'غير مصرح، يرجى تسجيل الدخول' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { currentPass, newPass } = req.body;
+
+        if (!currentPass || !newPass) {
+            return res.status(400).json({ success: false, message: 'جميع الحقول مطلوبة' });
+        }
+
+        // 1. جلب بيانات المستخدم للتأكد من الباسورد القديم
+        const userRes = await pgQuery('SELECT id, password FROM users WHERE id = $1', [decoded.id]);
+        if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'مستخدم غير موجود' });
+
+        const user = userRes.rows[0];
+
+        // 2. التحقق من صحة كلمة المرور الحالية
+        const isMatch = await bcrypt.compare(currentPass, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة ❌' });
+        }
+
+        // 3. تشفير كلمة المرور الجديدة
+        const hashedPassword = await bcrypt.hash(newPass, SALT_ROUNDS);
+
+        // 4. التحديث في قاعدة البيانات
+        await pgQuery('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, decoded.id]);
+
+        res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح ✅' });
+
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        res.status(500).json({ success: false, message: 'حدث خطأ في السيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
