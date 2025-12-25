@@ -108,7 +108,7 @@ const storageProfiles = new CloudinaryStorage({
         format: async () => 'webp', // تحويل تلقائي لـ webp للأداء
         public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
         transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
-    }
+    } 
 });
 
 // تعريف المتغير لاستخدامه في الراوت
