@@ -20,7 +20,6 @@
     /* --- 3. القائمة المنسدلة وأيقونة البروفايل --- */
     .profile-menu-container { position: relative; margin-right: 15px; display: flex; align-items: center; }
     
-    /* الستايل الجديد للأيقونة/الصورة */
     .dashboard-profile-toggle {
         width: 45px; height: 45px; 
         border-radius: 50%; 
@@ -37,7 +36,6 @@
     .dashboard-profile-toggle:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
     .dashboard-profile-toggle img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* عداد الإشعارات الأحمر */
     .menu-badge {
         position: absolute; top: -2px; right: -2px;
         background: #ff4444; color: white;
@@ -47,10 +45,9 @@
         display: flex; align-items: center; justify-content: center;
         border: 2px solid #1a1a1a;
         z-index: 2;
-        display: none; /* مخفي افتراضياً */
+        display: none; 
     }
 
-    /* القائمة المنسدلة */
     .profile-dropdown { 
         display: none; position: absolute; top: 60px; left: 10px; width: 280px; 
         background: rgba(20, 20, 20, 0.98); backdrop-filter: blur(15px); 
@@ -66,21 +63,22 @@
     .dropdown-points { background: rgba(255, 215, 0, 0.1); color: var(--neon-gold); padding: 5px 10px; border-radius: 50px; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
     .dropdown-points:hover { border-color: var(--neon-gold); background: rgba(255, 215, 0, 0.2); transform: scale(1.05); }
     
-    .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 12px 10px; color: white; text-decoration: none; border-radius: 10px; transition: 0.3s; font-size: 0.95rem; cursor: pointer; }
-    .dropdown-item:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
-    .dropdown-item i { width: 25px; text-align: center; }
+    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px 10px; color: white; text-decoration: none; border-radius: 10px; transition: 0.3s; font-size: 0.95rem; cursor: pointer; margin-bottom: 5px;}
+    .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
+    .dropdown-link i { width: 25px; text-align: center; }
     .logout-item:hover { background: rgba(255, 68, 68, 0.1); color: #ff4444; }
 
-    /* --- 🔔 قسم الإشعارات داخل القائمة --- */
+    /* --- 🔔 قسم الإشعارات --- */
     .menu-notifications-section { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px; }
     .notif-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .notif-label { color: #aaa; font-size: 0.9rem; }
     .notif-count { color: #ff4444; font-size: 0.8rem; font-weight: bold; }
     .menu-notif-list { max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: #ddd; scrollbar-width: thin; }
-    .menu-notif-item { padding: 8px; border-radius: 6px; margin-bottom: 5px; background: rgba(255,255,255,0.03); transition: 0.2s; }
-    .menu-notif-item.unread { background: rgba(0, 255, 136, 0.08); border-right: 2px solid var(--neon-primary); }
     
-    /* --- 🎨 ويدجت الترحيب --- */
+    .menu-notif-item { padding: 8px; border-radius: 6px; margin-bottom: 5px; background: rgba(255,255,255,0.03); transition: 0.2s; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+    .menu-notif-item.unread { background: rgba(0, 255, 136, 0.08); border-right: 2px solid var(--neon-primary); }
+    .notif-delete-btn { position: absolute; top: 5px; left: 5px; color: #ff4444; background: none; border: none; cursor: pointer; }
+
     .smart-greeting-widget { display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.03); padding: 5px 15px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); transition: 0.3s; margin-left: 10px; }
     .smart-greeting-widget:hover { border-color: var(--neon-primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.1); }
     .greeting-icon-box { color: var(--neon-gold); font-size: 1.2rem; animation: rotateSlow 10s linear infinite; }
@@ -91,10 +89,8 @@
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes rotateSlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* علامة التوثيق الذهبية */
     .verified-badge { color: #fff; background-color: #FFD700; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 9px; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); border: 1px solid #fff; }
 
-    /* Mobile */
     @media (max-width: 600px) {
         .greeting-sub { display: none; }
         .smart-greeting-widget { padding: 5px 10px; gap: 8px; }
@@ -102,7 +98,6 @@
         .profile-dropdown { width: 90vw; left: 50%; transform: translateX(-50%); top: 75px; }
     }
 
-    /* باقي الستايلات (Grid, Cards, Modal) */
     .main-content { max-width: 1200px; margin: 0 auto; padding: 20px 15px; }
     .page-title { text-align: center; margin-bottom: 30px; font-size: 1.8rem; color: var(--neon-primary); text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
     .admin-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
@@ -114,6 +109,7 @@
     .card-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; min-height: 40px; }
     .btn-neon-auth { display: inline-block; width: 100%; padding: 10px 0; border-radius: 50px; border: 1px solid var(--card-color, var(--neon-primary)); color: var(--card-color, var(--neon-primary)); background: transparent; font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.3s; }
     .btn-neon-auth:hover { background: var(--card-color, var(--neon-primary)); color: black; }
+    
     .modal { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); backdrop-filter: blur(5px); }
     .modal-content { background-color: #1c2630; margin: 15% auto; padding: 25px; border: 1px solid var(--neon-secondary); width: 90%; max-width: 400px; border-radius: 15px; text-align: center; color: white; position: relative; }
     .close { position: absolute; left: 15px; top: 10px; font-size: 28px; color: #777; cursor: pointer; }
@@ -176,15 +172,12 @@
                         </div>
                     </div>
 
-                    <a href="home" class="dropdown-item">
-                        <i class="fas fa-home"></i> الرئيسية
-                    </a>
-                    
-                    <a href="edit-profile" class="dropdown-item"> 
-                        <i class="fas fa-user-edit"></i> تعديل حسابي
-                    </a>
+                    <a href="home" class="dropdown-link"><i class="fas fa-home"></i> الرئيسية</a>
+                    <a href="edit-profile" class="dropdown-link"><i class="fas fa-user-edit"></i> تعديل حسابي</a>
+                    <a href="all-properties.html?type=buy" class="dropdown-link" style="color:var(--neon-primary);"><i class="fas fa-key"></i> عقارات للبيع</a>
+                    <a href="all-properties.html?type=rent" class="dropdown-link" style="color:var(--neon-secondary);"><i class="fas fa-door-open"></i> عقارات للإيجار</a>
 
-                    <div class="dropdown-item logout-item" onclick="openLogoutModal()">
+                    <div class="dropdown-link logout-item" onclick="openLogoutModal()" style="color:#ff4444; cursor:pointer;">
                         <i class="fas fa-sign-out-alt"></i> تسجيل خروج
                     </div>
                 </div>
@@ -306,11 +299,7 @@
     </div>
 
     <script>
-        // ✅ دوال واجهة المستخدم (تحديث الأيقونة والإشعارات)
         document.addEventListener('DOMContentLoaded', async () => {
-            // ... (باقي كود التحميل الموجود في user-dashboard.js سيتم استدعاؤه) ...
-            
-            // تعديل بسيط لدالة loadUserData لتدعم الهيكل الجديد
             const originalLoadUserData = window.loadUserData;
             window.loadUserData = async function() {
                 try {
@@ -318,12 +307,10 @@
                     const data = await response.json();
                     
                     if(data.isAuthenticated) {
-                        // 1. تحديث الاسم والعلامة الذهبية
                         const verifiedBadge = data.is_verified ? '<i class="verified-badge fas fa-check"></i>' : '';
                         document.getElementById('dropdown-username').innerHTML = `${data.name} ${verifiedBadge}`;
                         document.getElementById('welcome-title').innerHTML = `لوحة التحكم الخاصة بـ ${data.name} ${verifiedBadge}`;
 
-                        // 2. تحديث أيقونة البروفايل (صورة أو هامبرجر)
                         const profileBtn = document.getElementById('dashboard-profile-btn');
                         if(data.profile_picture && !data.profile_picture.includes('logo.png')) {
                             profileBtn.innerHTML = `<img src="${data.profile_picture}" alt="Profile"> <span id="menu-notif-badge" class="menu-badge">0</span>`;
@@ -331,7 +318,6 @@
                             profileBtn.innerHTML = `<i class="fas fa-bars"></i> <span id="menu-notif-badge" class="menu-badge">0</span>`;
                         }
 
-                        // 3. باقي التحديثات (الرصيد، الأدمن)
                         if(data.isPaymentActive) {
                             document.getElementById('dropdown-balance').innerHTML = `${data.balance} <i class="fas fa-coins"></i>`;
                         } else {
@@ -342,16 +328,13 @@
                 } catch(e) { console.error(e); }
             };
 
-            // تشغيل الدوال
             await window.loadUserData();
             checkNotifications();
-            // تحديث الويدجت
             const now = new Date();
             const dateEl = document.getElementById('current-date');
             if(dateEl) dateEl.textContent = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' });
         });
 
-        // ✅ دالة فتح القائمة وتصفير الإشعارات
         window.toggleProfileMenu = async function() {
             const menu = document.getElementById('profile-dropdown');
             const badge = document.getElementById('menu-notif-badge');
@@ -360,7 +343,6 @@
                 menu.style.display = 'none';
             } else {
                 menu.style.display = 'block';
-                // عند الفتح: تصفير العداد
                 if (badge.style.display !== 'none') {
                     badge.style.display = 'none';
                     document.getElementById('notif-count-text').textContent = '';
@@ -369,7 +351,7 @@
             }
         };
 
-        // ✅ دالة جلب الإشعارات
+        // ✅ دالة الإشعارات مع زر الحذف (نفس منطق الرئيسية)
         async function checkNotifications() {
             try {
                 const res = await fetch('/api/user/notifications');
@@ -387,10 +369,12 @@
 
                 if (data.notifications && data.notifications.length > 0) {
                     list.innerHTML = data.notifications.map(n => `
-                        <div class="menu-notif-item ${n.is_read ? '' : 'unread'}">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:3px; padding-left:25px;">
                                 <strong style="color:white; font-size:0.85rem;">${n.title}</strong>
-                                <span style="font-size:0.65rem; color:#777;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+                                <button onclick="deleteNotification(${n.id})" class="notif-delete-btn" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                             <p style="color:#aaa; font-size:0.8rem; margin:0;">${n.message}</p>
                         </div>
@@ -399,11 +383,23 @@
             } catch (e) { console.error("Notif Error", e); }
         }
 
-        // إغلاق القائمة عند الضغط خارجها
+        window.deleteNotification = async (id) => {
+            if(!confirm('حذف هذا الإشعار؟')) return;
+            try {
+                const res = await fetch(`/api/user/notification/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    const el = document.getElementById(`notif-${id}`);
+                    if(el) el.remove();
+                    checkNotifications(); 
+                }
+            } catch(e) { alert('خطأ في الحذف'); }
+        };
+
         window.addEventListener('click', function(e) {
             const container = document.querySelector('.profile-menu-container');
             const menu = document.getElementById('profile-dropdown');
-            if (container && menu && !container.contains(e.target)) {
+            const isDelete = e.target.closest('.notif-delete-btn');
+            if (container && menu && !container.contains(e.target) && !isDelete) {
                 menu.style.display = 'none';
             }
         });

@@ -2364,4 +2364,19 @@ async function sendNotification(userId, title, message) {
         );
     } catch (e) { console.error("Send Notif Error:", e); }
 }
+// حذف إشعار محدد
+app.delete('/api/user/notification/:id', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        // التأكد أن الإشعار يخص المستخدم قبل الحذف
+        await pgQuery('DELETE FROM user_notifications WHERE id = $1 AND user_phone = $2', [req.params.id, decoded.phone]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Delete Notif Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

@@ -19,28 +19,17 @@
     body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0 !important; padding: 0 !important; font-family: 'Cairo', sans-serif; overflow-x: hidden; }
 
     /* =========================================
-       📱 1. هيدر الموبايل (يظهر فقط في الموبايل)
+       📱 1. هيدر الموبايل
        ========================================= */
     .mobile-header-custom {
-        display: none; /* مخفي افتراضياً (للديسكتوب) */
-        position: fixed; top: 0; left: 0; right: 0;
-        height: 70px;
-        background: rgba(12, 12, 12, 0.98);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        z-index: 9999;
-        padding: 0 20px;
-        align-items: center;
-        justify-content: space-between;
+        display: none; position: fixed; top: 0; left: 0; right: 0;
+        height: 70px; background: rgba(12, 12, 12, 0.98);
+        backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 9999; padding: 0 20px; align-items: center; justify-content: space-between;
         box-shadow: 0 5px 25px rgba(0,0,0,0.8);
     }
-
-    /* اللوجو */
     .mob-logo-link img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
-
-    /* الأزرار (إضافة، قائمة، دخول) */
     .center-action { position: absolute; left: 50%; transform: translateX(-50%); }
-    
     .btn-add-prop-mob { 
         width: 45px; height: 45px; border-radius: 50%; 
         background: linear-gradient(135deg, #00ff88, #00cc6a); 
@@ -49,32 +38,41 @@
         font-size: 1.2rem; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); 
         text-decoration: none; transition: 0.3s; 
     }
-
     .menu-toggle-btn { 
-        background: rgba(255, 255, 255, 0.05); 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
+        background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); 
         width: 42px; height: 42px; border-radius: 12px; 
         display: flex; align-items: center; justify-content: center; 
-        cursor: pointer; color: var(--neon-secondary); font-size: 1.3rem; 
-        position: relative;
+        cursor: pointer; color: var(--neon-secondary); font-size: 1.3rem; position: relative;
     }
-
     .guest-buttons-container { display: flex; gap: 10px; }
     .btn-guest-login { padding: 6px 12px; border: 1px solid var(--neon-primary); color: var(--neon-primary); border-radius: 20px; text-decoration: none; font-size: 0.8rem; }
     .btn-guest-signup { padding: 6px 12px; background: var(--neon-primary); color: black; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
 
     /* القائمة المنسدلة للموبايل */
     .mobile-dropdown {
-        display: none; position: fixed; top: 75px; left: 15px; width: 260px;
-        background: #1a1a1a; border: 1px solid var(--neon-primary); border-radius: 12px;
+        display: none; position: fixed; top: 75px; left: 15px; width: 280px;
+        background: #1a1a1a; border: 1px solid var(--neon-primary); border-radius: 15px;
         padding: 15px; z-index: 10000; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        max-height: 80vh; overflow-y: auto;
     }
-    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; }
+    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; transition: 0.2s; }
     .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
+    
+    /* تصميم الإشعارات داخل القائمة */
+    .menu-notif-item {
+        padding: 10px; border-radius: 8px; margin-bottom: 8px;
+        background: rgba(255,255,255,0.05); transition: 0.2s; position: relative;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .menu-notif-item.unread { background: rgba(0, 255, 136, 0.05); border-color: rgba(0, 255, 136, 0.3); }
+    .notif-delete-btn {
+        position: absolute; top: 8px; left: 8px;
+        color: #ff4444; background: none; border: none;
+        cursor: pointer; font-size: 0.9rem; padding: 5px;
+    }
+    .notif-delete-btn:hover { transform: scale(1.1); }
 
-    /* =========================================
-       🖥️ 2. هيدر الديسكتوب (يظهر في الشاشات الكبيرة)
-       ========================================= */
+    /* 🖥️ هيدر الديسكتوب */
     .main-header {
         position: sticky; top: 0; z-index: 1000;
         background: var(--glass-bg); backdrop-filter: blur(20px);
@@ -82,24 +80,22 @@
         padding: 10px 15px; display: flex; justify-content: center;
     }
     .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1250px; }
-    .logo-container { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1.1rem; }
     .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
     .main-nav { display: flex; gap: 10px; align-items: center; }
     .nav-button { color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; transition: 0.3s; }
     .nav-button:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
     .sell-btn { background: var(--neon-primary); color: black; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; }
 
-    /* 📱 Media Query (التحكم في الظهور والاختفاء) */
     @media (max-width: 768px) {
-        .main-header { display: none !important; } /* إخفاء الديسكتوب */
-        .mobile-header-custom { display: flex !important; } /* إظهار الموبايل */
-        body { padding-top: 80px; } /* مسافة عشان الهيدر الثابت */
+        .main-header { display: none !important; }
+        .mobile-header-custom { display: flex !important; }
+        body { padding-top: 80px; }
         .search-bar-container { flex-direction: column; }
         .search-button { display: none; }
         .search-bar { border-radius: 50px !important; }
     }
 
-    /* باقي الستايلات (Grid, Cards, etc.) */
+    /* الستايلات العامة */
     .search-section { padding: 30px 15px; text-align: center; max-width: 800px; margin: 0 auto; }
     .search-bar { width: 100%; padding: 15px 25px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 50px; color: white; font-size: 1rem; }
     .listings-section { max-width: 1250px; margin: 0 auto; padding: 0 15px 40px 15px; }
@@ -108,7 +104,7 @@
     
     .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.3s; }
     .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
-    .adv-card-img-box { height: 200px; position: relative; }
+    .adv-card-img-box { height: 220px; position: relative; }
     .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
     .adv-type-badge { position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: black; }
     .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
@@ -117,28 +113,42 @@
     .adv-title { color: white; margin: 0 0 10px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
     .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; transition: 0.3s; }
-    .adv-details-btn:hover { background: var(--neon-primary); color: black; }
     
-    /* ستايلات التميز والتوثيق */
+    /* 🔥 تصميم زر عرض المزيد (Load More) الجديد 🔥 */
+    .load-more-btn {
+        background: linear-gradient(45deg, #00ff88, #00cc6a);
+        color: black; 
+        font-weight: bold;
+        border: none;
+        padding: 12px 40px; 
+        border-radius: 50px; 
+        margin-top: 30px;
+        cursor: pointer; 
+        transition: all 0.3s ease; 
+        font-size: 1rem;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .load-more-btn:hover { 
+        transform: scale(1.05); 
+        box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); 
+    }
+
     .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
     .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500); color: black; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; }
     .verified-badge { background: #FFD700; color: white; border-radius: 50%; padding: 2px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; border: 1px solid white; margin-right: 5px; vertical-align: middle; }
-
-    /* زر الشكوى العائم (تصحيح مكانه) */
     .complaint-float-btn { position: fixed; bottom: 80px; left: 20px; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 50px; cursor: pointer; z-index: 9990; backdrop-filter: blur(5px); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <header class="mobile-header-custom" id="mob-header">
-        <a href="home" class="mob-logo-link">
-            <img src="logo.png" alt="عقارك">
-        </a>
+        <a href="home" class="mob-logo-link"><img src="logo.png" alt="عقارك"></a>
 
         <div id="mob-center-action" class="center-action" style="display:none;">
-            <a href="seller-dashboard" class="btn-add-prop-mob" title="أضف عقارك">
-                <i class="fas fa-plus"></i>
-            </a>
+            <a href="seller-dashboard" class="btn-add-prop-mob" title="أضف عقارك"><i class="fas fa-plus"></i></a>
         </div>
 
         <div id="mob-menu-toggle" class="menu-toggle-btn" onclick="toggleMobileMenu()" style="display:none;">
@@ -169,6 +179,9 @@
 
             <a href="user-dashboard" class="dropdown-link"><i class="fas fa-user-circle"></i> حسابي</a>
             <a href="all-properties" class="dropdown-link"><i class="fas fa-building"></i> جميع العقارات</a>
+            <a href="all-properties.html?type=buy" class="dropdown-link" style="color:var(--neon-primary);"><i class="fas fa-key"></i> عقارات للبيع</a>
+            <a href="all-properties.html?type=rent" class="dropdown-link" style="color:var(--neon-secondary);"><i class="fas fa-door-open"></i> عقارات للإيجار</a>
+            
             <a href="#" onclick="logoutUser()" class="dropdown-link" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</a>
         </div>
     </header>
@@ -187,7 +200,7 @@
     <main class="main-content">
         <section class="search-section">
             <div class="search-bar-container">
-                <input type="text" class="search-bar" placeholder="ابحث عن عقارك (الاسم، المنطقة، السعر)...">
+                <input type="text" class="search-bar neon-input-white" placeholder="ابحث عن عقارك (الاسم، السعر، الغرف)...">
                 <button class="search-button"><i class="fas fa-search"></i> ابحث</button>
             </div>
         </section>
