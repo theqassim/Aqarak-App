@@ -19,7 +19,7 @@
     body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0 !important; padding: 0 !important; font-family: 'Cairo', sans-serif; overflow-x: hidden; }
 
     /* =========================================
-       📱 1. هيدر الموبايل
+       📱 هيدر الموبايل
        ========================================= */
     .mobile-header-custom {
         display: none; position: fixed; top: 0; left: 0; right: 0;
@@ -55,22 +55,27 @@
         padding: 15px; z-index: 10000; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         max-height: 80vh; overflow-y: auto;
     }
-    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; transition: 0.2s; }
+    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; transition: 0.2s; cursor: pointer; }
     .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
     
-    /* تصميم الإشعارات داخل القائمة */
-    .menu-notif-item {
-        padding: 10px; border-radius: 8px; margin-bottom: 8px;
-        background: rgba(255,255,255,0.05); transition: 0.2s; position: relative;
-        border: 1px solid rgba(255,255,255,0.05);
+    /* 🔥 تصميم الإشعارات الجديد (مثل الداشبورد) 🔥 */
+    .notif-toggle-btn { justify-content: space-between; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); }
+    .notif-inner-badge { background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-right: auto; margin-left: 10px; }
+    
+    .notifications-container {
+        display: none; /* مخفي افتراضياً */
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .menu-notif-item.unread { background: rgba(0, 255, 136, 0.05); border-color: rgba(0, 255, 136, 0.3); }
-    .notif-delete-btn {
-        position: absolute; top: 8px; left: 8px;
-        color: #ff4444; background: none; border: none;
-        cursor: pointer; font-size: 0.9rem; padding: 5px;
-    }
-    .notif-delete-btn:hover { transform: scale(1.1); }
+    
+    .menu-notif-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; font-size: 0.85rem; color: #ddd; }
+    .menu-notif-item:last-child { border-bottom: none; }
+    .menu-notif-item.unread { background: rgba(0, 255, 136, 0.05); border-right: 2px solid var(--neon-primary); }
+    .notif-delete-btn { position: absolute; top: 8px; left: 8px; color: #ff4444; background: none; border: none; cursor: pointer; padding: 5px; }
 
     /* 🖥️ هيدر الديسكتوب */
     .main-header {
@@ -104,7 +109,7 @@
     
     .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.3s; }
     .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
-    .adv-card-img-box { height: 220px; position: relative; }
+    .adv-card-img-box { height: 200px; position: relative; }
     .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
     .adv-type-badge { position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: black; }
     .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
@@ -113,28 +118,17 @@
     .adv-title { color: white; margin: 0 0 10px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
     .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; transition: 0.3s; }
+    .adv-details-btn:hover { background: var(--neon-primary); color: black; }
     
-    /* 🔥 تصميم زر عرض المزيد (Load More) الجديد 🔥 */
     .load-more-btn {
         background: linear-gradient(45deg, #00ff88, #00cc6a);
-        color: black; 
-        font-weight: bold;
-        border: none;
-        padding: 12px 40px; 
-        border-radius: 50px; 
-        margin-top: 30px;
-        cursor: pointer; 
-        transition: all 0.3s ease; 
-        font-size: 1rem;
+        color: black; font-weight: bold; border: none;
+        padding: 12px 40px; border-radius: 50px; margin-top: 30px;
+        cursor: pointer; transition: all 0.3s ease; font-size: 1rem;
         box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
+        display: block; margin-left: auto; margin-right: auto;
     }
-    .load-more-btn:hover { 
-        transform: scale(1.05); 
-        box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); 
-    }
+    .load-more-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); }
 
     .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
     .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500); color: black; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; }
@@ -167,13 +161,19 @@
                 <span style="font-size:0.8rem; color:#00ff88;" id="mob-user-balance"></span>
             </div>
             
-            <div style="border-bottom:1px solid #333; margin-bottom:10px; padding-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <span style="color:#aaa; font-size:0.9rem;"><i class="fas fa-bell"></i> الإشعارات</span>
-                    <span id="notif-count-text" style="color:#ff4444; font-size:0.8rem;"></span>
+            <div class="dropdown-link notif-toggle-btn" onclick="toggleNotifications(event)">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-bell"></i> الإشعارات
                 </div>
-                <div id="menu-notif-list" style="max-height:150px; overflow-y:auto; font-size:0.85rem; color:#ddd;">
-                    <p style="text-align:center; color:#555;">لا توجد إشعارات</p>
+                <div>
+                    <span id="notif-count-text" class="notif-inner-badge" style="display:none">0</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.8rem;"></i>
+                </div>
+            </div>
+
+            <div id="notifications-container" class="notifications-container">
+                <div id="menu-notif-list">
+                    <p style="text-align:center; color:#555; padding:10px;">لا توجد إشعارات</p>
                 </div>
             </div>
 
@@ -207,8 +207,7 @@
 
         <section class="listings-section">
             <h2 class="section-title">أحدث العقارات</h2>
-            <div class="adv-grid-container" id="listings-container">
-                </div>
+            <div class="adv-grid-container" id="listings-container"></div>
         </section>
         
         <section class="request-property-section">
@@ -239,7 +238,6 @@
     <script>
         function openComplaintModal() { document.getElementById('complaint-modal').style.display = 'flex'; }
         function closeComplaintModal() { document.getElementById('complaint-modal').style.display = 'none'; }
-        
         async function submitComplaint() {
             const text = document.getElementById('complaint-text').value;
             if(!text) return alert('اكتب تفاصيل الشكوى');

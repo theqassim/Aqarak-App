@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 submitBtn.innerHTML = 'جاري إنشاء الحساب...';
                 submitBtn.disabled = true;
 
-                // ✅ استخدام FormData لإرسال الصورة والبيانات
+             // ✅ استخدام FormData لإرسال الصورة والبيانات
                 const formData = new FormData();
                 formData.append('name', name);
                 formData.append('username', username);
@@ -167,18 +167,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formData.append('password', password);
                 formData.append('otp', otp);
                 
-                // إضافة الصورة لو موجودة
+                // ✅ التعديل الهام هنا: التأكد من سحب الملف بشكل صحيح
                 const fileInput = document.getElementById('profile-upload');
-                if (fileInput && fileInput.files[0]) {
+                
+                // نتأكد إن فيه ملف تم اختياره فعلاً
+                if (fileInput && fileInput.files && fileInput.files[0]) {
                     formData.append('profileImage', fileInput.files[0]);
+                } else {
+                    // (اختياري) لو مفيش صورة، السيرفر كدة كدة هيحط 'logo.png' بناءً على كودنا السابق
+                    // فلا داعي لإرسال شيء هنا
                 }
 
                 try {
-                    // لاحظ: شلنا headers: Content-Type عشان FormData بيحطها لوحده
+                    // لاحظ: لا تضع headers: Content-Type يدوياً مع FormData
                     const response = await fetch('/api/register', {
                         method: 'POST',
                         body: formData 
                     });
+                    // ... باقي الكود كما هو
                     const data = await response.json();
 
                     if (data.success) {

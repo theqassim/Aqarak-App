@@ -135,11 +135,24 @@ function toEnglishDigits(str) {
 // 🧠 1. نظام الواتساب (WhatsApp QR)
 // ==========================================================
 
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+
+// إعداد عميل الواتساب مع إعدادات خاصة لسيرفر Render
 const whatsappClient = new Client({
-    authStrategy: new LocalAuth({ clientId: "aqarak-session" }),
-    puppeteer: { 
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        headless: true
+    authStrategy: new LocalAuth({ clientId: "aqarak-session" }), // حفظ الجلسة باسم محدد
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', // ⚠️ مهم جداً: يمنع امتلاء الذاكرة المؤقتة ويحل مشكلة الانهيار
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process', // يقلل استهلاك الرامات
+            '--disable-gpu'
+        ]
     }
 });
 
@@ -152,8 +165,13 @@ whatsappClient.on('ready', () => {
     console.log('✅ الواتساب متصل وجاهز!');
 });
 
-whatsappClient.initialize();
+// التعامل مع فصل الاتصال وإعادة التشغيل تلقائياً
+whatsappClient.on('disconnected', (reason) => {
+    console.log('❌ تم فصل الواتساب:', reason);
+    whatsappClient.initialize();
+});
 
+whatsappClient.initialize();
 async function sendWhatsAppMessage(phone, message) {
     try {
         let formattedNumber = phone.replace(/\D/g, '');

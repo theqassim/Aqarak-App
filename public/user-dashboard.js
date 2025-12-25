@@ -152,26 +152,6 @@ window.addEventListener('click', function(e) {
         menu.style.display = 'none';
     }
 });
-
-// ==========================================
-// 🚪 4. تسجيل الخروج
-// ==========================================
-
-window.openLogoutModal = function() {
-    if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        logoutUser();
-    }
-};
-
-async function logoutUser() {
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        window.location.href = 'index.html';
-    } catch (e) {
-        window.location.reload();
-    }
-}
-
 // ==========================================
 // 💳 5. منطق شحن المحفظة (Modal & Logic)
 // ==========================================

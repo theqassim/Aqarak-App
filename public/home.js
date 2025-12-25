@@ -50,25 +50,48 @@ async function updateMobileHeader() {
     } catch (e) { console.error("Header Error", e); }
 }
 
-// ✅ دالة جلب الإشعارات (مع زر الحذف)
+// ✅ دالة فتح/غلق قائمة الإشعارات
+window.toggleNotifications = async function(e) {
+    e.stopPropagation(); // منع إغلاق القائمة الرئيسية
+    const container = document.getElementById('notifications-container');
+    const innerBadge = document.getElementById('notif-count-text');
+    const outerBadge = document.getElementById('menu-notif-badge');
+    
+    if (container.style.display === 'block') {
+        container.style.display = 'none';
+    } else {
+        container.style.display = 'block';
+        // تصفير العداد وقراءة الإشعارات عند الفتح
+        if (innerBadge.style.display !== 'none') {
+            innerBadge.style.display = 'none';
+            if(outerBadge) outerBadge.style.display = 'none';
+            try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
+        }
+    }
+};
+
+// ✅ دالة جلب الإشعارات
 async function checkNotifications() {
     try {
         const res = await fetch('/api/user/notifications');
         const data = await res.json();
         
-        const badge = document.getElementById('menu-notif-badge');
+        const badge = document.getElementById('menu-notif-badge'); // العداد الخارجي
+        const innerBadge = document.getElementById('notif-count-text'); // العداد الداخلي
         const list = document.getElementById('menu-notif-list');
-        const countText = document.getElementById('notif-count-text');
 
         if (data.unreadCount > 0) {
             if(badge) {
                 badge.style.display = 'block';
                 badge.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
             }
-            if(countText) countText.textContent = `${data.unreadCount} جديدة`;
+            if(innerBadge) {
+                innerBadge.style.display = 'inline-block';
+                innerBadge.textContent = `${data.unreadCount} جديدة`;
+            }
         } else {
             if(badge) badge.style.display = 'none';
-            if(countText) countText.textContent = '';
+            if(innerBadge) innerBadge.style.display = 'none';
         }
 
         if (list && data.notifications && data.notifications.length > 0) {
@@ -76,7 +99,7 @@ async function checkNotifications() {
                 <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}">
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-left:25px;">
                         <strong style="color:white; font-size:0.9rem;">${n.title}</strong>
-                        <button onclick="deleteNotification(${n.id})" class="notif-delete-btn" title="حذف">
+                        <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" title="حذف">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -88,37 +111,26 @@ async function checkNotifications() {
     } catch (e) { console.error("Notif Error", e); }
 }
 
-// ✅ دالة حذف الإشعار
-window.deleteNotification = async (id) => {
+window.deleteNotification = async (e, id) => {
+    e.stopPropagation(); // منع إغلاق القائمة
     if(!confirm('حذف هذا الإشعار؟')) return;
     try {
         const res = await fetch(`/api/user/notification/${id}`, { method: 'DELETE' });
         if(res.ok) {
             const el = document.getElementById(`notif-${id}`);
             if(el) el.remove();
-            // تحديث العداد بسيط (أو ممكن تعيد طلب checkNotifications)
-            const countText = document.getElementById('notif-count-text');
-            if(countText) countText.innerHTML = '<i class="fas fa-sync fa-spin"></i>'; 
-            checkNotifications(); 
         }
     } catch(e) { alert('خطأ في الحذف'); }
 };
 
 window.toggleMobileMenu = async function() {
     const menu = document.getElementById('mobile-profile-dropdown');
-    const badge = document.getElementById('menu-notif-badge');
-    const countText = document.getElementById('notif-count-text');
     
     if (menu) {
         if (menu.style.display === 'block') {
             menu.style.display = 'none';
         } else {
             menu.style.display = 'block';
-            if (badge && badge.style.display !== 'none') {
-                badge.style.display = 'none'; 
-                if(countText) countText.textContent = '';
-                try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
-            }
         }
     }
 };
@@ -135,7 +147,7 @@ window.addEventListener('click', function(e) {
     const menu = document.getElementById('mobile-profile-dropdown');
     const isMenuBtn = e.target.closest('.menu-toggle-btn');
     const isMenu = e.target.closest('.mobile-dropdown');
-    const isDeleteBtn = e.target.closest('.notif-delete-btn'); // عشان لو داس حذف ميعتبرش كليك خارج القائمة
+    const isDeleteBtn = e.target.closest('.notif-delete-btn');
 
     if (menu && menu.style.display === 'block' && !isMenuBtn && !isMenu && !isDeleteBtn) {
         menu.style.display = 'none';
@@ -230,7 +242,6 @@ async function fetchLatestProperties(isFirstLoad = false) {
 
         currentOffset += properties.length;
 
-        // ✅ تحسين مكان زر عرض المزيد
         if (!document.getElementById('load-more-container') && container) {
             const btnContainer = document.createElement('div');
             btnContainer.id = 'load-more-container';
