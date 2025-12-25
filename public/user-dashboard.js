@@ -466,3 +466,37 @@ document.addEventListener('click', function(e) {
         menu.style.display = 'none';
     }
 });
+// ✅ تشغيل ويدجت الترحيب الذكي
+    function updateGreetingWidget() {
+        const greetingEl = document.getElementById('time-greeting');
+        const iconEl = document.getElementById('greeting-icon');
+        const dateEl = document.getElementById('current-date');
+        
+        if (!greetingEl) return;
+
+        const now = new Date();
+        const hour = now.getHours();
+        
+        // 1. تحديد التحية والأيقونة
+        if (hour >= 5 && hour < 12) {
+            greetingEl.textContent = 'صباح الخير ☀️';
+            iconEl.className = 'fas fa-sun';
+            iconEl.style.color = '#FFD700'; // ذهبي
+        } else if (hour >= 12 && hour < 17) {
+            greetingEl.textContent = 'طاب يومك 🌤️';
+            iconEl.className = 'fas fa-cloud-sun';
+            iconEl.style.color = '#FFA500'; // برتقالي
+        } else {
+            greetingEl.textContent = 'مساء الخير 🌙';
+            iconEl.className = 'fas fa-moon';
+            iconEl.style.color = '#00d4ff'; // أزرق نيون
+        }
+
+        // 2. تحديد التاريخ (يوم - شهر)
+        const options = { weekday: 'long', day: 'numeric', month: 'short', calendar: 'islamic' };
+        // يمكنك تغيير 'ar-EG' واستخدام التقويم الميلادي بحذف calendar: 'islamic'
+        dateEl.textContent = now.toLocaleDateString('ar-EG', options);
+    }
+
+    // استدعاء الدالة فوراً
+    updateGreetingWidget();
