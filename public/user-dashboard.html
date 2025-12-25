@@ -136,22 +136,115 @@
     .close { position: absolute; left: 15px; top: 10px; font-size: 28px; color: #777; cursor: pointer; }
     .input-group { margin-bottom: 15px; text-align: right; }
     .neon-input-white { width: 100%; padding: 10px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; outline: none; transition: 0.3s; }
-     /* Fav Cards Style */
+     /* 🔥 تحسين كارت المفضلة */
     .favorites-section { margin-top: 30px; }
-    .listings-container { display: flex; flex-direction: column; gap: 15px; }
-    .fav-card { display: flex; background: var(--card-bg); border: 1px solid #333; border-radius: 15px; overflow: hidden; transition: all 0.3s ease; position: relative; height: 120px; align-items: center; }
-    .fav-card:hover { border-color: var(--neon-primary); transform: translateX(-5px); box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1); }
-    .fav-img-link { width: 130px; height: 100%; flex-shrink: 0; overflow: hidden; }
-    .fav-img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+    
+    .listings-container { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+    }
+
+    .fav-card {
+        display: flex;
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        height: 120px; /* ارتفاع ثابت للكارت */
+        align-items: center;
+    }
+
+    .fav-card:hover {
+        border-color: var(--neon-primary);
+        transform: translateX(-5px); /* حركة بسيطة */
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
+    }
+
+    /* الصورة */
+    .fav-img-link {
+        width: 130px;
+        height: 100%;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .fav-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* عشان الصورة تملأ المساحة بدون مط */
+        transition: 0.3s;
+    }
+
     .fav-card:hover .fav-img { transform: scale(1.1); }
-    .fav-content { flex: 1; padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-    .fav-title { color: white; font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fav-price { color: var(--neon-primary); font-size: 1rem; font-weight: bold; margin-bottom: 10px; }
-    .fav-actions { display: flex; gap: 10px; align-items: center; }
-    .btn-fav-view { text-decoration: none; background: rgba(0, 212, 255, 0.1); color: var(--neon-secondary); border: 1px solid var(--neon-secondary); padding: 5px 15px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s; }
+
+    /* المحتوى */
+    .fav-content {
+        flex: 1;
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden; /* عشان الكلام مايخرجش */
+    }
+
+    .fav-title {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fav-price {
+        color: var(--neon-primary);
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    /* الأزرار */
+    .fav-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .btn-fav-view {
+        text-decoration: none;
+        background: rgba(0, 212, 255, 0.1);
+        color: var(--neon-secondary);
+        border: 1px solid var(--neon-secondary);
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        transition: 0.3s;
+    }
     .btn-fav-view:hover { background: var(--neon-secondary); color: black; }
-    .btn-fav-remove { background: transparent; border: none; color: #ff4444; cursor: pointer; font-size: 1.2rem; transition: 0.3s; padding: 5px; }
-    @media (max-width: 480px) { .fav-card { height: auto; min-height: 110px; } .fav-img-link { width: 110px; height: 110px; } .fav-title { font-size: 1rem; } .fav-price { font-size: 0.9rem; } .btn-fav-view { padding: 4px 12px; font-size: 0.8rem; } }
+
+    .btn-fav-remove {
+        background: transparent;
+        border: none;
+        color: #ff4444;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: 0.3s;
+        padding: 5px;
+    }
+    .btn-fav-remove:hover { transform: scale(1.2); text-shadow: 0 0 10px red; }
+
+    /* 📱 تظبيط الموبايل */
+    @media (max-width: 480px) {
+        .fav-card { height: auto; min-height: 110px; }
+        .fav-img-link { width: 110px; height: 110px; } /* صورة مربعة */
+        .fav-title { font-size: 1rem; }
+        .fav-price { font-size: 0.9rem; }
+        .btn-fav-view { padding: 4px 12px; font-size: 0.8rem; }
+    }
   </style>
 </head>
 <body class="internal-page">

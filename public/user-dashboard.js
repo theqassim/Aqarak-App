@@ -109,6 +109,10 @@ window.loadUserData = async function() {
 // ❤️ 2. منطق المفضلة (الجديد)
 // ==========================================
 
+// ==========================================
+// ❤️ 2. منطق المفضلة (مع التمرير التلقائي)
+// ==========================================
+
 async function toggleFavorites() {
     const area = document.getElementById('favorites-area');
     const container = document.getElementById('favorites-listings');
@@ -120,10 +124,16 @@ async function toggleFavorites() {
     }
 
     area.style.display = 'block';
+
+    // ✅ التعديل هنا: التمرير التلقائي الناعم للقسم
+    setTimeout(() => {
+        area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
     container.innerHTML = '<div style="text-align:center; color:var(--neon-primary); padding:20px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
 
     try {
-        const res = await fetch('/api/favorites');
+        const res = await fetch('/api/user/favorites');
         if (!res.ok) throw new Error('Failed to fetch');
         
         const properties = await res.json();
