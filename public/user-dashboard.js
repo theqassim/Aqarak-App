@@ -3,11 +3,48 @@
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadUserData();
-    checkNotifications(); // تشغيل الإشعارات
+    updateGreeting(); // ✅ 1. تحديث رسالة الترحيب
+    await loadUserData(); // 2. تحميل بيانات المستخدم
+    checkNotifications(); // 3. تشغيل الإشعارات
+
+    // ✅ 4. تفعيل زر عرض المفضلة
+    const favBtn = document.getElementById('show-favorites');
+    if (favBtn) {
+        favBtn.addEventListener('click', toggleFavorites);
+    }
 });
 
-// ✅ 1. تحميل بيانات المستخدم وتحديث الواجهة
+// ✅ دالة الترحيب الذكي (صباح/مساء)
+function updateGreeting() {
+    const hour = new Date().getHours();
+    const greetingText = document.getElementById('time-greeting');
+    const greetingIcon = document.getElementById('greeting-icon');
+    const dateEl = document.getElementById('current-date');
+
+    // تحديث التاريخ
+    if(dateEl) {
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        dateEl.textContent = new Date().toLocaleDateString('ar-EG', options);
+    }
+
+    if (!greetingText || !greetingIcon) return;
+
+    if (hour >= 5 && hour < 12) {
+        greetingText.textContent = 'صباح الخير';
+        greetingIcon.className = 'fas fa-sun';
+        greetingIcon.style.color = '#ffd700'; // ذهبي
+    } else if (hour >= 12 && hour < 17) {
+        greetingText.textContent = 'طاب يومك';
+        greetingIcon.className = 'fas fa-cloud-sun';
+        greetingIcon.style.color = '#ff9800'; // برتقالي
+    } else {
+        greetingText.textContent = 'مساء الخير';
+        greetingIcon.className = 'fas fa-moon';
+        greetingIcon.style.color = '#00d4ff'; // أزرق ليلي
+    }
+}
+
+// ✅ دالة تحميل بيانات المستخدم وتحديث الواجهة
 window.loadUserData = async function() {
     try {
         const response = await fetch('/api/auth/me');
@@ -42,7 +79,7 @@ window.loadUserData = async function() {
                 // إذا كان لديه صورة بروفايل حقيقية (ليست اللوجو الافتراضي)
                 if (data.profile_picture && !data.profile_picture.includes('logo.png')) {
                     profileBtn.innerHTML = `
-                        <img src="${data.profile_picture}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
+                        <img src="${data.profile_picture}" alt="Profile" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                         <span id="menu-notif-badge" class="menu-badge">0</span>
                     `;
                 } else {
@@ -69,7 +106,82 @@ window.loadUserData = async function() {
 };
 
 // ==========================================
-// 🔔 2. نظام الإشعارات (المعدل)
+// ❤️ 2. منطق المفضلة (الجديد)
+// ==========================================
+
+async function toggleFavorites() {
+    const area = document.getElementById('favorites-area');
+    const container = document.getElementById('favorites-listings');
+    
+    // إغلاق إذا كانت مفتوحة
+    if (area.style.display === 'block') {
+        area.style.display = 'none';
+        return;
+    }
+
+    area.style.display = 'block';
+    container.innerHTML = '<div style="text-align:center; color:var(--neon-primary); padding:20px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
+
+    try {
+        const res = await fetch('/api/user/favorites');
+        if (!res.ok) throw new Error('Failed to fetch');
+        
+        const properties = await res.json();
+        container.innerHTML = '';
+
+        if (properties.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">لا توجد عقارات في المفضلة حالياً.</p>';
+            return;
+        }
+
+        properties.forEach(prop => {
+            const price = parseInt(prop.price).toLocaleString();
+            const html = `
+                <div class="fav-card">
+                    <a href="property-details?id=${prop.id}" class="fav-img-link">
+                        <img src="${prop.imageUrl || 'logo.png'}" class="fav-img" loading="lazy">
+                    </a>
+                    <div class="fav-content">
+                        <div class="fav-title">${prop.title}</div>
+                        <div class="fav-price">${price} ج.م</div>
+                        <div class="fav-actions">
+                            <a href="property-details?id=${prop.id}" class="btn-fav-view">عرض</a>
+                            <button class="btn-fav-remove" onclick="removeFavorite(${prop.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color:#ff4444;">حدث خطأ في تحميل المفضلة.</p>';
+    }
+}
+
+// دالة الحذف من المفضلة
+window.removeFavorite = async function(id) {
+    if (!confirm('هل أنت متأكد من الحذف من المفضلة؟')) return;
+    
+    try {
+        const res = await fetch(`/api/user/favorites/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            // إعادة تحميل القائمة
+            toggleFavorites(); // يغلق
+            setTimeout(toggleFavorites, 100); // يفتح مرة أخرى للتحديث
+        } else {
+            alert('فشل الحذف');
+        }
+    } catch (e) {
+        alert('خطأ في الاتصال');
+    }
+};
+
+// ==========================================
+// 🔔 3. نظام الإشعارات
 // ==========================================
 
 async function checkNotifications() {
@@ -77,7 +189,6 @@ async function checkNotifications() {
         const res = await fetch('/api/user/notifications');
         const data = await res.json();
         
-        // استخدام الـ IDs الجديدة الموجودة في HTML
         const badge = document.getElementById('menu-notif-badge');
         const list = document.getElementById('menu-notif-list');
         const countText = document.getElementById('notif-count-text');
@@ -85,7 +196,7 @@ async function checkNotifications() {
         // تحديث العداد (Badge)
         if (data.unreadCount > 0) {
             if (badge) {
-                badge.style.display = 'flex'; // استخدام flex للمحاذاة
+                badge.style.display = 'flex';
                 badge.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
             }
             if (countText) {
@@ -114,7 +225,7 @@ async function checkNotifications() {
 }
 
 // ==========================================
-// 📱 3. التحكم في القائمة المنسدلة
+// 📱 4. التحكم في القائمة المنسدلة
 // ==========================================
 
 window.toggleProfileMenu = async function() {
@@ -122,7 +233,7 @@ window.toggleProfileMenu = async function() {
     const badge = document.getElementById('menu-notif-badge');
     const countText = document.getElementById('notif-count-text');
     
-    if (!menu) return; // حماية من الخطأ
+    if (!menu) return;
 
     if (menu.style.display === 'block') {
         menu.style.display = 'none';
@@ -134,7 +245,6 @@ window.toggleProfileMenu = async function() {
             badge.style.display = 'none';
             if (countText) countText.textContent = '';
             
-            // إبلاغ السيرفر بقراءة الإشعارات
             try { 
                 await fetch('/api/user/notifications/read', { method: 'POST' }); 
             } catch(e) { console.error(e); }
@@ -142,16 +252,23 @@ window.toggleProfileMenu = async function() {
     }
 };
 
+window.logoutUser = async function() {
+    try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.reload();
+    } catch (e) { window.location.reload(); }
+};
+
 // إغلاق القائمة عند الضغط خارجها
 window.addEventListener('click', function(e) {
     const container = document.querySelector('.profile-menu-container');
     const menu = document.getElementById('profile-dropdown');
     
-    // تأكد من وجود العناصر قبل فحصها
     if (container && menu && !container.contains(e.target) && !menu.contains(e.target)) {
         menu.style.display = 'none';
     }
 });
+
 // ==========================================
 // 💳 5. منطق شحن المحفظة (Modal & Logic)
 // ==========================================
@@ -165,11 +282,9 @@ let selectedMethod = 'card';
 
 window.selectPaymentMethod = function(method) {
     selectedMethod = method;
-    // تحديث شكل الأزرار
     document.getElementById('btn-card').classList.remove('active');
     document.getElementById('btn-wallet').classList.remove('active');
     
-    // إعادة تعيين الستايل الأساسي
     document.getElementById('btn-card').style.background = 'transparent';
     document.getElementById('btn-card').style.color = 'var(--neon-primary)';
     
@@ -194,7 +309,6 @@ window.selectPaymentMethod = function(method) {
 window.calculatePrice = function() {
     const points = document.getElementById('charge-points').value;
     const priceDisplay = document.getElementById('price-display');
-    // سعر النقطة: 1 جنيه (مثال)
     const price = points ? points * 1 : 0; 
     if(priceDisplay) priceDisplay.textContent = price;
 };
@@ -208,7 +322,7 @@ window.startChargeProcess = async function() {
     btn.disabled = true;
 
     const payload = {
-        amount: points * 1, // السعر
+        amount: points * 1,
         points: points,
         method: selectedMethod
     };
@@ -224,7 +338,6 @@ window.startChargeProcess = async function() {
     }
 
     try {
-        // إرسال الطلب للسيرفر (Paymob Integration)
         const response = await fetch('/api/payment/initiate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -233,7 +346,7 @@ window.startChargeProcess = async function() {
         const data = await response.json();
 
         if (data.url) {
-            window.location.href = data.url; // التوجيه لصفحة الدفع
+            window.location.href = data.url;
         } else {
             alert('خطأ في الاتصال ببوابة الدفع');
             btn.innerHTML = 'تأكيد وشراء النقاط';
@@ -251,19 +364,19 @@ window.startChargeProcess = async function() {
 // 🔐 6. منطق تغيير كلمة المرور (Modal)
 // ==========================================
 
-// فتح المودال
-document.getElementById('open-password-modal').addEventListener('click', () => {
-    document.getElementById('passwordModal').style.display = 'block';
-    document.getElementById('normal-change-mode').style.display = 'block';
-    document.getElementById('otp-change-mode').style.display = 'none';
-});
+const passModalBtn = document.getElementById('open-password-modal');
+if (passModalBtn) {
+    passModalBtn.addEventListener('click', () => {
+        document.getElementById('passwordModal').style.display = 'block';
+        document.getElementById('normal-change-mode').style.display = 'block';
+        document.getElementById('otp-change-mode').style.display = 'none';
+    });
+}
 
-// إغلاق المودال
 window.closeModal = function() {
     document.getElementById('passwordModal').style.display = 'none';
 };
 
-// التبديل بين الأوضاع
 window.switchPassMode = function(mode) {
     if(mode === 'otp') {
         document.getElementById('normal-change-mode').style.display = 'none';
@@ -276,7 +389,6 @@ window.switchPassMode = function(mode) {
     }
 };
 
-// 1. التغيير العادي (بمعرفة القديمة)
 window.changePasswordNormal = async function() {
     const currentPass = document.getElementById('current-pass').value;
     const newPass = document.getElementById('new-pass-1').value;
@@ -306,7 +418,6 @@ window.changePasswordNormal = async function() {
     } catch(e) { console.error(e); }
 };
 
-// 2. إرسال OTP للواتساب
 window.sendResetOTP = async function() {
     const phone = document.getElementById('reset-phone').value;
     const msg = document.getElementById('otp-msg');
@@ -333,7 +444,6 @@ window.sendResetOTP = async function() {
     } catch(e) { console.error(e); }
 };
 
-// 3. تأكيد OTP وتغيير الباسورد
 window.resetPasswordViaOTP = async function() {
     const phone = document.getElementById('reset-phone').value;
     const otp = document.getElementById('otp-code').value;
