@@ -219,6 +219,62 @@
         }
         
         .fade-in { animation: fadeInUp 0.5s ease-out; }
+        /* 1. إصلاح مشكلة الفراغ في الموبايل */
+        @media (max-width: 480px) {
+            body {
+                align-items: flex-start; 
+                padding-top: 20px !important; /* ✅ تقليل المسافة العلوية جداً */
+            }
+            .auth-frame { 
+                padding: 25px 20px; 
+                margin-top: 10px;
+                border-radius: 15px;
+            } 
+            /* تصغير اللوجو في الموبايل ليتناسب مع المساحة */
+            .logo-flip-container { width: 70px !important; height: 70px !important; }
+        }
+
+        /* 2. أنيميشن اللوجو والأفاتار (Flip Animation) */
+        .logo-flip-container {
+            width: 90px; height: 90px; margin: 0 auto 15px auto;
+            position: relative; perspective: 1000px;
+        }
+        
+        .flip-inner {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.8s; transform-style: preserve-3d;
+            animation: initialFlip 4s ease-in-out forwards; /* الأنيميشن التلقائي */
+        }
+        
+        /* الوجه الأمامي (اللوجو) */
+        .flip-front, .flip-back {
+            position: absolute; width: 100%; height: 100%;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            border-radius: 50%; overflow: hidden;
+            border: 3px solid var(--neon-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            background: #111;
+        }
+        
+        .flip-front img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* الوجه الخلفي (مكان رفع الصورة) */
+        .flip-back {
+            transform: rotateY(180deg);
+            background: rgba(0, 255, 136, 0.1);
+            cursor: pointer;
+            flex-direction: column;
+            color: var(--neon-primary);
+        }
+        .flip-back:hover { background: rgba(0, 255, 136, 0.2); }
+
+        /* الكي فريم: يظهر اللوجو ثانية، ثم يلف ويظهر الأفاتار */
+        @keyframes initialFlip {
+            0% { transform: rotateY(0deg); }
+            30% { transform: rotateY(0deg); }
+            100% { transform: rotateY(180deg); } /* يثبت على صورة الأفاتار */
+        }
     </style>
 </head>
 <body>
@@ -227,7 +283,23 @@
         <div class="auth-frame">
             
             <div class="auth-header">
-                <img src="logo.jpg" alt="عقارك" class="auth-logo">
+                <div class="logo-flip-container" onclick="document.getElementById('profile-upload').click()">
+                    <div class="flip-inner" id="flip-box">
+                        <div class="flip-front">
+                            <img src="logo.jpg" alt="عقارك">
+                        </div>
+                        <div class="flip-back">
+                            <img id="profile-preview" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
+                            <div id="upload-placeholder">
+                                <i class="fas fa-user" style="font-size: 1.8rem; margin-bottom: 5px;"></i>
+                                <i class="fas fa-plus-circle" style="font-size: 0.8rem; position: absolute; bottom: 15px; right: 28px; background: #000; border-radius: 50%;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="file" id="profile-upload" accept="image/*" hidden onchange="previewProfileImage(event)">
+
                 <h1 class="auth-title">مرحباً بك في عقارك</h1>
                 <p class="auth-subtitle">بوابتك العقارية الآمنة 🏠</p>
             </div>

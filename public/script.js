@@ -152,17 +152,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 finally { if(!isOtpSent) submitBtn.innerHTML = originalText; submitBtn.disabled = false; }
 
             } else {
+                // --- الجزء الخاص بالتسجيل النهائي ---
                 const otp = document.getElementById('reg-otp').value;
                 if (!otp) return alert('من فضلك أدخل الكود');
 
                 submitBtn.innerHTML = 'جاري إنشاء الحساب...';
                 submitBtn.disabled = true;
 
+                // ✅ استخدام FormData لإرسال الصورة والبيانات
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('username', username);
+                formData.append('phone', phone);
+                formData.append('password', password);
+                formData.append('otp', otp);
+                
+                // إضافة الصورة لو موجودة
+                const fileInput = document.getElementById('profile-upload');
+                if (fileInput && fileInput.files[0]) {
+                    formData.append('profileImage', fileInput.files[0]);
+                }
+
                 try {
+                    // لاحظ: شلنا headers: Content-Type عشان FormData بيحطها لوحده
                     const response = await fetch('/api/register', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, username, phone, password, otp }),
+                        body: formData 
                     });
                     const data = await response.json();
 
@@ -174,13 +189,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                         submitBtn.innerHTML = 'تأكيد وإنشاء الحساب';
                         submitBtn.disabled = false;
                     }
-                } catch (error) { alert('حدث خطأ'); submitBtn.disabled = false; }
+                } catch (error) { 
+                    alert('حدث خطأ'); 
+                    submitBtn.disabled = false; 
+                }
             }
         });
     }
 });
 
 // --- دوال مساعدة ---
+window.previewProfileImage = function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-preview').src = e.target.result;
+            document.getElementById('profile-preview').style.display = 'block';
+            document.getElementById('upload-placeholder').style.display = 'none';
+        }
+        reader.readAsDataURL(file);
+    }
+};
 window.switchTab = function(tab) {
     const loginWrapper = document.getElementById('login-form-wrapper');
     const registerWrapper = document.getElementById('register-form-wrapper');

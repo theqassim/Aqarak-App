@@ -408,6 +408,19 @@ const storageSeller = new CloudinaryStorage({ cloudinary: cloudinary, params: { 
 const uploadSeller = multer({ storage: storageSeller, limits: { fileSize: MAX_FILE_SIZE } });
 const storageProperties = new CloudinaryStorage({ cloudinary: cloudinary, params: { folder: 'aqarak_properties', format: async () => 'webp', public_id: (req, file) => `property-${Date.now()}-${Math.round(Math.random() * 1E9)}` } });
 const uploadProperties = multer({ storage: storageProperties, limits: { fileSize: MAX_FILE_SIZE } });
+// ... (بعد إعدادات storageProperties الموجودة)
+
+// 👤 إعداد تخزين صور البروفايل (جديد)
+const storageProfiles = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'aqarak_users',
+        format: async () => 'webp',
+        public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+        transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
+    }
+});
+const uploadProfile = multer({ storage: storageProfiles, limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.use(cors({ origin: true, credentials: true })); 
 app.use(express.json());
@@ -600,37 +613,46 @@ app.post('/api/auth/send-otp', async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'خطأ في السيرفر' }); }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', uploadProfile.single('profileImage'), async (req, res) => {
+    // البيانات تأتي الآن داخل req.body والصورة في req.file
     const { name, phone, password, otp } = req.body;
     let { username } = req.body;
     username = username ? username.toLowerCase().trim() : '';
+    
+    // رابط الصورة (لو رفع صورة هناخد الرابط، لو لا هنسيبها null)
+    const profilePicUrl = req.file ? req.file.path : null;
 
-    if (!otpStore[phone] || otpStore[phone].code !== otp || Date.now() > otpStore[phone].expires) {
-        return res.status(400).json({ message: 'كود التحقق غير صحيح أو منتهي الصلاحية' });
+    if (!otpStore[phone] || otpStore[phone].code !== otp) {
+        // حذف الصورة لو الكود غلط عشان منخزنش ملفات عالفاضي
+        if (req.file) await deleteCloudinaryImages([req.file.path]); 
+        return res.status(400).json({ message: 'كود التحقق غير صحيح' });
     }
     
     try {
-        // فحص هل الرقم محظور سابقاً؟
+        // التحقق من الحظر
         const banCheck = await pgQuery('SELECT is_banned FROM users WHERE phone = $1', [phone]);
         if (banCheck.rows.length > 0 && banCheck.rows[0].is_banned) {
-            delete otpStore[phone];
-            return res.status(403).json({ message: '⛔ هذا الرقم محظور من استخدام موقع عقارك بسبب مخالفة الشروط.' });
+            return res.status(403).json({ message: '⛔ هذا الرقم محظور.' });
         }
 
-        if (username.length < 5) return res.status(400).json({ message: 'اسم المستخدم قصير (يجب أن يكون 5 حروف على الأقل)' });
+        if (username.length < 5) return res.status(400).json({ message: 'اسم المستخدم قصير' });
         
         const userCheck = await pgQuery('SELECT id FROM users WHERE username = $1', [username]);
-        if (userCheck.rows.length > 0) return res.status(409).json({ message: 'اسم المستخدم محجوز، اختر اسماً آخر' });
+        if (userCheck.rows.length > 0) return res.status(409).json({ message: 'اسم المستخدم محجوز' });
 
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        await pgQuery(`INSERT INTO users (name, username, phone, password, role) VALUES ($1, $2, $3, $4, $5)`, 
-            [name, username, phone, hashedPassword, 'user']);
+        
+        // ✅ الإضافة: تخزين profile_picture
+        // (تأكد أنك قمت بإضافة العمود للداتابيز كما اتفقنا)
+        await pgQuery(
+            `INSERT INTO users (name, username, phone, password, role, profile_picture) VALUES ($1, $2, $3, $4, $5, $6)`, 
+            [name, username, phone, hashedPassword, 'user', profilePicUrl]
+        );
         
         delete otpStore[phone];
         res.status(201).json({ success: true, message: 'تم إنشاء الحساب بنجاح' });
 
     } catch (error) { 
-        if(error.code === '23505') return res.status(409).json({ message: 'البيانات (الهاتف أو اسم المستخدم) مسجلة بالفعل' });
         console.error("Register Error:", error);
         res.status(500).json({ message: 'خطأ في السيرفر' }); 
     }
