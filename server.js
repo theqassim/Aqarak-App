@@ -97,6 +97,27 @@ cloudinary.config({
     api_secret: CLOUDINARY_API_SECRET
 });
 
+// ============================================================
+// 👤 إعدادات رفع صور البروفايل (Cloudinary + Multer)
+// ============================================================
+
+const storageProfiles = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'aqarak_users',
+        format: async () => 'webp', // تحويل تلقائي لـ webp للأداء
+        public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+        transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
+    }
+});
+
+// تعريف المتغير لاستخدامه في الراوت
+const uploadProfile = multer({ 
+    storage: storageProfiles, 
+    limits: { fileSize: 5 * 1024 * 1024 } // حد أقصى 5 ميجا
+});
+
+
 const dbPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -2108,26 +2129,6 @@ app.post('/api/admin/send-notification', async (req, res) => {
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
-// ============================================================
-// 👤 إعدادات رفع صور البروفايل (Cloudinary + Multer)
-// ============================================================
-
-const storageProfiles = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'aqarak_users',
-        format: async () => 'webp', // تحويل تلقائي لـ webp للأداء
-        public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
-        transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
-    }
-});
-
-// تعريف المتغير لاستخدامه في الراوت
-const uploadProfile = multer({ 
-    storage: storageProfiles, 
-    limits: { fileSize: 5 * 1024 * 1024 } // حد أقصى 5 ميجا
-});
-
 
 // ============================================================
 // 📝 راوت تحديث البروفايل (الذي أنشأناه سابقاً)
