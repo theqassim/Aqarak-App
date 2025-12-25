@@ -14,345 +14,154 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604" crossorigin="anonymous"></script>
     <script type="application/ld+json">
-     {
-
-  "@context": "https://schema.org",
-
-  "@type": "RealEstateAgent",
-
-  "name": "منصة عقارك - Aqarak",
-
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
-
-  "url": "https://aqarakeg.com",
-
-  "logo": "https://aqarakeg.com/logo.jpg",
-
-  "image": "https://aqarakeg.com/logo.jpg",
-
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
-
-  "address": {
-
-    "@type": "PostalAddress",
-
-    "addressLocality": "Cairo",
-
-    "addressCountry": "EG"
-
-  },
-
-  "priceRange": "$",
-
-  "contactPoint": {
-
-    "@type": "ContactPoint",
-
-    "telephone": "+201008102237",
-
-    "contactType": "customer service",
-
-    "areaServed": "EG",
-
-    "availableLanguage": ["Arabic"]
-
-  },
-
-  "sameAs": [
-
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-
-  ]
-
-}
+     { "@context": "https://schema.org", "@type": "RealEstateAgent", "name": "منصة عقارك - Aqarak", "url": "https://aqarakeg.com", "logo": "https://aqarakeg.com/logo.jpg", "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر." }
     </script>
     <style>
-    /* --- 🎨 1. القواعد الأساسية (نفس كود All Properties) --- */
-    :root {
-        --glass-bg: rgba(20, 20, 20, 0.98);
-        --neon-primary: #00ff88;  /* الأخضر النيون */
-        --neon-secondary: #00d4ff; /* الأزرق النيون */
-        --card-bg: #1a1a1a;
-        --text-main: #ffffff;
-    }
+    /* --- 🎨 1. القواعد الأساسية --- */
+    :root { --glass-bg: rgba(20, 20, 20, 0.98); --neon-primary: #00ff88; --neon-secondary: #00d4ff; --card-bg: #1a1a1a; --text-main: #ffffff; }
+    body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0 !important; padding: 0 !important; font-family: 'Cairo', sans-serif; overflow-x: hidden; }
 
-    /* إعدادات الصفحة والخلفية */
-    body {
-        background-color: #0f0f0f;
-        background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-        min-height: 100vh;
-        margin: 0 !important;
-        padding: 0 !important;
-        font-family: 'Cairo', sans-serif;
-        overflow-x: hidden;
-    }
-
-    /* --- 2. الهيدر (Header) --- */
-    .main-header {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-        padding: 10px 15px;
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-    }
-
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        max-width: 1250px;
-        margin: 0 auto;
-    }
-
-    .logo-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: white;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-    
-    /* ✅ تعديل 2: إصلاح اللوجو المضغوط */
-    .logo { 
-        height: 40px; 
-        width: 40px; /* عرض ثابت مساوي للارتفاع */
-        object-fit: cover; /* يمنعمط الصورة */
-        border-radius: 50%; 
-        border: 2px solid var(--neon-primary); /* إضافة إطار نيون جمالي */
-    }
-
-    /* أزرار النافبار */
+    /* --- 2. الهيدر (Desktop) --- */
+    .main-header { position: sticky; top: 0; z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding: 10px 15px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+    .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; }
+    .logo-container { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1.1rem; }
+    .logo { height: 40px; width: 40px; object-fit: cover; border-radius: 50%; border: 2px solid var(--neon-primary); }
     .main-nav { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
+    .nav-button { background: transparent; color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; font-size: 0.85rem; transition: 0.3s; }
+    .nav-button:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
+    .sell-btn { background: var(--neon-primary) !important; color: #000000 !important; border: 1px solid var(--neon-primary) !important; padding: 8px 20px; border-radius: 50px; text-decoration: none; font-size: 0.9rem; font-weight: bold; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); transition: 0.3s; }
+    .sell-btn:hover { background: transparent !important; color: var(--neon-primary) !important; box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); }
+
+    /* --- 📱 هيدر الموبايل الجديد (Action Dock) --- */
+    .mobile-header-custom {
+        display: none; /* مخفي في الديسكتوب */
+        position: fixed; top: 0; left: 0; right: 0;
+        height: 70px;
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 9999;
+        padding: 0 15px;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.8);
+    }
+
+    /* شريط الاختصارات (The Action Dock) */
+    .action-dock {
+        flex: 1; display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 10px;
+    }
+    .dock-btn {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none; font-size: 1.2rem; cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative; overflow: hidden;
+    }
+    .dock-btn:active { transform: scale(0.9); }
     
-    .nav-button {
-        background: transparent;
-        color: #ddd;
-        text-decoration: none;
-        padding: 8px 15px;
-        border-radius: 50px;
-        border: 1px solid #444;
-        font-size: 0.85rem;
-        transition: 0.3s;
+    /* زر الإضافة (المميز) */
+    .btn-add-prop { background: linear-gradient(135deg, #00ff88, #00cc6a); color: black; box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); border: 1px solid #00ff88; }
+    /* زر الـ AI */
+    .btn-ai-chat { background: rgba(255, 255, 255, 0.08); color: var(--neon-secondary); border: 1px solid rgba(0, 212, 255, 0.3); }
+    /* زر البحث */
+    .btn-quick-search { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+    /* صورة البروفايل في الموبايل */
+    .mobile-profile-container { position: relative; }
+    .mobile-profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); object-fit: cover; }
+
+    /* القائمة المنسدلة للموبايل */
+    .mobile-dropdown {
+        display: none; position: fixed; top: 75px; left: 15px; width: 240px;
+        background: #1a1a1a; border: 1px solid var(--neon-primary); border-radius: 12px;
+        padding: 10px; z-index: 10000; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        animation: dropIn 0.2s ease-out;
     }
-    .nav-button:hover {
-        border-color: var(--neon-primary);
-        color: var(--neon-primary);
+    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; }
+    .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Media Query للموبايل */
+    @media (max-width: 768px) {
+        .main-header { display: none !important; } /* إخفاء الهيدر القديم */
+        .mobile-header-custom { display: flex !important; } /* إظهار الجديد */
+        body { padding-top: 70px; } /* مسافة عشان الهيدر الثابت */
+        
+        .search-bar-container { flex-direction: column; }
+        .search-button { display: none; }
+        .search-bar { border-radius: 50px !important; }
     }
+
+    /* --- باقي الستايلات الأصلية --- */
+    .search-section { padding: 30px 15px; text-align: center; max-width: 800px; margin: 0 auto; }
+    .search-bar-container { position: relative; display: flex; gap: 10px; }
+    .search-bar { width: 100%; padding: 15px 25px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 50px; color: white; font-size: 1rem; transition: 0.3s; }
+    .search-bar:focus { border-color: var(--neon-secondary); outline: none; box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+    .search-button { background: var(--neon-secondary); color: #000; border: none; padding: 0 25px; border-radius: 50px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: 0.3s; }
     
-    /* ✅ تعديل 3: إبراز زر "اعرض عقارك" ليكون واضح جداً */
-    .sell-btn {
-        background: var(--neon-primary) !important; /* خلفية صلبة نيون */
-        color: #000000 !important; /* نص أسود لتباين عالي */
-        border: 1px solid var(--neon-primary) !important;
-        padding: 8px 20px;
-        border-radius: 50px;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: bold;
-        box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); /* توهج */
-        transition: 0.3s;
-    }
-    .sell-btn:hover {
-        background: transparent !important; /* عند التحويم يصبح شفاف */
-        color: var(--neon-primary) !important;
-        box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-    }
-
-    /* --- 3. قسم البحث (Search Hero) --- */
-    .search-section {
-        padding: 30px 15px;
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .search-bar-container {
-        position: relative;
-        display: flex;
-        gap: 10px;
-    }
-
-    .search-bar {
-        width: 100%;
-        padding: 15px 25px;
-        background: rgba(0,0,0,0.6);
-        border: 1px solid #444;
-        border-radius: 50px; /* حواف دائرية كاملة */
-        color: white;
-        font-size: 1rem;
-        transition: 0.3s;
-    }
-    .search-bar:focus {
-        border-color: var(--neon-secondary);
-        outline: none;
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-    }
-
-    .search-button {
-        background: var(--neon-secondary);
-        color: #000;
-        border: none;
-        padding: 0 25px;
-        border-radius: 50px;
-        font-weight: bold;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: 0.3s;
-    }
-    .search-button:hover { box-shadow: 0 0 15px rgba(0, 212, 255, 0.6); }
-
-    /* --- 4. شبكة العقارات (Grid System) --- */
-    .listings-section {
-        max-width: 1250px;
-        margin: 0 auto;
-        padding: 0 15px 40px 15px;
-    }
-
-    .section-title {
-        color: var(--neon-primary);
-        margin-bottom: 20px;
-        border-right: 4px solid var(--neon-primary);
-        padding-right: 15px;
-        font-size: 1.5rem;
-    }
-
-    .adv-grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 25px;
-    }
-
-    /* تصميم الكارت الموحد */
-    .adv-card {
-        background: var(--card-bg); border-radius: 16px; overflow: hidden;
-        border: 1px solid #333; transition: 0.3s; position: relative;
-        display: flex; flex-direction: column;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
+    .listings-section { max-width: 1250px; margin: 0 auto; padding: 0 15px 40px 15px; }
+    .section-title { color: var(--neon-primary); margin-bottom: 20px; border-right: 4px solid var(--neon-primary); padding-right: 15px; font-size: 1.5rem; }
+    .adv-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+    
+    .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; transition: 0.3s; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
     .adv-card:hover { transform: translateY(-7px); border-color: var(--neon-primary); box-shadow: 0 15px 40px rgba(0, 255, 136, 0.2); }
-    
-    /* ✅ تعديل 2 (تابع): زيادة ارتفاع صورة الكارت قليلاً */
     .adv-card-img-box { height: 220px; position: relative; }
     .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .adv-price-tag { 
-        position: absolute; bottom: 10px; left: 10px; 
-        background: rgba(0,0,0,0.85); color: var(--neon-primary); 
-        padding: 5px 12px; border-radius: 8px; 
-        font-weight: bold; border: 1px solid var(--neon-primary); 
-        font-size: 1rem; 
-    }
-    
-    .adv-type-badge { 
-        position: absolute; top: 10px; left: 10px; 
-        padding: 5px 10px; border-radius: 6px; 
-        font-weight: bold; font-size: 0.8rem; color: black; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    .is-sale { background: #00ff88; } 
-    .is-rent { background: #00d4ff; }
-    
+    .adv-price-tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.85); color: var(--neon-primary); padding: 5px 12px; border-radius: 8px; font-weight: bold; border: 1px solid var(--neon-primary); font-size: 1rem; }
+    .adv-type-badge { position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: black; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
     .adv-card-body { padding: 15px; }
     .adv-title { color: white; margin: 0 0 12px 0; font-size: 1.1rem; line-height: 1.4; height: 3rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    
-    .adv-features { 
-        display: flex; gap: 15px; color: #bbb; 
-        font-size: 0.85rem; margin-bottom: 15px; 
-        border-bottom: 1px solid #333; padding-bottom: 12px; 
-    }
+    .adv-features { display: flex; gap: 15px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
     .adv-feat-item i { color: var(--neon-secondary); margin-left: 5px; }
-    
-    .adv-details-btn { 
-        display: block; width: 100%; text-align: center; 
-        border: 1px solid var(--neon-primary); color: var(--neon-primary); 
-        padding: 10px; border-radius: 8px; text-decoration: none; 
-        font-weight: bold; font-size: 0.95rem; transition: 0.3s;
-        background: transparent;
-    }
+    .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; transition: 0.3s; background: transparent; }
     .adv-details-btn:hover { background: var(--neon-primary); color: black; }
-
-    /* زر عرض المزيد */
-    .load-more-btn {
-        background: transparent; color: white; border: 1px solid #555;
-        padding: 12px 40px; border-radius: 50px; margin-top: 30px;
-        cursor: pointer; transition: 0.3s; font-size: 1rem;
-    }
+    .load-more-btn { background: transparent; color: white; border: 1px solid #555; padding: 12px 40px; border-radius: 50px; margin-top: 30px; cursor: pointer; transition: 0.3s; font-size: 1rem; }
     .load-more-btn:hover { border-color: var(--neon-primary); color: var(--neon-primary); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
 
-    /* --- تحسينات الموبايل --- */
-    @media (max-width: 768px) {
-        .adv-grid-container { grid-template-columns: 1fr; gap: 20px; }
-        
-        /* ✅ تعديل 1: إخفاء زر البحث في الموبايل */
-        .search-bar-container { flex-direction: column; }
-        .search-button { display: none; /* إخفاء الزر تماماً */ }
-        .search-bar { border-radius: 50px !important; /* التأكد من دائرية الحواف */ }
-
-        .header-container { flex-direction: column; gap: 15px; }
-        .main-nav { justify-content: center; width: 100%; gap: 8px; }
-        .nav-button, .sell-btn { flex-grow: 1; text-align: center; padding: 8px 5px; font-size: 0.8rem;}
-        .logo-container { justify-content: center; }
-    }
-
-    /* --- ستايلات العناصر العائمة (Popup, Chatbot) --- */
-    /* (احتفظ بنفس الستايلات القديمة الخاصة بالـ Chatbot والـ Popup هنا) */
-    /* --- 🌟 ستايل العقار المميز (Gold Premium Style) --- */
-.featured-card-glow {
-    border: 2px solid #FFD700 !important; /* حدود ذهبية */
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.25); /* وهج ذهبي */
-    position: relative;
-    transform: scale(1.02); /* تكبير بسيط لتمييزه */
-    z-index: 5;
-    background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important;
-    transition: all 0.3s ease;
-}
-
-.featured-card-glow:hover {
-    border-color: #FFA500 !important;
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
-    transform: translateY(-7px) scale(1.03);
-}
-
-/* التاج الذهبي */
-.featured-crown {
-    position: absolute;
-    top: 10px;
-    right: 10px; /* مكان التاج */
-    background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
-    background-size: 200% 200%;
-    color: black;
-    font-weight: 900;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    animation: goldShine 3s infinite linear;
-    border: 1px solid #fff;
-}
-
-@keyframes goldShine { 
-    0% { background-position: 0% 50%; } 
-    100% { background-position: 100% 50%; } 
-}
-</style>
+    .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 25px rgba(255, 215, 0, 0.25); position: relative; transform: scale(1.02); z-index: 5; background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important; transition: all 0.3s ease; }
+    .featured-card-glow:hover { border-color: #FFA500 !important; box-shadow: 0 0 40px rgba(255, 215, 0, 0.5); transform: translateY(-7px) scale(1.03); }
+    .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700); background-size: 200% 200%; color: black; font-weight: 900; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; animation: goldShine 3s infinite linear; border: 1px solid #fff; }
+    @keyframes goldShine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+    </style>
 </head>
 <body>
 
-        <header class="main-header">
+    <header class="mobile-header-custom">
+        <a href="home" style="text-decoration:none;">
+            <img src="logo.png" alt="عقارك" style="width:38px; height:38px; border-radius:50%; border:1px solid #444;">
+        </a>
+
+        <div class="action-dock">
+            <div onclick="toggleChat()" class="dock-btn btn-ai-chat" title="مساعد عقارك">
+                <i class="fas fa-robot"></i>
+            </div>
+            
+            <a href="seller-dashboard" class="dock-btn btn-add-prop" title="أضف عقارك مجاناً">
+                <i class="fas fa-plus"></i>
+            </a>
+
+            <div onclick="document.getElementById('hero-search-section').scrollIntoView({behavior: 'smooth', block: 'center'})" class="dock-btn btn-quick-search" title="بحث">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+
+        <div class="mobile-profile-container" id="mobile-auth-area">
+            </div>
+
+        <div id="mobile-profile-dropdown" class="mobile-dropdown">
+            <div style="padding:10px; border-bottom:1px solid #333; margin-bottom:5px;">
+                <strong style="color:white; display:block;" id="mob-user-name">...</strong>
+                <span style="font-size:0.75rem; color:#00ff88;" id="mob-user-balance"></span>
+            </div>
+            <a href="user-dashboard" class="dropdown-link"><i class="fas fa-th-large"></i> لوحة التحكم</a>
+            <a href="user-dashboard?tab=fav" class="dropdown-link"><i class="fas fa-heart"></i> المفضلة</a>
+            <a href="#" onclick="logoutUser()" class="dropdown-link" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</a>
+        </div>
+    </header>
+
+    <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.png" alt="شعار عقارك" class="logo">
@@ -363,9 +172,8 @@
         </div>
     </header>
 
-
     <main class="main-content">
-        <section class="search-section">
+        <section class="search-section" id="hero-search-section">
             <div class="search-bar-container">
                 <input type="text" class="search-bar neon-input-white" placeholder="ابحث عن عقارك (الاسم، السعر، الغرف)...">
                 <button class="search-button"><i class="fas fa-search"></i> ابحث</button>
@@ -397,39 +205,6 @@
         </div>
     </footer>
 
-    <div id="install-toast" class="install-toast" style="display: none;">
-        <div class="install-content">
-            <img src="logo.jpg" alt="Aqarak Logo" class="install-logo">
-            <div class="install-text">
-                <span class="app-name">تطبيق عقارك</span>
-                <span class="app-desc">تجربة أسرع وأسهل</span>
-            </div>
-        </div>
-        <div class="install-actions">
-            <button id="install-btn-action" class="btn-install-mini">تثبيت</button>
-            <button id="close-install" class="btn-close-mini"><i class="fas fa-times"></i></button>
-        </div>
-    </div>
-
-    <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
-        <div class="ios-prompt-content">
-            <span class="close-ios" onclick="closeIosPrompt()">&times;</span>
-            <p style="margin: 0; font-weight: bold; font-size: 0.9rem;">تثبيت تطبيق عقارك 📱</p>
-            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #ddd;">اضغط مشاركة <i class="fas fa-share-square"></i> ثم إضافة للصفحة الرئيسية.</p>
-        </div>
-        <div class="ios-arrow"></div>
-    </div>
-
-    <div id="promoPopup" class="popup-overlay">
-      <div class="popup-content">
-        <div class="news-header">عقارك</div>
-        <div class="sub-text">استمتع بتجربة بيع وشراء عقارية مختلفة</div>
-        <div class="glowing-box"><h3>خدمة مجانية 100%</h3><p>بدون رسوم</p></div>
-        <button class="action-btn" onclick="closePopup()">تصفح الموقع الآن</button>
-        <label class="checkbox-container"><input type="checkbox" id="dontShowAgain"> عدم العرض مرة أخرى</label>
-      </div>
-    </div>
-
     <button class="chatbot-toggler" onclick="toggleChat()">
         <i class="fas fa-robot"></i>
     </button>
@@ -445,20 +220,17 @@
             </div>
             <span class="close-btn" onclick="toggleChat()">×</span>
         </div>
-        
         <ul class="chatbox" id="chatbox">
             <li class="chat incoming">
                 <span class="bot-icon"><img src="logo.png" alt="Aqarak Bot"></span>
                 <p>مرحباً بك في منصة عقارك! 👋<br>أنا هنا لمساعدتك.. اختر من الاقتراحات 👇</p>
             </li>
         </ul>
-        
         <div class="suggestions-container">
             <button class="suggestion-chip" onclick="sendSuggestion('كيف يعمل الموقع؟')">كيف يعمل الموقع؟</button>
             <button class="suggestion-chip" onclick="sendSuggestion('ايه الشقق المتاحة؟')">ايه الشقق المتاحة؟</button>
             <button class="suggestion-chip" onclick="sendSuggestion('ازاي اتواصل مع المالك؟')">طريقة التواصل</button>
         </div>
-
         <div class="chat-input">
             <textarea id="userMessage" placeholder="اكتب سؤالك هنا..." required></textarea>
             <span id="micBtn" onclick="startVoiceInput()"><i class="fas fa-microphone"></i></span>
@@ -466,21 +238,34 @@
         </div>
     </div>
 
-    <style>
-        .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .popup-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.5s; color: #fff; }
-        .news-header { color: #00ff41; font-size: 32px; font-weight: 900; margin-bottom: 15px; }
-        .glowing-box { border: 2px solid #00e5ff; padding: 25px; margin: 20px 0; border-radius: 12px; background: radial-gradient(circle, rgba(0,229,255,0.1) 0%, transparent 70%); box-shadow: 0 0 20px rgba(0,229,255,0.4); }
-        .glowing-box h3 { margin: 0; font-size: 42px; color: #fff; font-weight: bold; }
-        .glowing-box p { margin: 5px 0 0; color: #00e5ff; font-size: 16px; font-weight: bold; }
-        .action-btn { background: linear-gradient(135deg, #00ff41, #008cff); color: white; border: none; padding: 15px 50px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; }
-        .checkbox-container { margin-top: 15px; font-size: 14px; color: #aaa; display: flex; justify-content: center; gap: 8px; cursor: pointer; }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    <button onclick="openComplaintModal()" class="complaint-float-btn">
+        <i class="fas fa-exclamation-circle"></i> عندك شكوى؟
+    </button>
 
-        /* شات يمين */
+    <div id="complaint-modal" class="popup-overlay" style="display: none;">
+        <div class="popup-content neon-glow" style="max-width: 400px; border-color: #ff4444;">
+            <span class="close-btn" onclick="closeComplaintModal()" style="position:absolute; top:10px; left:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <i class="fas fa-headset" style="font-size: 3rem; color: #ff4444;"></i>
+                <h3 style="color: white; margin-top: 10px;">إرسال شكوى للإدارة</h3>
+            </div>
+            <form id="user-complaint-form">
+                <div class="input-group full-width">
+                    <textarea id="complaint-text" class="neon-input-white" rows="4" placeholder="اكتب تفاصيل الشكوى هنا..." required style="background: #222; border-color: #555;"></textarea>
+                </div>
+                <button type="submit" class="btn-neon-auth" style="width: 100%; border-color: #ff4444; color: #ff4444;">
+                    <i class="fas fa-paper-plane"></i> إرسال الشكوى
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .complaint-float-btn { position: fixed; bottom: 20px; left: 20px; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; z-index: 9999; transition: 0.3s; backdrop-filter: blur(5px); }
+        .complaint-float-btn:hover { background: #ff4444; color: white; transform: translateY(-3px); }
         .chatbot-toggler { position: fixed; bottom: 85px; right: 25px; left: auto; height: 60px; width: 60px; border-radius: 50%; background: #007bff; color: #fff; border: none; font-size: 28px; cursor: pointer; z-index: 99999; transition: transform 0.3s; box-shadow: 0 0 15px rgba(0,123,255,0.6); }
         .chatbot-toggler:hover { transform: scale(1.1); background: #0056b3; }
-        .chatbot-window { position: fixed; right: 25px; left: auto; bottom: 155px; width: 90%; max-width: 450px; height: 75vh; max-height: 650px; background: #1c2630; border: 1px solid #333; border-radius: 15px; overflow: hidden; opacity: 0; pointer-events: none; transform: scale(0.5); transform-origin: bottom right; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: all 0.3s; z-index: 100000; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; }
+        .chatbot-window { position: fixed; right: 25px; left: auto; bottom: 155px; width: 90%; max-width: 450px; height: 75vh; max-height: 650px; background: #1c2630; border: 1px solid #333; border-radius: 15px; overflow: hidden; opacity: 0; pointer-events: none; transform: scale(0.5); transform-origin: bottom right; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: all 0.3s; z-index: 100000; display: flex; flex-direction: column; }
         .chatbot-window.show-chat { opacity: 1; pointer-events: auto; transform: scale(1); }
         .chatbot-header { background: #0d141b; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; flex-shrink: 0; }
         .header-info { display: flex; align-items: center; gap: 10px; }
@@ -494,115 +279,23 @@
         .chatbox .incoming .bot-icon img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .chatbox .incoming p { background: #2c3e50; color: #fff; border-radius: 15px 0 15px 15px; }
         .chatbox .outgoing { justify-content: flex-end; }
-        .chatbox .outgoing p { background: #007bff; color: #fff; border-radius: 0 15px 15px 15px; box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2); }
-        .chatbox a { color: #4facfe; text-decoration: underline; font-weight: bold; word-break: break-all; }
+        .chatbox .outgoing p { background: #007bff; color: #fff; border-radius: 0 15px 15px 15px; }
+        .chatbox a { color: #4facfe; text-decoration: underline; font-weight: bold; }
         .suggestions-container { display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; background: #1c2630; border-top: 1px solid #333; scrollbar-width: thin; }
         .suggestion-chip { background: rgba(0,123,255,0.1); color: #007bff; border: 1px solid #007bff; border-radius: 20px; padding: 8px 15px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
         .chat-input { display: flex; gap: 10px; padding: 15px; background: #0d141b; border-top: 1px solid #333; flex-shrink: 0; align-items: center; }
         .chat-input textarea { height: auto; min-height: 50px; max-height: 150px; width: 100%; border: none; outline: none; resize: none; background: #2c3e50; color: #fff; padding: 12px; border-radius: 10px; font-family: inherit; font-size: 0.95rem; overflow-y: hidden; }
-        .chat-input textarea.scrolling { overflow-y: auto; }
         .chat-input span { color: #007bff; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
         .recording { color: red !important; animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         body.no-scroll { overflow: hidden !important; height: 100vh; }
-        @media (max-width: 450px) { .chatbot-window { width: 95%; right: 2.5%; bottom: 20px; height: 80vh; } .chatbot-toggler { bottom: 20px; right: 20px; } }
-/* === تصميم الكارت المربع الصغير (Clickable) === */
-.chat-property-box {
-    display: block;
-    background: #1c2630; /* نفس لون خلفية الشات */
-    border: 1px solid #333;
-    border-radius: 12px;
-    overflow: hidden;
-    margin: 10px auto;
-    width: 90%;
-    max-width: 250px; /* عرض صغير ومناسب */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    text-decoration: none;
-    color: #fff;
-    transition: all 0.3s ease;
-    position: relative;
-    cursor: pointer;
-}
-
-/* تأثير التحديد عند الوقوف عليه */
-.chat-property-box:hover {
-    transform: translateY(-3px);
-    border-color: #007bff; /* برواز أزرق عند التحديد */
-    box-shadow: 0 0 15px rgba(0, 123, 255, 0.2);
-}
-
-.chat-box-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    border-bottom: 1px solid #2c3e50;
-    background: rgba(255,255,255,0.03);
-}
-
-.title-text {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: bold;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 70%;
-}
-
-.title-tag {
-    background: #FFD700;
-    color: #000;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-
-.chat-box-body {
-    padding: 12px;
-    text-align: center;
-}
-
-.price {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #4facfe;
-    margin: 8px 0;
-}
-
-.specs {
-    font-size: 0.8rem;
-    color: #aaa;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.cta {
-    font-size: 0.8rem;
-    color: #28a745;
-    font-weight: bold;
-    margin-top: 5px;
-}
+        .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .popup-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.5s; color: #fff; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
     </style>
 
     <script>
-        window.onload = function() {
-            var expiryDate = new Date('2026-03-03'); 
-            var today = new Date();
-            if (!localStorage.getItem('hidePromoForever') && !sessionStorage.getItem('hidePromoSession') && today < expiryDate) {
-                document.getElementById('promoPopup').style.display = 'flex';
-            }
-        };
-        function closePopup() {
-            document.getElementById('promoPopup').style.display = 'none';
-            if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hidePromoForever', 'true');
-            else sessionStorage.setItem('hidePromoSession', 'true');
-        }
-
+        // الشات بوت والشكاوي
         const chatInput = document.querySelector("#userMessage");
         const sendChatBtn = document.querySelector("#sendBtn");
         const chatbox = document.querySelector(".chatbox");
@@ -618,10 +311,7 @@
 
         chatInput.addEventListener("input", () => {
             chatInput.style.height = "auto";
-            let scHeight = chatInput.scrollHeight;
-            chatInput.style.height = `${scHeight}px`;
-            if (scHeight > 150) chatInput.classList.add('scrolling');
-            else chatInput.classList.remove('scrolling');
+            chatInput.style.height = `${chatInput.scrollHeight}px`;
         });
 
         const startVoiceInput = () => {
@@ -631,202 +321,60 @@
             recognition.lang = 'ar-EG';
             recognition.onstart = () => { micBtn.classList.add("recording"); chatInput.placeholder = "تحدث..."; };
             recognition.onend = () => { micBtn.classList.remove("recording"); chatInput.placeholder = "اكتب..."; };
-            recognition.onresult = (e) => {
-                chatInput.value = e.results[0][0].transcript;
-                chatInput.dispatchEvent(new Event('input'));
-            };
+            recognition.onresult = (e) => { chatInput.value = e.results[0][0].transcript; chatInput.dispatchEvent(new Event('input')); };
             recognition.start();
         }
 
-        const sendSuggestion = (text) => {
-            chatInput.value = text;
-            chatInput.dispatchEvent(new Event('input'));
-            handleChat();
-        }
-
-        const formatMessage = (text) => {
-            let formatted = text.replace(/(https?:\/\/[^\s)\]]+)/g, '<a href="$1" target="_blank">$1</a>');
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/\n/g, '<br>');
-            return formatted;
-        }
+        const sendSuggestion = (text) => { chatInput.value = text; handleChat(); }
 
         const createChatLi = (message, className) => {
             const chatLi = document.createElement("li");
             chatLi.classList.add("chat", className);
-            let chatContent = className === "incoming" ? `<span class="bot-icon"><img src="logo.png" alt="Bot"></span><p></p>` : `<p></p>`;
+            let chatContent = className === "incoming" ? `<span class="bot-icon"><img src="logo.png" alt="Bot"></span><p>${message}</p>` : `<p>${message}</p>`;
             chatLi.innerHTML = chatContent;
-            // استخدام innerHTML عشان يعرض الكارت صح
-            chatLi.querySelector("p").innerHTML = className === "outgoing" ? message : formatMessage(message);
             return chatLi;
-        }
-
-        const generateResponse = async (incomingChatLi) => {
-            const messageElement = incomingChatLi.querySelector("p");
-            try {
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMessage })
-                });
-                const data = await response.json();
-                messageElement.innerHTML = formatMessage(data.reply);
-            } catch (error) { messageElement.textContent = "خطأ في الاتصال"; }
-            chatbox.scrollTo(0, chatbox.scrollHeight);
         }
 
         const handleChat = () => {
             userMessage = chatInput.value.trim();
             if(!userMessage) return;
-
             if(suggestionsBox) suggestionsBox.style.display = "none";
-
             chatbox.appendChild(createChatLi(userMessage, "outgoing"));
             chatbox.scrollTo(0, chatbox.scrollHeight);
             chatInput.value = "";
-            chatInput.style.height = "auto";
-            setTimeout(() => {
+            setTimeout(async () => {
                 const incomingChatLi = createChatLi("...", "incoming");
                 chatbox.appendChild(incomingChatLi);
                 chatbox.scrollTo(0, chatbox.scrollHeight);
-                generateResponse(incomingChatLi);
+                try {
+                    const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: userMessage }) });
+                    const data = await response.json();
+                    incomingChatLi.querySelector("p").innerHTML = data.reply.replace(/\n/g, '<br>');
+                } catch (error) { incomingChatLi.querySelector("p").textContent = "خطأ في الاتصال"; }
             }, 600);
         }
 
         sendChatBtn.addEventListener("click", handleChat);
-        chatInput.addEventListener("keydown", (e) => {
-            if(e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChat(); }
-        });
-
-        // سكربتات التثبيت
-        let deferredPrompt;
-        const installToast = document.getElementById('install-toast');
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            if (!localStorage.getItem('installPromptDismissed')) installToast.style.display = 'flex';
-        });
-        document.getElementById('install-btn-action')?.addEventListener('click', async () => {
-            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; installToast.style.display = 'none'; }
-        });
-        document.getElementById('close-install')?.addEventListener('click', () => {
-            installToast.style.display = 'none'; localStorage.setItem('installPromptDismissed', 'true');
-        });
         
-        document.addEventListener('DOMContentLoaded', () => {
-            const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
-            if (isIos && !isStandalone && !localStorage.getItem('iosPromptDismissed')) {
-                setTimeout(() => { document.getElementById('ios-install-prompt').style.display = 'flex'; }, 3000);
-            }
+        function openComplaintModal() { document.getElementById('complaint-modal').style.display = 'flex'; }
+        function closeComplaintModal() { document.getElementById('complaint-modal').style.display = 'none'; }
+        
+        document.getElementById('user-complaint-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const text = document.getElementById('complaint-text').value;
+            btn.innerHTML = 'جاري الإرسال...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/submit-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: text }) });
+                const data = await res.json();
+                if(res.ok) { alert('✅ ' + data.message); closeComplaintModal(); } else alert(data.message);
+            } catch(err) { alert('خطأ'); } finally { btn.innerHTML = 'إرسال الشكوى'; btn.disabled = false; }
         });
-        window.closeIosPrompt = () => {
-            document.getElementById('ios-install-prompt').style.display = 'none';
-            localStorage.setItem('iosPromptDismissed', Date.now());
-        };
     </script>
     
     <script src="home.js"></script>
     <script src="search-handler.js"></script>
-    <script src="guest.js"></script>
-    <script src="utils.js"></script>
-    <script src="app.js"></script>
-    <script src="reload.js"></script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
-    <button onclick="openComplaintModal()" class="complaint-float-btn">
-    <i class="fas fa-exclamation-circle"></i> عندك شكوى؟
-</button>
-
-<div id="complaint-modal" class="popup-overlay" style="display: none;">
-    <div class="popup-content neon-glow" style="max-width: 400px; border-color: #ff4444;">
-        <span class="close-btn" onclick="closeComplaintModal()" style="position:absolute; top:10px; left:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
-        
-        <div style="text-align: center; margin-bottom: 15px;">
-            <i class="fas fa-headset" style="font-size: 3rem; color: #ff4444;"></i>
-            <h3 style="color: white; margin-top: 10px;">إرسال شكوى للإدارة</h3>
-            <p style="color: #ccc; font-size: 0.9rem;">واجهتك مشكلة؟ اكتبلنا وهنحلها فوراً.</p>
-        </div>
-
-        <form id="user-complaint-form">
-            <div class="input-group full-width">
-                <textarea id="complaint-text" class="neon-input-white" rows="4" placeholder="اكتب تفاصيل الشكوى هنا..." required style="background: #222; border-color: #555;"></textarea>
-            </div>
-            <button type="submit" class="btn-neon-auth" style="width: 100%; border-color: #ff4444; color: #ff4444;">
-                <i class="fas fa-paper-plane"></i> إرسال الشكوى
-            </button>
-        </form>
-    </div>
-</div>
-
-<style>
-    /* تنسيق زر الشكوى العائم */
-    .complaint-float-btn {
-        position: fixed;
-        bottom: 20px;
-        left: 20px; /* على الشمال عشان ميتعارضش مع الشات بوت */
-        background: rgba(255, 68, 68, 0.1);
-        color: #ff4444;
-        border: 1px solid #ff4444;
-        padding: 10px 20px;
-        border-radius: 50px;
-        font-weight: bold;
-        cursor: pointer;
-        z-index: 9999;
-        transition: 0.3s;
-        backdrop-filter: blur(5px);
-        box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
-    }
-    .complaint-float-btn:hover {
-        background: #ff4444;
-        color: white;
-        transform: translateY(-3px);
-        box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
-    }
-</style>
-
-<script>
-    // دوال فتح وغلق المودال
-    function openComplaintModal() {
-        document.getElementById('complaint-modal').style.display = 'flex';
-    }
-    function closeComplaintModal() {
-        document.getElementById('complaint-modal').style.display = 'none';
-    }
-
-    // إرسال الشكوى
-    document.getElementById('user-complaint-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button');
-        const originalText = btn.innerHTML;
-        const text = document.getElementById('complaint-text').value;
-
-        btn.innerHTML = 'جاري الإرسال...';
-        btn.disabled = true;
-
-        try {
-            const res = await fetch('/api/submit-complaint', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ content: text })
-            });
-            
-            const data = await res.json();
-
-            if(res.ok) {
-                alert('✅ ' + data.message);
-                document.getElementById('complaint-text').value = '';
-                closeComplaintModal();
-            } else {
-                if(res.status === 401) alert('يجب تسجيل الدخول أولاً لإرسال شكوى.');
-                else alert('❌ حدث خطأ: ' + data.message);
-            }
-        } catch(err) {
-            alert('خطأ في الاتصال.');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    });
-</script>
 </body>
 </html>
