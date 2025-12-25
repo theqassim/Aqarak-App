@@ -2120,4 +2120,76 @@ app.post('/api/admin/send-notification', async (req, res) => {
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
+// ✅ تحديث بيانات البروفايل (صورة + يوزر نيم)
+app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'سجل دخول أولاً' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { newUsername } = req.body;
+        const phone = decoded.phone;
+
+        // 1. جلب بيانات المستخدم الحالية
+        const userRes = await pgQuery('SELECT * FROM users WHERE phone = $1', [phone]);
+        const currentUser = userRes.rows[0];
+
+        let updateQuery = 'UPDATE users SET ';
+        let updateValues = [];
+        let paramCounter = 1;
+
+        // 2. معالجة تغيير الصورة (لو رفع صورة جديدة)
+        if (req.file) {
+            updateQuery += `profile_picture = $${paramCounter}, `;
+            updateValues.push(req.file.path);
+            paramCounter++;
+        }
+
+        // 3. معالجة تغيير اسم المستخدم (بشروط)
+        if (newUsername && newUsername !== currentUser.username) {
+            // أ. التحقق من المدة (مرة كل 30 يوم)
+            if (currentUser.last_username_change) {
+                const lastChange = new Date(currentUser.last_username_change);
+                const now = new Date();
+                const diffTime = Math.abs(now - lastChange);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays < 30) {
+                    return res.status(400).json({ 
+                        message: `عفواً، لا يمكنك تغيير اسم المستخدم إلا بعد ${30 - diffDays} يوم.` 
+                    });
+                }
+            }
+
+            // ب. التحقق من أن الاسم غير محجوز
+            const checkUser = await pgQuery('SELECT id FROM users WHERE username = $1', [newUsername]);
+            if (checkUser.rows.length > 0) {
+                return res.status(400).json({ message: 'اسم المستخدم هذا مستخدم بالفعل.' });
+            }
+
+            // ج. الموافقة على التغيير
+            updateQuery += `username = $${paramCounter}, last_username_change = NOW(), `;
+            updateValues.push(newUsername);
+            paramCounter++;
+        }
+
+        // لو مفيش حاجة اتغيرت
+        if (updateValues.length === 0) {
+            return res.json({ success: true, message: 'لم يتم تغيير أي بيانات' });
+        }
+
+        // إزالة الفاصلة الزائدة في النهاية وإكمال الاستعلام
+        updateQuery = updateQuery.slice(0, -2); 
+        updateQuery += ` WHERE phone = $${paramCounter}`;
+        updateValues.push(phone);
+
+        await pgQuery(updateQuery, updateValues);
+
+        res.json({ success: true, message: 'تم تحديث الملف الشخصي بنجاح ✅' });
+
+    } catch (error) {
+        console.error("Update Profile Error:", error);
+        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
