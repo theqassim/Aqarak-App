@@ -716,40 +716,22 @@ app.get('/api/auth/me', async (req, res) => {
     
     try { 
         const decoded = jwt.verify(token, JWT_SECRET);
-
-        // ✅ تصحيح: قراءة المفتاح الصحيح (payment_active) بدلاً من (payment_config)
+        
         let isPaymentActive = false;
         const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
-        if (settingsRes.rows.length > 0) {
-            // القيمة مخزنة كنص 'true' أو 'false'
-            isPaymentActive = settingsRes.rows[0].setting_value === 'true';
-        }
+        if (settingsRes.rows.length > 0) isPaymentActive = settingsRes.rows[0].setting_value === 'true';
         
-        // لو أدمن
-        if (decoded.role === 'admin' || decoded.id === 0) {
-             return res.json({ 
-                 isAuthenticated: true, 
-                 role: 'admin', 
-                 phone: decoded.phone, 
-                 username: 'admin', 
-                 name: 'المدير العام',
-                 balance: 999999,
-                 isPaymentActive: true // الأدمن دايماً يشوف النقط
-             });
+        if (decoded.role === 'admin') {
+             return res.json({ isAuthenticated: true, role: 'admin', phone: decoded.phone, username: 'admin', name: 'المدير العام', balance: 999999, isPaymentActive: true, is_verified: true });
         }
 
-        // لو مستخدم عادي
-        const userRes = await pgQuery('SELECT role, phone, username, name, is_banned, wallet_balance FROM users WHERE id = $1', [decoded.id]);
+        // جلب التوثيق والصورة
+        const userRes = await pgQuery('SELECT role, phone, username, name, is_banned, wallet_balance, is_verified, profile_picture FROM users WHERE id = $1', [decoded.id]);
         
-        if (userRes.rows.length === 0) {
-            return res.json({ isAuthenticated: false, role: 'guest' });
-        }
-
+        if (userRes.rows.length === 0) return res.json({ isAuthenticated: false, role: 'guest' });
         const user = userRes.rows[0];
 
-        if (user.is_banned) {
-            return res.status(403).json({ isAuthenticated: false, banned: true });
-        }
+        if (user.is_banned) return res.status(403).json({ isAuthenticated: false, banned: true });
 
         res.json({ 
             isAuthenticated: true, 
@@ -758,7 +740,9 @@ app.get('/api/auth/me', async (req, res) => {
             username: user.username, 
             name: user.name,
             balance: parseFloat(user.wallet_balance || 0),
-            isPaymentActive: isPaymentActive // ✅ إرسال الحالة الصحيحة
+            is_verified: user.is_verified, // ✅ إرسال حالة التوثيق
+            profile_picture: user.profile_picture, // ✅ إرسال الصورة
+            isPaymentActive: isPaymentActive
         }); 
     } 
     catch (err) { res.json({ isAuthenticated: false, role: 'guest' }); }
@@ -1184,27 +1168,34 @@ app.get('/api/properties', async (req, res) => {
     // 🔥 الخطوة الجديدة: فحص العقارات المنتهية أولاً
     await checkExpiredFeatured(); 
 
-    let sql = "SELECT id, title, price, rooms, bathrooms, area, \"imageUrl\", type, \"isFeatured\", \"isLegal\", \"sellerPhone\" FROM properties"; 
+    // ✅ التعديل: إضافة JOIN مع جدول المستخدمين لجلب حالة التوثيق (is_verified)
+    let sql = `
+        SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified 
+        FROM properties p
+        LEFT JOIN users u ON p."sellerPhone" = u.phone
+    `; 
+    
     const params = []; 
     let idx = 1; 
     const filters = []; 
     
     const { type, limit, offset, keyword, minPrice, maxPrice, rooms, sort } = req.query; 
 
-    if (type) { filters.push(`type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } 
-    if (keyword) { filters.push(`(title ILIKE $${idx} OR description ILIKE $${idx} OR "hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } 
-    if (minPrice) { filters.push(`"numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } 
-    if (maxPrice) { filters.push(`"numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } 
-    if (rooms) { if (rooms === '4+') { filters.push(`rooms >= $${idx++}`); params.push(4); } else { filters.push(`rooms = $${idx++}`); params.push(Number(rooms)); } } 
+    // ✅ التعديل: إضافة "p." قبل أسماء الأعمدة لتحديد أنها من جدول properties
+    if (type) { filters.push(`p.type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } 
+    if (keyword) { filters.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx} OR p."hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } 
+    if (minPrice) { filters.push(`p."numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } 
+    if (maxPrice) { filters.push(`p."numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } 
+    if (rooms) { if (rooms === '4+') { filters.push(`p.rooms >= $${idx++}`); params.push(4); } else { filters.push(`p.rooms = $${idx++}`); params.push(Number(rooms)); } } 
     
     if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); 
 
     // الترتيب: المميز أولاً
-    let orderBy = 'ORDER BY "isFeatured" DESC, id DESC'; 
+    let orderBy = 'ORDER BY p."isFeatured" DESC, p.id DESC'; 
     
-    if (sort === 'price_asc') orderBy = 'ORDER BY "isFeatured" DESC, "numericPrice" ASC'; 
-    else if (sort === 'price_desc') orderBy = 'ORDER BY "isFeatured" DESC, "numericPrice" DESC'; 
-    else if (sort === 'oldest') orderBy = 'ORDER BY "isFeatured" DESC, id ASC'; 
+    if (sort === 'price_asc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" ASC'; 
+    else if (sort === 'price_desc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" DESC'; 
+    else if (sort === 'oldest') orderBy = 'ORDER BY p."isFeatured" DESC, p.id ASC'; 
     
     sql += ` ${orderBy}`; 
 
@@ -1212,7 +1203,7 @@ app.get('/api/properties', async (req, res) => {
     if (offset) { sql += ` OFFSET $${idx++}`; params.push(parseInt(offset)); }
 
     try { const result = await pgQuery(sql, params); res.json(result.rows); } 
-    catch (err) { res.status(500).json({ message: 'Error fetching properties' }); } 
+    catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching properties' }); } 
 });
 
 // 4. API تفعيل باقة التميز (شراء الباقة)
@@ -1312,7 +1303,24 @@ app.get('/api/admin/counts', async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); }
 });
 
-app.get('/api/public/profile/:username', async (req, res) => { const { username } = req.params; try { const userRes = await pgQuery('SELECT name, phone FROM users WHERE username = $1', [username.toLowerCase()]); if (userRes.rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود' }); const user = userRes.rows[0]; const propsRes = await pgQuery(`SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`, [username.toLowerCase(), user.phone]); res.json({ name: user.name, properties: propsRes.rows }); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
+app.get('/api/public/profile/:username', async (req, res) => { 
+    const { username } = req.params; 
+    try { 
+        // جلب التوثيق والصورة
+        const userRes = await pgQuery('SELECT name, phone, is_verified, profile_picture FROM users WHERE username = $1', [username.toLowerCase()]); 
+        if (userRes.rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود' }); 
+        
+        const user = userRes.rows[0]; 
+        const propsRes = await pgQuery(`SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`, [username.toLowerCase(), user.phone]); 
+        
+        res.json({ 
+            name: user.name, 
+            is_verified: user.is_verified, // ✅
+            profile_picture: user.profile_picture, // ✅
+            properties: propsRes.rows 
+        }); 
+    } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } 
+});
 
 // ==========================================================
 // 🛠️ روابط تحديث وإصلاح الداتابيز (شغلها مرة واحدة)
@@ -2143,7 +2151,6 @@ app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async
         const { newUsername } = req.body;
         const phone = decoded.phone;
 
-        // 1. جلب بيانات المستخدم
         const userRes = await pgQuery('SELECT * FROM users WHERE phone = $1', [phone]);
         const currentUser = userRes.rows[0];
 
@@ -2151,33 +2158,34 @@ app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async
         let updateValues = [];
         let paramCounter = 1;
 
-        // 2. تحديث الصورة (إذا تم رفع ملف)
+        // --- إصلاح مسار الصورة ---
         if (req.file) {
+            // لو Cloudinary بناخد path، لو Local بنحط / قبلها
+            let finalPath = req.file.path;
+            if (!finalPath.startsWith('http')) {
+                finalPath = '/' + finalPath.replace(/\\/g, "/");
+            }
+            
             updateQuery += `profile_picture = $${paramCounter}, `;
-            updateValues.push(req.file.path); // رابط Cloudinary المباشر
+            updateValues.push(finalPath);
             paramCounter++;
         }
 
-        // 3. تحديث اسم المستخدم (بشروط)
         if (newUsername && newUsername !== currentUser.username) {
-            // التحقق من المدة (30 يوم)
             if (currentUser.last_username_change) {
                 const lastChange = new Date(currentUser.last_username_change);
                 const diffDays = Math.ceil(Math.abs(new Date() - lastChange) / (1000 * 60 * 60 * 24));
-                if (diffDays < 30) {
-                    return res.status(400).json({ message: `متبقي ${30 - diffDays} يوم لتغيير الاسم مرة أخرى.` });
-                }
+                if (diffDays < 30) return res.status(400).json({ message: `انتظر ${30 - diffDays} يوم لتغيير الاسم.` });
             }
-            // التحقق من التوفر
             const checkUser = await pgQuery('SELECT id FROM users WHERE username = $1', [newUsername]);
-            if (checkUser.rows.length > 0) return res.status(400).json({ message: 'الاسم مستخدم بالفعل' });
+            if (checkUser.rows.length > 0) return res.status(400).json({ message: 'الاسم مستخدم بالفعل.' });
 
             updateQuery += `username = $${paramCounter}, last_username_change = NOW(), `;
             updateValues.push(newUsername);
             paramCounter++;
         }
 
-        if (updateValues.length === 0) return res.json({ success: true, message: 'لم يتم تغيير شيء' });
+        if (updateValues.length === 0) return res.json({ success: true, message: 'لم يتغير شيء' });
 
         updateQuery = updateQuery.slice(0, -2) + ` WHERE phone = $${paramCounter}`;
         updateValues.push(phone);
@@ -2186,7 +2194,7 @@ app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async
         res.json({ success: true, message: 'تم التحديث بنجاح ✅' });
 
     } catch (error) {
-        console.error("Update Profile Error:", error);
+        console.error("Update Error:", error);
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
@@ -2243,6 +2251,42 @@ app.post('/api/admin/users/verify', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'خطأ' });
+    }
+});
+// 🗑️ حذف الحساب نهائياً
+app.post('/api/user/delete', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { password } = req.body;
+
+        // 1. التحقق من المستخدم
+        const userRes = await pgQuery('SELECT id, password, phone FROM users WHERE id = $1', [decoded.id]);
+        if (userRes.rows.length === 0) return res.status(404).json({ message: 'مستخدم غير موجود' });
+        
+        const user = userRes.rows[0];
+
+        // 2. التحقق من كلمة المرور
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'كلمة المرور غير صحيحة' });
+
+        // 3. حذف البيانات (نبدأ بالعقارات المرتبطة ثم المستخدم)
+        // حذف العقارات
+        await pgQuery('DELETE FROM properties WHERE "sellerPhone" = $1', [user.phone]);
+        // حذف الإشعارات
+        await pgQuery('DELETE FROM notifications WHERE user_id = $1', [user.id]);
+        // حذف المستخدم نفسه
+        await pgQuery('DELETE FROM users WHERE id = $1', [user.id]);
+
+        // 4. تسجيل الخروج
+        res.clearCookie('auth_token');
+        res.json({ success: true, message: 'تم حذف الحساب بنجاح' });
+
+    } catch (error) {
+        console.error("Delete Account Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر أثناء الحذف' });
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

@@ -87,13 +87,12 @@
         min-height: 100vh;
         font-family: 'Cairo', sans-serif;
         color: white;
-        /* 🔥 تعديل: إلغاء المسافة لأن الهيدر أصبح جزء من الصفحة */
         padding-top: 0 !important; 
     }
 
-    /* --- Header (تم التعديل ليتحرك مع السكرول) --- */
+    /* --- Header --- */
     .main-header {
-        position: relative !important; /* 🔥 تغيير من fixed لـ relative */
+        position: relative !important;
         width: 100% !important;
         z-index: 9999;
         background: var(--glass-bg);
@@ -114,7 +113,6 @@
         padding: 40px 20px;
         text-align: center;
         margin-bottom: 40px;
-        /* اضافة بسيطة عشان ميكونش لازق في الهيدر اوي */
         margin-top: 0; 
     }
     
@@ -126,9 +124,11 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 3rem; margin: 0 auto 15px;
         box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        overflow: hidden;
     }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-    .profile-name { color: #fff; margin: 0; font-size: 1.8rem; font-weight:bold; }
+    .profile-name { color: #fff; margin: 0; font-size: 1.8rem; font-weight:bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .profile-stats { color: #888; margin-top: 10px; font-size: 0.95rem; }
     .profile-stats span { color: var(--neon-primary); font-weight: bold; }
 
@@ -158,7 +158,23 @@
     .card-details { color: #aaa; font-size: 0.85rem; margin-top: 10px; border-top:1px solid #333; padding-top:10px; }
     
     .main-footer { text-align: center; padding: 20px; color: #666; border-top: 1px solid #333; margin-top: 50px; }
-</style>
+
+    /* ✅ علامة التوثيق الذهبية */
+    .verified-badge {
+        color: #fff; 
+        background-color: #FFD700; 
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+        vertical-align: middle;
+        box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+        border: 1px solid #fff;
+    }
+    </style>
 </head>
 <body class="internal-page">
 
@@ -177,7 +193,9 @@
     </header>
 
     <div class="profile-header">
-        <div class="profile-avatar"><i class="fas fa-user"></i></div>
+        <div class="profile-avatar" id="avatar-container">
+            <i class="fas fa-user"></i>
+        </div>
         <h1 class="profile-name" id="user-name">...</h1>
         <p class="profile-stats" id="listing-count">...</p>
     </div>
@@ -220,9 +238,21 @@
 
                 const data = await response.json();
 
-                document.getElementById('user-name').textContent = data.name;
+                // ✅ 1. عرض علامة التوثيق الذهبية
+                const verifiedBadge = data.is_verified ? 
+                    `<i class="fas fa-check verified-badge" title="موثق"></i>` : '';
+                
+                document.getElementById('user-name').innerHTML = `${data.name} ${verifiedBadge}`;
                 document.getElementById('listing-count').innerHTML = `إجمالي العقارات: <span>${data.properties.length}</span>`;
                 document.title = `عقارات ${data.name} - عقارك`;
+
+                // ✅ 2. عرض الصورة الشخصية
+                const avatarContainer = document.getElementById('avatar-container');
+                if(data.profile_picture && !data.profile_picture.includes('logo.png')) {
+                    avatarContainer.innerHTML = `<img src="${data.profile_picture}" alt="${data.name}">`;
+                } else {
+                    avatarContainer.innerHTML = `<i class="fas fa-user"></i>`;
+                }
 
                 loading.style.display = 'none';
 
@@ -233,7 +263,6 @@
 
                 data.properties.forEach(prop => {
                     const price = Number(prop.price).toLocaleString('ar-EG');
-                    const typeLabel = (prop.type === 'buy' || prop.type === 'بيع') ? 'بيع' : 'إيجار';
                     
                     const card = `
                         <div class="property-card" onclick="window.location.href='property-details?id=${prop.id}'">
@@ -263,6 +292,5 @@
     </script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
-<
 </body>
 </html>

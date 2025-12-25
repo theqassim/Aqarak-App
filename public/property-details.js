@@ -284,6 +284,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         let publisherHTML = '';
         let publisherStatsBadge = '';
 
+        // ✅ تعريف علامة التوثيق الذهبية
+        const verifiedBadge = property.is_verified ? 
+            `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-right:5px; margin-left:5px; vertical-align:middle; box-shadow:0 0 5px rgba(255, 215, 0, 0.5);" title="بائع موثق"></i>` : '';
+
         if (property.publisherUsername) {
             try {
                 const statsRes = await fetch(`/api/public/profile/${property.publisherUsername}`);
@@ -314,7 +318,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <span><i class="fas fa-user-circle"></i> تم النشر بواسطة:</span>
                         <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold;">
-                            ${property.sellerName || 'مستخدم عقارك'}
+                            ${property.sellerName || 'مستخدم عقارك'} ${verifiedBadge}
                         </a>
                         ${publisherStatsBadge}
                     </p>
@@ -324,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
                     <p style="color: #ccc;">
-                        <i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'}
+                        <i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'} ${verifiedBadge}
                     </p>
                 </div>
             `;
@@ -365,7 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <style>@keyframes shine { 0% { transform: skewX(-20deg) translateX(-150%); } 20% { transform: skewX(-20deg) translateX(150%); } 100% { transform: skewX(-20deg) translateX(150%); } }</style>
                     `;
                 } else if (property.isFeatured) {
-                     featureBtnHTML = `
+                        featureBtnHTML = `
                         <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid #FFD700; color: #FFD700; padding: 10px; border-radius: 50px; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold;">
                             <i class="fas fa-check-circle"></i> هذا العقار مميز (Premium)
                         </div>
