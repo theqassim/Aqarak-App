@@ -9,43 +9,44 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ✅ دالة ضبط هيدر الموبايل الجديد
+// ✅ دالة ضبط هيدر الموبايل (المعدلة)
 async function updateMobileHeader() {
-    const authArea = document.getElementById('mobile-auth-area');
-    if (!authArea) return;
-
     try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
 
+        const mobName = document.getElementById('mob-user-name');
+        const mobBalance = document.getElementById('mob-user-balance');
+        const guestActions = document.getElementById('mob-guest-actions');
+        const userActions = document.getElementById('mob-user-actions');
+
         if (data.isAuthenticated) {
-            // ✅ لو مسجل دخول: اعرض الصورة
-            authArea.innerHTML = `
-                <img src="${data.profile_picture || 'logo.png'}" class="mobile-profile-img" onclick="toggleMobileMenu()">
-            `;
-            
-            // تحديث بيانات القائمة المنسدلة
-            const mobName = document.getElementById('mob-user-name');
-            const mobBalance = document.getElementById('mob-user-balance');
-            
-            if(mobName) mobName.textContent = data.name || 'مستخدم عقارك';
+            // بيانات المستخدم
+            mobName.textContent = data.name || 'مستخدم عقارك';
             if(mobBalance) {
                 if(data.isPaymentActive) {
                     mobBalance.textContent = `${data.balance || 0} نقطة`;
+                    mobBalance.style.display = 'block';
                 } else {
                     mobBalance.style.display = 'none';
                 }
             }
+            
+            // إظهار زر الخروج وإخفاء زر الدخول
+            if(userActions) userActions.style.display = 'block';
+            if(guestActions) guestActions.style.display = 'none';
+
         } else {
-            // ❌ لو زائر: اعرض زر دخول أنيق
-            authArea.innerHTML = `
-                <a href="index" style="color:#00ff88; font-weight:bold; text-decoration:none; font-size:0.85rem; border:1px solid #00ff88; padding:6px 12px; border-radius:15px; display:flex; align-items:center; gap:5px;">
-                    دخول <i class="fas fa-sign-in-alt"></i>
-                </a>
-            `;
+            // وضع الزائر
+            mobName.textContent = 'زائر';
+            if(mobBalance) mobBalance.style.display = 'none';
+
+            // إظهار زر الدخول وإخفاء زر الخروج
+            if(userActions) userActions.style.display = 'none';
+            if(guestActions) guestActions.style.display = 'block';
         }
     } catch (e) { console.error("Mobile Header Error:", e); }
 }
-
 // ✅ دوال القائمة المنسدلة (Global)
 window.toggleMobileMenu = function() {
     const menu = document.getElementById('mobile-profile-dropdown');
