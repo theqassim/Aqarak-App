@@ -181,8 +181,6 @@
             <a href="all-properties" class="dropdown-link"><i class="fas fa-building"></i> جميع العقارات</a>
             <a href="all-properties.html?type=buy" class="dropdown-link" style="color:var(--neon-primary);"><i class="fas fa-key"></i> عقارات للبيع</a>
             <a href="all-properties.html?type=rent" class="dropdown-link" style="color:var(--neon-secondary);"><i class="fas fa-door-open"></i> عقارات للإيجار</a>
-            
-            <a href="#" onclick="logoutUser()" class="dropdown-link" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</a>
         </div>
     </header>
 
@@ -251,5 +249,258 @@
     </script>
     <script src="home.js"></script>
     <script src="ban-check.js"></script>
+    <div id="ai-root">
+    <div class="ai-orb-container" onclick="toggleAiChat()">
+        <div class="ai-orb-pulse"></div>
+        <div class="ai-orb-core">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="ai-status-ring"></div>
+    </div>
+
+    <div class="ai-hud-interface" id="ai-interface">
+        <div class="ai-hud-header">
+            <div class="ai-identity">
+                <div class="ai-mini-orb"></div>
+                <div class="ai-info">
+                    <span class="ai-name">AQARAK <small>AI CORE</small></span>
+                    <span class="ai-status">ONLINE /// SYSTEM READY</span>
+                </div>
+            </div>
+            <button class="ai-close-btn" onclick="toggleAiChat()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="ai-console" id="ai-console">
+            <div class="ai-msg ai-msg-bot">
+                <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+                <div class="ai-text">أهلاً بك في المستقبل 🌌<br>أنا عقارك AI. كيف يمكنني مساعدتك اليوم؟</div>
+            </div>
+            </div>
+
+        <div class="ai-typing-indicator" id="ai-typing" style="display: none;">
+            <span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="ai-input-zone">
+            <input type="text" id="ai-user-input" placeholder="اكتب استفسارك هنا..." onkeypress="handleAiEnter(event)">
+            <button class="ai-send-btn" onclick="sendAiMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- 🎨 المتغيرات الفضائية --- */
+    :root {
+        --ai-primary: #00ff88;      /* أخضر نيون */
+        --ai-secondary: #00d4ff;    /* أزرق نيون */
+        --ai-bg: rgba(10, 15, 20, 0.85); /* أسود شفاف */
+        --ai-glass: rgba(255, 255, 255, 0.05);
+        --ai-border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    /* --- 🛸 1. زر الأورب (The Floating Orb) --- */
+    .ai-orb-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 70px;
+        height: 70px;
+        cursor: pointer;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .ai-orb-container:hover { transform: scale(1.1); }
+
+    .ai-orb-core {
+        width: 50px;
+        height: 50px;
+        background: radial-gradient(circle at 30% 30%, #2a2a2a, #000);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ai-primary);
+        font-size: 1.5rem;
+        box-shadow: 0 0 20px var(--ai-primary), inset 0 0 10px var(--ai-primary);
+        z-index: 2;
+        border: 2px solid rgba(0, 255, 136, 0.5);
+    }
+
+    /* نبض الطاقة حول الزر */
+    .ai-orb-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid var(--ai-primary);
+        opacity: 0;
+        animation: pulse-ring 2s infinite;
+    }
+
+    .ai-status-ring {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border-top: 2px solid var(--ai-secondary);
+        border-right: 2px solid transparent;
+        animation: spin-slow 4s linear infinite;
+    }
+
+    /* --- 🛸 2. واجهة الهيدر (HUD) --- */
+    .ai-hud-interface {
+        position: fixed;
+        bottom: 110px;
+        right: 30px;
+        width: 380px;
+        height: 550px;
+        background: var(--ai-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: var(--ai-border);
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
+        display: none; /* مخفي افتراضياً */
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 9999;
+        transform-origin: bottom right;
+        animation: hud-open 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    /* الهيدر */
+    .ai-hud-header {
+        padding: 15px;
+        background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ai-identity { display: flex; align-items: center; gap: 10px; }
+    .ai-mini-orb {
+        width: 10px; height: 10px; background: var(--ai-primary);
+        border-radius: 50%; box-shadow: 0 0 10px var(--ai-primary);
+        animation: blink 2s infinite;
+    }
+    .ai-info { display: flex; flex-direction: column; }
+    .ai-name { color: white; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+    .ai-name small { font-size: 0.6rem; color: var(--ai-primary); }
+    .ai-status { font-size: 0.6rem; color: #aaa; letter-spacing: 2px; }
+
+    .ai-close-btn { background: none; border: none; color: white; cursor: pointer; transition: 0.3s; }
+    .ai-close-btn:hover { color: #ff4444; transform: rotate(90deg); }
+
+    /* الكونسول (الرسائل) */
+    .ai-console {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        font-family: 'Cairo', sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--ai-primary) transparent;
+    }
+
+    /* تصميم الرسائل */
+    .ai-msg { display: flex; gap: 10px; max-width: 85%; animation: msg-pop 0.3s ease-out; }
+    
+    /* رسالة البوت */
+    .ai-msg-bot { align-self: flex-start; }
+    .ai-msg-bot .ai-avatar {
+        width: 30px; height: 30px; background: rgba(0,255,136,0.2);
+        color: var(--ai-primary); display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; border: 1px solid var(--ai-primary);
+    }
+    .ai-msg-bot .ai-text {
+        background: rgba(255,255,255,0.05);
+        color: #e0e0e0;
+        padding: 10px 15px;
+        border-radius: 0 15px 15px 15px;
+        border-left: 2px solid var(--ai-primary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* رسالة المستخدم */
+    .ai-msg-user { align-self: flex-end; flex-direction: row-reverse; }
+    .ai-msg-user .ai-text {
+        background: linear-gradient(135deg, var(--ai-primary), #00cc6a);
+        color: black;
+        padding: 10px 15px;
+        border-radius: 15px 0 15px 15px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+    }
+
+    /* مؤشر الكتابة */
+    .ai-typing-indicator {
+        padding: 10px 20px;
+        display: flex; gap: 5px;
+    }
+    .ai-typing-indicator span {
+        width: 4px; height: 4px; background: var(--ai-primary);
+        border-radius: 50%; animation: wave 1s infinite;
+    }
+    .ai-typing-indicator span:nth-child(2) { animation-delay: 0.1s; }
+    .ai-typing-indicator span:nth-child(3) { animation-delay: 0.2s; }
+
+    /* منطقة الإدخال */
+    .ai-input-zone {
+        padding: 15px;
+        background: rgba(0,0,0,0.3);
+        border-top: 1px solid rgba(255,255,255,0.05);
+        display: flex; gap: 10px;
+    }
+    .ai-input-zone input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid #444;
+        color: white;
+        padding: 10px;
+        font-family: 'Cairo', sans-serif;
+        outline: none;
+        transition: 0.3s;
+    }
+    .ai-input-zone input:focus { border-color: var(--ai-primary); box-shadow: 0 1px 0 var(--ai-primary); }
+    .ai-send-btn {
+        background: transparent;
+        border: 1px solid var(--ai-primary);
+        color: var(--ai-primary);
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .ai-send-btn:hover { background: var(--ai-primary); color: black; box-shadow: 0 0 15px var(--ai-primary); }
+
+    /* --- ✨ Animations --- */
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+    @keyframes hud-open { 0% { opacity: 0; transform: scale(0.8) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes msg-pop { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    /* للموبايل */
+    @media (max-width: 480px) {
+        .ai-hud-interface {
+            width: 100%; height: 100%;
+            bottom: 0; right: 0; border-radius: 0;
+        }
+        .ai-orb-container { bottom: 20px; right: 20px; }
+    }
+</style>
 </body>
 </html>

@@ -135,13 +135,6 @@ window.toggleMobileMenu = async function() {
     }
 };
 
-window.logoutUser = async function() {
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        window.location.reload();
-    } catch (e) { window.location.reload(); }
-};
-
 window.addEventListener('click', function(e) {
     const header = document.querySelector('.mobile-header-custom');
     const menu = document.getElementById('mobile-profile-dropdown');
@@ -268,4 +261,116 @@ async function fetchLatestProperties(isFirstLoad = false) {
     } finally {
         isLoading = false;
     }
+}
+// =========================================
+// 👽 Aqarak AI Core Logic
+// =========================================
+
+function toggleAiChat() {
+    const hud = document.getElementById('ai-interface');
+    const input = document.getElementById('ai-user-input');
+    
+    if (hud.style.display === 'flex') {
+        hud.style.display = 'none';
+    } else {
+        hud.style.display = 'flex';
+        // تركيز المؤشر داخل مربع الكتابة عند الفتح
+        setTimeout(() => input.focus(), 100);
+    }
+}
+
+function handleAiEnter(e) {
+    if (e.key === 'Enter') sendAiMessage();
+}
+
+async function sendAiMessage() {
+    const input = document.getElementById('ai-user-input');
+    const consoleDiv = document.getElementById('ai-console');
+    const typingIndicator = document.getElementById('ai-typing');
+    
+    const message = input.value.trim();
+    if (!message) return;
+
+    // 1. عرض رسالة المستخدم
+    appendMessage(message, 'user');
+    input.value = '';
+
+    // 2. إظهار مؤشر الكتابة
+    typingIndicator.style.display = 'flex';
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+    try {
+        // 3. الاتصال بالسيرفر
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await response.json();
+
+        // 4. إخفاء المؤشر وعرض الرد
+        typingIndicator.style.display = 'none';
+        
+        // محاكاة الكتابة الحرفية (Typing Effect) لتبدو أكثر ذكاءً
+        typeWriterResponse(data.reply);
+
+    } catch (error) {
+        typingIndicator.style.display = 'none';
+        appendMessage("⚠️ فقدنا الاتصال بالقاعدة الأم (خطأ في السيرفر).", 'bot');
+    }
+}
+
+function appendMessage(text, sender) {
+    const consoleDiv = document.getElementById('ai-console');
+    const div = document.createElement('div');
+    div.className = `ai-msg ai-msg-${sender}`;
+    
+    if (sender === 'bot') {
+        div.innerHTML = `
+            <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+            <div class="ai-text">${text}</div>
+        `;
+    } else {
+        div.innerHTML = `
+            <div class="ai-text">${text}</div>
+        `;
+    }
+    
+    consoleDiv.appendChild(div);
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    return div.querySelector('.ai-text'); // نرجع العنصر عشان لو هنعدل عليه
+}
+
+// دالة لمحاكاة الكتابة حرف بحرف للذكاء الاصطناعي
+function typeWriterResponse(text) {
+    const consoleDiv = document.getElementById('ai-console');
+    const div = document.createElement('div');
+    div.className = 'ai-msg ai-msg-bot';
+    div.innerHTML = `
+        <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+        <div class="ai-text"></div>
+    `;
+    consoleDiv.appendChild(div);
+    
+    const textElement = div.querySelector('.ai-text');
+    let i = 0;
+    const speed = 10; // سرعة الكتابة (ميلي ثانية)
+
+    function type() {
+        if (i < text.length) {
+            // التعامل مع الروابط أو HTML لو البوت مرجع تنسيق
+            if(text.charAt(i) === '<') {
+                const endTag = text.indexOf('>', i);
+                textElement.innerHTML += text.substring(i, endTag + 1);
+                i = endTag + 1;
+            } else {
+                textElement.innerHTML += text.charAt(i);
+                i++;
+            }
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            setTimeout(type, speed);
+        }
+    }
+    type();
 }

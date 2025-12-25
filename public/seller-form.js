@@ -15,18 +15,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initMap();
 });
-// ✅ دالة إظهار المودال الاحترافي المحدثة
+
+// ✅ دالة إظهار المودال الاحترافي
 function showStatusModal(type, title, subtitle, note = '', marketingDesc = '', location = '') {
-    // إزالة أي مودال قديم موجود
     const oldModal = document.querySelector('.status-modal-overlay');
     if (oldModal) oldModal.remove();
 
     let config = {};
-    if (type === 'review') { // حالة المراجعة البشرية (Pending)
+    if (type === 'review') { 
         config = { color: '#ffc107', bgIcon: '#ffc107', icon: 'fas fa-hourglass-half', btnText: 'فهمت، شكراً' };
-    } else if (type === 'success') { // حالة القبول الفوري (Approved)
+    } else if (type === 'success') { 
         config = { color: '#00ff88', bgIcon: '#00c853', icon: 'fas fa-check-double', btnText: 'روعة، تمام!' };
-    } else if (type === 'error') { // حالة الرفض (Rejected)
+    } else if (type === 'error') { 
         config = { color: '#ff4444', bgIcon: '#d32f2f', icon: 'fas fa-exclamation-triangle', btnText: 'حاول مجدداً' };
     }
 
@@ -64,29 +64,113 @@ function closeModal() {
     const modal = document.querySelector('.status-modal-overlay');
     if (modal) modal.remove();
 }
-// --- 🔢 دالة دعم الأرقام العربية ---
+
+// --- 🔢 دالة دعم الأرقام العربية (المحدثة والذكية) ---
 function setupArabicNumbersSupport() {
-    // الحقول المستهدفة
+    // تحديد كل الحقول الرقمية
     const targetInputs = document.querySelectorAll(
         'input[name="propertyPrice"], input[name="propertyArea"], input[name="propertyRooms"], input[name="propertyBathrooms"], input[name="propertyFloors"]'
     );
 
     targetInputs.forEach(input => {
+        // 1. ضمان التنسيق الصحيح
+        input.style.direction = 'ltr';       
+        input.style.textAlign = 'right';     
+        input.setAttribute('placeholder', '0');
+
+        // 2. الاستماع للكتابة الفورية
         input.addEventListener('input', function(e) {
             let val = this.value;
-            // استبدال الأرقام العربية بالإنجليزية
-            val = val.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            // حذف أي رموز غير رقمية
-            val = val.replace(/[^0-9]/g, '');
+
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+            // استبدال الأرقام العربية والفارسية
+            val = val.replace(/[٠-٩]/g, d => arabicNumbers.indexOf(d));
+            val = val.replace(/[۰-۹]/g, d => persianNumbers.indexOf(d));
             
+            // حذف أي رموز غير رقمية تماماً
+            val = val.replace(/[^0-9]/g, '');
+
             if (this.value !== val) {
                 this.value = val;
             }
         });
+
+        // 3. منع اللصق الخاطئ
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            let pastedData = (e.clipboardData || window.clipboardData).getData('text');
+            // تنظيف النص المنسوخ
+            pastedData = pastedData.replace(/[٠-٩]/g, d => '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)])
+                                   .replace(/[^0-9]/g, '');
+            document.execCommand("insertText", false, pastedData);
+        });
     });
 }
 
-// --- 🌍 إعدادات الخريطة والبحث ---
+// --- 🏗️ التحكم الذكي في الحقول (المحدثة) ---
+function toggleFields() {
+    const category = document.getElementById('property-category').value;
+    
+    // تعريف المجموعات
+    const groups = {
+        level: document.getElementById('level-group'),        // الدور (للشقق)
+        floors: document.getElementById('floors-count-group'),// عدد الأدوار (للفيلات)
+        rooms: document.getElementById('rooms-group'),        // الغرف
+        bath: document.getElementById('bath-group'),          // الحمامات
+        finish: document.getElementById('finishing-group'),   // التشطيب
+        landType: document.getElementById('land-type-group')  // نوع الأرض
+    };
+
+    // 1. إخفاء الكل
+    for (let key in groups) {
+        if (groups[key]) groups[key].style.display = 'none';
+    }
+
+    // 2. إظهار المناسب
+    switch (category) {
+        case 'apartment':   // شقة
+        case 'duplex':      // دوبلكس
+        case 'office':      // مكتب
+            if(groups.level) groups.level.style.display = 'block';
+            if(groups.rooms) groups.rooms.style.display = 'block';
+            if(groups.bath) groups.bath.style.display = 'block';
+            if(groups.finish) groups.finish.style.display = 'block';
+            break;
+
+        case 'villa':       // فيلا
+        case 'chalet':      // شاليه
+        case 'building':    // عمارة
+            if(groups.floors) groups.floors.style.display = 'block';
+            if(groups.rooms) groups.rooms.style.display = 'block';
+            if(groups.bath) groups.bath.style.display = 'block';
+            if(groups.finish) groups.finish.style.display = 'block';
+            break;
+
+        case 'store':       // محل
+            if(groups.level) groups.level.style.display = 'block';
+            if(groups.bath) groups.bath.style.display = 'block'; // المحل قد يحتاج حمام
+            if(groups.finish) groups.finish.style.display = 'block';
+            break;
+
+        case 'warehouse':   // مخزن
+             if(groups.bath) groups.bath.style.display = 'block';
+             if(groups.finish) groups.finish.style.display = 'block';
+             break;
+
+        case 'land':        // أرض
+            if(groups.landType) groups.landType.style.display = 'block';
+            break;
+            
+        default:
+            if(groups.rooms) groups.rooms.style.display = 'block';
+            if(groups.bath) groups.bath.style.display = 'block';
+            if(groups.finish) groups.finish.style.display = 'block';
+    }
+}
+
+// --- 🌍 الخريطة والبحث ---
 function initMap() {
     const defaultLat = 30.0444; 
     const defaultLng = 31.2357; 
@@ -116,7 +200,6 @@ function initMap() {
     }
 }
 
-// 🔍 البحث
 async function searchLocation() {
     const query = document.getElementById('map-search-input').value;
     const resultsBox = document.getElementById('search-suggestions');
@@ -159,12 +242,10 @@ async function searchLocation() {
         });
 
     } catch (error) {
-        console.error("Search Error:", error);
         resultsBox.style.display = 'none';
     }
 }
 
-// اختيار الموقع
 async function handleLocationSelect(lat, lng) {
     map.setView([lat, lng], 17);
     
@@ -181,7 +262,6 @@ async function handleLocationSelect(lat, lng) {
     await fetchNearbyServices(lat, lng);
 }
 
-// 🤖 جلب الخدمات
 async function fetchNearbyServices(lat, lng) {
     const statusMsg = document.getElementById('map-status-text');
     statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحليل المنطقة بالذكاء الاصطناعي...';
@@ -233,7 +313,6 @@ window.locateUser = function() {
     } else { alert("المتصفح لا يدعم تحديد الموقع"); btn.innerHTML = originalText; }
 };
 
-// --- البيانات والصور والإرسال ---
 async function fetchUserData() {
     try {
         const response = await fetch('/api/auth/me');
@@ -247,9 +326,8 @@ async function fetchUserData() {
 
 const imgInput = document.getElementById('property-images');
 if (imgInput) {
-    // 🛡️ فلتر الصور (منع الأكبر من 10 ميجا)
     imgInput.addEventListener('change', function(e) {
-        const MAX_SIZE = 10 * 1024 * 1024; // 10 ميجا بايت
+        const MAX_SIZE = 10 * 1024 * 1024; 
         let rejectedCount = 0;
 
         Array.from(e.target.files).forEach(file => {
@@ -260,10 +338,7 @@ if (imgInput) {
             }
         });
 
-        if (rejectedCount > 0) {
-            alert(`⚠️ تم رفض ${rejectedCount} صورة لأن حجمها أكبر من 10 ميجا. يرجى اختيار صور أصغر.`);
-        }
-
+        if (rejectedCount > 0) alert(`⚠️ تم رفض ${rejectedCount} صورة لأن حجمها أكبر من 10 ميجا.`);
         if (selectedFiles.length > 10) {
             alert("⚠️ الحد الأقصى 10 صور فقط، سيتم استخدام أول 10 صور.");
             selectedFiles = selectedFiles.slice(0, 10);
@@ -317,30 +392,12 @@ document.getElementById('seller-form').addEventListener('submit', async function
         const response = await fetch('/api/submit-seller-property', { method: 'POST', body: formData });
         const result = await response.json();
         
-        // التحقق من حالة الرد وإظهار المودال المناسب
         if (result.status === 'approved') {
-            showStatusModal(
-                'success', 
-                result.title, 
-                result.message, 
-                '', 
-                result.marketing_desc, 
-                result.location
-            );
+            showStatusModal('success', result.title, result.message, '', result.marketing_desc, result.location);
         } else if (result.status === 'pending') {
-            showStatusModal(
-                'review', 
-                result.title, 
-                result.message, 
-                'تم تحويل طلبك للمراجعة اليدوية للتأكد من بعض التفاصيل.'
-            );
+            showStatusModal('review', result.title, result.message, 'تم تحويل طلبك للمراجعة اليدوية للتأكد من بعض التفاصيل.');
         } else {
-            // حالة الرفض (Rejected) أو الخطأ
-            showStatusModal(
-                'error', 
-                result.title || 'عذراً، مرفوض', 
-                result.message || 'الإعلان لا يطابق سياسات النشر.'
-            );
+            showStatusModal('error', result.title || 'عذراً، مرفوض', result.message || 'الإعلان لا يطابق سياسات النشر.');
         }
 
     } catch (error) {
@@ -349,17 +406,3 @@ document.getElementById('seller-form').addEventListener('submit', async function
         btn.innerHTML = originalText; btn.disabled = false;
     }
 });
-function toggleFields() {
-    const cat = document.getElementById('property-category').value;
-    const levelGroup = document.getElementById('level-group');
-    const floorsGroup = document.getElementById('floors-count-group');
-    if(levelGroup && floorsGroup) {
-        if(cat === 'apartment' || cat === 'office' || cat === 'store') {
-            levelGroup.style.display = 'block'; floorsGroup.style.display = 'none';
-        } else if (cat === 'villa' || cat === 'building' || cat === 'warehouse') {
-            levelGroup.style.display = 'none'; floorsGroup.style.display = 'block';
-        } else {
-            levelGroup.style.display = 'none'; floorsGroup.style.display = 'none';
-        }
-    }
-}
