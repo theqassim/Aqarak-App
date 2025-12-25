@@ -135,9 +135,6 @@ function toEnglishDigits(str) {
 // 🧠 1. نظام الواتساب (WhatsApp QR)
 // ==========================================================
 
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-
 // إعداد عميل الواتساب مع إعدادات خاصة لسيرفر Render
 const whatsappClient = new Client({
     authStrategy: new LocalAuth({ clientId: "aqarak-session" }), // حفظ الجلسة باسم محدد
