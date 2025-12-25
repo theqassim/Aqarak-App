@@ -285,6 +285,112 @@
         .btn-fav-view { padding: 5px 0; font-size: 0.8rem; }
         .btn-fav-remove { width: 32px; height: 32px; }
     }
+    /* --- ➕ علامة الزائد الجديدة (شيك) --- */
+.dropdown-points {
+    position: relative;
+    padding-right: 35px; /* مساحة للعلامة */
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.05);
+    cursor: pointer;
+}
+
+.add-points-badge {
+    position: absolute;
+    right: -8px; top: -8px;
+    width: 20px; height: 20px;
+    background: #ff4444; /* لون أحمر مميز */
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid #1a1a1a; /* فاصل عن الخلفية */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- 💎 تصميم المودال العصري (Modern UI) --- */
+.modern-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 20000; /* عشان يغطي على كل حاجة */
+}
+
+.modern-modal-content {
+    background: #1e1e24;
+    border-radius: 24px;
+    padding: 30px;
+    width: 90%; max-width: 400px;
+    margin: 10% auto;
+    color: white; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+}
+
+.modern-close {
+    position: absolute; top: 20px; right: 20px;
+    font-size: 1.5rem; color: #888; cursor: pointer;
+    background: rgba(255,255,255,0.05); width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: 0.3s;
+}
+.modern-close:hover { background: rgba(255,68,68,0.1); color: #ff4444; }
+
+.modern-header { margin-bottom: 25px; }
+.icon-wrapper {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #00ff88, #00b862);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 15px; font-size: 1.5rem; color: #000;
+    box-shadow: 0 10px 20px rgba(0, 255, 136, 0.2);
+}
+
+/* أزرار الدفع */
+.modern-methods-grid { display: flex; gap: 12px; margin-bottom: 25px; }
+.modern-method-card {
+    flex: 1; background: rgba(255, 255, 255, 0.03);
+    border: 2px solid transparent; padding: 15px;
+    border-radius: 16px; cursor: pointer; transition: 0.3s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative; color: #ccc;
+}
+.modern-method-card.active { background: rgba(0, 255, 136, 0.05); border-color: #00ff88; color: white; }
+.check-mark {
+    position: absolute; top: 8px; left: 8px; width: 18px; height: 18px;
+    background: #00ff88; border-radius: 50%; color: black; font-size: 0.6rem;
+    display: none; align-items: center; justify-content: center;
+}
+.modern-method-card.active .check-mark { display: flex; }
+
+/* Wallet Style */
+#btn-wallet.active { border-color: #ff4444; background: rgba(255, 68, 68, 0.05); }
+#btn-wallet.active .check-mark { background: #ff4444; color: white; }
+
+/* Inputs */
+.modern-input-group { margin-bottom: 20px; text-align: right; }
+.modern-input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #ddd; }
+.input-wrapper { position: relative; }
+.input-wrapper input {
+    width: 100%; padding: 14px 15px; background: #141418;
+    border: 1px solid #333; border-radius: 12px; color: white;
+    font-size: 1rem; outline: none; transition: 0.3s;
+}
+.input-wrapper input:focus { border-color: #00ff88; background: #0a0a0c; }
+.unit-tag { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; font-weight: bold; }
+
+/* Summary & Button */
+.modern-summary {
+    background: #141418; padding: 15px; border-radius: 12px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.price-value { font-size: 1.2rem; font-weight: bold; color: #00ff88; }
+.modern-action-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #00ff88, #00b862);
+    color: black; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold;
+    cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+.modern-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4); }
+.modern-action-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
   </style>
 </head>
 <body class="internal-page">
@@ -309,9 +415,10 @@
                 
                 <div id="profile-dropdown" class="profile-dropdown">
                     <div class="dropdown-header">
-                        <div class="dropdown-points" id="dropdown-balance" onclick="openChargeModal()">
-                            0 <i class="fas fa-coins"></i>
-                        </div>
+                       <div class="dropdown-points" id="dropdown-balance" onclick="openChargeModal()">
+    <span id="balance-num">0</span> <i class="fas fa-coins"></i>
+    <div class="add-points-badge"><i class="fas fa-plus"></i></div>
+</div>
                         <div class="dropdown-user-info">
                             <span class="dropdown-name" id="dropdown-username">المستخدم</span>
                             <span class="dropdown-role">لوحة التحكم</span>
@@ -412,39 +519,57 @@
         </div>
     </div>
 
-    <div id="charge-modal" class="modal" style="z-index: 20001;">
-        <div class="modal-content" style="border-color: var(--neon-primary); max-width: 450px;">
-            <span class="close" onclick="document.getElementById('charge-modal').style.display='none'">&times;</span>
-            <div style="text-align: center; margin-bottom: 20px;">
-                <i class="fas fa-wallet" style="font-size: 3rem; color: var(--neon-primary); margin-bottom: 10px;"></i>
-                <h2 style="color: white;">شحن المحفظة</h2>
-                <p style="color: #aaa; font-size: 0.9rem;">اشحن رصيدك لتتمكن من تمييز عقاراتك ونشر المزيد.</p>
+    <div id="charge-modal" class="modal modern-modal-overlay">
+    <div class="modern-modal-content">
+        <span class="modern-close" onclick="closeChargeModal()">&times;</span>
+        
+        <div class="modern-header">
+            <div class="icon-wrapper">
+                <i class="fas fa-wallet"></i>
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button id="btn-card" onclick="selectPaymentMethod('card')" class="btn-neon-auth active" style="flex: 1; border-radius: 10px;">
-                    <i class="far fa-credit-card"></i> بطاقة بنكية
-                </button>
-                <button id="btn-wallet" onclick="selectPaymentMethod('wallet')" class="btn-neon-auth" style="flex: 1; border-radius: 10px; border-color: #ff4444; color: #ff4444;">
-                    <i class="fas fa-mobile-alt"></i> محفظة إلكترونية
-                </button>
-            </div>
-            <div class="input-group">
-                <label style="color: #ccc; display: block; margin-bottom: 5px;">عدد النقاط المراد شحنها</label>
-                <input type="number" id="charge-points" class="neon-input-white" placeholder="أقل عدد 10 نقاط" min="10" oninput="calculatePrice()">
-            </div>
-            <div id="wallet-input-container" class="input-group" style="display: none;">
-                <label style="color: #ccc; display: block; margin-bottom: 5px;">رقم المحفظة (فودافون/اتصالات..)</label>
-                <input type="tel" id="wallet-number" class="neon-input-white" placeholder="01xxxxxxxxx">
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: #ccc;">إجمالي المبلغ:</span>
-                <span style="font-size: 1.4rem; font-weight: bold; color: var(--neon-gold);"><span id="price-display">0</span> ج.م</span>
-            </div>
-            <button onclick="startChargeProcess()" class="btn-neon-auth" style="background: var(--neon-primary); color: black; font-weight: bold; width: 100%;">
-                تأكيد وشراء النقاط <i class="fas fa-check-circle"></i>
+            <h3>شحن الرصيد</h3>
+            <p>سعر النقطة الحالي: <span id="current-point-price" style="color:#00ff88; font-weight:bold;">...</span> ج.م</p>
+        </div>
+
+        <div class="modern-methods-grid">
+            <button id="btn-card" onclick="selectPaymentMethod('card')" class="modern-method-card active">
+                <i class="far fa-credit-card"></i>
+                <span>بطاقة بنكية</span>
+                <div class="check-mark"><i class="fas fa-check"></i></div>
+            </button>
+            <button id="btn-wallet" onclick="selectPaymentMethod('wallet')" class="modern-method-card">
+                <i class="fas fa-mobile-alt"></i>
+                <span>محفظة إلكترونية</span>
+                <div class="check-mark"><i class="fas fa-check"></i></div>
             </button>
         </div>
+
+        <div class="modern-input-group">
+            <label>عدد النقاط</label>
+            <div class="input-wrapper">
+                <input type="number" id="charge-points" placeholder="مثال: 100" min="10" oninput="calculatePrice()">
+                <span class="unit-tag">نقطة</span>
+            </div>
+        </div>
+
+        <div id="wallet-input-container" class="modern-input-group" style="display: none;">
+            <label>رقم المحفظة</label>
+            <div class="input-wrapper">
+                <input type="tel" id="wallet-number" placeholder="01xxxxxxxxx">
+                <span class="unit-tag"><i class="fas fa-phone"></i></span>
+            </div>
+        </div>
+
+        <div class="modern-summary">
+            <span>الإجمالي:</span>
+            <span class="price-value"><span id="price-display">0</span> ج.م</span>
+        </div>
+
+        <button onclick="startChargeProcess()" class="modern-action-btn" id="confirm-charge-btn">
+            تأكيد وشحن <i class="fas fa-arrow-left"></i>
+        </button>
     </div>
+</div>
 
     <script src="user-dashboard.js"></script>
     <script src="ban-check.js"></script>
