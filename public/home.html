@@ -15,7 +15,14 @@
     
     <style>
     /* --- 🎨 الأساسيات --- */
-    :root { --glass-bg: rgba(20, 20, 20, 0.98); --neon-primary: #00ff88; --neon-secondary: #00d4ff; --card-bg: #1a1a1a; }
+    :root { 
+        --glass-bg: rgba(20, 20, 20, 0.98); 
+        --neon-primary: #00ff88; 
+        --neon-secondary: #00d4ff; 
+        --card-bg: #1a1a1a;
+        --ai-bg: rgba(10, 15, 20, 0.9);
+        --ai-border: 1px solid rgba(0, 255, 136, 0.3);
+    }
     body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0 !important; padding: 0 !important; font-family: 'Cairo', sans-serif; overflow-x: hidden; }
 
     /* =========================================
@@ -58,22 +65,18 @@
     .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; transition: 0.2s; cursor: pointer; }
     .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
     
-    /* 🔥 تصميم الإشعارات الجديد (مثل الداشبورد) 🔥 */
+    /* الإشعارات */
     .notif-toggle-btn { justify-content: space-between; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); }
     .notif-inner-badge { background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-right: auto; margin-left: 10px; }
     
     .notifications-container {
-        display: none; /* مخفي افتراضياً */
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 10px;
-        margin-bottom: 10px;
-        max-height: 200px;
-        overflow-y: auto;
+        display: none; background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px; margin-bottom: 10px;
+        max-height: 200px; overflow-y: auto;
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     .menu-notif-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; font-size: 0.85rem; color: #ddd; }
-    .menu-notif-item:last-child { border-bottom: none; }
     .menu-notif-item.unread { background: rgba(0, 255, 136, 0.05); border-right: 2px solid var(--neon-primary); }
     .notif-delete-btn { position: absolute; top: 8px; left: 8px; color: #ff4444; background: none; border: none; cursor: pointer; padding: 5px; }
 
@@ -86,10 +89,12 @@
     }
     .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1250px; }
     .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
+    .logo-container { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1.1rem; }
     .main-nav { display: flex; gap: 10px; align-items: center; }
     .nav-button { color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; transition: 0.3s; }
     .nav-button:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
-    .sell-btn { background: var(--neon-primary); color: black; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; }
+    .sell-btn { background: var(--neon-primary); color: black; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
+    .sell-btn:hover { background: transparent; color: var(--neon-primary); border: 1px solid var(--neon-primary); box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); }
 
     @media (max-width: 768px) {
         .main-header { display: none !important; }
@@ -100,14 +105,19 @@
         .search-bar { border-radius: 50px !important; }
     }
 
-    /* الستايلات العامة */
+    /* المحتوى */
     .search-section { padding: 30px 15px; text-align: center; max-width: 800px; margin: 0 auto; }
-    .search-bar { width: 100%; padding: 15px 25px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 50px; color: white; font-size: 1rem; }
+    .search-bar-container { position: relative; display: flex; gap: 10px; }
+    .search-bar { width: 100%; padding: 15px 25px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 50px; color: white; font-size: 1rem; transition: 0.3s; }
+    .search-bar:focus { border-color: var(--neon-secondary); outline: none; box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+    .search-button { background: var(--neon-secondary); color: #000; border: none; padding: 0 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
+
     .listings-section { max-width: 1250px; margin: 0 auto; padding: 0 15px 40px 15px; }
     .section-title { color: var(--neon-primary); margin-bottom: 20px; font-size: 1.5rem; border-right: 4px solid var(--neon-primary); padding-right: 10px; }
     .adv-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
     
-    .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.3s; }
+    /* الكروت */
+    .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.3s; display: flex; flex-direction: column; }
     .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
     .adv-card-img-box { height: 200px; position: relative; }
     .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
@@ -117,23 +127,92 @@
     .adv-card-body { padding: 15px; }
     .adv-title { color: white; margin: 0 0 10px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; transition: 0.3s; }
+    .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; transition: 0.3s; background: transparent; }
     .adv-details-btn:hover { background: var(--neon-primary); color: black; }
-    
-    .load-more-btn {
-        background: linear-gradient(45deg, #00ff88, #00cc6a);
-        color: black; font-weight: bold; border: none;
-        padding: 12px 40px; border-radius: 50px; margin-top: 30px;
-        cursor: pointer; transition: all 0.3s ease; font-size: 1rem;
-        box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-        display: block; margin-left: auto; margin-right: auto;
-    }
-    .load-more-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 255, 136, 0.7); }
 
-    .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
-    .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500); color: black; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; }
-    .verified-badge { background: #FFD700; color: white; border-radius: 50%; padding: 2px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; border: 1px solid white; margin-right: 5px; vertical-align: middle; }
-    .complaint-float-btn { position: fixed; bottom: 80px; left: 20px; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 50px; cursor: pointer; z-index: 9990; backdrop-filter: blur(5px); font-weight: bold; }
+    /* التميز */
+    .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); transform: scale(1.02); }
+    .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500); color: black; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
+    
+    .load-more-btn { background: transparent; color: white; border: 1px solid #555; padding: 12px 40px; border-radius: 50px; margin-top: 30px; cursor: pointer; transition: 0.3s; font-size: 1rem; display: block; margin-left: auto; margin-right: auto; }
+    .load-more-btn:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
+
+    .request-box { text-align: center; margin-top: 30px; }
+    .request-text { color: white; margin-bottom: 15px; }
+    .main-footer { text-align: center; padding: 20px; color: #777; border-top: 1px solid #333; margin-top: 40px; }
+
+    /* --- 🛸 ستايلات الشات الفضائي الجديد --- */
+    .ai-orb-container { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; cursor: pointer; z-index: 10000; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+    .ai-orb-container:hover { transform: scale(1.1); }
+    .ai-orb-core { width: 50px; height: 50px; background: radial-gradient(circle at 30% 30%, #2a2a2a, #000); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--neon-primary); font-size: 1.5rem; box-shadow: 0 0 20px var(--neon-primary), inset 0 0 10px var(--neon-primary); z-index: 2; border: 2px solid rgba(0, 255, 136, 0.5); overflow: hidden; }
+    .ai-orb-core img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .ai-orb-pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--neon-primary); opacity: 0; animation: pulse-ring 2s infinite; }
+    .ai-status-ring { position: absolute; width: 60px; height: 60px; border-radius: 50%; border-top: 2px solid var(--neon-secondary); border-right: 2px solid transparent; animation: spin-slow 4s linear infinite; }
+
+    .ai-hud-interface { position: fixed; bottom: 110px; right: 30px; width: 380px; height: 550px; background: var(--ai-bg); backdrop-filter: blur(15px); border-radius: 20px; border: var(--ai-border); box-shadow: 0 0 30px rgba(0, 255, 136, 0.15); display: none; flex-direction: column; overflow: hidden; z-index: 9999; transform-origin: bottom right; animation: hud-open 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
+    .ai-hud-header { padding: 15px; background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .ai-identity { display: flex; align-items: center; gap: 10px; }
+    .ai-mini-orb { width: 10px; height: 10px; background: var(--neon-primary); border-radius: 50%; box-shadow: 0 0 10px var(--neon-primary); animation: blink 2s infinite; }
+    .ai-info { display: flex; flex-direction: column; }
+    .ai-name { color: white; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+    .ai-name small { font-size: 0.6rem; color: var(--neon-primary); }
+    .ai-status { font-size: 0.6rem; color: #aaa; letter-spacing: 2px; }
+    .ai-close-btn { background: none; border: none; color: white; cursor: pointer; transition: 0.3s; }
+    .ai-close-btn:hover { color: #ff4444; transform: rotate(90deg); }
+
+    .ai-console { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; gap: 15px; scrollbar-width: thin; scrollbar-color: var(--neon-primary) transparent; }
+    .ai-msg { display: flex; gap: 10px; max-width: 85%; animation: msg-pop 0.3s ease-out; }
+    .ai-msg-bot { align-self: flex-start; }
+    .ai-msg-bot .ai-avatar { width: 30px; height: 30px; background: transparent; border: 1px solid var(--neon-primary); border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .ai-msg-bot .ai-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .ai-msg-bot .ai-text { background: rgba(255,255,255,0.05); color: #e0e0e0; padding: 10px 15px; border-radius: 0 15px 15px 15px; border-left: 2px solid var(--neon-primary); font-size: 0.9rem; line-height: 1.5; }
+    .ai-msg-user { align-self: flex-end; flex-direction: row-reverse; }
+    .ai-msg-user .ai-text { background: linear-gradient(135deg, var(--neon-primary), #00cc6a); color: black; padding: 10px 15px; border-radius: 15px 0 15px 15px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2); }
+
+    .ai-typing-indicator { padding: 10px 20px; display: flex; gap: 5px; }
+    .ai-typing-indicator span { width: 4px; height: 4px; background: var(--neon-primary); border-radius: 50%; animation: wave 1s infinite; }
+    .ai-typing-indicator span:nth-child(2) { animation-delay: 0.1s; }
+    .ai-typing-indicator span:nth-child(3) { animation-delay: 0.2s; }
+
+    .ai-input-zone { padding: 15px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; }
+    .ai-input-zone input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: white; padding: 10px; font-family: 'Cairo', sans-serif; outline: none; transition: 0.3s; }
+    .ai-input-zone input:focus { border-color: var(--neon-primary); }
+    .ai-send-btn, .ai-mic-btn { background: transparent; border: 1px solid var(--neon-primary); color: var(--neon-primary); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .ai-mic-btn { border-color: var(--neon-secondary); color: var(--neon-secondary); }
+    .ai-mic-btn:hover { background: rgba(0, 212, 255, 0.2); box-shadow: 0 0 10px var(--neon-secondary); }
+    .ai-mic-active { background: var(--neon-secondary) !important; color: black !important; box-shadow: 0 0 15px var(--neon-secondary) !important; animation: pulse-ring 1.5s infinite; }
+    .ai-send-btn:hover { background: var(--neon-primary); color: black; box-shadow: 0 0 15px var(--neon-primary); }
+
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+    @keyframes hud-open { 0% { opacity: 0; transform: scale(0.8) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes msg-pop { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    @media (max-width: 480px) {
+        .ai-hud-interface { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
+        .ai-orb-container { bottom: 20px; right: 20px; }
+    }
+    
+    /* Popups */
+    .install-toast { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; border:1px solid #444; padding:15px; border-radius:12px; z-index:11000; width:90%; max-width:350px; justify-content:space-between; align-items:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+    .install-content { display:flex; align-items:center; gap:10px; }
+    .install-logo { width:40px; height:40px; border-radius:8px; }
+    .app-name { color:white; font-weight:bold; display:block; }
+    .app-desc { color:#aaa; font-size:0.8rem; }
+    .btn-install-mini { background:var(--neon-primary); border:none; padding:5px 15px; border-radius:20px; font-weight:bold; cursor:pointer; }
+    .btn-close-mini { background:none; border:none; color:#888; cursor:pointer; font-size:1.1rem; }
+    
+    .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+    .popup-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.5s; color: #fff; position: relative; }
+    .news-header { color: #00ff41; font-size: 32px; font-weight: 900; margin-bottom: 15px; }
+    .glowing-box { border: 2px solid #00e5ff; padding: 25px; margin: 20px 0; border-radius: 12px; background: radial-gradient(circle, rgba(0,229,255,0.1) 0%, transparent 70%); box-shadow: 0 0 20px rgba(0,229,255,0.4); }
+    .glowing-box h3 { margin: 0; font-size: 42px; color: #fff; font-weight: bold; }
+    .glowing-box p { margin: 5px 0 0; color: #00e5ff; font-size: 16px; font-weight: bold; }
+    .action-btn { background: linear-gradient(135deg, #00ff41, #008cff); color: white; border: none; padding: 15px 50px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; }
+    .checkbox-container { margin-top: 15px; font-size: 14px; color: #aaa; display: flex; justify-content: center; gap: 8px; cursor: pointer; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -190,8 +269,7 @@
                 <img src="logo.png" alt="شعار عقارك" class="logo">
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
-            <nav class="main-nav" id="dynamic-nav">
-                </nav>
+            <nav class="main-nav" id="dynamic-nav"></nav>
         </div>
     </header>
 
@@ -209,298 +287,160 @@
         </section>
         
         <section class="request-property-section">
-            <div class="request-box neon-glow centered-page-content" style="text-align:center; margin-top:30px;">
+            <div class="request-box">
                 <p class="request-text" style="color:white; margin-bottom:15px;">لم تجد العقار الذي تبحث عنه؟</p>
                 <a href="request-property" class="sell-btn">احجز عقارك الآن!</a>
             </div>
         </section>
     </main>
 
-    <footer class="main-footer" style="text-align:center; padding:20px; color:#777; border-top:1px solid #333; margin-top:40px;">
+    <footer class="main-footer">
+        <div class="social-links" style="margin-bottom:15px;">
+            <a href="https://www.facebook.com/share/17H591aR7r/" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/aqarak.eg" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-instagram"></i></a>
+            <a href="https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-whatsapp"></i></a>
+        </div>
         <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
     </footer>
 
-    <button onclick="openComplaintModal()" class="complaint-float-btn">
+    <button onclick="openComplaintModal()" class="complaint-float-btn" style="position:fixed; bottom:20px; left:20px; background:rgba(255,68,68,0.1); color:#ff4444; border:1px solid #ff4444; padding:10px 20px; border-radius:50px; cursor:pointer; font-weight:bold; backdrop-filter:blur(5px); z-index:9000;">
         <i class="fas fa-exclamation-circle"></i> شكوى؟
     </button>
 
-    <div id="complaint-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
-        <div style="background:#1c2630; padding:20px; border-radius:10px; width:90%; max-width:400px; border:1px solid #ff4444; text-align:center;">
-            <h3 style="color:white;">إرسال شكوى</h3>
-            <textarea id="complaint-text" style="width:100%; background:#222; color:white; border:1px solid #555; padding:10px; margin:10px 0;" rows="4"></textarea>
-            <button onclick="submitComplaint()" class="sell-btn" style="background:#ff4444; border-color:#ff4444;">إرسال</button>
-            <button onclick="closeComplaintModal()" style="background:none; border:none; color:#aaa; margin-top:10px; cursor:pointer;">إلغاء</button>
+    <div id="complaint-modal" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="max-width: 400px; border-color: #ff4444;">
+            <span class="close-btn" onclick="closeComplaintModal()" style="position:absolute; top:10px; left:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <i class="fas fa-headset" style="font-size: 3rem; color: #ff4444;"></i>
+                <h3 style="color: white; margin-top: 10px;">إرسال شكوى للإدارة</h3>
+            </div>
+            <textarea id="complaint-text" style="width:100%; background:#222; color:white; border:1px solid #555; padding:10px; border-radius:10px;" rows="4" placeholder="اكتب تفاصيل الشكوى..."></textarea>
+            <button onclick="submitComplaint()" class="action-btn" style="background:#ff4444; margin-top:15px;">إرسال الشكوى</button>
         </div>
     </div>
 
+    <div id="install-toast" class="install-toast">
+        <div class="install-content">
+            <img src="logo.jpg" alt="Aqarak" class="install-logo">
+            <div><span class="app-name">تطبيق عقارك</span><span class="app-desc">تجربة أسرع</span></div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <button id="install-btn-action" class="btn-install-mini">تثبيت</button>
+            <button id="close-install" class="btn-close-mini"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div id="ios-install-prompt" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; padding:15px; border-radius:10px; border:1px solid #555; z-index:11000; color:white; text-align:center; width:90%; max-width:300px;">
+        <span onclick="closeIosPrompt()" style="position:absolute; top:5px; right:10px; cursor:pointer;">&times;</span>
+        <p style="margin:0; font-weight:bold;">تثبيت التطبيق على آيفون 📱</p>
+        <p style="margin:5px 0 0; font-size:0.8rem; color:#ccc;">اضغط مشاركة <i class="fas fa-share-square"></i> ثم إضافة للصفحة الرئيسية.</p>
+    </div>
+
+    <div id="promoPopup" class="popup-overlay">
+      <div class="popup-content">
+        <div class="news-header">عقارك</div>
+        <div class="sub-text">استمتع بتجربة بيع وشراء عقارية مختلفة</div>
+        <div class="glowing-box"><h3>خدمة مجانية 100%</h3><p>بدون رسوم</p></div>
+        <button class="action-btn" onclick="closePopup()">تصفح الموقع الآن</button>
+        <label class="checkbox-container"><input type="checkbox" id="dontShowAgain"> عدم العرض مرة أخرى</label>
+      </div>
+    </div>
+
+    <div id="ai-root">
+        <div class="ai-orb-container" onclick="toggleAiChat()">
+            <div class="ai-orb-pulse"></div>
+            <div class="ai-orb-core">
+                <img src="logo.png" alt="AI">
+            </div>
+            <div class="ai-status-ring"></div>
+        </div>
+
+        <div class="ai-hud-interface" id="ai-interface">
+            <div class="ai-hud-header">
+                <div class="ai-identity">
+                    <div class="ai-mini-orb"></div>
+                    <div class="ai-info">
+                        <span class="ai-name">AQARAK <small>AI CORE</small></span>
+                        <span class="ai-status">ONLINE /// SYSTEM READY</span>
+                    </div>
+                </div>
+                <button class="ai-close-btn" onclick="toggleAiChat()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="ai-console" id="ai-console">
+                <div class="ai-msg ai-msg-bot">
+                    <div class="ai-avatar"><img src="logo.png" alt="AI"></div>
+                    <div class="ai-text">أهلاً بك في المستقبل 🌌<br>أنا عقارك AI. كيف يمكنني مساعدتك اليوم؟</div>
+                </div>
+            </div>
+
+            <div class="ai-typing-indicator" id="ai-typing" style="display: none;">
+                <span></span><span></span><span></span><span></span>
+            </div>
+
+            <div class="ai-input-zone">
+                <input type="text" id="ai-user-input" placeholder="اكتب أو تحدث..." onkeypress="handleAiEnter(event)">
+                <button class="ai-mic-btn" onclick="toggleVoiceInput()" id="ai-mic-btn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="ai-send-btn" onclick="sendAiMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="home.js"></script>
+    <script src="ban-check.js"></script>
+    <script src="global-alert.js"></script>
     <script>
+        // دوال الشكاوى
         function openComplaintModal() { document.getElementById('complaint-modal').style.display = 'flex'; }
         function closeComplaintModal() { document.getElementById('complaint-modal').style.display = 'none'; }
         async function submitComplaint() {
+            const btn = document.querySelector('#complaint-modal .action-btn');
+            const originalText = btn.innerHTML;
             const text = document.getElementById('complaint-text').value;
             if(!text) return alert('اكتب تفاصيل الشكوى');
+            
+            btn.innerHTML = 'جاري الإرسال...';
+            btn.disabled = true;
             try {
-                await fetch('/api/submit-complaint', {
+                const res = await fetch('/api/submit-complaint', {
                     method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({content: text})
                 });
-                alert('تم الإرسال بنجاح'); closeComplaintModal();
-            } catch(e) { alert('خطأ، يرجى تسجيل الدخول'); }
+                if(res.ok) { alert('تم الإرسال بنجاح ✅'); closeComplaintModal(); document.getElementById('complaint-text').value=''; }
+                else { alert('يجب تسجيل الدخول أولاً'); }
+            } catch(e) { alert('خطأ في الاتصال'); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
+
+        // PWA Popup Logic
+        window.onload = function() {
+            var expiryDate = new Date('2026-03-03'); 
+            var today = new Date();
+            if (!localStorage.getItem('hidePromoForever') && !sessionStorage.getItem('hidePromoSession') && today < expiryDate) {
+                document.getElementById('promoPopup').style.display = 'flex';
+            }
+        };
+        function closePopup() {
+            document.getElementById('promoPopup').style.display = 'none';
+            if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hidePromoForever', 'true');
+            else sessionStorage.setItem('hidePromoSession', 'true');
+        }
+        
+        // IOS Prompt
+        window.closeIosPrompt = () => {
+            document.getElementById('ios-install-prompt').style.display = 'none';
+            localStorage.setItem('iosPromptDismissed', Date.now());
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+            if (isIos && !isStandalone && !localStorage.getItem('iosPromptDismissed')) {
+                setTimeout(() => { document.getElementById('ios-install-prompt').style.display = 'flex'; }, 3000);
+            }
+        });
     </script>
-    <script src="home.js"></script>
-    <script src="ban-check.js"></script>
-    <div id="ai-root">
-    <div class="ai-orb-container" onclick="toggleAiChat()">
-        <div class="ai-orb-pulse"></div>
-        <div class="ai-orb-core">
-            <i class="fas fa-robot"></i>
-        </div>
-        <div class="ai-status-ring"></div>
-    </div>
-
-    <div class="ai-hud-interface" id="ai-interface">
-        <div class="ai-hud-header">
-            <div class="ai-identity">
-                <div class="ai-mini-orb"></div>
-                <div class="ai-info">
-                    <span class="ai-name">AQARAK <small>AI CORE</small></span>
-                    <span class="ai-status">ONLINE /// SYSTEM READY</span>
-                </div>
-            </div>
-            <button class="ai-close-btn" onclick="toggleAiChat()"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="ai-console" id="ai-console">
-            <div class="ai-msg ai-msg-bot">
-                <div class="ai-avatar"><i class="fas fa-cube"></i></div>
-                <div class="ai-text">أهلاً بك في المستقبل 🌌<br>أنا عقارك AI. كيف يمكنني مساعدتك اليوم؟</div>
-            </div>
-            </div>
-
-        <div class="ai-typing-indicator" id="ai-typing" style="display: none;">
-            <span></span><span></span><span></span><span></span>
-        </div>
-
-        <div class="ai-input-zone">
-            <input type="text" id="ai-user-input" placeholder="اكتب استفسارك هنا..." onkeypress="handleAiEnter(event)">
-            <button class="ai-send-btn" onclick="sendAiMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-</div>
-
-<style>
-    /* --- 🎨 المتغيرات الفضائية --- */
-    :root {
-        --ai-primary: #00ff88;      /* أخضر نيون */
-        --ai-secondary: #00d4ff;    /* أزرق نيون */
-        --ai-bg: rgba(10, 15, 20, 0.85); /* أسود شفاف */
-        --ai-glass: rgba(255, 255, 255, 0.05);
-        --ai-border: 1px solid rgba(0, 255, 136, 0.3);
-    }
-
-    /* --- 🛸 1. زر الأورب (The Floating Orb) --- */
-    .ai-orb-container {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 70px;
-        height: 70px;
-        cursor: pointer;
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .ai-orb-container:hover { transform: scale(1.1); }
-
-    .ai-orb-core {
-        width: 50px;
-        height: 50px;
-        background: radial-gradient(circle at 30% 30%, #2a2a2a, #000);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--ai-primary);
-        font-size: 1.5rem;
-        box-shadow: 0 0 20px var(--ai-primary), inset 0 0 10px var(--ai-primary);
-        z-index: 2;
-        border: 2px solid rgba(0, 255, 136, 0.5);
-    }
-
-    /* نبض الطاقة حول الزر */
-    .ai-orb-pulse {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 2px solid var(--ai-primary);
-        opacity: 0;
-        animation: pulse-ring 2s infinite;
-    }
-
-    .ai-status-ring {
-        position: absolute;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border-top: 2px solid var(--ai-secondary);
-        border-right: 2px solid transparent;
-        animation: spin-slow 4s linear infinite;
-    }
-
-    /* --- 🛸 2. واجهة الهيدر (HUD) --- */
-    .ai-hud-interface {
-        position: fixed;
-        bottom: 110px;
-        right: 30px;
-        width: 380px;
-        height: 550px;
-        background: var(--ai-bg);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 20px;
-        border: var(--ai-border);
-        box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
-        display: none; /* مخفي افتراضياً */
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 9999;
-        transform-origin: bottom right;
-        animation: hud-open 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
-    /* الهيدر */
-    .ai-hud-header {
-        padding: 15px;
-        background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .ai-identity { display: flex; align-items: center; gap: 10px; }
-    .ai-mini-orb {
-        width: 10px; height: 10px; background: var(--ai-primary);
-        border-radius: 50%; box-shadow: 0 0 10px var(--ai-primary);
-        animation: blink 2s infinite;
-    }
-    .ai-info { display: flex; flex-direction: column; }
-    .ai-name { color: white; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; }
-    .ai-name small { font-size: 0.6rem; color: var(--ai-primary); }
-    .ai-status { font-size: 0.6rem; color: #aaa; letter-spacing: 2px; }
-
-    .ai-close-btn { background: none; border: none; color: white; cursor: pointer; transition: 0.3s; }
-    .ai-close-btn:hover { color: #ff4444; transform: rotate(90deg); }
-
-    /* الكونسول (الرسائل) */
-    .ai-console {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto;
-        font-family: 'Cairo', sans-serif;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        scrollbar-width: thin;
-        scrollbar-color: var(--ai-primary) transparent;
-    }
-
-    /* تصميم الرسائل */
-    .ai-msg { display: flex; gap: 10px; max-width: 85%; animation: msg-pop 0.3s ease-out; }
-    
-    /* رسالة البوت */
-    .ai-msg-bot { align-self: flex-start; }
-    .ai-msg-bot .ai-avatar {
-        width: 30px; height: 30px; background: rgba(0,255,136,0.2);
-        color: var(--ai-primary); display: flex; align-items: center; justify-content: center;
-        border-radius: 50%; border: 1px solid var(--ai-primary);
-    }
-    .ai-msg-bot .ai-text {
-        background: rgba(255,255,255,0.05);
-        color: #e0e0e0;
-        padding: 10px 15px;
-        border-radius: 0 15px 15px 15px;
-        border-left: 2px solid var(--ai-primary);
-        font-size: 0.9rem;
-        line-height: 1.5;
-    }
-
-    /* رسالة المستخدم */
-    .ai-msg-user { align-self: flex-end; flex-direction: row-reverse; }
-    .ai-msg-user .ai-text {
-        background: linear-gradient(135deg, var(--ai-primary), #00cc6a);
-        color: black;
-        padding: 10px 15px;
-        border-radius: 15px 0 15px 15px;
-        font-weight: bold;
-        font-size: 0.9rem;
-        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
-    }
-
-    /* مؤشر الكتابة */
-    .ai-typing-indicator {
-        padding: 10px 20px;
-        display: flex; gap: 5px;
-    }
-    .ai-typing-indicator span {
-        width: 4px; height: 4px; background: var(--ai-primary);
-        border-radius: 50%; animation: wave 1s infinite;
-    }
-    .ai-typing-indicator span:nth-child(2) { animation-delay: 0.1s; }
-    .ai-typing-indicator span:nth-child(3) { animation-delay: 0.2s; }
-
-    /* منطقة الإدخال */
-    .ai-input-zone {
-        padding: 15px;
-        background: rgba(0,0,0,0.3);
-        border-top: 1px solid rgba(255,255,255,0.05);
-        display: flex; gap: 10px;
-    }
-    .ai-input-zone input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        border-bottom: 1px solid #444;
-        color: white;
-        padding: 10px;
-        font-family: 'Cairo', sans-serif;
-        outline: none;
-        transition: 0.3s;
-    }
-    .ai-input-zone input:focus { border-color: var(--ai-primary); box-shadow: 0 1px 0 var(--ai-primary); }
-    .ai-send-btn {
-        background: transparent;
-        border: 1px solid var(--ai-primary);
-        color: var(--ai-primary);
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .ai-send-btn:hover { background: var(--ai-primary); color: black; box-shadow: 0 0 15px var(--ai-primary); }
-
-    /* --- ✨ Animations --- */
-    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
-    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
-    @keyframes hud-open { 0% { opacity: 0; transform: scale(0.8) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    @keyframes msg-pop { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
-    @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-    /* للموبايل */
-    @media (max-width: 480px) {
-        .ai-hud-interface {
-            width: 100%; height: 100%;
-            bottom: 0; right: 0; border-radius: 0;
-        }
-        .ai-orb-container { bottom: 20px; right: 20px; }
-    }
-</style>
 </body>
 </html>

@@ -7,6 +7,20 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavigation();
     updateMobileHeader();
     checkNotifications();
+    
+    // PWA Installer Logic
+    let deferredPrompt;
+    const installToast = document.getElementById('install-toast');
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); deferredPrompt = e;
+        if (!localStorage.getItem('installPromptDismissed')) installToast.style.display = 'flex';
+    });
+    document.getElementById('install-btn-action')?.addEventListener('click', async () => {
+        if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; installToast.style.display = 'none'; }
+    });
+    document.getElementById('close-install')?.addEventListener('click', () => {
+        installToast.style.display = 'none'; localStorage.setItem('installPromptDismissed', 'true');
+    });
 });
 
 // =========================================
@@ -52,7 +66,7 @@ async function updateMobileHeader() {
 
 // ✅ دالة فتح/غلق قائمة الإشعارات
 window.toggleNotifications = async function(e) {
-    e.stopPropagation(); // منع إغلاق القائمة الرئيسية
+    e.stopPropagation(); 
     const container = document.getElementById('notifications-container');
     const innerBadge = document.getElementById('notif-count-text');
     const outerBadge = document.getElementById('menu-notif-badge');
@@ -61,8 +75,7 @@ window.toggleNotifications = async function(e) {
         container.style.display = 'none';
     } else {
         container.style.display = 'block';
-        // تصفير العداد وقراءة الإشعارات عند الفتح
-        if (innerBadge.style.display !== 'none') {
+        if (innerBadge && innerBadge.style.display !== 'none') {
             innerBadge.style.display = 'none';
             if(outerBadge) outerBadge.style.display = 'none';
             try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
@@ -70,14 +83,13 @@ window.toggleNotifications = async function(e) {
     }
 };
 
-// ✅ دالة جلب الإشعارات
 async function checkNotifications() {
     try {
         const res = await fetch('/api/user/notifications');
         const data = await res.json();
         
-        const badge = document.getElementById('menu-notif-badge'); // العداد الخارجي
-        const innerBadge = document.getElementById('notif-count-text'); // العداد الداخلي
+        const badge = document.getElementById('menu-notif-badge');
+        const innerBadge = document.getElementById('notif-count-text');
         const list = document.getElementById('menu-notif-list');
 
         if (data.unreadCount > 0) {
@@ -112,7 +124,7 @@ async function checkNotifications() {
 }
 
 window.deleteNotification = async (e, id) => {
-    e.stopPropagation(); // منع إغلاق القائمة
+    e.stopPropagation();
     if(!confirm('حذف هذا الإشعار؟')) return;
     try {
         const res = await fetch(`/api/user/notification/${id}`, { method: 'DELETE' });
@@ -125,18 +137,12 @@ window.deleteNotification = async (e, id) => {
 
 window.toggleMobileMenu = async function() {
     const menu = document.getElementById('mobile-profile-dropdown');
-    
     if (menu) {
-        if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-        } else {
-            menu.style.display = 'block';
-        }
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 };
 
 window.addEventListener('click', function(e) {
-    const header = document.querySelector('.mobile-header-custom');
     const menu = document.getElementById('mobile-profile-dropdown');
     const isMenuBtn = e.target.closest('.menu-toggle-btn');
     const isMenu = e.target.closest('.mobile-dropdown');
@@ -169,7 +175,6 @@ async function updateNavigation() {
             `;
         }
     } catch (error) {
-        console.error('Navigation Error:', error);
         nav.innerHTML = `<a href="index" class="nav-button">تسجيل دخول</a>`;
     }
 }
@@ -213,7 +218,7 @@ async function fetchLatestProperties(isFirstLoad = false) {
             const featuredClass = prop.isFeatured ? 'featured-card-glow' : '';
             let extraBadges = prop.isFeatured ? `<div class="featured-crown"><i class="fas fa-crown"></i> مميز</div>` : '';
             const verifiedBadge = prop.is_verified ? 
-                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle;" title="بائع موثق"></i>` : '';
+                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle;"></i>` : '';
 
             const html = `
                 <div class="adv-card ${featuredClass}" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
@@ -262,6 +267,7 @@ async function fetchLatestProperties(isFirstLoad = false) {
         isLoading = false;
     }
 }
+
 // =========================================
 // 👽 Aqarak AI Core Logic
 // =========================================
@@ -269,13 +275,22 @@ async function fetchLatestProperties(isFirstLoad = false) {
 function toggleAiChat() {
     const hud = document.getElementById('ai-interface');
     const input = document.getElementById('ai-user-input');
+    const orb = document.querySelector('.ai-orb-container'); 
+    const complaintBtn = document.querySelector('.complaint-float-btn'); 
     
     if (hud.style.display === 'flex') {
         hud.style.display = 'none';
+        if (orb) orb.style.display = 'flex';
+        if (complaintBtn) complaintBtn.style.display = 'block';
     } else {
         hud.style.display = 'flex';
-        // تركيز المؤشر داخل مربع الكتابة عند الفتح
         setTimeout(() => input.focus(), 100);
+
+        // إخفاء الأزرار في الموبايل
+        if (window.innerWidth <= 768) { 
+            if (orb) orb.style.display = 'none';
+            if (complaintBtn) complaintBtn.style.display = 'none';
+        }
     }
 }
 
@@ -291,16 +306,13 @@ async function sendAiMessage() {
     const message = input.value.trim();
     if (!message) return;
 
-    // 1. عرض رسالة المستخدم
     appendMessage(message, 'user');
     input.value = '';
 
-    // 2. إظهار مؤشر الكتابة
-    typingIndicator.style.display = 'flex';
+    if(typingIndicator) typingIndicator.style.display = 'flex';
     consoleDiv.scrollTop = consoleDiv.scrollHeight;
 
     try {
-        // 3. الاتصال بالسيرفر
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -308,15 +320,11 @@ async function sendAiMessage() {
         });
         
         const data = await response.json();
-
-        // 4. إخفاء المؤشر وعرض الرد
-        typingIndicator.style.display = 'none';
-        
-        // محاكاة الكتابة الحرفية (Typing Effect) لتبدو أكثر ذكاءً
+        if(typingIndicator) typingIndicator.style.display = 'none';
         typeWriterResponse(data.reply);
 
     } catch (error) {
-        typingIndicator.style.display = 'none';
+        if(typingIndicator) typingIndicator.style.display = 'none';
         appendMessage("⚠️ فقدنا الاتصال بالقاعدة الأم (خطأ في السيرفر).", 'bot');
     }
 }
@@ -328,7 +336,7 @@ function appendMessage(text, sender) {
     
     if (sender === 'bot') {
         div.innerHTML = `
-            <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+            <div class="ai-avatar"><img src="logo.png" alt="AI"></div>
             <div class="ai-text">${text}</div>
         `;
     } else {
@@ -339,27 +347,25 @@ function appendMessage(text, sender) {
     
     consoleDiv.appendChild(div);
     consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    return div.querySelector('.ai-text'); // نرجع العنصر عشان لو هنعدل عليه
 }
 
-// دالة لمحاكاة الكتابة حرف بحرف للذكاء الاصطناعي
 function typeWriterResponse(text) {
     const consoleDiv = document.getElementById('ai-console');
     const div = document.createElement('div');
     div.className = 'ai-msg ai-msg-bot';
+    
     div.innerHTML = `
-        <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+        <div class="ai-avatar"><img src="logo.png" alt="AI"></div>
         <div class="ai-text"></div>
     `;
     consoleDiv.appendChild(div);
     
     const textElement = div.querySelector('.ai-text');
     let i = 0;
-    const speed = 10; // سرعة الكتابة (ميلي ثانية)
+    const speed = 10;
 
     function type() {
         if (i < text.length) {
-            // التعامل مع الروابط أو HTML لو البوت مرجع تنسيق
             if(text.charAt(i) === '<') {
                 const endTag = text.indexOf('>', i);
                 textElement.innerHTML += text.substring(i, endTag + 1);
@@ -373,4 +379,59 @@ function typeWriterResponse(text) {
         }
     }
     type();
+}
+
+// =========================================
+// 🎙️ 5. نظام التعرف الصوتي (Voice Input)
+// =========================================
+
+let recognition;
+let isListening = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-EG'; 
+    recognition.continuous = false; 
+    recognition.interimResults = true; 
+
+    recognition.onstart = function() {
+        isListening = true;
+        const btn = document.getElementById('ai-mic-btn');
+        if(btn) btn.classList.add('ai-mic-active');
+        document.getElementById('ai-user-input').placeholder = "جاري الاستماع... 🎧";
+    };
+
+    recognition.onend = function() {
+        isListening = false;
+        const btn = document.getElementById('ai-mic-btn');
+        if(btn) btn.classList.remove('ai-mic-active');
+        document.getElementById('ai-user-input').placeholder = "اكتب استفسارك هنا...";
+    };
+
+    recognition.onresult = function(event) {
+        const transcript = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.transcript)
+            .join('');
+
+        const input = document.getElementById('ai-user-input');
+        input.value = transcript;
+    };
+    
+    recognition.onerror = function(event) {
+        console.error("Voice Error:", event.error);
+        isListening = false;
+        const btn = document.getElementById('ai-mic-btn');
+        if(btn) btn.classList.remove('ai-mic-active');
+    };
+}
+
+function toggleVoiceInput() {
+    if (!recognition) {
+        alert("عذراً، متصفحك لا يدعم الكتابة الصوتية.");
+        return;
+    }
+    if (isListening) recognition.stop();
+    else recognition.start();
 }
