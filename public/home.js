@@ -18,16 +18,12 @@ async function updateMobileHeader() {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
 
-        // عناصر الهيدر
+        // عناصر الهيدر (مع فحوصات الأمان)
         const mobCenterAction = document.getElementById('mob-center-action');
         const mobMenuToggle = document.getElementById('mob-menu-toggle');
         const mobGuestBtns = document.getElementById('mob-guest-btns');
-        
-        // عناصر القائمة المنسدلة
         const mobName = document.getElementById('mob-user-name');
         const mobBalance = document.getElementById('mob-user-balance');
-        // (اختياري) لو عندك صورة في القائمة القديمة
-        const profileImg = document.querySelector('.mobile-profile-img');
 
         if (data.isAuthenticated) {
             // 🟢 مستخدم مسجل: أظهر زر الإضافة والقائمة
@@ -35,11 +31,10 @@ async function updateMobileHeader() {
             if(mobMenuToggle) mobMenuToggle.style.display = 'flex';
             if(mobGuestBtns) mobGuestBtns.style.display = 'none';
 
-            // ✅ تصميم علامة التوثيق الذهبية (Facebook Style)
+            // ✅ علامة التوثيق الذهبية
             const verifiedBadge = data.is_verified ? 
-                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; border:1px solid white; margin-right:5px; box-shadow:0 0 8px rgba(255, 215, 0, 0.6); vertical-align:middle;"></i>` : '';
+                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-right:5px; vertical-align:middle;"></i>` : '';
             
-            // تحديث الاسم بالعلامة
             if(mobName) mobName.innerHTML = `${data.name || 'مستخدم'} ${verifiedBadge}`;
             
             // تحديث الرصيد
@@ -52,9 +47,6 @@ async function updateMobileHeader() {
                 }
             }
 
-            // تحديث الصورة لو موجودة
-            if(profileImg) profileImg.src = data.profile_picture || 'logo.png';
-
         } else {
             // 🔴 زائر: أظهر أزرار الدخول والتسجيل فقط
             if(mobCenterAction) mobCenterAction.style.display = 'none';
@@ -64,7 +56,7 @@ async function updateMobileHeader() {
     } catch (e) { console.error("Header Error", e); }
 }
 
-// ✅ دالة جلب الإشعارات وتحديث العداد
+// ✅ دالة جلب الإشعارات
 async function checkNotifications() {
     try {
         const res = await fetch('/api/user/notifications');
@@ -74,7 +66,6 @@ async function checkNotifications() {
         const list = document.getElementById('menu-notif-list');
         const countText = document.getElementById('notif-count-text');
 
-        // تحديث العداد الأحمر على أيقونة القائمة
         if (data.unreadCount > 0) {
             if(badge) {
                 badge.style.display = 'block';
@@ -86,15 +77,13 @@ async function checkNotifications() {
             if(countText) countText.textContent = '';
         }
 
-        // تعبئة قائمة الإشعارات
         if (list && data.notifications && data.notifications.length > 0) {
             list.innerHTML = data.notifications.map(n => `
                 <div style="padding:10px; border-bottom:1px solid #333; background:${n.is_read ? 'transparent' : 'rgba(0, 255, 136, 0.05)'}; transition:0.3s;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                         <strong style="color:white; font-size:0.9rem;">${n.title}</strong>
-                        <span style="font-size:0.7rem; color:#777;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <p style="color:#aaa; font-size:0.85rem; margin:0; line-height:1.4;">${n.message}</p>
+                    <p style="color:#aaa; font-size:0.8rem; margin:0; line-height:1.4;">${n.message}</p>
                 </div>
             `).join('');
         }
@@ -107,18 +96,18 @@ window.toggleMobileMenu = async function() {
     const badge = document.getElementById('menu-notif-badge');
     const countText = document.getElementById('notif-count-text');
     
-    if (menu.style.display === 'block') {
-        menu.style.display = 'none';
-    } else {
-        menu.style.display = 'block';
-        
-        // عند الفتح: تصفير العداد وقراءة الإشعارات
-        if (badge && badge.style.display !== 'none') {
-            badge.style.display = 'none'; // إخفاء النقطة الحمراء
-            if(countText) countText.textContent = '';
+    if (menu) {
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
             
-            // إبلاغ السيرفر بأن الإشعارات تمت قراءتها
-            try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
+            // عند الفتح: تصفير العداد وقراءة الإشعارات
+            if (badge && badge.style.display !== 'none') {
+                badge.style.display = 'none'; 
+                if(countText) countText.textContent = '';
+                try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
+            }
         }
     }
 };
@@ -135,8 +124,11 @@ window.addEventListener('click', function(e) {
     const header = document.querySelector('.mobile-header-custom');
     const menu = document.getElementById('mobile-profile-dropdown');
     
-    // لو الضغط تم خارج الهيدر وخارج القائمة
-    if (header && menu && !header.contains(e.target) && !menu.contains(e.target)) {
+    // شرط: الضغط ليس على زر القائمة ولا داخل القائمة
+    const isMenuBtn = e.target.closest('.menu-toggle-btn');
+    const isMenu = e.target.closest('.mobile-dropdown');
+
+    if (menu && menu.style.display === 'block' && !isMenuBtn && !isMenu) {
         menu.style.display = 'none';
     }
 });
@@ -193,7 +185,6 @@ async function fetchLatestProperties(isFirstLoad = false) {
 
     try {
         const response = await fetch(`/api/properties?limit=${LIMIT}&offset=${currentOffset}`);
-        if (!response.ok) throw new Error('Network response was not ok');
         const properties = await response.json();
         
         if (isFirstLoad && container) container.innerHTML = '';
@@ -213,18 +204,17 @@ async function fetchLatestProperties(isFirstLoad = false) {
             const typeText = isSale ? 'للبيع' : 'للإيجار';
 
             // المميزات
-            const roomsHtml = prop.rooms ? `<span class="adv-feat-item"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
-            const bathsHtml = prop.bathrooms ? `<span class="adv-feat-item"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
-            const areaHtml = prop.area ? `<span class="adv-feat-item"><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
+            const roomsHtml = prop.rooms ? `<span style="margin-left:8px;"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
+            const bathsHtml = prop.bathrooms ? `<span style="margin-left:8px;"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
+            const areaHtml = prop.area ? `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
 
-            // 🔥 1. التميز (تاج ذهبي + إطار)
+            // 🔥 1. التميز
             const featuredClass = prop.isFeatured ? 'featured-card-glow' : '';
             let extraBadges = prop.isFeatured ? `<div class="featured-crown"><i class="fas fa-crown"></i> مميز</div>` : '';
 
-            // ✅ 2. التوثيق (علامة ذهبية بجانب اسم العقار)
-            // (لاحظ: لازم السيرفر يرجع is_verified في الـ query)
+            // ✅ 2. التوثيق
             const verifiedBadge = prop.is_verified ? 
-                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle; box-shadow:0 0 5px rgba(255, 215, 0, 0.5);" title="بائع موثق"></i>` : '';
+                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle;" title="بائع موثق"></i>` : '';
 
             const html = `
                 <div class="adv-card ${featuredClass}" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
@@ -256,7 +246,7 @@ async function fetchLatestProperties(isFirstLoad = false) {
 
         currentOffset += properties.length;
 
-        // زر عرض المزيد
+        // إضافة زر المزيد (مرة واحدة)
         if (!document.getElementById('load-more-container') && container) {
             const btnContainer = document.createElement('div');
             btnContainer.id = 'load-more-container';

@@ -2254,6 +2254,7 @@ app.post('/api/admin/users/verify', async (req, res) => {
     }
 });
 // 🗑️ حذف الحساب نهائياً
+// 🗑️ حذف الحساب نهائياً
 app.post('/api/user/delete', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
@@ -2272,21 +2273,95 @@ app.post('/api/user/delete', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'كلمة المرور غير صحيحة' });
 
-        // 3. حذف البيانات (نبدأ بالعقارات المرتبطة ثم المستخدم)
-        // حذف العقارات
+        // 3. 🧹 تنظيف البيانات المرتبطة (الترتيب مهم جداً!)
+        
+        // أ. حذف العقارات (مرتبطة برقم الهاتف)
         await pgQuery('DELETE FROM properties WHERE "sellerPhone" = $1', [user.phone]);
-        // حذف الإشعارات
-        await pgQuery('DELETE FROM notifications WHERE user_id = $1', [user.id]);
-        // حذف المستخدم نفسه
+        
+        // ب. حذف طلبات الدفع (Payment Orders) - ✅ هذا هو حل مشكلتك
+        // نستخدم try-catch لتجاهل الخطأ لو الجدول مش موجود
+        try { await pgQuery('DELETE FROM payment_orders WHERE user_id = $1', [user.id]); } catch(e) { console.log('No payments to delete or table missing'); }
+
+        // ج. حذف الإشعارات
+        try { await pgQuery('DELETE FROM notifications WHERE user_id = $1', [user.id]); } catch(e) { console.log('No notifications to delete'); }
+
+        // د. حذف أي جداول أخرى قد تكون مرتبطة (مثل المحفظة أو المعاملات)
+        try { await pgQuery('DELETE FROM wallet_transactions WHERE user_id = $1', [user.id]); } catch(e) {}
+
+        // هـ. أخيراً: حذف المستخدم نفسه
         await pgQuery('DELETE FROM users WHERE id = $1', [user.id]);
 
-        // 4. تسجيل الخروج
+        // 4. تسجيل الخروج والرد
         res.clearCookie('auth_token');
-        res.json({ success: true, message: 'تم حذف الحساب بنجاح' });
+        res.json({ success: true, message: 'تم حذف الحساب وجميع البيانات المرتبطة بنجاح' });
 
     } catch (error) {
         console.error("Delete Account Error:", error);
+        // التحقق لو الخطأ لسه موجود بسبب جدول تاني نسيناه
+        if (error.code === '23503') {
+            return res.status(400).json({ message: 'لا يمكن حذف الحساب لوجود بيانات مالية أو سجلات مرتبطة أخرى لم يتم مسحها.' });
+        }
         res.status(500).json({ message: 'خطأ في السيرفر أثناء الحذف' });
     }
 });
+// ==========================================
+// 🔔 نظام الإشعارات (Backend)
+// ==========================================
+
+// 1. جلب إشعارات المستخدم
+app.get('/api/user/notifications', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.json({ unreadCount: 0, notifications: [] });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // جلب آخر 20 إشعار
+        const notifRes = await pgQuery(
+            'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20', 
+            [decoded.id]
+        );
+        
+        // عد غير المقروءة
+        const countRes = await pgQuery(
+            'SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = FALSE', 
+            [decoded.id]
+        );
+
+        res.json({
+            notifications: notifRes.rows,
+            unreadCount: parseInt(countRes.rows[0].count)
+        });
+
+    } catch (error) {
+        console.error("Notif Fetch Error:", error);
+        res.json({ unreadCount: 0, notifications: [] });
+    }
+});
+
+// 2. تحديث الإشعارات كمقروءة (عند فتح القائمة)
+app.post('/api/user/notifications/read', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).send();
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        await pgQuery('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [decoded.id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Notif Read Error:", error);
+        res.status(500).send();
+    }
+});
+
+// 3. (اختياري) دالة لإرسال إشعار جديد (تستخدمها في الكود الداخلي)
+// مثال: await sendNotification(userId, 'تم نشر عقارك', 'عقارك الجديد أصبح متاحاً الآن');
+async function sendNotification(userId, title, message) {
+    try {
+        await pgQuery(
+            'INSERT INTO notifications (user_id, title, message) VALUES ($1, $2, $3)',
+            [userId, title, message]
+        );
+    } catch (e) { console.error("Send Notif Error:", e); }
+}
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

@@ -3,21 +3,26 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
+    <meta name="description" content="أفضل منصة عقارية في مصر لعرض وطلب العقارات مجاناً." />
     <title>عقارك - الرئيسية</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1c2630">
     <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8686960539652604" crossorigin="anonymous"></script>
+    
     <style>
     /* --- 🎨 الأساسيات --- */
     :root { --glass-bg: rgba(20, 20, 20, 0.98); --neon-primary: #00ff88; --neon-secondary: #00d4ff; --card-bg: #1a1a1a; }
     body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0 !important; padding: 0 !important; font-family: 'Cairo', sans-serif; overflow-x: hidden; }
 
-    /* --- 📱 هيدر الموبايل الذكي --- */
+    /* =========================================
+       📱 1. هيدر الموبايل (يظهر فقط في الموبايل)
+       ========================================= */
     .mobile-header-custom {
-        display: none;
+        display: none; /* مخفي افتراضياً (للديسكتوب) */
         position: fixed; top: 0; left: 0; right: 0;
         height: 70px;
         background: rgba(12, 12, 12, 0.98);
@@ -28,105 +33,104 @@
         align-items: center;
         justify-content: space-between;
         box-shadow: 0 5px 25px rgba(0,0,0,0.8);
-        transition: transform 0.3s ease-in-out;
     }
-    
-    .header-hidden { transform: translateY(-100%); }
 
-    /* اللوجو (يمين) */
-    .mob-logo-link img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+    /* اللوجو */
+    .mob-logo-link img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
 
-    /* --- 🔒 عناصر المسجلين (Add + Menu) --- */
+    /* الأزرار (إضافة، قائمة، دخول) */
     .center-action { position: absolute; left: 50%; transform: translateX(-50%); }
-    .btn-add-prop-mob { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #00ff88, #00cc6a); color: black; border: 2px solid #00ff88; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); text-decoration: none; transition: 0.3s; }
-    .btn-add-prop-mob:active { transform: scale(0.9); }
-
-    .menu-toggle-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: var(--neon-secondary); font-size: 1.3rem; }
-
-    /* --- 👤 عناصر الزوار (Guest Buttons) --- */
-    .guest-buttons-container {
-        display: flex; gap: 10px; align-items: center;
-    }
-    .btn-guest-login {
-        background: transparent; border: 1px solid var(--neon-primary); color: var(--neon-primary);
-        padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; text-decoration: none; font-weight: bold;
-    }
-    .btn-guest-signup {
-        background: var(--neon-primary); color: black; border: 1px solid var(--neon-primary);
-        padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; text-decoration: none; font-weight: bold;
+    
+    .btn-add-prop-mob { 
+        width: 45px; height: 45px; border-radius: 50%; 
+        background: linear-gradient(135deg, #00ff88, #00cc6a); 
+        color: black; border: 2px solid #00ff88; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 1.2rem; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); 
+        text-decoration: none; transition: 0.3s; 
     }
 
-    /* القائمة المنسدلة */
-    .mobile-dropdown { display: none; position: fixed; top: 80px; left: 20px; width: 260px; background: #151515; border: 1px solid var(--neon-secondary); border-radius: 16px; padding: 15px; z-index: 10000; box-shadow: 0 10px 50px rgba(0,0,0,0.95); animation: slideIn 0.25s ease-out; }
-    .dropdown-user-info { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; margin-bottom: 10px; text-align: center; }
-    .dropdown-link { display: flex; align-items: center; gap: 12px; padding: 12px; color: #ddd; text-decoration: none; border-radius: 10px; font-size: 0.95rem; margin-bottom: 5px; transition: 0.2s; }
-    .dropdown-link:hover { background: rgba(0, 212, 255, 0.1); color: var(--neon-secondary); }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .menu-toggle-btn { 
+        background: rgba(255, 255, 255, 0.05); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        width: 42px; height: 42px; border-radius: 12px; 
+        display: flex; align-items: center; justify-content: center; 
+        cursor: pointer; color: var(--neon-secondary); font-size: 1.3rem; 
+        position: relative;
+    }
 
+    .guest-buttons-container { display: flex; gap: 10px; }
+    .btn-guest-login { padding: 6px 12px; border: 1px solid var(--neon-primary); color: var(--neon-primary); border-radius: 20px; text-decoration: none; font-size: 0.8rem; }
+    .btn-guest-signup { padding: 6px 12px; background: var(--neon-primary); color: black; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: bold; }
+
+    /* القائمة المنسدلة للموبايل */
+    .mobile-dropdown {
+        display: none; position: fixed; top: 75px; left: 15px; width: 260px;
+        background: #1a1a1a; border: 1px solid var(--neon-primary); border-radius: 12px;
+        padding: 15px; z-index: 10000; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+    }
+    .dropdown-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem; margin-bottom: 5px; }
+    .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
+
+    /* =========================================
+       🖥️ 2. هيدر الديسكتوب (يظهر في الشاشات الكبيرة)
+       ========================================= */
+    .main-header {
+        position: sticky; top: 0; z-index: 1000;
+        background: var(--glass-bg); backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px; display: flex; justify-content: center;
+    }
+    .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1250px; }
+    .logo-container { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1.1rem; }
+    .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
+    .main-nav { display: flex; gap: 10px; align-items: center; }
+    .nav-button { color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; transition: 0.3s; }
+    .nav-button:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
+    .sell-btn { background: var(--neon-primary); color: black; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; }
+
+    /* 📱 Media Query (التحكم في الظهور والاختفاء) */
     @media (max-width: 768px) {
-        .main-header { display: none !important; }
-        .mobile-header-custom { display: flex !important; }
-        body { padding-top: 70px; }
+        .main-header { display: none !important; } /* إخفاء الديسكتوب */
+        .mobile-header-custom { display: flex !important; } /* إظهار الموبايل */
+        body { padding-top: 80px; } /* مسافة عشان الهيدر الثابت */
         .search-bar-container { flex-direction: column; }
         .search-button { display: none; }
         .search-bar { border-radius: 50px !important; }
     }
 
-    /* --- باقي الستايلات --- */
-    .main-header { position: sticky; top: 0; z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 15px; }
-    .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; }
-    .logo-container { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1.1rem; }
-    .logo { height: 40px; width: 40px; object-fit: cover; border-radius: 50%; border: 2px solid var(--neon-primary); }
-    .main-nav { display: flex; gap: 10px; }
-    .nav-button { background: transparent; color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; font-size: 0.85rem; }
-    .sell-btn { background: var(--neon-primary) !important; color: black !important; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none; }
-
+    /* باقي الستايلات (Grid, Cards, etc.) */
     .search-section { padding: 30px 15px; text-align: center; max-width: 800px; margin: 0 auto; }
-    .search-bar-container { position: relative; display: flex; gap: 10px; }
     .search-bar { width: 100%; padding: 15px 25px; background: rgba(0,0,0,0.6); border: 1px solid #444; border-radius: 50px; color: white; font-size: 1rem; }
-    .search-button { background: var(--neon-secondary); color: #000; border: none; padding: 0 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
     .listings-section { max-width: 1250px; margin: 0 auto; padding: 0 15px 40px 15px; }
-    .section-title { color: var(--neon-primary); margin-bottom: 20px; border-right: 4px solid var(--neon-primary); padding-right: 15px; font-size: 1.5rem; }
-    .adv-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-    .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; transition: 0.3s; position: relative; display: flex; flex-direction: column; }
-    .adv-card-img-box { height: 220px; position: relative; }
+    .section-title { color: var(--neon-primary); margin-bottom: 20px; font-size: 1.5rem; border-right: 4px solid var(--neon-primary); padding-right: 10px; }
+    .adv-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    
+    .adv-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.3s; }
+    .adv-card:hover { transform: translateY(-5px); border-color: var(--neon-primary); }
+    .adv-card-img-box { height: 200px; position: relative; }
     .adv-card-img { width: 100%; height: 100%; object-fit: cover; }
-    .adv-price-tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.85); color: var(--neon-primary); padding: 5px 12px; border-radius: 8px; font-weight: bold; border: 1px solid var(--neon-primary); }
     .adv-type-badge { position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; color: black; }
     .is-sale { background: #00ff88; } .is-rent { background: #00d4ff; }
+    .adv-price-tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: var(--neon-primary); padding: 5px 10px; border-radius: 8px; font-weight: bold; border: 1px solid var(--neon-primary); }
     .adv-card-body { padding: 15px; }
-    .adv-title { color: white; margin: 0 0 12px 0; font-size: 1.1rem; line-height: 1.4; height: 3rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .adv-features { display: flex; gap: 15px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
-    .adv-feat-item i { color: var(--neon-secondary); margin-left: 5px; }
-    .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95rem; background: transparent; }
-    .load-more-btn { background: transparent; color: white; border: 1px solid #555; padding: 12px 40px; border-radius: 50px; margin-top: 30px; cursor: pointer; }
-    .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 25px rgba(255, 215, 0, 0.25); position: relative; transform: scale(1.02); z-index: 5; background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important; }
-    .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700); background-size: 200% 200%; color: black; font-weight: 900; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); z-index: 10; display: flex; align-items: center; gap: 6px; border: 1px solid #fff; }
-    .complaint-float-btn { position: fixed; bottom: 20px; left: 20px; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(5px); }
-    .popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-    .popup-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); color: #fff; }
-    /* علامة التوثيق الذهبية (مثل فيسبوك) */
-.verified-badge {
-    color: #fff; /* علامة الصح بيضاء */
-    background-color: #FFD700; /* خلفية ذهبية */
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
-    margin-right: 5px;
-    vertical-align: middle;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-    border: 1px solid #fff;
-}
+    .adv-title { color: white; margin: 0 0 10px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .adv-features { display: flex; gap: 10px; color: #bbb; font-size: 0.85rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .adv-details-btn { display: block; width: 100%; text-align: center; border: 1px solid var(--neon-primary); color: var(--neon-primary); padding: 8px; border-radius: 8px; text-decoration: none; transition: 0.3s; }
+    .adv-details-btn:hover { background: var(--neon-primary); color: black; }
+    
+    /* ستايلات التميز والتوثيق */
+    .featured-card-glow { border: 2px solid #FFD700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+    .featured-crown { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #FFD700, #FFA500); color: black; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; }
+    .verified-badge { background: #FFD700; color: white; border-radius: 50%; padding: 2px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; border: 1px solid white; margin-right: 5px; vertical-align: middle; }
+
+    /* زر الشكوى العائم (تصحيح مكانه) */
+    .complaint-float-btn { position: fixed; bottom: 80px; left: 20px; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; padding: 8px 15px; border-radius: 50px; cursor: pointer; z-index: 9990; backdrop-filter: blur(5px); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <header class="mobile-header-custom" id="mob-header">
-        
         <a href="home" class="mob-logo-link">
             <img src="logo.png" alt="عقارك">
         </a>
@@ -139,152 +143,102 @@
 
         <div id="mob-menu-toggle" class="menu-toggle-btn" onclick="toggleMobileMenu()" style="display:none;">
             <i class="fas fa-bars"></i>
+            <span id="menu-notif-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ff4444; color:white; font-size:0.7rem; padding:2px 6px; border-radius:50%; border:2px solid #121212;">0</span>
         </div>
 
         <div id="mob-guest-btns" class="guest-buttons-container" style="display:none;">
             <a href="index" class="btn-guest-login">دخول</a>
-            <a href="index" class="btn-guest-signup">إنشاء حساب</a>
+            <a href="index" class="btn-guest-signup">حساب جديد</a>
         </div>
 
-        <header class="mobile-header-custom" id="mob-header">
-    <a href="home" class="mob-logo-link"><img src="logo.png" alt="عقارك"></a>
-
-    <div id="mob-center-action" class="center-action" style="display:none;">
-        <a href="seller-dashboard" class="btn-add-prop-mob" title="أضف عقارك"><i class="fas fa-plus"></i></a>
-    </div>
-
-    <div id="mob-menu-toggle" class="menu-toggle-btn" onclick="toggleMobileMenu()" style="display:none; position: relative;">
-        <i class="fas fa-bars"></i>
-        <span id="menu-notif-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ff4444; color:white; font-size:0.7rem; padding:2px 6px; border-radius:50%; border:2px solid #121212;">0</span>
-    </div>
-
-    <div id="mob-guest-btns" class="guest-buttons-container" style="display:none;">
-        <a href="index" class="btn-guest-login">دخول</a>
-        <a href="index" class="btn-guest-signup">إنشاء حساب</a>
-    </div>
-
-    <div id="mobile-profile-dropdown" class="mobile-dropdown">
-        <div class="dropdown-user-info">
-            <strong style="color:white; display:block; font-size:1.1rem;" id="mob-user-name">...</strong>
-            <span style="font-size:0.8rem; color:#00ff88;" id="mob-user-balance"></span>
-        </div>
-        
-        <div class="menu-notifications-section" style="border-bottom:1px solid #333; margin-bottom:10px; padding-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="color:#aaa; font-size:0.9rem;"><i class="fas fa-bell"></i> الإشعارات</span>
-                <span id="notif-count-text" style="color:#ff4444; font-size:0.8rem; font-weight:bold;"></span>
+        <div id="mobile-profile-dropdown" class="mobile-dropdown">
+            <div style="padding-bottom:10px; border-bottom:1px solid #333; margin-bottom:10px;">
+                <strong style="color:white; display:block; font-size:1.1rem;" id="mob-user-name">...</strong>
+                <span style="font-size:0.8rem; color:#00ff88;" id="mob-user-balance"></span>
             </div>
-            <div id="menu-notif-list" style="max-height:150px; overflow-y:auto; font-size:0.85rem; color:#ddd;">
-                <p style="text-align:center; color:#555;">لا توجد إشعارات</p>
-            </div>
-        </div>
-
-        <a href="user-dashboard" class="dropdown-link"><i class="fas fa-user-circle"></i> حسابي</a>
-        <a href="all-properties" class="dropdown-link"><i class="fas fa-building"></i> جميع العقارات</a>
-        <a href="#" onclick="logoutUser()" class="dropdown-link" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</a>
-    </div>
-</header>
-
-<script>
-    // ✅ دالة فتح القائمة وتصفير الإشعارات
-    async function toggleMobileMenu() {
-        const menu = document.getElementById('mobile-profile-dropdown');
-        const badge = document.getElementById('menu-notif-badge');
-        
-        if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-        } else {
-            menu.style.display = 'block';
             
-            // عند الفتح: تصفير العداد وقراءة الإشعارات
-            if (badge.style.display !== 'none') {
-                badge.style.display = 'none'; // إخفاء النقطة الحمراء
-                document.getElementById('notif-count-text').textContent = '';
-                
-                // إبلاغ السيرفر بقراءة الإشعارات
-                try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
-            }
-        }
-    }
-</script>
+            <div style="border-bottom:1px solid #333; margin-bottom:10px; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="color:#aaa; font-size:0.9rem;"><i class="fas fa-bell"></i> الإشعارات</span>
+                    <span id="notif-count-text" style="color:#ff4444; font-size:0.8rem;"></span>
+                </div>
+                <div id="menu-notif-list" style="max-height:150px; overflow-y:auto; font-size:0.85rem; color:#ddd;">
+                    <p style="text-align:center; color:#555;">لا توجد إشعارات</p>
+                </div>
+            </div>
+
+            <a href="user-dashboard" class="dropdown-link"><i class="fas fa-user-circle"></i> حسابي</a>
+            <a href="all-properties" class="dropdown-link"><i class="fas fa-building"></i> جميع العقارات</a>
+            <a href="#" onclick="logoutUser()" class="dropdown-link" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</a>
+        </div>
+    </header>
+
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
                 <img src="logo.png" alt="شعار عقارك" class="logo">
                 <span class="logo-text">عقارك مضمون!</span>
             </div>
-            <nav class="main-nav" id="dynamic-nav"></nav>
+            <nav class="main-nav" id="dynamic-nav">
+                </nav>
         </div>
     </header>
 
     <main class="main-content">
-        <section class="search-section" id="hero-search-section">
+        <section class="search-section">
             <div class="search-bar-container">
-                <input type="text" class="search-bar neon-input-white" placeholder="ابحث عن عقارك (الاسم، السعر، الغرف)...">
+                <input type="text" class="search-bar" placeholder="ابحث عن عقارك (الاسم، المنطقة، السعر)...">
                 <button class="search-button"><i class="fas fa-search"></i> ابحث</button>
             </div>
         </section>
+
         <section class="listings-section">
             <h2 class="section-title">أحدث العقارات</h2>
-            <div class="listings-container" id="listings-container"></div>
+            <div class="adv-grid-container" id="listings-container">
+                </div>
         </section>
+        
         <section class="request-property-section">
-            <div class="request-box neon-glow centered-page-content" style="text-align:center; padding:40px; border:1px solid var(--neon-secondary); border-radius:15px; margin-top:20px; background:rgba(0, 212, 255, 0.05);">
-                <p class="request-text" style="color:white; font-size:1.2rem; margin-bottom:15px;">لم تجد العقار الذي تبحث عنه؟</p>
-                <a href="request-property" class="sell-btn" style="background:var(--neon-secondary)!important; color:black!important; border-color:var(--neon-secondary)!important;">احجز عقارك الآن!</a>
+            <div class="request-box neon-glow centered-page-content" style="text-align:center; margin-top:30px;">
+                <p class="request-text" style="color:white; margin-bottom:15px;">لم تجد العقار الذي تبحث عنه؟</p>
+                <a href="request-property" class="sell-btn">احجز عقارك الآن!</a>
             </div>
         </section>
     </main>
 
-    <footer class="main-footer">
-        <div class="footer-content" style="text-align:center; padding:20px; color:#777; font-size:0.9rem;">
-            <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
-        </div>
+    <footer class="main-footer" style="text-align:center; padding:20px; color:#777; border-top:1px solid #333; margin-top:40px;">
+        <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
     </footer>
 
     <button onclick="openComplaintModal()" class="complaint-float-btn">
         <i class="fas fa-exclamation-circle"></i> شكوى؟
     </button>
 
-    <div id="complaint-modal" class="popup-overlay">
-        <div class="popup-content neon-glow" style="max-width: 400px; border-color: #ff4444;">
-            <span class="close-btn" onclick="closeComplaintModal()" style="position:absolute; top:10px; left:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
-            <h3 style="color: white; margin-bottom: 15px;">إرسال شكوى</h3>
-            <form id="user-complaint-form">
-                <textarea id="complaint-text" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #555; border-radius:10px; margin-bottom:10px;" rows="4" placeholder="اكتب التفاصيل..." required></textarea>
-                <button type="submit" class="sell-btn" style="width:100%; border-color:#ff4444!important; background:transparent!important; color:#ff4444!important;">إرسال</button>
-            </form>
+    <div id="complaint-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#1c2630; padding:20px; border-radius:10px; width:90%; max-width:400px; border:1px solid #ff4444; text-align:center;">
+            <h3 style="color:white;">إرسال شكوى</h3>
+            <textarea id="complaint-text" style="width:100%; background:#222; color:white; border:1px solid #555; padding:10px; margin:10px 0;" rows="4"></textarea>
+            <button onclick="submitComplaint()" class="sell-btn" style="background:#ff4444; border-color:#ff4444;">إرسال</button>
+            <button onclick="closeComplaintModal()" style="background:none; border:none; color:#aaa; margin-top:10px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
     <script>
         function openComplaintModal() { document.getElementById('complaint-modal').style.display = 'flex'; }
         function closeComplaintModal() { document.getElementById('complaint-modal').style.display = 'none'; }
-        document.getElementById('user-complaint-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
+        
+        async function submitComplaint() {
             const text = document.getElementById('complaint-text').value;
-            btn.innerHTML = 'جاري...'; btn.disabled = true;
+            if(!text) return alert('اكتب تفاصيل الشكوى');
             try {
-                const res = await fetch('/api/submit-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: text }) });
-                const data = await res.json();
-                if(res.ok) { alert('✅ ' + data.message); closeComplaintModal(); } else alert(data.message);
-            } catch(err) { alert('خطأ'); } finally { btn.innerHTML = 'إرسال'; btn.disabled = false; }
-        });
-
-        let lastScrollTop = 0;
-        const mobileHeader = document.getElementById('mob-header');
-        window.addEventListener('scroll', function() {
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            if (scrollTop > lastScrollTop && scrollTop > 70) { mobileHeader.classList.add('header-hidden'); } 
-            else { mobileHeader.classList.remove('header-hidden'); }
-            lastScrollTop = scrollTop;
-        });
+                await fetch('/api/submit-complaint', {
+                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({content: text})
+                });
+                alert('تم الإرسال بنجاح'); closeComplaintModal();
+            } catch(e) { alert('خطأ، يرجى تسجيل الدخول'); }
+        }
     </script>
-    
     <script src="home.js"></script>
-    <script src="search-handler.js"></script>
     <script src="ban-check.js"></script>
-    <script src="global-alert.js"></script>
 </body>
 </html>

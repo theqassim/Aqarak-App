@@ -1,393 +1,379 @@
-// متغيرات الدفع العامة
-let selectedMethod = 'card'; 
-let PRICE_PER_POINT = 1; 
+// ==========================================
+// 🛠️ إعدادات الصفحة والتحقق من المستخدم
+// ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // ----------------------------------------------------
-    // 💰 1. إعدادات الدفع والتحقق
-    // ----------------------------------------------------
-    try {
-        const res = await fetch('/api/config/payment-price');
-        const data = await res.json();
-        PRICE_PER_POINT = data.pointPrice || 1;
-    } catch (e) { console.error("Failed to fetch price"); }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment');
-
-    if (paymentStatus === 'success') {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-            if(window.showStatusModal) window.showStatusModal('success', 'تم الشحن بنجاح! 💰', 'تمت إضافة النقاط إلى محفظتك.');
-            else alert('تم الشحن بنجاح!');
-        }, 500);
-    } else if (paymentStatus === 'failed') {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-            if(window.showStatusModal) window.showStatusModal('rejected', 'فشلت العملية', 'لم يتم خصم أي مبلغ.');
-            else alert('فشلت عملية الدفع.');
-        }, 500);
-    }
-
-    // ----------------------------------------------------
-    // 👤 2. البيانات والواجهة
-    // ----------------------------------------------------
     await loadUserData();
-    setupLogoutModal();
-    checkNotifications();
-    setInterval(checkNotifications, 60000);
-    updateGreetingWidget();
+    checkNotifications(); // تشغيل الإشعارات
+});
 
-    // تشغيل زر عرض المفضلة
-    const favoritesBtn = document.getElementById('show-favorites');
-    if (favoritesBtn) {
-        favoritesBtn.addEventListener('click', () => {
-            const favoritesArea = document.getElementById('favorites-area');
-            if (favoritesArea) {
-                favoritesArea.style.display = 'block';
-                favoritesArea.scrollIntoView({ behavior: 'smooth' });
-            }
-            fetchFavorites();
-        });
-    }
-
-    // تشغيل مودال تغيير كلمة المرور
-    const openModalBtn = document.getElementById('open-password-modal');
-    if(openModalBtn) {
-        openModalBtn.addEventListener('click', () => {
-            const modal = document.getElementById("passwordModal");
-            if(modal) modal.style.display = "block";
-            const userPhone = localStorage.getItem('userPhone');
-            if (typeof checkAuthAndFillPhone === 'function') checkAuthAndFillPhone(userPhone);
-        });
-    }
-}); 
-
-// ----------------------------------------------------
-// 🔥 الدوال الأساسية (Global Functions)
-// ----------------------------------------------------
-
-// أ. جلب بيانات المستخدم
-async function loadUserData() {
+// ✅ 1. تحميل بيانات المستخدم وتحديث الواجهة
+window.loadUserData = async function() {
     try {
-        const response = await fetch('/api/auth/me', { headers: { 'Cache-Control': 'no-cache' } });
-        if (!response.ok) return;
-        
+        const response = await fetch('/api/auth/me');
         const data = await response.json();
-        
+
         if (data.isAuthenticated) {
-            const titleEl = document.getElementById('welcome-title');
-            if (titleEl && data.name) titleEl.textContent = `لوحة التحكم الخاصة بـ ${data.name}`;
+            // تحديث النصوص
+            const verifiedBadge = data.is_verified ? 
+                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-right:5px; vertical-align:middle; box-shadow:0 0 5px rgba(255, 215, 0, 0.5);"></i>` : '';
 
-            const headerImg = document.getElementById('header-profile-img');
-            if (headerImg) headerImg.src = data.profile_picture || 'logo.jpg';
+            // تحديث الاسم في القائمة والترحيب
+            const usernameEl = document.getElementById('dropdown-username');
+            const welcomeEl = document.getElementById('welcome-title');
+            
+            if (usernameEl) usernameEl.innerHTML = `${data.name} ${verifiedBadge}`;
+            if (welcomeEl) welcomeEl.innerHTML = `مرحباً، ${data.name} ${verifiedBadge}`;
 
-            const dropName = document.getElementById('dropdown-username');
-            const dropBalance = document.getElementById('dropdown-balance');
-            
-            if (dropName) dropName.textContent = data.name || data.username;
-            
-            if (data.isPaymentActive === true) {
-                if (dropBalance) {
-                    dropBalance.innerHTML = `${data.balance || 0} <i class="fas fa-coins"></i>`;
-                    dropBalance.style.display = 'flex';
+            // تحديث الرصيد
+            const balanceEl = document.getElementById('dropdown-balance');
+            if (balanceEl) {
+                if (data.isPaymentActive) {
+                    balanceEl.innerHTML = `${data.balance} <i class="fas fa-coins"></i>`;
+                    balanceEl.style.display = 'flex';
+                } else {
+                    balanceEl.style.display = 'none';
                 }
-            } else {
-                if (dropBalance) dropBalance.style.display = 'none';
             }
 
+            // تحديث زر البروفايل (صورة أو هامبرجر)
+            const profileBtn = document.getElementById('dashboard-profile-btn');
+            if (profileBtn) {
+                // إذا كان لديه صورة بروفايل حقيقية (ليست اللوجو الافتراضي)
+                if (data.profile_picture && !data.profile_picture.includes('logo.png')) {
+                    profileBtn.innerHTML = `
+                        <img src="${data.profile_picture}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
+                        <span id="menu-notif-badge" class="menu-badge">0</span>
+                    `;
+                } else {
+                    // إذا لم يكن لديه صورة، نضع أيقونة القائمة
+                    profileBtn.innerHTML = `
+                        <i class="fas fa-bars"></i>
+                        <span id="menu-notif-badge" class="menu-badge">0</span>
+                    `;
+                }
+            }
+
+            // إظهار كارت الأدمن إذا كان مسؤولاً
             if (data.role === 'admin') {
                 const adminCard = document.getElementById('admin-card');
                 if (adminCard) adminCard.style.display = 'block';
             }
+
+        } else {
+            window.location.href = 'index.html'; // إعادة توجيه إذا لم يكن مسجلاً
         }
-    } catch (e) { console.error('Failed to load user data:', e); }
-}
-
-// ب. جلب المفضلة
-async function fetchFavorites() {
-    const favoritesContainer = document.getElementById('favorites-listings');
-    if (!favoritesContainer) return;
-    favoritesContainer.innerHTML = '<div style="text-align:center; padding:20px; width:100%;"><i class="fas fa-spinner fa-spin" style="color:var(--neon-primary); font-size:2rem;"></i></div>';
-
-    try {
-        const response = await fetch('/api/favorites');
-        if (response.status === 401) {
-            favoritesContainer.innerHTML = '<p class="empty-message error" style="text-align:center; color:red;">انتهت الجلسة.</p>';
-            return;
-        }
-        const properties = await response.json();
-        favoritesContainer.innerHTML = '';
-
-        if (properties.length === 0) {
-            favoritesContainer.innerHTML = `
-                <div style="text-align:center; padding:40px; border:1px dashed #444; border-radius:15px; width:100%;">
-                    <i class="fas fa-heart-broken" style="color: #444; font-size: 3rem; margin-bottom:15px;"></i>
-                    <p style="color: #888; font-size:1.1rem;">لا يوجد عقارات في المفضلة حالياً.</p>
-                    <a href="home" style="color:var(--neon-secondary); margin-top:10px; display:inline-block; text-decoration:none;">تصفح العقارات</a>
-                </div>`;
-            return;
-        }
-
-        properties.forEach(property => {
-            const price = Number(property.price).toLocaleString();
-            const imgUrl = property.imageUrl || 'logo.png';
-            favoritesContainer.innerHTML += `
-                <div class="fav-card">
-                    <a href="property-details?id=${property.id}" class="fav-img-link">
-                        <img src="${imgUrl}" alt="${property.title}" class="fav-img">
-                    </a>
-                    <div class="fav-content">
-                        <h3 class="fav-title" title="${property.title}">${property.title}</h3> 
-                        <p class="fav-price">${price} ج.م</p> 
-                        <div class="fav-actions">
-                            <a href="property-details?id=${property.id}" class="btn-fav-view"><i class="fas fa-eye"></i> التفاصيل</a>
-                            <button class="remove-favorite-btn btn-fav-remove" data-id="${property.id}" onclick="removeFromFav(this, ${property.id})"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    } catch (error) { 
-        favoritesContainer.innerHTML = `<p style="text-align:center; color:red;">حدث خطأ أثناء التحميل.</p>`; 
+    } catch (e) {
+        console.error("Load User Data Error:", e);
     }
-}
-
-// دالة حذف من المفضلة (تم تحسينها لتكون Global)
-window.removeFromFav = async function(btn, id) {
-    if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
-    const card = btn.closest('.fav-card'); 
-    try {
-        await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
-        if(card) {
-            card.style.transition = 'all 0.3s ease';
-            card.style.opacity = '0';
-            setTimeout(() => {
-                card.remove();
-                if (document.getElementById('favorites-listings').children.length === 0) fetchFavorites();
-            }, 300);
-        }
-    } catch (error) { alert('فشل الحذف'); }
 };
 
 // ==========================================
-// 💰 دوال الدفع (Payment Logic)
+// 🔔 2. نظام الإشعارات (المعدل)
 // ==========================================
-
-window.openChargeModal = function() {
-    const modal = document.getElementById('charge-modal');
-    if(modal) {
-        modal.style.display = 'block';
-        window.calculatePrice(); 
-    } else {
-        alert('جاري تحميل نظام الدفع...');
-    }
-}
-
-window.calculatePrice = function() {
-    const pointsInput = document.getElementById('charge-points');
-    const priceDisplay = document.getElementById('price-display');
-    if (!pointsInput || !priceDisplay) return;
-    const points = pointsInput.value;
-    priceDisplay.innerText = (points && points >= 0) ? (points * PRICE_PER_POINT).toLocaleString() : '0';
-}
-
-window.selectPaymentMethod = function(method) {
-    selectedMethod = method;
-    const cardBtn = document.getElementById('btn-card');
-    const walletBtn = document.getElementById('btn-wallet');
-    if(cardBtn) cardBtn.classList.toggle('active', method === 'card');
-    if(walletBtn) walletBtn.classList.toggle('active', method === 'wallet');
-    const walletInput = document.getElementById('wallet-input-container');
-    if (walletInput) walletInput.style.display = (method === 'wallet') ? 'block' : 'none';
-}
-
-window.startChargeProcess = async function() {
-    const points = document.getElementById('charge-points').value;
-    const btn = document.querySelector('button[onclick="startChargeProcess()"]');
-    if (!points || points < 10) return alert('أقل عدد نقاط للشحن هو 10');
-    let mobileNumber = null;
-    if (selectedMethod === 'wallet') {
-        mobileNumber = document.getElementById('wallet-number').value;
-        if (!mobileNumber || mobileNumber.length < 11) return alert('يرجى كتابة رقم محفظة صحيح');
-    }
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاتصال...';
-    btn.disabled = true;
-    try {
-        const res = await fetch('/api/payment/charge', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ points: points, method: selectedMethod, mobileNumber: mobileNumber })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            if (data.iframeUrl) window.location.href = data.iframeUrl;
-            else if (data.redirectUrl) window.location.href = data.redirectUrl;
-        } else { alert('❌ ' + (data.message || 'حدث خطأ')); }
-    } catch (e) { alert('خطأ في الاتصال'); } 
-    finally { btn.innerHTML = 'تأكيد وشراء النقاط <i class="fas fa-check-circle"></i>'; btn.disabled = false; }
-}
-
-// ==========================================
-// 🔔 دوال الإشعارات والتحيات
-// ==========================================
-
-function updateGreetingWidget() {
-    const greetingEl = document.getElementById('time-greeting');
-    const iconEl = document.getElementById('greeting-icon');
-    const dateEl = document.getElementById('current-date');
-    if (!greetingEl) return;
-    const now = new Date();
-    const hour = now.getHours();
-    if (hour >= 5 && hour < 12) {
-        greetingEl.textContent = 'صباح الخير ☀️'; iconEl.className = 'fas fa-sun'; iconEl.style.color = '#FFD700';
-    } else if (hour >= 12 && hour < 17) {
-        greetingEl.textContent = 'طاب يومك 🌤️'; iconEl.className = 'fas fa-cloud-sun'; iconEl.style.color = '#FFA500';
-    } else {
-        greetingEl.textContent = 'مساء الخير 🌙'; iconEl.className = 'fas fa-moon'; iconEl.style.color = '#00d4ff';
-    }
-    dateEl.textContent = now.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' });
-}
-
-window.toggleNotificationMenu = function(e) {
-    e.stopPropagation();
-    const menu = document.getElementById('notif-dropdown');
-    document.getElementById('profile-dropdown').style.display = 'none'; // إغلاق البروفايل لو مفتوح
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-}
 
 async function checkNotifications() {
     try {
         const res = await fetch('/api/user/notifications');
         const data = await res.json();
-        const dot = document.getElementById('notif-dot');
-        const list = document.getElementById('notif-list');
-        if (data.unreadCount > 0) {
-            dot.style.display = 'block';
-            dot.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
-        } else { dot.style.display = 'none'; }
-        if (data.notifications && data.notifications.length > 0) {
-            list.innerHTML = data.notifications.map(n => `
-                <div class="notif-item ${n.is_read ? '' : 'unread'}">
-                    <h4>${n.title}</h4>
-                    <p>${n.message}</p>
-                    <span class="notif-time">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
-                </div>`).join('');
-        }
-    } catch (e) { console.error("Notif Error", e); }
-}
-
-window.markNotificationsRead = async function() {
-    try {
-        await fetch('/api/user/notifications/read', { method: 'POST' });
-        document.getElementById('notif-dot').style.display = 'none';
-        document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
-    } catch (e) {}
-}
-
-// ==========================================
-// 🚪 تسجيل الخروج (Fixed)
-// ==========================================
-
-function setupLogoutModal() {
-    if (!document.getElementById('luxLogoutModal')) {
-        const logoutHTML = `
-            <style>
-                #luxLogoutModal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
-                .lux-logout-card { background: linear-gradient(145deg, #1a1a1a, #111); padding: 40px; border-radius: 25px; border: 1px solid #ff4444; box-shadow: 0 0 50px rgba(255, 68, 68, 0.15); text-align: center; max-width: 90%; width: 400px; animation: popIn 0.4s; }
-                .lux-logout-icon { font-size: 3.5rem; color: #ff4444; margin-bottom: 20px; }
-                .lux-logout-title { color: white; font-size: 1.6rem; margin-bottom: 10px; font-weight: bold; }
-                .lux-logout-desc { color: #ccc; margin-bottom: 30px; font-size: 1.1rem; }
-                .lux-logout-btns { display: flex; gap: 15px; justify-content: center; }
-                .lux-btn { padding: 12px 35px; border-radius: 50px; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; font-size: 1rem; }
-                .lux-btn-yes { background: #ff4444; color: white; }
-                .lux-btn-yes:hover { background: #ff2222; transform: translateY(-2px); }
-                .lux-btn-no { background: transparent; color: white; border: 1px solid #555; }
-                .lux-btn-no:hover { background: rgba(255, 255, 255, 0.1); }
-                @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-            </style>
-            <div id="luxLogoutModal">
-                <div class="lux-logout-card">
-                    <i class="fas fa-sign-out-alt lux-logout-icon"></i>
-                    <h3 class="lux-logout-title">تسجيل الخروج</h3>
-                    <p class="lux-logout-desc">هل أنت متأكد أنك تريد المغادرة؟</p>
-                    <div class="lux-logout-btns">
-                        <button id="confirmLogoutBtn" class="lux-btn lux-btn-yes">نعم، خروج</button>
-                        <button id="cancelLogoutBtn" class="lux-btn lux-btn-no">إلغاء</button>
-                    </div>
-                </div>
-            </div>`;
-        document.body.insertAdjacentHTML('beforeend', logoutHTML);
         
-        // تفعيل أزرار المودال
-        document.getElementById('confirmLogoutBtn').onclick = async function() {
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-                localStorage.clear();
-                window.location.href = 'index';
-            } catch (e) { window.location.href = 'index'; }
-        };
-        document.getElementById('cancelLogoutBtn').onclick = function() {
-            document.getElementById('luxLogoutModal').style.display = 'none';
-        };
+        // استخدام الـ IDs الجديدة الموجودة في HTML
+        const badge = document.getElementById('menu-notif-badge');
+        const list = document.getElementById('menu-notif-list');
+        const countText = document.getElementById('notif-count-text');
+
+        // تحديث العداد (Badge)
+        if (data.unreadCount > 0) {
+            if (badge) {
+                badge.style.display = 'flex'; // استخدام flex للمحاذاة
+                badge.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
+            }
+            if (countText) {
+                countText.textContent = `${data.unreadCount} جديدة`;
+            }
+        } else {
+            if (badge) badge.style.display = 'none';
+            if (countText) countText.textContent = '';
+        }
+
+        // تعبئة القائمة
+        if (list && data.notifications && data.notifications.length > 0) {
+            list.innerHTML = data.notifications.map(n => `
+                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" style="padding:10px; border-bottom:1px solid #333; background:${n.is_read ? 'transparent' : 'rgba(0, 255, 136, 0.05)'}; transition:0.3s;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <strong style="color:white; font-size:0.85rem;">${n.title}</strong>
+                        <span style="font-size:0.65rem; color:#777;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <p style="color:#aaa; font-size:0.8rem; margin:0;">${n.message}</p>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        console.error("Notif Error:", e);
     }
 }
 
-// دالة فتح مودال الخروج (عامة)
-window.openLogoutModal = function() {
-    setupLogoutModal(); // التأكد من وجود المودال
-    document.getElementById('luxLogoutModal').style.display = 'flex';
-}
-
 // ==========================================
-// 🧩 دوال القوائم العامة
+// 📱 3. التحكم في القائمة المنسدلة
 // ==========================================
 
-window.toggleProfileMenu = function() {
+window.toggleProfileMenu = async function() {
     const menu = document.getElementById('profile-dropdown');
-    document.getElementById('notif-dropdown').style.display = 'none'; // إغلاق الإشعارات لو مفتوحة
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-}
+    const badge = document.getElementById('menu-notif-badge');
+    const countText = document.getElementById('notif-count-text');
+    
+    if (!menu) return; // حماية من الخطأ
 
-window.onclick = function(e) {
-    if (!e.target.closest('.profile-menu-container')) {
-        const menu = document.getElementById('profile-dropdown');
-        if (menu) menu.style.display = 'none';
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+        
+        // عند الفتح: إخفاء العداد وتصفير الإشعارات
+        if (badge && badge.style.display !== 'none') {
+            badge.style.display = 'none';
+            if (countText) countText.textContent = '';
+            
+            // إبلاغ السيرفر بقراءة الإشعارات
+            try { 
+                await fetch('/api/user/notifications/read', { method: 'POST' }); 
+            } catch(e) { console.error(e); }
+        }
     }
-    if (!e.target.closest('.header-notification-btn')) {
-        const menu = document.getElementById('notif-dropdown');
-        if (menu) menu.style.display = 'none';
-    }
-    const modal = document.getElementById("passwordModal");
-    if (e.target == modal) modal.style.display = "none";
-}
+};
 
-// دوال تغيير كلمة المرور (نفس القديمة)
-window.checkAuthAndFillPhone = async function(storedPhone) {
-    const phoneInput = document.getElementById('reset-phone');
-    if (!phoneInput) return;
-    if (storedPhone) { phoneInput.value = storedPhone; window.switchPassMode('normal'); } 
-    else { window.switchPassMode('otp'); }
-}
-window.closeModal = function() { document.getElementById("passwordModal").style.display = "none"; }
-window.switchPassMode = function(mode) {
-    const normalDiv = document.getElementById('normal-change-mode');
-    const otpDiv = document.getElementById('otp-change-mode');
-    document.querySelectorAll('.message').forEach(m => m.textContent = ''); 
-    if (mode === 'otp') { normalDiv.style.display='none'; otpDiv.style.display='block'; } 
-    else { otpDiv.style.display='none'; normalDiv.style.display='block'; }
-}
-window.changePasswordNormal = async function() {
-    const msg = document.getElementById('pass-msg');
-    const phoneVal = document.getElementById('reset-phone').value; 
-    const currentPassword = document.getElementById('current-pass').value;
-    const newPassword = document.getElementById('new-pass-1').value;
-    if (!currentPassword || !newPassword) { msg.textContent = 'املأ الحقول'; msg.style.color = 'red'; return; }
-    msg.textContent = 'جاري التحديث...';
+// إغلاق القائمة عند الضغط خارجها
+window.addEventListener('click', function(e) {
+    const container = document.querySelector('.profile-menu-container');
+    const menu = document.getElementById('profile-dropdown');
+    
+    // تأكد من وجود العناصر قبل فحصها
+    if (container && menu && !container.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
+
+// ==========================================
+// 🚪 4. تسجيل الخروج
+// ==========================================
+
+window.openLogoutModal = function() {
+    if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        logoutUser();
+    }
+};
+
+async function logoutUser() {
     try {
-        const response = await fetch('/api/user/change-password', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phoneVal, currentPassword, newPassword }) });
-        const data = await response.json();
-        if (data.success) { msg.textContent = '✅ تم التغيير'; msg.style.color = '#00ff88'; setTimeout(closeModal, 1500); } 
-        else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
-    } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = 'index.html';
+    } catch (e) {
+        window.location.reload();
+    }
 }
+
+// ==========================================
+// 💳 5. منطق شحن المحفظة (Modal & Logic)
+// ==========================================
+
+window.openChargeModal = function() {
+    const modal = document.getElementById('charge-modal');
+    if(modal) modal.style.display = 'block';
+};
+
+let selectedMethod = 'card';
+
+window.selectPaymentMethod = function(method) {
+    selectedMethod = method;
+    // تحديث شكل الأزرار
+    document.getElementById('btn-card').classList.remove('active');
+    document.getElementById('btn-wallet').classList.remove('active');
+    
+    // إعادة تعيين الستايل الأساسي
+    document.getElementById('btn-card').style.background = 'transparent';
+    document.getElementById('btn-card').style.color = 'var(--neon-primary)';
+    
+    document.getElementById('btn-wallet').style.background = 'transparent';
+    document.getElementById('btn-wallet').style.color = '#ff4444';
+
+    if (method === 'card') {
+        const btn = document.getElementById('btn-card');
+        btn.classList.add('active');
+        btn.style.background = 'var(--neon-primary)';
+        btn.style.color = 'black';
+        document.getElementById('wallet-input-container').style.display = 'none';
+    } else {
+        const btn = document.getElementById('btn-wallet');
+        btn.classList.add('active');
+        btn.style.background = '#ff4444';
+        btn.style.color = 'white';
+        document.getElementById('wallet-input-container').style.display = 'block';
+    }
+};
+
+window.calculatePrice = function() {
+    const points = document.getElementById('charge-points').value;
+    const priceDisplay = document.getElementById('price-display');
+    // سعر النقطة: 1 جنيه (مثال)
+    const price = points ? points * 1 : 0; 
+    if(priceDisplay) priceDisplay.textContent = price;
+};
+
+window.startChargeProcess = async function() {
+    const points = document.getElementById('charge-points').value;
+    if (!points || points < 10) return alert('أقل عدد للنقاط هو 10');
+
+    const btn = document.querySelector('#charge-modal button[onclick="startChargeProcess()"]');
+    btn.innerHTML = 'جاري المعالجة...';
+    btn.disabled = true;
+
+    const payload = {
+        amount: points * 1, // السعر
+        points: points,
+        method: selectedMethod
+    };
+
+    if (selectedMethod === 'wallet') {
+        const walletNum = document.getElementById('wallet-number').value;
+        if (!walletNum || walletNum.length < 11) {
+            btn.innerHTML = 'تأكيد وشراء النقاط';
+            btn.disabled = false;
+            return alert('أدخل رقم محفظة صحيح');
+        }
+        payload.walletNumber = walletNum;
+    }
+
+    try {
+        // إرسال الطلب للسيرفر (Paymob Integration)
+        const response = await fetch('/api/payment/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+
+        if (data.url) {
+            window.location.href = data.url; // التوجيه لصفحة الدفع
+        } else {
+            alert('خطأ في الاتصال ببوابة الدفع');
+            btn.innerHTML = 'تأكيد وشراء النقاط';
+            btn.disabled = false;
+        }
+    } catch (e) {
+        console.error(e);
+        alert('حدث خطأ');
+        btn.innerHTML = 'تأكيد وشراء النقاط';
+        btn.disabled = false;
+    }
+};
+
+// ==========================================
+// 🔐 6. منطق تغيير كلمة المرور (Modal)
+// ==========================================
+
+// فتح المودال
+document.getElementById('open-password-modal').addEventListener('click', () => {
+    document.getElementById('passwordModal').style.display = 'block';
+    document.getElementById('normal-change-mode').style.display = 'block';
+    document.getElementById('otp-change-mode').style.display = 'none';
+});
+
+// إغلاق المودال
+window.closeModal = function() {
+    document.getElementById('passwordModal').style.display = 'none';
+};
+
+// التبديل بين الأوضاع
+window.switchPassMode = function(mode) {
+    if(mode === 'otp') {
+        document.getElementById('normal-change-mode').style.display = 'none';
+        document.getElementById('otp-change-mode').style.display = 'block';
+        document.getElementById('step-send-otp').style.display = 'block';
+        document.getElementById('step-verify-otp').style.display = 'none';
+    } else {
+        document.getElementById('otp-change-mode').style.display = 'none';
+        document.getElementById('normal-change-mode').style.display = 'block';
+    }
+};
+
+// 1. التغيير العادي (بمعرفة القديمة)
+window.changePasswordNormal = async function() {
+    const currentPass = document.getElementById('current-pass').value;
+    const newPass = document.getElementById('new-pass-1').value;
+    const msg = document.getElementById('pass-msg');
+
+    if(!currentPass || !newPass) {
+        msg.textContent = "املأ جميع الحقول";
+        msg.style.color = "red";
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/user/change-password-manual', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ currentPass, newPass })
+        });
+        const data = await response.json();
+        
+        if(data.success) {
+            alert('✅ تم تغيير كلمة المرور بنجاح');
+            closeModal();
+        } else {
+            msg.textContent = data.message;
+            msg.style.color = "red";
+        }
+    } catch(e) { console.error(e); }
+};
+
+// 2. إرسال OTP للواتساب
+window.sendResetOTP = async function() {
+    const phone = document.getElementById('reset-phone').value;
+    const msg = document.getElementById('otp-msg');
+    
+    if(!phone) return alert('أدخل رقم الهاتف');
+
+    try {
+        const res = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone, type: 'reset' })
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            msg.textContent = "تم إرسال الكود للواتساب!";
+            msg.style.color = "#00ff88";
+            document.getElementById('step-send-otp').style.display = 'none';
+            document.getElementById('step-verify-otp').style.display = 'block';
+        } else {
+            msg.textContent = data.message;
+            msg.style.color = "red";
+        }
+    } catch(e) { console.error(e); }
+};
+
+// 3. تأكيد OTP وتغيير الباسورد
+window.resetPasswordViaOTP = async function() {
+    const phone = document.getElementById('reset-phone').value;
+    const otp = document.getElementById('otp-code').value;
+    const newPass = document.getElementById('new-pass-2').value;
+
+    if(!otp || !newPass) return alert('أكمل البيانات');
+
+    try {
+        const res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone, otp, newPassword: newPass })
+        });
+        const data = await res.json();
+
+        if(data.success) {
+            alert('✅ تم تغيير كلمة المرور بنجاح!');
+            closeModal();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    } catch(e) { console.error(e); }
+};
