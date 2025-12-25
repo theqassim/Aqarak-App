@@ -1,12 +1,18 @@
+// =================================================
+// 🏠 إعدادات الصفحة والمتغيرات العامة
+// =================================================
+
 let currentOffset = 0;
 const LIMIT = 6;
 let isLoading = false;
+let currentSearchQuery = ''; // 🔍 متغير جديد لحفظ كلمة البحث
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchLatestProperties(true);
     updateNavigation();
     updateMobileHeader();
     checkNotifications();
+    setupSearchLogic(); // تشغيل منطق البحث
     
     // PWA Installer Logic
     let deferredPrompt;
@@ -24,7 +30,167 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================
-// 📱 1. دوال هيدر الموبايل
+// 🔍 منطق البحث في نفس الصفحة (AJAX)
+// =========================================
+
+function setupSearchLogic() {
+    const searchInputs = document.querySelectorAll('.search-bar');
+    const searchButtons = document.querySelectorAll('.search-button');
+
+    // دالة تنفيذ البحث
+    window.performSearch = function(inputElement) {
+        const query = inputElement.value.trim();
+        
+        // 1. تحديث متغير البحث العالمي
+        currentSearchQuery = query;
+        
+        // 2. تصفير العداد عشان نبدأ من الأول
+        currentOffset = 0;
+        
+        // 3. تغيير عنوان القسم (اختياري لتحسين التجربة)
+        const titleEl = document.querySelector('.section-title');
+        if(titleEl) {
+            titleEl.innerHTML = query ? `نتائج البحث عن: "<span style="color:white">${query}</span>"` : 'أحدث العقارات';
+        }
+
+        // 4. جلب البيانات الجديدة
+        fetchLatestProperties(true);
+    };
+
+    // تفعيل الزرار
+    searchButtons.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            const input = searchInputs[index]; 
+            if(input) performSearch(input);
+        });
+    });
+
+    // تفعيل زر Enter
+    searchInputs.forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch(input);
+        });
+    });
+}
+
+// =========================================
+// 🏘️ جلب وعرض العقارات (محدث للبحث)
+// =========================================
+
+async function fetchLatestProperties(isFirstLoad = false) {
+    if (isLoading) return;
+    isLoading = true;
+
+    const container = document.getElementById('listings-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+
+    if (isFirstLoad && container) {
+        currentOffset = 0;
+        // مؤشر تحميل أثناء البحث
+        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--neon-primary); padding: 50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p style="margin-top:10px; color:#aaa;">جاري البحث...</p></div>';
+        if(loadMoreBtn) loadMoreBtn.style.display = 'none';
+    } else {
+        if(loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+    }
+
+    try {
+        // بناء الرابط: لو فيه بحث بنزوده على الرابط
+        let url = `/api/properties?limit=${LIMIT}&offset=${currentOffset}`;
+        if (currentSearchQuery) {
+            url += `&keyword=${encodeURIComponent(currentSearchQuery)}`;
+        }
+
+        const response = await fetch(url);
+        const properties = await response.json();
+        
+        if (isFirstLoad && container) container.innerHTML = '';
+
+        if (isFirstLoad && properties.length === 0 && container) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: #333; margin-bottom: 15px;"></i>
+                    <p style="color: #ccc; font-size: 1.1rem;">لم يتم العثور على عقارات تطابق بحثك.</p>
+                    <button onclick="clearSearch()" style="background:none; border:1px solid var(--neon-primary); color:var(--neon-primary); padding:8px 20px; border-radius:20px; margin-top:10px; cursor:pointer;">عرض كل العقارات</button>
+                </div>
+            `;
+            isLoading = false;
+            return;
+        }
+
+        properties.forEach(prop => {
+            const bgImage = prop.imageUrl || 'logo.png';
+            let priceText = parseInt(prop.price || 0).toLocaleString();
+            const isSale = (prop.type === 'بيع' || prop.type === 'buy');
+            const typeClass = isSale ? 'is-sale' : 'is-rent';
+            const typeText = isSale ? 'للبيع' : 'للإيجار';
+            const roomsHtml = prop.rooms ? `<span style="margin-left:8px;"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
+            const bathsHtml = prop.bathrooms ? `<span style="margin-left:8px;"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
+            const areaHtml = prop.area ? `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
+            const featuredClass = prop.isFeatured ? 'featured-card-glow' : '';
+            let extraBadges = prop.isFeatured ? `<div class="featured-crown"><i class="fas fa-crown"></i> مميز</div>` : '';
+            const verifiedBadge = prop.is_verified ? 
+                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle;"></i>` : '';
+
+            const html = `
+                <div class="adv-card ${featuredClass}" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
+                    <div class="adv-card-img-box">
+                        <img src="${bgImage}" alt="${prop.title}" class="adv-card-img" loading="lazy">
+                        <span class="adv-type-badge ${typeClass}">${typeText}</span>
+                        <div class="adv-price-tag">${priceText} ج.م</div>
+                        ${extraBadges} 
+                    </div>
+                    <div class="adv-card-body">
+                        <h3 class="adv-title" title="${prop.title}">${verifiedBadge} ${prop.title}</h3>
+                        <div class="adv-features">${roomsHtml}${bathsHtml}${areaHtml}</div>
+                        <a href="property-details?id=${prop.id}" class="adv-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                    </div>
+                </div>
+            `;
+            if(container) container.innerHTML += html;
+        });
+
+        currentOffset += properties.length;
+
+        // زر تحميل المزيد
+        if (!document.getElementById('load-more-container') && container) {
+            const btnContainer = document.createElement('div');
+            btnContainer.id = 'load-more-container';
+            btnContainer.style.gridColumn = "1 / -1";
+            btnContainer.style.textAlign = 'center';
+            btnContainer.style.marginTop = '20px';
+            btnContainer.innerHTML = `<button id="load-more-btn" class="load-more-btn">عرض المزيد <i class="fas fa-arrow-down"></i></button>`;
+            container.parentNode.appendChild(btnContainer);
+            document.getElementById('load-more-btn').addEventListener('click', () => fetchLatestProperties(false));
+        }
+
+        const btn = document.getElementById('load-more-btn');
+        if (btn) {
+            if (properties.length < LIMIT) btn.style.display = 'none';
+            else {
+                btn.style.display = 'block';
+                btn.innerHTML = 'عرض المزيد <i class="fas fa-arrow-down"></i>';
+            }
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        if(isFirstLoad && container) container.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ في الاتصال.</p>';
+    } finally {
+        isLoading = false;
+    }
+}
+
+// دالة مساعدة لمسح البحث والعودة للرئيسية
+window.clearSearch = function() {
+    document.querySelectorAll('.search-bar').forEach(el => el.value = '');
+    currentSearchQuery = '';
+    currentOffset = 0;
+    document.querySelector('.section-title').textContent = 'أحدث العقارات';
+    fetchLatestProperties(true);
+}
+
+// =========================================
+// 📱 دوال الهيدر والإشعارات (زي ما هي)
 // =========================================
 
 async function updateMobileHeader() {
@@ -64,7 +230,6 @@ async function updateMobileHeader() {
     } catch (e) { console.error("Header Error", e); }
 }
 
-// ✅ دالة فتح/غلق قائمة الإشعارات
 window.toggleNotifications = async function(e) {
     e.stopPropagation(); 
     const container = document.getElementById('notifications-container');
@@ -179,114 +344,31 @@ async function updateNavigation() {
     }
 }
 
-async function fetchLatestProperties(isFirstLoad = false) {
-    if (isLoading) return;
-    isLoading = true;
-
-    const container = document.getElementById('listings-container');
-    const loadMoreBtn = document.getElementById('load-more-btn');
-
-    if (isFirstLoad && container) {
-        currentOffset = 0;
-        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--neon-primary); padding: 50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
-        if(loadMoreBtn) loadMoreBtn.style.display = 'none';
-    } else {
-        if(loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
-    }
-
-    try {
-        const response = await fetch(`/api/properties?limit=${LIMIT}&offset=${currentOffset}`);
-        const properties = await response.json();
-        
-        if (isFirstLoad && container) container.innerHTML = '';
-
-        if (isFirstLoad && properties.length === 0 && container) {
-            container.innerHTML = '<p style="color: #888; text-align: center; grid-column: 1/-1;">لا يوجد عقارات حالياً.</p>';
-            isLoading = false;
-            return;
-        }
-
-        properties.forEach(prop => {
-            const bgImage = prop.imageUrl || 'logo.png';
-            let priceText = parseInt(prop.price || 0).toLocaleString();
-            const isSale = (prop.type === 'بيع' || prop.type === 'buy');
-            const typeClass = isSale ? 'is-sale' : 'is-rent';
-            const typeText = isSale ? 'للبيع' : 'للإيجار';
-            const roomsHtml = prop.rooms ? `<span style="margin-left:8px;"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
-            const bathsHtml = prop.bathrooms ? `<span style="margin-left:8px;"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
-            const areaHtml = prop.area ? `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
-            const featuredClass = prop.isFeatured ? 'featured-card-glow' : '';
-            let extraBadges = prop.isFeatured ? `<div class="featured-crown"><i class="fas fa-crown"></i> مميز</div>` : '';
-            const verifiedBadge = prop.is_verified ? 
-                `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-left:5px; vertical-align:middle;"></i>` : '';
-
-            const html = `
-                <div class="adv-card ${featuredClass}" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
-                    <div class="adv-card-img-box">
-                        <img src="${bgImage}" alt="${prop.title}" class="adv-card-img" loading="lazy">
-                        <span class="adv-type-badge ${typeClass}">${typeText}</span>
-                        <div class="adv-price-tag">${priceText} ج.م</div>
-                        ${extraBadges} 
-                    </div>
-                    <div class="adv-card-body">
-                        <h3 class="adv-title" title="${prop.title}">${verifiedBadge} ${prop.title}</h3>
-                        <div class="adv-features">${roomsHtml}${bathsHtml}${areaHtml}</div>
-                        <a href="property-details?id=${prop.id}" class="adv-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
-                    </div>
-                </div>
-            `;
-            if(container) container.innerHTML += html;
-        });
-
-        currentOffset += properties.length;
-
-        if (!document.getElementById('load-more-container') && container) {
-            const btnContainer = document.createElement('div');
-            btnContainer.id = 'load-more-container';
-            btnContainer.style.gridColumn = "1 / -1";
-            btnContainer.style.textAlign = 'center';
-            btnContainer.style.marginTop = '20px';
-            btnContainer.innerHTML = `<button id="load-more-btn" class="load-more-btn">عرض المزيد من العقارات <i class="fas fa-arrow-down"></i></button>`;
-            container.parentNode.appendChild(btnContainer);
-            document.getElementById('load-more-btn').addEventListener('click', () => fetchLatestProperties(false));
-        }
-
-        const btn = document.getElementById('load-more-btn');
-        if (btn) {
-            if (properties.length < LIMIT) btn.style.display = 'none';
-            else {
-                btn.style.display = 'block';
-                btn.innerHTML = 'عرض المزيد من العقارات <i class="fas fa-arrow-down"></i>';
-            }
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        if(isFirstLoad && container) container.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ في التحميل.</p>';
-    } finally {
-        isLoading = false;
-    }
-}
-
 // =========================================
-// 👽 Aqarak AI Core Logic
+// 👽 Aqarak AI Core Logic (الشات مع إصلاح الموبايل)
 // =========================================
 
 function toggleAiChat() {
     const hud = document.getElementById('ai-interface');
     const input = document.getElementById('ai-user-input');
-    const orb = document.querySelector('.ai-orb-container'); 
-    const complaintBtn = document.querySelector('.complaint-float-btn'); 
+    const orb = document.querySelector('.ai-orb-container');
+    const complaintBtn = document.querySelector('.complaint-float-btn');
     
     if (hud.style.display === 'flex') {
+        // --- إغلاق الشات ---
         hud.style.display = 'none';
+        document.body.classList.remove('chat-open');
+        
         if (orb) orb.style.display = 'flex';
         if (complaintBtn) complaintBtn.style.display = 'block';
+
     } else {
+        // --- فتح الشات ---
         hud.style.display = 'flex';
+        document.body.classList.add('chat-open'); // كلاس للتحكم في الموبايل
+        
         setTimeout(() => input.focus(), 100);
 
-        // إخفاء الأزرار في الموبايل
         if (window.innerWidth <= 768) { 
             if (orb) orb.style.display = 'none';
             if (complaintBtn) complaintBtn.style.display = 'none';

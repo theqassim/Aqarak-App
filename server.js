@@ -1220,7 +1220,34 @@ app.get('/api/properties', async (req, res) => {
     try { const result = await pgQuery(sql, params); res.json(result.rows); } 
     catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching properties' }); } 
 });
-app.get('/api/property/:id', async (req, res) => { try { const r = await pgQuery(`SELECT * FROM properties WHERE id=$1`, [req.params.id]); if(r.rows[0]) { try { r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); } catch(e){ r.rows[0].imageUrls=[]; } res.json(r.rows[0]); } else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
+// ✅ تعديل API جلب تفاصيل العقار (لإضافة حالة التوثيق)
+app.get('/api/property/:id', async (req, res) => {
+    try {
+        // بنعمل LEFT JOIN عشان نجيب is_verified من جدول users بناءً على رقم التليفون
+        const sql = `
+            SELECT p.*, u.is_verified, u.profile_picture 
+            FROM properties p
+            LEFT JOIN users u ON p."sellerPhone" = u.phone
+            WHERE p.id = $1
+        `;
+        
+        const r = await pgQuery(sql, [req.params.id]);
+        
+        if (r.rows[0]) {
+            try { 
+                r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); 
+            } catch (e) { 
+                r.rows[0].imageUrls = []; 
+            }
+            res.json(r.rows[0]);
+        } else {
+            res.status(404).json({ message: 'غير موجود' });
+        }
+    } catch (e) { 
+        console.error("Property Fetch Error:", e);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } catch (e) { throw e; } });
 app.post('/api/favorites', async (req, res) => { const token = req.cookies.auth_token; if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' }); try { const decoded = jwt.verify(token, JWT_SECRET); await pgQuery(`INSERT INTO favorites (user_phone, property_id) VALUES ($1, $2)`, [decoded.phone, req.body.propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة بالفعل' }); res.status(500).json({ error: 'خطأ سيرفر' }); } });

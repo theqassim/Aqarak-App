@@ -276,15 +276,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formattedOwnerPhone = ownerPhone.replace(/\D/g, '').startsWith('0') ? '2' + ownerPhone : ownerPhone;
         const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(`أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`)}`;
 
-       // Publisher Info
-        let publisherHTML = '';
-        let publisherStatsBadge = '';
+      // ... (داخل دالة عرض التفاصيل بعد جلب const property) ...
 
-        // 🔥 هنا التعديل: علامة التوثيق الذهبية بستايل فيسبوك 🔥
+        // 🔥 1. تعريف العلامة بناءً على حالة التوثيق
         const verifiedBadge = property.is_verified ? 
             `<span class="fb-gold-badge" title="موثق"><i class="fas fa-check"></i></span>` : '';
 
+        // 🔥 2. منطق عرض الناشر
+        let publisherHTML = '';
+        let publisherStatsBadge = '';
+
         if (property.publisherUsername) {
+            // محاولة جلب إحصائيات الناشر
             try {
                 const statsRes = await fetch(`/api/public/profile/${property.publisherUsername}`);
                 if (statsRes.ok) {
@@ -294,15 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     publisherStatsBadge = `
                         <a href="user-profile.html?u=${property.publisherUsername}" style="
                             background: rgba(0, 255, 136, 0.1); 
-                            color: #00ff88; 
-                            padding: 2px 8px; 
-                            border-radius: 12px; 
-                            font-size: 0.8rem; 
-                            margin-right: 10px; 
-                            border: 1px solid #00ff88;
-                            text-decoration: none;
-                            cursor: pointer;
-                            transition: 0.3s;">
+                            color: #00ff88; padding: 2px 8px; border-radius: 12px; 
+                            font-size: 0.8rem; margin-right: 10px; border: 1px solid #00ff88;
+                            text-decoration: none; cursor: pointer; transition: 0.3s;">
                             <i class="fas fa-building"></i> ${count} عقار منشور
                         </a>
                     `;
@@ -321,6 +318,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         } else {
+            // حالة عدم وجود اسم مستخدم (للمستخدمين القدامى أو الأدمن)
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
                     <p style="color: #ccc; display:flex; align-items:center;">
@@ -332,7 +330,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         }
-
+        
+        // ... (أكمل باقي الكود لعرض publisherHTML في الـ container) ...
         // Action Buttons Logic
         let actionSectionHTML = '';
         let makeOfferButtonHTML = '';
