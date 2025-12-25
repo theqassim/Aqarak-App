@@ -342,6 +342,52 @@
         .smart-greeting-widget { padding: 5px 10px; gap: 8px; }
         .greeting-main { font-size: 0.8rem; }
     }
+    /* --- 🔔 قائمة الإشعارات (Dropdown) --- */
+    .header-notification-btn { position: relative; } /* ضروري عشان القائمة تظهر تحته */
+
+    .notif-dropdown {
+        display: none; /* مخفية افتراضياً */
+        position: absolute;
+        top: 40px; left: -10px; /* تضبط مكانها بالنسبة للجرس */
+        width: 300px;
+        background: #1c1c1c;
+        border: 1px solid #333;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 10001;
+        overflow: hidden;
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    .notif-header {
+        background: #252525;
+        padding: 10px 15px;
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #333;
+    }
+    .notif-title { color: white; font-weight: bold; font-size: 0.9rem; }
+    .mark-read-btn { color: var(--neon-primary); font-size: 0.75rem; cursor: pointer; }
+    .mark-read-btn:hover { text-decoration: underline; }
+
+    .notif-list {
+        max-height: 300px; overflow-y: auto;
+    }
+
+    .notif-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: 0.2s;
+        position: relative;
+    }
+    .notif-item:hover { background: rgba(255,255,255,0.03); }
+    .notif-item.unread { background: rgba(0, 255, 136, 0.05); border-right: 3px solid var(--neon-primary); }
+    
+    .notif-item h4 { margin: 0 0 5px 0; color: white; font-size: 0.9rem; }
+    .notif-item p { margin: 0; color: #aaa; font-size: 0.8rem; line-height: 1.4; }
+    .notif-time { font-size: 0.7rem; color: #666; margin-top: 5px; display: block; text-align: left; }
+
+    .empty-notif { padding: 30px; text-align: center; color: #555; }
+    .empty-notif i { font-size: 2rem; margin-bottom: 10px; }
 </style>
 </head>
 <body class="internal-page">
@@ -357,9 +403,22 @@
                     <span id="current-date" class="greeting-sub">...</span>
                 </div>
                 
-                <div class="header-notification-btn">
+                <div class="header-notification-btn" onclick="toggleNotificationMenu(event)">
                     <i class="fas fa-bell"></i>
-                    <span class="notification-dot"></span>
+                    <span class="notification-dot" id="notif-dot" style="display:none;"></span>
+                    
+                    <div class="notif-dropdown" id="notif-dropdown" onclick="event.stopPropagation()">
+                        <div class="notif-header">
+                            <span class="notif-title">الإشعارات</span>
+                            <span class="mark-read-btn" onclick="markNotificationsRead()">تحديد الكل كمقروء</span>
+                        </div>
+                        <div class="notif-list" id="notif-list">
+                            <div class="empty-notif">
+                                <i class="far fa-bell-slash"></i>
+                                <p>لا توجد إشعارات جديدة</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

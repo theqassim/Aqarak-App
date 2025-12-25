@@ -893,9 +893,37 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 sellerPhone: sellerPhone
             }, code);
 
-            // ✅ 3. إرسال إشعار لكل المستخدمين (Web Push)
+            // Web Push لكل المستخدمين
             notifyAllUsers(`عقار جديد: ${propertyTitle}`, `تم نشر عقار ${propertyType} بسعر ${englishPrice}`, `/property-details?id=${pubRes.rows[0].id}`);
+
+            // ✅ (تصحيح مكان الإشعار) نرسل "تم النشر" هنا فقط
+            await createNotification(
+                sellerPhone, 
+                'تم النشر بنجاح ✅', 
+                `تم نشر عقارك "${propertyTitle}" فوراً بنجاح ويظهر الآن للجميع.`
+            );
+
+        } else {
+            // ✅ (إضافة) نرسل "قيد المراجعة" لو العقار لم ينشر فوراً
+            await createNotification(
+                sellerPhone, 
+                'طلبك قيد المراجعة ⏳', 
+                `تم استلام عقارك "${propertyTitle}" وسيقوم فريق المراجعة بفحصه في أقرب وقت.`
+            );
         }
+
+        // إشعار ديسكورد (ثابت)
+        await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
+            { name: "👤 المالك", value: sellerName },
+            { name: "🤖 تقرير AI", value: aiReview.reason },
+            { name: "💰 حالة الدفع", value: isPaidSystem ? "تم خصم نقطة واحدة" : "مجاني" }
+        ], isPublic ? 3066993 : 16776960, files[0]?.path);
+
+        await createNotification(
+                sellerPhone, 
+                'تم النشر بنجاح ✅', 
+                `تم نشر عقارك "${propertyTitle}" فوراً بنجاح بعد اجتياز الفحص الآلي.`
+            );
 
         await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
             { name: "👤 المالك", value: sellerName },
@@ -989,19 +1017,28 @@ app.post('/api/make-offer', async (req, res) => { const { propertyId, buyerName,
 
 // نشر العقار من الأدمن (نقل البيانات الجديدة أيضاً)
 app.post('/api/admin/publish-submission', async (req, res) => {
+    const token = req.cookies.auth_token;
+    // التحقق من الأدمن
+    try { 
+        const decoded = jwt.verify(token, JWT_SECRET); 
+        if(decoded.role !== 'admin') return res.status(403).json({message: 'غير مسموح'}); 
+    } catch(e) { return res.status(401).json({message: 'سجل دخول أولاً'}); }
+
     const { submissionId, hiddenCode } = req.body;
+    
     try {
         const subRes = await pgQuery(`SELECT * FROM seller_submissions WHERE id = $1`, [submissionId]);
         if (subRes.rows.length === 0) return res.status(404).json({ message: 'الطلب غير موجود' });
         const sub = subRes.rows[0];
         
+        // جلب اسم المستخدم (للنشر)
         let publisherUsername = null;
         const userCheck = await pgQuery(`SELECT username FROM users WHERE phone = $1`, [sub.sellerPhone]);
         if (userCheck.rows.length > 0) publisherUsername = userCheck.rows[0].username;
         
         const imageUrls = (sub.imagePaths || '').split(' | ').filter(Boolean);
         
-        // ✅ نقلنا الـ latitude و longitude للجدول الرئيسي
+        // 1. نقل العقار لجدول Properties
         const sql = `
             INSERT INTO properties (
                 title, price, "numericPrice", rooms, bathrooms, area, description, 
@@ -1021,14 +1058,30 @@ app.post('/api/admin/publish-submission', async (req, res) => {
             imageUrls[0] || '', JSON.stringify(imageUrls), sub.propertyType, hiddenCode, sub.sellerName, sub.sellerPhone, 
             publisherUsername,
             sub.propertyLevel, safeInt(sub.propertyFloors), sub.propertyFinishing,
-            sub.nearby_services || '', sub.latitude, sub.longitude // ✅ البيانات الجديدة
+            sub.nearby_services || '', sub.latitude, sub.longitude
         ];
         
         const result = await pgQuery(sql, params);
+        
+        // 2. حذف الطلب من قائمة الانتظار
         await pgQuery(`DELETE FROM seller_submissions WHERE id = $1`, [submissionId]);
+
+        // ✅ 3. (الإضافة الجديدة) إرسال إشعار لصاحب العقار
+        await createNotification(
+            sub.sellerPhone, 
+            '🎉 مبروك! تم قبول عقارك', 
+            `تمت مراجعة عقارك "${sub.propertyTitle}" والموافقة عليه. هو الآن منشور ويظهر للجميع.`
+        );
+
+        // 4. إشعار عام لكل المستخدمين (Web Push)
         notifyAllUsers(`عقار جديد!`, sub.propertyTitle, `/property-details?id=${result.rows[0].id}`);
+        
         res.status(201).json({ success: true, id: result.rows[0].id });
-    } catch (err) { console.error("Publish Error:", err); res.status(400).json({ message: 'Error' }); }
+
+    } catch (err) { 
+        console.error("Publish Error:", err); 
+        res.status(400).json({ message: 'Error' }); 
+    }
 });
 app.put('/api/update-property/:id', uploadProperties.array('propertyImages', 10), async (req, res) => { 
     const { 
@@ -1989,6 +2042,82 @@ app.get('/api/config/payment-price', async (req, res) => {
         res.json({ pointPrice: price, isPaymentActive: isActive });
     } catch (error) {
         res.json({ pointPrice: 1, isPaymentActive: false }); // قيم افتراضية لو حصل خطأ
+    }
+});
+// ============================================================
+// 🔔 نظام الإشعارات (Backend)
+// ============================================================
+
+// 1. دالة مساعدة لإنشاء إشعار (Helper Function)
+async function createNotification(phone, title, message) {
+    try {
+        await pgQuery(
+            `INSERT INTO user_notifications (user_phone, title, message) VALUES ($1, $2, $3)`, 
+            [phone, title, message]
+        );
+    } catch (e) { console.error("Notification Error:", e); }
+}
+
+// 2. (للمستخدم) جلب الإشعارات الخاصة به
+app.get('/api/user/notifications', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.json({ notifications: [], unreadCount: 0 });
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        // جلب آخر 20 إشعار (الأحدث أولاً)
+        const result = await pgQuery(
+            `SELECT * FROM user_notifications WHERE user_phone = $1 ORDER BY id DESC LIMIT 20`, 
+            [decoded.phone]
+        );
+        
+        const unreadCount = result.rows.filter(n => !n.is_read).length;
+        res.json({ notifications: result.rows, unreadCount });
+    } catch (e) { res.json({ notifications: [], unreadCount: 0 }); }
+});
+
+// 3. (للمستخدم) تحديد الكل كمقروء
+app.post('/api/user/notifications/read', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({});
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        await pgQuery(`UPDATE user_notifications SET is_read = TRUE WHERE user_phone = $1`, [decoded.phone]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({}); }
+});
+
+// 4. (للأدمن) إرسال إشعار جديد 📢
+app.post('/api/admin/send-notification', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        const { targetPhone, title, message, isBroadcast } = req.body;
+
+        if (!title || !message) return res.status(400).json({ message: 'البيانات ناقصة' });
+
+        if (isBroadcast) {
+            // إرسال للكل
+            const usersRes = await pgQuery('SELECT phone FROM users');
+            // نستخدم Promise.all عشان نبعت للكل بسرعة
+            const promises = usersRes.rows.map(user => 
+                createNotification(user.phone, title, message)
+            );
+            await Promise.all(promises);
+            res.json({ success: true, message: `تم الإرسال لـ ${usersRes.rows.length} مستخدم` });
+        } else {
+            // إرسال لشخص محدد
+            if (!targetPhone) return res.status(400).json({ message: 'رقم الهاتف مطلوب' });
+            await createNotification(targetPhone, title, message);
+            res.json({ success: true, message: 'تم الإرسال للمستخدم بنجاح' });
+        }
+
+    } catch (error) {
+        console.error("Admin Notif Error:", error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

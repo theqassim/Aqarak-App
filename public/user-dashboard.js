@@ -500,3 +500,83 @@ document.addEventListener('click', function(e) {
 
     // استدعاء الدالة فوراً
     updateGreetingWidget();
+
+    // ==========================================
+// 🔔 دوال الإشعارات (Notifications Logic)
+// ==========================================
+
+async function checkNotifications() {
+    try {
+        const res = await fetch('/api/user/notifications');
+        const data = await res.json();
+        
+        const dot = document.getElementById('notif-dot');
+        const list = document.getElementById('notif-list');
+        
+        // 1. تحديث النقطة الحمراء
+        if (data.unreadCount > 0) {
+            dot.style.display = 'block';
+            dot.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
+        } else {
+            dot.style.display = 'none';
+        }
+
+        // 2. تعبئة القائمة
+        if (data.notifications && data.notifications.length > 0) {
+            list.innerHTML = data.notifications.map(n => `
+                <div class="notif-item ${n.is_read ? '' : 'unread'}">
+                    <h4>${n.title}</h4>
+                    <p>${n.message}</p>
+                    <span class="notif-time">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = `
+                <div class="empty-notif">
+                    <i class="far fa-bell-slash"></i>
+                    <p>لا توجد إشعارات جديدة</p>
+                </div>`;
+        }
+    } catch (e) { console.error("Notif Error", e); }
+}
+
+// فتح/غلق القائمة
+function toggleNotificationMenu(e) {
+    e.stopPropagation(); // منع إغلاقها فوراً
+    const menu = document.getElementById('notif-dropdown');
+    const isVisible = menu.style.display === 'block';
+    
+    // إغلاق أي قوائم أخرى
+    document.querySelectorAll('.profile-dropdown').forEach(d => d.style.display = 'none');
+    
+    menu.style.display = isVisible ? 'none' : 'block';
+    
+    // لو فتحنا القائمة، نعلمها كمقروءة بعد ثانية
+    if (!isVisible) {
+        // يمكنك تفعيل هذا السطر لو عايزها "تقرأ" بمجرد الفتح
+        // setTimeout(markNotificationsRead, 2000); 
+    }
+}
+
+// تعليم الكل كمقروء
+async function markNotificationsRead() {
+    try {
+        await fetch('/api/user/notifications/read', { method: 'POST' });
+        document.getElementById('notif-dot').style.display = 'none'; // إخفاء النقطة
+        // إزالة ستايل unread من العناصر
+        document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    } catch (e) {}
+}
+
+// تشغيل الفحص عند التحميل
+document.addEventListener('DOMContentLoaded', () => {
+    checkNotifications();
+    // فحص كل دقيقة (Live Update)
+    setInterval(checkNotifications, 60000);
+});
+
+// إغلاق القائمة عند الضغط في الخارج
+window.addEventListener('click', () => {
+    const menu = document.getElementById('notif-dropdown');
+    if (menu) menu.style.display = 'none';
+});

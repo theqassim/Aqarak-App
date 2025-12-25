@@ -379,6 +379,13 @@ input:checked + .slider:before { transform: translateX(26px); }
     <button onclick="manualCharge()" class="btn-neon-auth">تنفيذ الشحن ⚡</button>
 </div>
 
+<div class="dashboard-card" style="--card-color: #00d4ff;">
+                <i class="fas fa-paper-plane icon-large" style="color: #00d4ff;"></i>
+                <h2 class="card-title">إرسال إشعار</h2>
+                <p class="card-desc">إرسال تنبيهات للمستخدمين أو للكل.</p>
+                <button onclick="openNotifModal()" class="btn-neon-auth">إرسال الآن</button>
+            </div>
+
         </div>
     </main>
 
@@ -386,16 +393,90 @@ input:checked + .slider:before { transform: translateX(26px); }
     <script src="admin-home.js"></script>
     <script src="app.js"></script>
     <script src="reload.js"></script>
-    
+    <script src="global-alert.js"></script>
+    <div id="notif-modal" class="modal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #1c2630; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; border: 1px solid #00d4ff; text-align: center;">
+            <span onclick="document.getElementById('notif-modal').style.display='none'" style="position: absolute; top: 15px; left: 15px; color: #aaa; cursor: pointer; font-size: 1.5rem;">&times;</span>
+            
+            <h3 style="color: #00d4ff; margin-bottom: 20px;"><i class="fas fa-bell"></i> إرسال إشعار جديد</h3>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center;">
+                <label style="cursor: pointer; color: white;">
+                    <input type="radio" name="targetType" value="single" checked onchange="toggleNotifTarget()"> مستخدم محدد
+                </label>
+                <label style="cursor: pointer; color: white;">
+                    <input type="radio" name="targetType" value="all" onchange="toggleNotifTarget()"> إرسال للجميع (Broadcast)
+                </label>
+            </div>
+
+            <div class="input-group" id="target-phone-group">
+                <input type="tel" id="notif-phone" class="neon-input-white" placeholder="رقم هاتف المستخدم (01xxxxxxxxx)" style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;">
+            </div>
+
+            <div class="input-group" style="margin-top: 10px;">
+                <input type="text" id="notif-title" class="neon-input-white" placeholder="عنوان الإشعار" style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;">
+            </div>
+
+            <div class="input-group" style="margin-top: 10px;">
+                <textarea id="notif-message" rows="3" placeholder="نص الرسالة..." style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;"></textarea>
+            </div>
+
+            <button onclick="sendAdminNotification()" class="btn-neon-auth" style="margin-top: 20px; background: #00d4ff; color: black; font-weight: bold;">🚀 إرسال</button>
+        </div>
+    </div>
+
     <script>
-        // دالة مساعدة لتسجيل الخروج (إذا لم تكن موجودة في logout.js)
-        function logoutAdmin() {
-            if(confirm('هل تريد تسجيل الخروج؟')) {
-                // استدعاء دالة الخروج الأصلية أو تنفيذ خروج يدوي
-                window.location.href = 'index'; // أو الـ API الخاص بك
+        function openNotifModal() {
+            document.getElementById('notif-modal').style.display = 'flex';
+        }
+
+        function toggleNotifTarget() {
+            const isBroadcast = document.querySelector('input[name="targetType"]:checked').value === 'all';
+            document.getElementById('target-phone-group').style.display = isBroadcast ? 'none' : 'block';
+        }
+
+        async function sendAdminNotification() {
+            const isBroadcast = document.querySelector('input[name="targetType"]:checked').value === 'all';
+            const phone = document.getElementById('notif-phone').value;
+            const title = document.getElementById('notif-title').value;
+            const message = document.getElementById('notif-message').value;
+            const btn = document.querySelector('button[onclick="sendAdminNotification()"]');
+
+            if (!title || !message) return alert('يرجى كتابة العنوان والرسالة');
+            if (!isBroadcast && !phone) return alert('يرجى كتابة رقم الهاتف');
+
+            btn.innerHTML = 'جاري الإرسال...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        targetPhone: phone,
+                        title: title,
+                        message: message,
+                        isBroadcast: isBroadcast
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    document.getElementById('notif-modal').style.display = 'none';
+                    // تفريغ الحقول
+                    document.getElementById('notif-title').value = '';
+                    document.getElementById('notif-message').value = '';
+                } else {
+                    alert('❌ فشل: ' + data.message);
+                }
+            } catch (e) {
+                alert('خطأ في الاتصال');
+            } finally {
+                btn.innerHTML = '🚀 إرسال';
+                btn.disabled = false;
             }
         }
     </script>
-    <script src="global-alert.js"></script>
 </body>
 </html>
