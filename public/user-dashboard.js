@@ -110,54 +110,74 @@ window.loadUserData = async function() {
 // ==========================================
 
 // ==========================================
-// ❤️ 2. منطق المفضلة (مع التمرير التلقائي)
+// ❤️ 2. منطق المفضلة (المحسن)
 // ==========================================
 
 async function toggleFavorites() {
     const area = document.getElementById('favorites-area');
     const container = document.getElementById('favorites-listings');
+    const btnText = document.getElementById('show-favorites');
     
-    // إغلاق إذا كانت مفتوحة
+    // التبديل بين الفتح والإغلاق
     if (area.style.display === 'block') {
         area.style.display = 'none';
+        btnText.innerHTML = 'عرض المفضلة';
         return;
     }
 
     area.style.display = 'block';
+    btnText.innerHTML = 'إخفاء المفضلة';
 
-    // ✅ التعديل هنا: التمرير التلقائي الناعم للقسم
+    // تمرير ناعم للقسم
     setTimeout(() => {
         area.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 
-    container.innerHTML = '<div style="text-align:center; color:var(--neon-primary); padding:20px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
+    // عرض مؤشر التحميل
+    container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding:40px;">
+            <i class="fas fa-circle-notch fa-spin fa-2x" style="color:var(--neon-primary);"></i>
+            <p style="color:#aaa; margin-top:10px;">جاري جلب عقاراتك المميزة...</p>
+        </div>`;
 
     try {
         const res = await fetch('/api/user/favorites');
-        if (!res.ok) throw new Error('Failed to fetch');
+        if (!res.ok) throw new Error('Network response was not ok');
         
         const properties = await res.json();
         container.innerHTML = '';
 
         if (properties.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">لا توجد عقارات في المفضلة حالياً.</p>';
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align:center; padding:30px; border:1px dashed #444; border-radius:15px;">
+                    <i class="far fa-heart" style="font-size:3rem; color:#444; margin-bottom:15px;"></i>
+                    <p style="color:#888;">لم تقم بإضافة أي عقارات للمفضلة بعد.</p>
+                    <a href="home" class="btn-neon-auth" style="display:inline-block; width:auto; padding:5px 20px; margin-top:10px; font-size:0.9rem;">تصفح العقارات</a>
+                </div>`;
             return;
         }
 
         properties.forEach(prop => {
-            const price = parseInt(prop.price).toLocaleString();
+            const price = parseInt(prop.price).toLocaleString('en-US');
+            const location = prop.location || 'موقع غير محدد'; // تأكد أن الـ API يرجع الموقع
+            
             const html = `
-                <div class="fav-card">
+                <div class="fav-card" id="fav-card-${prop.id}">
                     <a href="property-details?id=${prop.id}" class="fav-img-link">
-                        <img src="${prop.imageUrl || 'logo.png'}" class="fav-img" loading="lazy">
+                        <img src="${prop.imageUrl || 'logo.png'}" class="fav-img" loading="lazy" alt="${prop.title}">
+                        <div class="price-badge">${price} ج.م</div>
                     </a>
                     <div class="fav-content">
-                        <div class="fav-title">${prop.title}</div>
-                        <div class="fav-price">${price} ج.م</div>
+                        <div>
+                            <div class="fav-title" title="${prop.title}">${prop.title}</div>
+                            <div class="fav-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>
+                        </div>
                         <div class="fav-actions">
-                            <a href="property-details?id=${prop.id}" class="btn-fav-view">عرض</a>
-                            <button class="btn-fav-remove" onclick="removeFavorite(${prop.id})">
-                                <i class="fas fa-trash"></i>
+                            <a href="property-details?id=${prop.id}" class="btn-fav-view">
+                                <i class="fas fa-eye"></i> التفاصيل
+                            </a>
+                            <button class="btn-fav-remove" onclick="removeFavorite(${prop.id})" title="حذف من المفضلة">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -168,28 +188,49 @@ async function toggleFavorites() {
 
     } catch (e) {
         console.error(e);
-        container.innerHTML = '<p style="text-align:center; color:#ff4444;">حدث خطأ في تحميل المفضلة.</p>';
+        container.innerHTML = `<p style="text-align:center; color:#ff4444; grid-column: 1/-1;">حدث خطأ أثناء تحميل المفضلة، حاول مرة أخرى.</p>`;
     }
 }
 
-// دالة الحذف من المفضلة
+// دالة الحذف (مع أنيميشن الحذف السلس)
 window.removeFavorite = async function(id) {
-    if (!confirm('هل أنت متأكد من الحذف من المفضلة؟')) return;
+    if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
     
+    // تغيير أيقونة الزر لتدل على التحميل
+    const card = document.getElementById(`fav-card-${id}`);
+    const btn = card.querySelector('.btn-fav-remove');
+    const originalIcon = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
     try {
         const res = await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
+        
         if (res.ok) {
-            // إعادة تحميل القائمة
-            toggleFavorites(); // يغلق
-            setTimeout(toggleFavorites, 100); // يفتح مرة أخرى للتحديث
+            // تأثير اختفاء الكارت قبل حذفه من الـ DOM
+            card.style.transform = 'scale(0.9)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.remove();
+                // التحقق مما إذا كانت القائمة فارغة الآن
+                const container = document.getElementById('favorites-listings');
+                if (container.children.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align:center; padding:30px; color:#888;">
+                            تم حذف جميع العناصر.
+                        </div>`;
+                }
+            }, 300); // الانتظار حتى ينتهي الأنيميشن
         } else {
-            alert('فشل الحذف');
+            alert('فشل الحذف، حاول مرة أخرى.');
+            btn.innerHTML = originalIcon;
         }
     } catch (e) {
-        alert('خطأ في الاتصال');
+        console.error(e);
+        alert('خطأ في الاتصال بالخادم');
+        btn.innerHTML = originalIcon;
     }
 };
-
 // ==========================================
 // 🔔 3. نظام الإشعارات
 // ==========================================
