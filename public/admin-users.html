@@ -3,99 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المستخدمين - عقارك</title>
+    <title>إدارة المستخدمين - الأدمن</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/png" href="logo.png">
+    
     <style>
-        :root { --bg: #0f0f0f; --card: #1c2630; --primary: #00ff88; --blue: #00d4ff; --text: #fff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
-        
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .back-btn { color: #ccc; text-decoration: none; font-size: 1.2rem; transition: 0.3s; }
-        .back-btn:hover { color: var(--primary); }
+        /* --- 🛠️ 1. Global Styles (Match System) --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        /* شريط البحث */
-        .search-container { position: relative; max-width: 600px; margin: 0 auto 40px auto; }
+        :root {
+            --glass-bg: rgba(20, 20, 20, 0.98);
+            --neon-primary: #00ff88;
+            --neon-secondary: #00d4ff;
+            --neon-pink: #e91e63; /* اللون الأساسي للسيستم */
+            --card-bg: #1a1a1a;
+            --gold: #FFD700;
+        }
+
+        body.internal-page {
+            background-color: #0f0f0f;
+            background-image: radial-gradient(circle at 50% 0%, #2c1a25 0%, #0f0f0f 70%); /* تعديل التدرج للوردي */
+            min-height: 100vh;
+            font-family: 'Cairo', sans-serif;
+            color: white;
+            padding-top: 100px !important; 
+            overflow-x: hidden;
+        }
+
+        /* --- 🔒 2. الهيدر الثابت --- */
+        .main-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+        }
+
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1250px; margin: 0 auto; width: 100%;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo { height: 40px; border-radius: 50%; border: 2px solid var(--neon-pink); }
+        .logo-text { color: white; font-weight: bold; font-size: 1.1rem; }
+
+        .nav-button {
+            text-decoration: none; color: white; border: 1px solid var(--neon-pink);
+            padding: 6px 20px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
+        }
+        .nav-button:hover { background: var(--neon-pink); color: white; }
+
+        /* --- Main Content --- */
+        .main-content { max-width: 1200px; margin: 0 auto; padding: 20px 15px; }
+
+        /* --- Search Bar Style --- */
+        .search-container { 
+            position: relative; max-width: 600px; margin: 0 auto 40px auto; 
+            box-shadow: 0 0 20px rgba(233, 30, 99, 0.1);
+            border-radius: 50px;
+        }
         .search-input { 
             width: 100%; padding: 15px 50px 15px 20px; 
-            background: #222; border: 1px solid #444; border-radius: 50px; 
-            color: white; font-size: 1.1rem; transition: 0.3s; outline: none;
+            background: #1a1a1a; border: 1px solid #444; border-radius: 50px; 
+            color: white; font-size: 1rem; transition: 0.3s; outline: none;
+            font-family: 'Cairo', sans-serif;
         }
-        .search-input:focus { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
-        .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #777; font-size: 1.2rem; }
+        .search-input:focus { 
+            border-color: var(--neon-pink); 
+            box-shadow: 0 0 15px rgba(233, 30, 99, 0.3); 
+        }
+        .search-icon { 
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%); 
+            color: var(--neon-pink); font-size: 1.2rem; 
+        }
 
-        /* كروت المستخدمين */
-        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        /* --- Users Grid --- */
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         
         .user-card { 
-            background: var(--card); border: 1px solid #333; border-radius: 15px; 
-            padding: 20px; display: flex; flex-direction: column; align-items: center; 
+            background: var(--card-bg); 
+            border: 1px solid #333; 
+            border-radius: 16px; 
+            padding: 25px 20px; 
+            display: flex; flex-direction: column; align-items: center; 
             transition: 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        .user-card:hover { transform: translateY(-5px); border-color: var(--blue); }
         
-        /* علامة التوثيق */
+        /* تأثير التوثيق */
+        .user-card.is-verified { 
+            border-color: var(--gold); 
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); 
+        }
+        
+        /* الشريط العلوي للكارت */
+        .user-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: #333; transition: 0.3s;
+        }
+        .user-card:hover { transform: translateY(-5px); }
+        .user-card:hover::before { background: var(--neon-pink); }
+        .user-card.is-verified::before { background: var(--gold); }
+
+        /* الصور والنصوص */
+        .user-img-wrapper { position: relative; margin-bottom: 15px; }
+        .user-img { 
+            width: 85px; height: 85px; border-radius: 50%; object-fit: cover; 
+            border: 3px solid #333; transition: 0.3s;
+        }
+        .user-card.is-verified .user-img { border-color: var(--gold); }
+
         .verified-badge { 
-            position: absolute; top: 10px; left: 10px; 
-            color: var(--blue); font-size: 1.2rem; display: none; 
+            position: absolute; bottom: 0; right: 0;
+            color: #fff; background-color: var(--gold);
+            border-radius: 50%; display: none;
+            align-items: center; justify-content: center;
+            width: 24px; height: 24px; font-size: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 2px solid var(--card-bg);
         }
-        .user-card.is-verified { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 212, 255, 0.1); }
-        .user-card.is-verified .verified-badge { display: block; }
+        .user-card.is-verified .verified-badge { display: flex; }
 
-        .user-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #444; margin-bottom: 15px; }
-        .user-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
-        .user-username { color: #888; font-size: 0.9rem; margin-bottom: 5px; }
-        .user-phone { color: var(--primary); font-family: monospace; font-size: 1rem; margin-bottom: 20px; }
+        .user-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: white; }
+        .user-username { color: #888; font-size: 0.85rem; margin-bottom: 5px; font-family: monospace; }
+        .user-phone { 
+            color: var(--neon-secondary); font-family: monospace; font-size: 0.95rem; margin-bottom: 20px; 
+            background: rgba(0, 212, 255, 0.1); padding: 2px 10px; border-radius: 4px;
+        }
 
-        /* أزرار التحكم */
+        /* --- Buttons --- */
         .action-btn { 
-            width: 100%; padding: 10px; border: none; border-radius: 8px; 
-            cursor: pointer; font-weight: bold; transition: 0.3s; 
+            width: 100%; padding: 8px; border: none; border-radius: 50px; 
+            cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'Cairo', sans-serif;
         }
-        .btn-verify { background: rgba(0, 212, 255, 0.1); color: var(--blue); border: 1px solid var(--blue); }
-        .btn-verify:hover { background: var(--blue); color: black; }
         
-        .btn-unverify { background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; display: none; }
-        .btn-unverify:hover { background: #ff4444; color: white; }
+        .btn-verify { 
+            background: transparent; color: var(--gold); border: 1px solid var(--gold); 
+        }
+        .btn-verify:hover { background: var(--gold); color: black; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        
+        .btn-unverify { 
+            background: transparent; color: #ff4444; border: 1px solid #ff4444; display: none; 
+        }
+        .btn-unverify:hover { background: #ff4444; color: white; box-shadow: 0 0 15px rgba(255, 68, 68, 0.4); }
 
-        /* تبديل الأزرار حسب الحالة */
+        /* Toggle Button Visibility */
         .user-card.is-verified .btn-verify { display: none; }
-        .user-card.is-verified .btn-unverify { display: inline-block; }
+        .user-card.is-verified .btn-unverify { display: flex; }
 
-        /* علامة التوثيق الذهبية (مثل فيسبوك) */
-.verified-badge {
-    color: #fff; /* علامة الصح بيضاء */
-    background-color: #FFD700; /* خلفية ذهبية */
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
-    margin-right: 5px;
-    vertical-align: middle;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-    border: 1px solid #fff;
-}
-
+        /* Mobile */
+        @media (max-width: 768px) {
+            body.internal-page { padding-top: 130px !important; }
+            .logo-text { display: none; }
+        }
     </style>
 </head>
-<body>
+<body class="internal-page">
 
-    <div class="header-area">
-        <h2 style="margin:0; color:white;"><i class="fas fa-users-cog"></i> إدارة المستخدمين</h2>
-        <a href="admin-home" class="back-btn"><i class="fas fa-arrow-left"></i> عودة</a>
-    </div>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="شعار عقارك" class="logo">
+                <span class="logo-text">إدارة المستخدمين (Admin)</span>
+            </div>
+            <nav class="main-nav">
+                <a href="admin-home" class="nav-button">
+                    العودة للرئيسية <i class="fas fa-arrow-left" style="margin-right:5px;"></i>
+                </a> 
+            </nav>
+        </div>
+    </header>
 
-    <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="search-input" class="search-input" placeholder="ابحث باسم المستخدم أو رقم الهاتف..." oninput="searchUsers()">
-    </div>
+    <main class="main-content">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" class="search-input" placeholder="ابحث باسم المستخدم أو الهاتف..." oninput="searchUsers()">
+        </div>
 
-    <div id="users-container" class="users-grid">
-        <p style="color:#777; text-align:center; width:100%;">جاري التحميل...</p>
-    </div>
+        <div id="users-container" class="users-grid">
+            <div style="grid-column: 1/-1; text-align: center; color: var(--neon-pink); margin-top: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري تحميل البيانات...
+            </div>
+        </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -110,6 +210,9 @@
                 const query = document.getElementById('search-input').value;
                 const container = document.getElementById('users-container');
                 
+                // Show loading state if typing
+                // container.innerHTML = '...'; 
+
                 try {
                     const res = await fetch(`/api/admin/users/search?query=${query}`);
                     const users = await res.json();
@@ -117,27 +220,34 @@
                     container.innerHTML = '';
 
                     if (users.length === 0) {
-                        container.innerHTML = '<p style="color:#777; text-align:center; grid-column:1/-1;">لا يوجد مستخدمين بهذا الاسم</p>';
+                        container.innerHTML = `
+                            <div style="grid-column:1/-1; text-align:center; padding: 40px; border:1px dashed #444; border-radius:10px; color:#777;">
+                                <i class="fas fa-user-slash fa-2x" style="margin-bottom:10px;"></i><br>
+                                لا يوجد مستخدمين بهذا الاسم
+                            </div>
+                        `;
                         return;
                     }
 
                     users.forEach(user => {
                         const isVerified = user.is_verified ? 'is-verified' : '';
-                        const img = user.profile_picture || 'logo.png'; // لو مفيش صورة حط اللوجو
+                        const img = user.profile_picture || 'logo.png'; 
 
                         const html = `
                             <div class="user-card ${isVerified}" id="card-${user.id}">
-                                <i class="fas fa-check-circle verified-badge"></i>
-                                <img src="${img}" alt="User" class="user-img">
-                                <div class="user-name">${user.name || 'بدون اسم'}</div>
-                                <div class="user-username">@${user.username || '...'}</div>
+                                <div class="user-img-wrapper">
+                                    <img src="${img}" alt="User" class="user-img">
+                                    <i class="fas fa-check verified-badge"></i>
+                                </div>
+                                <div class="user-name">${user.name || 'مستخدم جديد'}</div>
+                                <div class="user-username">@${user.username || 'unknown'}</div>
                                 <div class="user-phone">${user.phone}</div>
                                 
                                 <button class="action-btn btn-verify" onclick="toggleVerify(${user.id}, true)">
-                                    <i class="fas fa-check"></i> توثيق الحساب
+                                    <i class="fas fa-check-circle"></i> توثيق الحساب
                                 </button>
                                 <button class="action-btn btn-unverify" onclick="toggleVerify(${user.id}, false)">
-                                    <i class="fas fa-times"></i> إزالة التوثيق
+                                    <i class="fas fa-times-circle"></i> إزالة التوثيق
                                 </button>
                             </div>
                         `;
@@ -146,13 +256,14 @@
 
                 } catch (e) {
                     console.error(e);
-                    container.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ</p>';
+                    container.innerHTML = '<p style="color:#ff4444; text-align:center; grid-column:1/-1;">خطأ في الاتصال بالسيرفر</p>';
                 }
             }, 300); // Debounce
         }
 
         async function toggleVerify(userId, status) {
-            if(!confirm(status ? 'هل أنت متأكد من توثيق هذا الحساب؟' : 'هل أنت متأكد من إزالة التوثيق؟')) return;
+            const actionText = status ? 'توثيق الحساب' : 'إزالة التوثيق';
+            if(!confirm(`⚠️ هل أنت متأكد من ${actionText}؟`)) return;
 
             try {
                 const res = await fetch('/api/admin/users/verify', {
@@ -163,16 +274,14 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // تحديث الشكل فوراً بدون ريفريش
                     const card = document.getElementById(`card-${userId}`);
                     if (status) {
                         card.classList.add('is-verified');
                     } else {
                         card.classList.remove('is-verified');
                     }
-                    // alert(data.message); (اختياري)
                 } else {
-                    alert('خطأ: ' + data.message);
+                    alert('❌ خطأ: ' + data.message);
                 }
             } catch (e) {
                 alert('فشل الاتصال بالسيرفر');
