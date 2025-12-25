@@ -203,6 +203,74 @@
         .fav-price { font-size: 0.9rem; }
         .btn-fav-view { padding: 4px 12px; font-size: 0.8rem; }
     }
+    /* --- 3. القائمة المنسدلة للبروفايل (Profile Dropdown) --- */
+    .profile-menu-container {
+        position: relative;
+        margin-right: 15px;
+    }
+
+    .header-profile-img {
+        width: 45px; height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--neon-primary);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .header-profile-img:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
+
+    .profile-dropdown {
+        display: none; /* مخفية افتراضياً */
+        position: absolute;
+        top: 60px; left: 10px; /* تفتح على الشمال */
+        width: 260px;
+        background: rgba(20, 20, 20, 0.98);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--neon-primary);
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        z-index: 10000;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .dropdown-header {
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 10px; margin-bottom: 10px;
+    }
+    
+    .dropdown-user-info { text-align: right; }
+    .dropdown-name { color: white; font-weight: bold; font-size: 0.95rem; display: block; }
+    .dropdown-role { color: #888; font-size: 0.8rem; }
+
+    .dropdown-points {
+        background: rgba(255, 215, 0, 0.1);
+        color: var(--neon-gold);
+        padding: 5px 10px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        display: flex; align-items: center; gap: 5px;
+    }
+
+    .dropdown-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 10px;
+        color: white; text-decoration: none;
+        border-radius: 10px; transition: 0.3s;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+    .dropdown-item:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
+    .dropdown-item i { width: 25px; text-align: center; }
+
+    .logout-item:hover { background: rgba(255, 68, 68, 0.1); color: #ff4444; }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 </head>
 <body class="internal-page">
@@ -210,22 +278,40 @@
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <a href="#">
-                    <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                    <span class="logo-text">حسابي</span>
+                <a href="home">
+                    <img src="logo.jpg" alt="عقارك" class="logo">
+                    <span class="logo-text">عقارك</span>
                 </a>
             </div>
-            <nav class="main-nav">
-                <div id="user-balance-display">
-                    <span id="balance-number">0</span> <i class="fas fa-coins"></i>
-                </div>
 
-                <a href="home" class="nav-button"><span>الرئيسية</span> <i class="fas fa-home"></i></a> 
-                <a href="#" class="nav-button logout-btn" onclick="logoutUser()"><span>خروج</span> <i class="fas fa-sign-out-alt"></i></a>
-            </nav>
+            <div class="profile-menu-container">
+                <img src="logo.jpg" id="header-profile-img" class="header-profile-img" onclick="toggleProfileMenu()">
+                
+                <div id="profile-dropdown" class="profile-dropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-points" id="dropdown-balance">
+                            0 <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="dropdown-user-info">
+                            <span class="dropdown-name" id="dropdown-username">المستخدم</span>
+                            <span class="dropdown-role">لوحة التحكم</span>
+                        </div>
+                    </div>
+
+                    <a href="home" class="dropdown-item">
+                        <i class="fas fa-home"></i> الرئيسية
+                    </a>
+                    
+                    <a href="edit-profile" class="dropdown-item"> <i class="fas fa-user-edit"></i> تعديل حسابي
+                    </a>
+
+                    <div class="dropdown-item logout-item" onclick="document.getElementById('luxLogoutModal').style.display='flex'">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
-
     <main class="main-content">
         <h1 class="page-title" id="welcome-title">لوحة تحكم المستخدم</h1>
 

@@ -90,38 +90,57 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             
             if (data.isAuthenticated) {
-                // تغيير العنوان
+                // 1. تحديث عنوان الترحيب
                 const titleEl = document.getElementById('welcome-title');
                 if (titleEl && data.name) {
                     titleEl.textContent = `لوحة التحكم الخاصة بـ ${data.name}`;
                 }
 
-                // عرض الرصيد (لو الدفع مفعل)
-                if (data.isPaymentActive === true && data.balance !== undefined) {
-                    const balanceEl = document.getElementById('user-balance-display');
-                    const numberEl = document.getElementById('balance-number');
-                    if (balanceEl && numberEl) {
-                        balanceEl.style.display = 'flex';
-                        balanceEl.style.alignItems = 'center';
-                        balanceEl.style.gap = '5px';
-                        numberEl.textContent = data.balance;
+                // 2. تحديث صورة البروفايل في الهيدر (الجديد) 📸
+                const headerImg = document.getElementById('header-profile-img');
+                if (headerImg) {
+                    // لو فيه صورة جاية من الداتابيز نستخدمها، لو مفيش نستخدم اللوجو
+                    headerImg.src = data.profile_picture || 'logo.jpg';
+                }
+
+                // 3. تحديث بيانات القائمة المنسدلة (الاسم والرصيد) ⬇️
+                const dropName = document.getElementById('dropdown-username');
+                const dropBalance = document.getElementById('dropdown-balance');
+                
+                if (dropName) dropName.textContent = data.name || data.username;
+                
+                // منطق عرض الرصيد في القائمة المنسدلة
+                if (data.isPaymentActive === true) {
+                    if (dropBalance) {
+                        dropBalance.innerHTML = `${data.balance || 0} <i class="fas fa-coins"></i>`;
+                        dropBalance.style.display = 'flex';
+                    }
+                    
+                    // (احتياطي) لو لسه بتستخدم العنصر القديم في مكان ما
+                    const oldBalanceEl = document.getElementById('user-balance-display');
+                    if (oldBalanceEl) {
+                        oldBalanceEl.style.display = 'flex';
+                        const numEl = document.getElementById('balance-number');
+                        if (numEl) numEl.textContent = data.balance || 0;
                         
-                        // إضافة زر الشحن (+) لو مش موجود
+                        // زر الشحن القديم (لو موجود)
                         if (!document.getElementById('add-balance-btn')) {
                             const addBtn = document.createElement('i');
                             addBtn.id = 'add-balance-btn';
                             addBtn.className = 'fas fa-plus-circle';
                             addBtn.style.cssText = 'color: #00ff88; cursor: pointer; margin-right: 5px; font-size: 1.1rem;';
-                            addBtn.onclick = openChargeModal; // ربط زر الشحن
-                            balanceEl.prepend(addBtn);
+                            addBtn.onclick = openChargeModal;
+                            oldBalanceEl.prepend(addBtn);
                         }
                     }
                 } else {
-                    const balanceEl = document.getElementById('user-balance-display');
-                    if (balanceEl) balanceEl.style.display = 'none';
+                    // إخفاء الرصيد لو الموقع مجاني
+                    if (dropBalance) dropBalance.style.display = 'none';
+                    const oldBalanceEl = document.getElementById('user-balance-display');
+                    if (oldBalanceEl) oldBalanceEl.style.display = 'none';
                 }
 
-                // كارت الأدمن
+                // 4. كارت الأدمن
                 if (data.role === 'admin') {
                     const adminCard = document.getElementById('admin-card');
                     if (adminCard) adminCard.style.display = 'block';
@@ -129,7 +148,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (e) { console.error('Failed to load user data:', e); }
     }
-    
     // ب. جلب المفضلة
     async function fetchFavorites() {
         if (!favoritesContainer) return;
@@ -430,3 +448,21 @@ async function resetPasswordViaOTP() {
         else { msg.textContent = '❌ ' + data.message; msg.style.color = 'red'; }
     } catch (e) { msg.textContent = 'خطأ'; msg.style.color = 'red'; }
 }
+// دالة فتح/غلق قائمة البروفايل
+function toggleProfileMenu() {
+    const menu = document.getElementById('profile-dropdown');
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+    }
+}
+
+// إغلاق القائمة عند الضغط في أي مكان خارجها
+document.addEventListener('click', function(e) {
+    const container = document.querySelector('.profile-menu-container');
+    const menu = document.getElementById('profile-dropdown');
+    if (container && !container.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
