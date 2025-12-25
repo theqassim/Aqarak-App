@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين - عقارك</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        :root { --bg: #0f0f0f; --card: #1c2630; --primary: #00ff88; --blue: #00d4ff; --text: #fff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .back-btn { color: #ccc; text-decoration: none; font-size: 1.2rem; transition: 0.3s; }
+        .back-btn:hover { color: var(--primary); }
+
+        /* شريط البحث */
+        .search-container { position: relative; max-width: 600px; margin: 0 auto 40px auto; }
+        .search-input { 
+            width: 100%; padding: 15px 50px 15px 20px; 
+            background: #222; border: 1px solid #444; border-radius: 50px; 
+            color: white; font-size: 1.1rem; transition: 0.3s; outline: none;
+        }
+        .search-input:focus { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+        .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #777; font-size: 1.2rem; }
+
+        /* كروت المستخدمين */
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        .user-card { 
+            background: var(--card); border: 1px solid #333; border-radius: 15px; 
+            padding: 20px; display: flex; flex-direction: column; align-items: center; 
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .user-card:hover { transform: translateY(-5px); border-color: var(--blue); }
+        
+        /* علامة التوثيق */
+        .verified-badge { 
+            position: absolute; top: 10px; left: 10px; 
+            color: var(--blue); font-size: 1.2rem; display: none; 
+        }
+        .user-card.is-verified { border-color: var(--blue); box-shadow: 0 0 15px rgba(0, 212, 255, 0.1); }
+        .user-card.is-verified .verified-badge { display: block; }
+
+        .user-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #444; margin-bottom: 15px; }
+        .user-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+        .user-username { color: #888; font-size: 0.9rem; margin-bottom: 5px; }
+        .user-phone { color: var(--primary); font-family: monospace; font-size: 1rem; margin-bottom: 20px; }
+
+        /* أزرار التحكم */
+        .action-btn { 
+            width: 100%; padding: 10px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; transition: 0.3s; 
+        }
+        .btn-verify { background: rgba(0, 212, 255, 0.1); color: var(--blue); border: 1px solid var(--blue); }
+        .btn-verify:hover { background: var(--blue); color: black; }
+        
+        .btn-unverify { background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; display: none; }
+        .btn-unverify:hover { background: #ff4444; color: white; }
+
+        /* تبديل الأزرار حسب الحالة */
+        .user-card.is-verified .btn-verify { display: none; }
+        .user-card.is-verified .btn-unverify { display: inline-block; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header-area">
+        <h2 style="margin:0; color:white;"><i class="fas fa-users-cog"></i> إدارة المستخدمين</h2>
+        <a href="admin-home" class="back-btn"><i class="fas fa-arrow-left"></i> عودة</a>
+    </div>
+
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search-input" class="search-input" placeholder="ابحث باسم المستخدم أو رقم الهاتف..." oninput="searchUsers()">
+    </div>
+
+    <div id="users-container" class="users-grid">
+        <p style="color:#777; text-align:center; width:100%;">جاري التحميل...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            searchUsers(); // تحميل أولي
+        });
+
+        let typingTimer;
+
+        function searchUsers() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(async () => {
+                const query = document.getElementById('search-input').value;
+                const container = document.getElementById('users-container');
+                
+                try {
+                    const res = await fetch(`/api/admin/users/search?query=${query}`);
+                    const users = await res.json();
+
+                    container.innerHTML = '';
+
+                    if (users.length === 0) {
+                        container.innerHTML = '<p style="color:#777; text-align:center; grid-column:1/-1;">لا يوجد مستخدمين بهذا الاسم</p>';
+                        return;
+                    }
+
+                    users.forEach(user => {
+                        const isVerified = user.is_verified ? 'is-verified' : '';
+                        const img = user.profile_picture || 'logo.png'; // لو مفيش صورة حط اللوجو
+
+                        const html = `
+                            <div class="user-card ${isVerified}" id="card-${user.id}">
+                                <i class="fas fa-check-circle verified-badge"></i>
+                                <img src="${img}" alt="User" class="user-img">
+                                <div class="user-name">${user.name || 'بدون اسم'}</div>
+                                <div class="user-username">@${user.username || '...'}</div>
+                                <div class="user-phone">${user.phone}</div>
+                                
+                                <button class="action-btn btn-verify" onclick="toggleVerify(${user.id}, true)">
+                                    <i class="fas fa-check"></i> توثيق الحساب
+                                </button>
+                                <button class="action-btn btn-unverify" onclick="toggleVerify(${user.id}, false)">
+                                    <i class="fas fa-times"></i> إزالة التوثيق
+                                </button>
+                            </div>
+                        `;
+                        container.innerHTML += html;
+                    });
+
+                } catch (e) {
+                    console.error(e);
+                    container.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ</p>';
+                }
+            }, 300); // Debounce
+        }
+
+        async function toggleVerify(userId, status) {
+            if(!confirm(status ? 'هل أنت متأكد من توثيق هذا الحساب؟' : 'هل أنت متأكد من إزالة التوثيق؟')) return;
+
+            try {
+                const res = await fetch('/api/admin/users/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, status })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // تحديث الشكل فوراً بدون ريفريش
+                    const card = document.getElementById(`card-${userId}`);
+                    if (status) {
+                        card.classList.add('is-verified');
+                    } else {
+                        card.classList.remove('is-verified');
+                    }
+                    // alert(data.message); (اختياري)
+                } else {
+                    alert('خطأ: ' + data.message);
+                }
+            } catch (e) {
+                alert('فشل الاتصال بالسيرفر');
+            }
+        }
+    </script>
+
+</body>
+</html>

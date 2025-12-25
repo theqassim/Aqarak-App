@@ -410,18 +410,6 @@ const storageProperties = new CloudinaryStorage({ cloudinary: cloudinary, params
 const uploadProperties = multer({ storage: storageProperties, limits: { fileSize: MAX_FILE_SIZE } });
 // ... (بعد إعدادات storageProperties الموجودة)
 
-// 👤 إعداد تخزين صور البروفايل (جديد)
-const storageProfiles = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'aqarak_users',
-        format: async () => 'webp',
-        public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
-        transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
-    }
-});
-const uploadProfile = multer({ storage: storageProfiles, limits: { fileSize: 5 * 1024 * 1024 } });
-
 app.use(cors({ origin: true, credentials: true })); 
 app.use(express.json());
 app.use(cookieParser());
@@ -2120,7 +2108,31 @@ app.post('/api/admin/send-notification', async (req, res) => {
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
-// ✅ تحديث بيانات البروفايل (صورة + يوزر نيم)
+// ============================================================
+// 👤 إعدادات رفع صور البروفايل (Cloudinary + Multer)
+// ============================================================
+
+const storageProfiles = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'aqarak_users',
+        format: async () => 'webp', // تحويل تلقائي لـ webp للأداء
+        public_id: (req, file) => `user-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+        transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }] // قص ذكي على الوجه
+    }
+});
+
+// تعريف المتغير لاستخدامه في الراوت
+const uploadProfile = multer({ 
+    storage: storageProfiles, 
+    limits: { fileSize: 5 * 1024 * 1024 } // حد أقصى 5 ميجا
+});
+
+
+// ============================================================
+// 📝 راوت تحديث البروفايل (الذي أنشأناه سابقاً)
+// ============================================================
+
 app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'سجل دخول أولاً' });
@@ -2130,7 +2142,7 @@ app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async
         const { newUsername } = req.body;
         const phone = decoded.phone;
 
-        // 1. جلب بيانات المستخدم الحالية
+        // 1. جلب بيانات المستخدم
         const userRes = await pgQuery('SELECT * FROM users WHERE phone = $1', [phone]);
         const currentUser = userRes.rows[0];
 
@@ -2138,58 +2150,98 @@ app.post('/api/user/update-profile', uploadProfile.single('profileImage'), async
         let updateValues = [];
         let paramCounter = 1;
 
-        // 2. معالجة تغيير الصورة (لو رفع صورة جديدة)
+        // 2. تحديث الصورة (إذا تم رفع ملف)
         if (req.file) {
             updateQuery += `profile_picture = $${paramCounter}, `;
-            updateValues.push(req.file.path);
+            updateValues.push(req.file.path); // رابط Cloudinary المباشر
             paramCounter++;
         }
 
-        // 3. معالجة تغيير اسم المستخدم (بشروط)
+        // 3. تحديث اسم المستخدم (بشروط)
         if (newUsername && newUsername !== currentUser.username) {
-            // أ. التحقق من المدة (مرة كل 30 يوم)
+            // التحقق من المدة (30 يوم)
             if (currentUser.last_username_change) {
                 const lastChange = new Date(currentUser.last_username_change);
-                const now = new Date();
-                const diffTime = Math.abs(now - lastChange);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+                const diffDays = Math.ceil(Math.abs(new Date() - lastChange) / (1000 * 60 * 60 * 24));
                 if (diffDays < 30) {
-                    return res.status(400).json({ 
-                        message: `عفواً، لا يمكنك تغيير اسم المستخدم إلا بعد ${30 - diffDays} يوم.` 
-                    });
+                    return res.status(400).json({ message: `متبقي ${30 - diffDays} يوم لتغيير الاسم مرة أخرى.` });
                 }
             }
-
-            // ب. التحقق من أن الاسم غير محجوز
+            // التحقق من التوفر
             const checkUser = await pgQuery('SELECT id FROM users WHERE username = $1', [newUsername]);
-            if (checkUser.rows.length > 0) {
-                return res.status(400).json({ message: 'اسم المستخدم هذا مستخدم بالفعل.' });
-            }
+            if (checkUser.rows.length > 0) return res.status(400).json({ message: 'الاسم مستخدم بالفعل' });
 
-            // ج. الموافقة على التغيير
             updateQuery += `username = $${paramCounter}, last_username_change = NOW(), `;
             updateValues.push(newUsername);
             paramCounter++;
         }
 
-        // لو مفيش حاجة اتغيرت
-        if (updateValues.length === 0) {
-            return res.json({ success: true, message: 'لم يتم تغيير أي بيانات' });
-        }
+        if (updateValues.length === 0) return res.json({ success: true, message: 'لم يتم تغيير شيء' });
 
-        // إزالة الفاصلة الزائدة في النهاية وإكمال الاستعلام
-        updateQuery = updateQuery.slice(0, -2); 
-        updateQuery += ` WHERE phone = $${paramCounter}`;
+        updateQuery = updateQuery.slice(0, -2) + ` WHERE phone = $${paramCounter}`;
         updateValues.push(phone);
 
         await pgQuery(updateQuery, updateValues);
-
-        res.json({ success: true, message: 'تم تحديث الملف الشخصي بنجاح ✅' });
+        res.json({ success: true, message: 'تم التحديث بنجاح ✅' });
 
     } catch (error) {
         console.error("Update Profile Error:", error);
-        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+// ==========================================
+// 🛡️ نظام إدارة المستخدمين والتوثيق (Admin)
+// ==========================================
+
+// 1. البحث عن المستخدمين
+app.get('/api/admin/users/search', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+
+        const { query } = req.query; // الكلمة اللي بيبحث عنها
+        let sql, params;
+
+        if (query) {
+            // بحث باليوزر نيم أو رقم الهاتف
+            sql = `SELECT id, name, username, phone, is_verified, profile_picture, created_at 
+                   FROM users 
+                   WHERE username ILIKE $1 OR phone ILIKE $1 
+                   ORDER BY created_at DESC LIMIT 20`;
+            params = [`%${query}%`];
+        } else {
+            // لو مفيش بحث، هات آخر المسجلين
+            sql = `SELECT id, name, username, phone, is_verified, profile_picture, created_at 
+                   FROM users ORDER BY created_at DESC LIMIT 20`;
+            params = [];
+        }
+
+        const result = await pgQuery(sql, params);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+
+// 2. تفعيل/إلغاء توثيق مستخدم
+app.post('/api/admin/users/verify', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'غير مصرح' });
+
+        const { userId, status } = req.body; // status: true (وثق) / false (الغاء)
+
+        await pgQuery('UPDATE users SET is_verified = $1 WHERE id = $2', [status, userId]);
+        
+        res.json({ success: true, message: status ? 'تم توثيق الحساب ✅' : 'تم إزالة التوثيق ❌' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ' });
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
