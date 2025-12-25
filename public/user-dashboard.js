@@ -1,30 +1,28 @@
 // ==========================================
-// 🛠️ إعدادات الصفحة والتحقق من المستخدم
+// 🛠️ 1. إعدادات الصفحة والتحقق من المستخدم
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    updateGreeting(); // ✅ 1. تحديث رسالة الترحيب
-    await loadUserData(); // 2. تحميل بيانات المستخدم
-    checkNotifications(); // 3. تشغيل الإشعارات
+    updateGreeting();      // تحديث الترحيب
+    await loadUserData();  // تحميل البيانات
+    checkNotifications();  // تشغيل الإشعارات
 
-    // ✅ 4. تفعيل زر عرض المفضلة
+    // تفعيل زر عرض المفضلة
     const favBtn = document.getElementById('show-favorites');
     if (favBtn) {
         favBtn.addEventListener('click', toggleFavorites);
     }
 });
 
-// ✅ دالة الترحيب الذكي (صباح/مساء)
+// ✅ دالة الترحيب الذكي
 function updateGreeting() {
     const hour = new Date().getHours();
     const greetingText = document.getElementById('time-greeting');
     const greetingIcon = document.getElementById('greeting-icon');
     const dateEl = document.getElementById('current-date');
 
-    // تحديث التاريخ
     if(dateEl) {
-        const options = { weekday: 'long', day: 'numeric', month: 'long' };
-        dateEl.textContent = new Date().toLocaleDateString('ar-EG', options);
+        dateEl.textContent = new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
     }
 
     if (!greetingText || !greetingIcon) return;
@@ -32,30 +30,30 @@ function updateGreeting() {
     if (hour >= 5 && hour < 12) {
         greetingText.textContent = 'صباح الخير';
         greetingIcon.className = 'fas fa-sun';
-        greetingIcon.style.color = '#ffd700'; // ذهبي
+        greetingIcon.style.color = '#ffd700';
     } else if (hour >= 12 && hour < 17) {
         greetingText.textContent = 'طاب يومك';
         greetingIcon.className = 'fas fa-cloud-sun';
-        greetingIcon.style.color = '#ff9800'; // برتقالي
+        greetingIcon.style.color = '#ff9800';
     } else {
         greetingText.textContent = 'مساء الخير';
         greetingIcon.className = 'fas fa-moon';
-        greetingIcon.style.color = '#00d4ff'; // أزرق ليلي
+        greetingIcon.style.color = '#00d4ff';
     }
 }
 
-// ✅ دالة تحميل بيانات المستخدم وتحديث الواجهة
+// ✅ دالة تحميل بيانات المستخدم
 window.loadUserData = async function() {
     try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
 
         if (data.isAuthenticated) {
-            // تحديث النصوص
+            // شارة التوثيق
             const verifiedBadge = data.is_verified ? 
                 `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-right:5px; vertical-align:middle; box-shadow:0 0 5px rgba(255, 215, 0, 0.5);"></i>` : '';
 
-            // تحديث الاسم في القائمة والترحيب
+            // تحديث الأسماء
             const usernameEl = document.getElementById('dropdown-username');
             const welcomeEl = document.getElementById('welcome-title');
             
@@ -73,17 +71,15 @@ window.loadUserData = async function() {
                 }
             }
 
-            // تحديث زر البروفايل (صورة أو هامبرجر)
+            // تحديث صورة البروفايل
             const profileBtn = document.getElementById('dashboard-profile-btn');
             if (profileBtn) {
-                // إذا كان لديه صورة بروفايل حقيقية (ليست اللوجو الافتراضي)
                 if (data.profile_picture && !data.profile_picture.includes('logo.png')) {
                     profileBtn.innerHTML = `
                         <img src="${data.profile_picture}" alt="Profile" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                         <span id="menu-notif-badge" class="menu-badge">0</span>
                     `;
                 } else {
-                    // إذا لم يكن لديه صورة، نضع أيقونة القائمة
                     profileBtn.innerHTML = `
                         <i class="fas fa-bars"></i>
                         <span id="menu-notif-badge" class="menu-badge">0</span>
@@ -91,14 +87,14 @@ window.loadUserData = async function() {
                 }
             }
 
-            // إظهار كارت الأدمن إذا كان مسؤولاً
+            // إظهار لوحة الأدمن
             if (data.role === 'admin') {
                 const adminCard = document.getElementById('admin-card');
                 if (adminCard) adminCard.style.display = 'block';
             }
 
         } else {
-            window.location.href = 'index.html'; // إعادة توجيه إذا لم يكن مسجلاً
+            window.location.href = 'index.html';
         }
     } catch (e) {
         console.error("Load User Data Error:", e);
@@ -106,11 +102,7 @@ window.loadUserData = async function() {
 };
 
 // ==========================================
-// ❤️ 2. منطق المفضلة (الجديد)
-// ==========================================
-
-// ==========================================
-// ❤️ 2. منطق المفضلة (المحسن)
+// ❤️ 2. منطق المفضلة (تم تصحيح الرابط)
 // ==========================================
 
 async function toggleFavorites() {
@@ -118,51 +110,53 @@ async function toggleFavorites() {
     const container = document.getElementById('favorites-listings');
     const btnText = document.getElementById('show-favorites');
     
-    // التبديل بين الفتح والإغلاق
+    // 1. التبديل بين الفتح والإغلاق
     if (area.style.display === 'block') {
         area.style.display = 'none';
-        btnText.innerHTML = 'عرض المفضلة';
+        if(btnText) btnText.innerHTML = 'عرض المفضلة';
         return;
     }
 
     area.style.display = 'block';
-    btnText.innerHTML = 'إخفاء المفضلة';
+    if(btnText) btnText.innerHTML = 'إخفاء المفضلة';
 
-    // تمرير ناعم للقسم
+    // 2. تمرير ناعم للقسم
     setTimeout(() => {
         area.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 
-    // عرض مؤشر التحميل
+    // 3. عرض مؤشر التحميل
     container.innerHTML = `
-        <div style="grid-column: 1/-1; text-align:center; padding:40px;">
-            <i class="fas fa-circle-notch fa-spin fa-2x" style="color:var(--neon-primary);"></i>
-            <p style="color:#aaa; margin-top:10px;">جاري جلب عقاراتك المميزة...</p>
+        <div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--neon-primary);">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+            <p style="margin-top:10px; color:#aaa;">جاري جلب عقاراتك المميزة...</p>
         </div>`;
 
     try {
-        const res = await fetch('/api/user/favorites');
-        if (!res.ok) throw new Error('Network response was not ok');
+        // 🔥 تم التصحيح: الرابط الآن /api/favorites بدلاً من /api/user/favorites
+        const res = await fetch('/api/favorites');
+        
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         
         const properties = await res.json();
         container.innerHTML = '';
 
         if (properties.length === 0) {
             container.innerHTML = `
-                <div style="grid-column: 1/-1; text-align:center; padding:30px; border:1px dashed #444; border-radius:15px;">
-                    <i class="far fa-heart" style="font-size:3rem; color:#444; margin-bottom:15px;"></i>
-                    <p style="color:#888;">لم تقم بإضافة أي عقارات للمفضلة بعد.</p>
-                    <a href="home" class="btn-neon-auth" style="display:inline-block; width:auto; padding:5px 20px; margin-top:10px; font-size:0.9rem;">تصفح العقارات</a>
+                <div style="grid-column: 1/-1; text-align:center; padding:30px; border:1px dashed #444; border-radius:15px; color:#888;">
+                    <i class="far fa-heart" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
+                    <p>قائمة المفضلة فارغة حالياً.</p>
                 </div>`;
             return;
         }
 
+        // 4. بناء الكروت
         properties.forEach(prop => {
             const price = parseInt(prop.price).toLocaleString('en-US');
-            const location = prop.location || 'موقع غير محدد'; // تأكد أن الـ API يرجع الموقع
-            
+            const location = prop.location || 'موقع مميز'; 
+
             const html = `
-                <div class="fav-card" id="fav-card-${prop.id}">
+                <div class="fav-card" id="fav-item-${prop.id}">
                     <a href="property-details?id=${prop.id}" class="fav-img-link">
                         <img src="${prop.imageUrl || 'logo.png'}" class="fav-img" loading="lazy" alt="${prop.title}">
                         <div class="price-badge">${price} ج.م</div>
@@ -170,13 +164,15 @@ async function toggleFavorites() {
                     <div class="fav-content">
                         <div>
                             <div class="fav-title" title="${prop.title}">${prop.title}</div>
-                            <div class="fav-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>
+                            <div class="fav-location" style="color:#aaa; font-size:0.8rem; margin-bottom:10px;">
+                                <i class="fas fa-map-marker-alt"></i> ${location}
+                            </div>
                         </div>
                         <div class="fav-actions">
                             <a href="property-details?id=${prop.id}" class="btn-fav-view">
                                 <i class="fas fa-eye"></i> التفاصيل
                             </a>
-                            <button class="btn-fav-remove" onclick="removeFavorite(${prop.id})" title="حذف من المفضلة">
+                            <button class="btn-fav-remove" onclick="removeFavorite(${prop.id})" title="حذف">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -187,50 +183,46 @@ async function toggleFavorites() {
         });
 
     } catch (e) {
-        console.error(e);
-        container.innerHTML = `<p style="text-align:center; color:#ff4444; grid-column: 1/-1;">حدث خطأ أثناء تحميل المفضلة، حاول مرة أخرى.</p>`;
+        console.error("Favorite Error:", e);
+        container.innerHTML = `<p style="text-align:center; color:#ff4444; grid-column: 1/-1;">حدث خطأ أثناء تحميل المفضلة (${e.message}).</p>`;
     }
 }
 
-// دالة الحذف (مع أنيميشن الحذف السلس)
+// دالة الحذف (مع أنيميشن)
 window.removeFavorite = async function(id) {
     if (!confirm('هل أنت متأكد من إزالة هذا العقار من المفضلة؟')) return;
     
-    // تغيير أيقونة الزر لتدل على التحميل
-    const card = document.getElementById(`fav-card-${id}`);
-    const btn = card.querySelector('.btn-fav-remove');
-    const originalIcon = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    const card = document.getElementById(`fav-item-${id}`);
+    if(card) card.style.opacity = '0.5'; // تأثير بصري فوري
 
     try {
         const res = await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
         
         if (res.ok) {
-            // تأثير اختفاء الكارت قبل حذفه من الـ DOM
-            card.style.transform = 'scale(0.9)';
-            card.style.opacity = '0';
-            
-            setTimeout(() => {
-                card.remove();
-                // التحقق مما إذا كانت القائمة فارغة الآن
-                const container = document.getElementById('favorites-listings');
-                if (container.children.length === 0) {
-                    container.innerHTML = `
-                        <div style="grid-column: 1/-1; text-align:center; padding:30px; color:#888;">
-                            تم حذف جميع العناصر.
-                        </div>`;
-                }
-            }, 300); // الانتظار حتى ينتهي الأنيميشن
+            if(card) {
+                // أنيميشن اختفاء
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    card.remove();
+                    // إذا أصبحت القائمة فارغة، نحدث العرض
+                    const container = document.getElementById('favorites-listings');
+                    if (container && container.children.length === 0) {
+                        toggleFavorites(); // لإعادة التحميل وإظهار رسالة "فارغة"
+                        setTimeout(toggleFavorites, 50); 
+                    }
+                }, 300);
+            }
         } else {
             alert('فشل الحذف، حاول مرة أخرى.');
-            btn.innerHTML = originalIcon;
+            if(card) card.style.opacity = '1';
         }
     } catch (e) {
         console.error(e);
-        alert('خطأ في الاتصال بالخادم');
-        btn.innerHTML = originalIcon;
+        alert('خطأ في الاتصال');
+        if(card) card.style.opacity = '1';
     }
 };
+
 // ==========================================
 // 🔔 3. نظام الإشعارات
 // ==========================================
@@ -244,7 +236,7 @@ async function checkNotifications() {
         const list = document.getElementById('menu-notif-list');
         const countText = document.getElementById('notif-count-text');
 
-        // تحديث العداد (Badge)
+        // تحديث العداد
         if (data.unreadCount > 0) {
             if (badge) {
                 badge.style.display = 'flex';
@@ -261,10 +253,10 @@ async function checkNotifications() {
         // تعبئة القائمة
         if (list && data.notifications && data.notifications.length > 0) {
             list.innerHTML = data.notifications.map(n => `
-                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" style="padding:10px; border-bottom:1px solid #333; background:${n.is_read ? 'transparent' : 'rgba(0, 255, 136, 0.05)'}; transition:0.3s;">
+                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1); background:${n.is_read ? 'transparent' : 'rgba(0, 255, 136, 0.05)'}; transition:0.3s; position:relative;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                         <strong style="color:white; font-size:0.85rem;">${n.title}</strong>
-                        <span style="font-size:0.65rem; color:#777;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+                        <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" style="background:none; border:none; color:#ff4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
                     </div>
                     <p style="color:#aaa; font-size:0.8rem; margin:0;">${n.message}</p>
                 </div>
@@ -291,7 +283,7 @@ window.toggleProfileMenu = async function() {
     } else {
         menu.style.display = 'block';
         
-        // عند الفتح: إخفاء العداد وتصفير الإشعارات
+        // عند الفتح: إخفاء العداد الخارجي وتصفير القراءة في قاعدة البيانات
         if (badge && badge.style.display !== 'none') {
             badge.style.display = 'none';
             if (countText) countText.textContent = '';
@@ -314,14 +306,15 @@ window.logoutUser = async function() {
 window.addEventListener('click', function(e) {
     const container = document.querySelector('.profile-menu-container');
     const menu = document.getElementById('profile-dropdown');
+    const isDelete = e.target.closest('.notif-delete-btn'); // استثناء زر الحذف
     
-    if (container && menu && !container.contains(e.target) && !menu.contains(e.target)) {
+    if (container && menu && !container.contains(e.target) && !isDelete) {
         menu.style.display = 'none';
     }
 });
 
 // ==========================================
-// 💳 5. منطق شحن المحفظة (Modal & Logic)
+// 💳 5. منطق شحن المحفظة
 // ==========================================
 
 window.openChargeModal = function() {
@@ -369,6 +362,7 @@ window.startChargeProcess = async function() {
     if (!points || points < 10) return alert('أقل عدد للنقاط هو 10');
 
     const btn = document.querySelector('#charge-modal button[onclick="startChargeProcess()"]');
+    const originalText = btn.innerHTML;
     btn.innerHTML = 'جاري المعالجة...';
     btn.disabled = true;
 
@@ -381,7 +375,7 @@ window.startChargeProcess = async function() {
     if (selectedMethod === 'wallet') {
         const walletNum = document.getElementById('wallet-number').value;
         if (!walletNum || walletNum.length < 11) {
-            btn.innerHTML = 'تأكيد وشراء النقاط';
+            btn.innerHTML = originalText;
             btn.disabled = false;
             return alert('أدخل رقم محفظة صحيح');
         }
@@ -400,19 +394,19 @@ window.startChargeProcess = async function() {
             window.location.href = data.url;
         } else {
             alert('خطأ في الاتصال ببوابة الدفع');
-            btn.innerHTML = 'تأكيد وشراء النقاط';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     } catch (e) {
         console.error(e);
         alert('حدث خطأ');
-        btn.innerHTML = 'تأكيد وشراء النقاط';
+        btn.innerHTML = originalText;
         btn.disabled = false;
     }
 };
 
 // ==========================================
-// 🔐 6. منطق تغيير كلمة المرور (Modal)
+// 🔐 6. منطق تغيير كلمة المرور
 // ==========================================
 
 const passModalBtn = document.getElementById('open-password-modal');

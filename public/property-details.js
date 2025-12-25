@@ -5,10 +5,10 @@ const supabaseUrl = 'https://scncapmhnshjpocenqpm.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// --- 1. Style Injection (حقن الستايلات الخاصة بالجافاسكريبت) ---
+// --- 1. Style Injection (حقن الستايلات) ---
 const style = document.createElement('style');
 style.innerHTML = `
-    /* تصميم مودال الحالة (Success/Error) */
+    /* تصميم مودال الحالة */
     .status-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.95); z-index: 10000; display: flex;
@@ -20,9 +20,7 @@ style.innerHTML = `
         border: 1px solid #333; position: relative;
         box-shadow: 0 0 30px rgba(0,0,0,0.5);
     }
-    .status-icon-box {
-        font-size: 3.5rem; margin-bottom: 20px;
-    }
+    .status-icon-box { font-size: 3.5rem; margin-bottom: 20px; }
     .status-note-box {
         background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;
         margin: 20px 0; text-align: right; border-right: 4px solid;
@@ -32,7 +30,25 @@ style.innerHTML = `
         font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
     }
     
-    /* زر الفيديو الحديث */
+    /* 🔥 تصميم علامة التوثيق الذهبية (Facebook Style) 🔥 */
+    .fb-gold-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;  /* حجم الدائرة */
+        height: 18px;
+        background-color: #FFD700; /* اللون الذهبي */
+        color: #fff; /* لون علامة الصح أبيض */
+        border-radius: 50%;
+        font-size: 10px; /* حجم علامة الصح */
+        margin: 0 5px;
+        border: 1.5px solid #fff; /* حدود بيضاء لتفصيلها عن الخلفية */
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); /* توهج خفيف */
+        vertical-align: middle;
+        transform: translateY(-1px); /* ضبط المحاذاة مع النص */
+    }
+
+    /* باقي الستايلات (فيديو، مودال تعديل، إلخ) */
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -42,26 +58,16 @@ style.innerHTML = `
     }
     .video-btn-modern:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(192, 57, 43, 0.6); }
     
-    /* صندوق الزائر */
     .guest-action-box {
         text-align: center; padding: 30px 20px; background: rgba(255, 255, 255, 0.03);
         border: 1px dashed #00ff88; border-radius: 15px; margin-top: 20px;
     }
-    .guest-btns-wrapper {
-        display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;
-    }
-    .btn-login-action {
-        background: transparent; border: 2px solid #00ff88; color: #00ff88;
-        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;
-    }
+    .guest-btns-wrapper { display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+    .btn-login-action { background: transparent; border: 2px solid #00ff88; color: #00ff88; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s; }
     .btn-login-action:hover { background: #00ff88; color: #000; }
-    .btn-register-action {
-        background: #00ff88; border: 2px solid #00ff88; color: #000;
-        padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;
-    }
+    .btn-register-action { background: #00ff88; border: 2px solid #00ff88; color: #000; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s; }
     .btn-register-action:hover { background: transparent; color: #00ff88; }
 
-    /* مودال التعديل والصور */
     .edit-modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
@@ -74,10 +80,7 @@ style.innerHTML = `
     }
     .edit-input-group { margin-bottom: 15px; }
     .edit-input-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold; }
-    .edit-input { 
-        width: 100%; padding: 12px; background: #2a3b4c; border: 1px solid #444; 
-        color: #fff; border-radius: 8px; outline: none; font-size: 1rem; transition: 0.3s;
-    }
+    .edit-input { width: 100%; padding: 12px; background: #2a3b4c; border: 1px solid #444; color: #fff; border-radius: 8px; outline: none; font-size: 1rem; transition: 0.3s; }
     .edit-input:focus { border-color: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.2); }
     .edit-actions { display: flex; gap: 10px; margin-top: 25px; }
     .btn-save { background: linear-gradient(45deg, #00ff88, #00cc6a); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; transition: 0.3s; }
@@ -85,16 +88,11 @@ style.innerHTML = `
     .btn-cancel { background: #ff4444; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.3s; }
     .btn-cancel:hover { background: #cc0000; }
 
-    /* شبكة الصور في التعديل */
     .img-grid-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
     .img-box { position: relative; width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid #444; transition: 0.3s; }
     .img-box img { width: 100%; height: 100%; object-fit: cover; }
     .img-box:hover { border-color: #00ff88; }
-    .delete-img-btn { 
-        position: absolute; top: 2px; right: 2px; background: rgba(255,68,68,0.9); color: white; 
-        border: none; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; z-index: 10;
-    }
+    .delete-img-btn { position: absolute; top: 2px; right: 2px; background: rgba(255,68,68,0.9); color: white; border: none; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
     .delete-img-btn:hover { background: #ff0000; transform: scale(1.1); }
 `;
 document.head.appendChild(style);
@@ -242,7 +240,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         let currentUserPhone = null;
         let isAuthenticated = false;
 
-        // Auth Check
         try {
             const authRes = await fetch('/api/auth/me');
             const authData = await authRes.json();
@@ -250,7 +247,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 userRole = authData.role; 
                 currentUserPhone = authData.phone;
                 isAuthenticated = true; 
-                // ✅ حفظنا حالة الدفع هنا عشان نستخدمها وقت التعديل
                 window.isPaymentActive = authData.isPaymentActive; 
             }
         } catch (e) { console.log("Guest User"); }
@@ -284,9 +280,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let publisherHTML = '';
         let publisherStatsBadge = '';
 
-        // ✅ تعريف علامة التوثيق الذهبية
+        // 🔥 هنا التعديل: علامة التوثيق الذهبية بستايل فيسبوك 🔥
         const verifiedBadge = property.is_verified ? 
-            `<i class="fas fa-check" style="background:#FFD700; color:white; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; border:1px solid white; margin-right:5px; margin-left:5px; vertical-align:middle; box-shadow:0 0 5px rgba(255, 215, 0, 0.5);" title="بائع موثق"></i>` : '';
+            `<span class="fb-gold-badge" title="موثق"><i class="fas fa-check"></i></span>` : '';
 
         if (property.publisherUsername) {
             try {
@@ -315,9 +311,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                         <span><i class="fas fa-user-circle"></i> تم النشر بواسطة:</span>
-                        <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold;">
+                        <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold; display:flex; align-items:center;">
                             ${property.sellerName || 'مستخدم عقارك'} ${verifiedBadge}
                         </a>
                         ${publisherStatsBadge}
@@ -327,8 +323,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             publisherHTML = `
                 <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc;">
-                        <i class="fas fa-user-circle"></i> تم النشر بواسطة: ${property.sellerName || 'عقارك'} ${verifiedBadge}
+                    <p style="color: #ccc; display:flex; align-items:center;">
+                        <i class="fas fa-user-circle" style="margin-left:5px;"></i> تم النشر بواسطة: 
+                        <span style="color: #00ff88; font-weight: bold; display:flex; align-items:center; margin-right:5px;">
+                             ${property.sellerName || 'عقارك'} ${verifiedBadge}
+                        </span>
                     </p>
                 </div>
             `;
@@ -356,10 +355,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isOwner || isAdmin) {
                 const controlTitle = isAdmin ? 'تحكم الإدارة 🛡️' : 'أنت صاحب هذا العقار 👑';
                 
-                // 🔥 التعديل هنا: فحص حالة الدفع قبل إظهار زر التمييز
                 let featureBtnHTML = '';
-                
-                // نظهر الزرار فقط لو: (الدفع شغال) و (العقار مش مميز أصلاً)
                 if (window.isPaymentActive && !property.isFeatured) {
                     featureBtnHTML = `
                         <button onclick="openFeatureModal(${property.id})" class="btn-neon-auth" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border:none; color: black; flex: 1.5; margin-bottom:10px; width:100%; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); position: relative; overflow: hidden;">
@@ -381,9 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <p style="color: ${isAdmin ? '#e91e63' : '#00ff88'}; font-weight: bold; margin-bottom: 15px; font-size: 1.1rem;">
                             ${controlTitle}
                         </p>
-                        
                         ${featureBtnHTML}
-
                         <div style="display: flex; gap: 10px; justify-content: center;">
                             <button onclick="openEditPropertyModal()" class="btn-neon-auth" style="background: rgba(33, 150, 243, 0.1); border-color: #2196F3; color: #2196F3; flex: 1;">
                                 <i class="fas fa-edit"></i> تعديل
@@ -396,7 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 
                 injectEditModal(property);
-                // تفعيل المودال فقط لو الدفع شغال
                 if (window.isPaymentActive) injectFeatureModal(); 
             }
             let isFav = false;
@@ -448,7 +441,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (property.floors_count && parseInt(property.floors_count) > 0) specsHTML += `<li><span>عدد الأدوار:</span> ${property.floors_count} <i class="fas fa-building"></i></li>`;
         if (property.finishing_type && property.finishing_type !== 'undefined') specsHTML += `<li><span>التشطيب:</span> ${property.finishing_type} <i class="fas fa-paint-roller"></i></li>`;
 
-        // ✅ HTML Rendering
         container.innerHTML = `
             <div class="property-detail-content">
                 <h1 class="page-title">${property.title} ${window.getTypeTag(property.type)}</h1>
@@ -501,9 +493,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="service-tag"><i class="fas fa-check-circle"></i> ${service.trim()}</span>
             `).join('')}
         </div>
-        <p style="font-size:0.8rem; color:#888; margin-top:10px;">
-            * هذه البيانات تقريبية بناءً على الموقع الجغرافي المسجل لدينا.
-        </p>
     </div>
 </div>
 ` : ''}
@@ -539,7 +528,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        // Admin Badge Controls
         if (userRole === 'admin') {
             const box = document.getElementById('admin-secret-box');
             if(box) {
@@ -570,7 +558,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Image Gallery Logic
         const mainImg = document.getElementById('property-main-image');
         const thumbsContainer = document.getElementById('image-thumbnails');
         const update = () => updateMainImage(mainImg);
@@ -591,7 +578,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSimilarProperties(property);
         if(window.setupLightbox) window.setupLightbox(imageUrls);
 
-        // Offer Form Logic
         const offerForm = document.getElementById('offer-form');
         if (offerForm) {
             offerForm.addEventListener('submit', async (e) => {
@@ -611,7 +597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ============================================================
-// 🛠️ Edit Modal Functions (إدارة الصور والتعديل)
+// 🛠️ Edit Modal Functions
 // ============================================================
 let currentEditImages = []; 
 let newEditFiles = [];
@@ -625,7 +611,6 @@ function injectEditModal(prop) {
         else if(prop.imageUrl) currentEditImages = [prop.imageUrl];
     } catch (e) { currentEditImages = []; }
 
-    // إزالة أي مودال قديم
     const oldModal = document.getElementById('edit-modal');
     if(oldModal) oldModal.remove();
 
@@ -694,7 +679,7 @@ function injectEditModal(prop) {
         e.preventDefault();
         if (window.isPaymentActive) {
             if (!confirm('⚠️ تنبيه هام:\nتعديل العقار سيخصم 1 نقطة من رصيدك.\n\nهل أنت متأكد من المتابعة؟')) {
-                return; // إلغاء العملية لو داس Cancel
+                return;
             }
         }
         const btn = e.target.querySelector('.btn-save');
@@ -756,7 +741,6 @@ function renderEditImages() {
     });
 }
 
-// Window scoped functions
 window.removeOldImage = (index) => { currentEditImages.splice(index, 1); renderEditImages(); };
 window.removeNewFile = (index) => { newEditFiles.splice(index, 1); renderEditImages(); };
 window.openEditPropertyModal = () => { document.getElementById('edit-modal').style.display = 'flex'; };
@@ -790,7 +774,6 @@ window.setupLightbox = (images) => {
     document.addEventListener('keydown', (e) => { if (lightbox.style.display === 'flex') { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') nextBtn.click(); if (e.key === 'ArrowRight') prevBtn.click(); } });
 };
 
-// Show Status Modal Helper
 window.showStatusModal = (type, title, subtitle, note = '') => {
     const isSuccess = type === 'success';
     const isRejected = type === 'rejected';
@@ -812,8 +795,9 @@ window.showStatusModal = (type, title, subtitle, note = '') => {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
+
 // ============================================================
-// 💎 Premium Feature Modal (كود المودال والزرار الناقص)
+// 💎 Premium Feature Modal
 // ============================================================
 function injectFeatureModal() {
     const old = document.getElementById('feature-modal-overlay');
@@ -854,7 +838,6 @@ function injectFeatureModal() {
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-// تعريف الدوال لتكون متاحة للـ HTML
 window.openFeatureModal = (propId) => {
     window.currentFeaturePropId = propId;
     const modal = document.getElementById('feature-modal-overlay');
