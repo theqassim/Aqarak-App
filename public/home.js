@@ -10,40 +10,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ✅ دالة ضبط هيدر الموبايل الجديد
 // ✅ دالة ضبط هيدر الموبايل (المعدلة)
+// ✅ دالة ضبط هيدر الموبايل (نظام الضيف والمستخدم)
 async function updateMobileHeader() {
     try {
         const response = await fetch('/api/auth/me');
         const data = await response.json();
 
-        const mobName = document.getElementById('mob-user-name');
-        const mobBalance = document.getElementById('mob-user-balance');
-        const guestActions = document.getElementById('mob-guest-actions');
-        const userActions = document.getElementById('mob-user-actions');
+        const mobCenterAction = document.getElementById('mob-center-action');
+        const mobMenuToggle = document.getElementById('mob-menu-toggle');
+        const mobGuestBtns = document.getElementById('mob-guest-btns');
 
         if (data.isAuthenticated) {
-            // بيانات المستخدم
-            mobName.textContent = data.name || 'مستخدم عقارك';
-            if(mobBalance) {
-                if(data.isPaymentActive) {
-                    mobBalance.textContent = `${data.balance || 0} نقطة`;
-                    mobBalance.style.display = 'block';
-                } else {
-                    mobBalance.style.display = 'none';
-                }
-            }
+            // 🟢 مستخدم مسجل: أظهر زر الإضافة والقائمة
+            if(mobCenterAction) mobCenterAction.style.display = 'block';
+            if(mobMenuToggle) mobMenuToggle.style.display = 'flex';
+            if(mobGuestBtns) mobGuestBtns.style.display = 'none';
+
+            // تعبئة بيانات القائمة
+            const mobName = document.getElementById('mob-user-name');
+            const mobBalance = document.getElementById('mob-user-balance');
             
-            // إظهار زر الخروج وإخفاء زر الدخول
-            if(userActions) userActions.style.display = 'block';
-            if(guestActions) guestActions.style.display = 'none';
-
+            if(mobName) mobName.textContent = data.name || 'مستخدم عقارك';
+            if(mobBalance && data.isPaymentActive) {
+                mobBalance.textContent = `${data.balance || 0} نقطة`;
+                mobBalance.style.display = 'block';
+            }
         } else {
-            // وضع الزائر
-            mobName.textContent = 'زائر';
-            if(mobBalance) mobBalance.style.display = 'none';
-
-            // إظهار زر الدخول وإخفاء زر الخروج
-            if(userActions) userActions.style.display = 'none';
-            if(guestActions) guestActions.style.display = 'block';
+            // 🔴 زائر: أظهر زرارين الدخول والتسجيل فقط
+            if(mobCenterAction) mobCenterAction.style.display = 'none';
+            if(mobMenuToggle) mobMenuToggle.style.display = 'none';
+            if(mobGuestBtns) mobGuestBtns.style.display = 'flex';
         }
     } catch (e) { console.error("Mobile Header Error:", e); }
 }
@@ -82,7 +78,7 @@ async function updateNavigation() {
                 <a href="all-properties" class="nav-button">جميع العقارات</a>
                 <a href="all-properties.html?type=buy" class="nav-button">شراء</a>
                 <a href="all-properties.html?type=rent" class="nav-button">ايجار</a>
-                <a href="user-dashboard" class="nav-button">القائمة</a> 
+                <a href="user-dashboard" class="nav-button">حسابي</a> 
                 <a href="seller-dashboard" class="sell-btn">اعرض عقارك!</a>
             `;
         } else {
