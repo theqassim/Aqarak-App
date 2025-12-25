@@ -198,13 +198,8 @@
                         </div>
                     </div>
 
-                    <a href="home" class="dropdown-item">
-                        <i class="fas fa-home"></i> الرئيسية
-                    </a>
-                    
-                    <a href="edit-profile" class="dropdown-item"> 
-                        <i class="fas fa-user-edit"></i> تعديل حسابي
-                    </a>
+                    <a href="home" class="dropdown-link"><i class="fas fa-home"></i> الرئيسية</a>
+                    <a href="edit-profile" class="dropdown-link"><i class="fas fa-user-edit"></i> تعديل حسابي</a>
 
                     <div class="dropdown-item logout-btn" style="color:#ff4444;">
                         <i class="fas fa-sign-out-alt"></i> تسجيل خروج
@@ -388,7 +383,7 @@
             area.style.display = 'block';
             container.innerHTML = '<p style="text-align:center; color:#00ff88; padding:20px;"><i class="fas fa-circle-notch fa-spin"></i> جاري التحميل...</p>';
             try {
-                const res = await fetch('/api/user/favorites'); 
+                const res = await fetch('/api/favorites'); 
                 if(!res.ok) throw new Error('Failed to fetch');
                 const props = await res.json();
                 container.innerHTML = '';
@@ -421,7 +416,7 @@
         async function removeFavorite(id) {
             if(!confirm('حذف من المفضلة؟')) return;
             try {
-                await fetch(`/api/user/favorites/${id}`, { method: 'DELETE' });
+                await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
                 document.getElementById('show-favorites').click(); 
                 document.getElementById('show-favorites').click(); 
             } catch(e) { alert('خطأ في الحذف'); }

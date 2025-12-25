@@ -123,7 +123,7 @@ async function toggleFavorites() {
     container.innerHTML = '<div style="text-align:center; color:var(--neon-primary); padding:20px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
 
     try {
-        const res = await fetch('/api/user/favorites');
+        const res = await fetch('/api/favorites');
         if (!res.ok) throw new Error('Failed to fetch');
         
         const properties = await res.json();
@@ -167,7 +167,7 @@ window.removeFavorite = async function(id) {
     if (!confirm('هل أنت متأكد من الحذف من المفضلة؟')) return;
     
     try {
-        const res = await fetch(`/api/user/favorites/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
         if (res.ok) {
             // إعادة تحميل القائمة
             toggleFavorites(); // يغلق
