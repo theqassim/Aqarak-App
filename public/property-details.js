@@ -418,8 +418,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i> يجب تسجيل الدخول للتواصل مع المالك.
                     </p>
                     <div class="guest-btns-wrapper">
-                        <a href="login" class="btn-login-action">تسجيل دخول</a>
-                        <a href="register" class="btn-register-action">إنشاء حساب</a>
+                        <a href="index" class="btn-login-action">تسجيل دخول</a>
+                        <a href="index" class="btn-register-action">إنشاء حساب</a>
                     </div>
                 </div>
             `;
