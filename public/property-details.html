@@ -500,6 +500,82 @@
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); 
     vertical-align: middle;
     transform: translateY(-1px);
+}/* ==========================================================
+   🔍 إصلاح أسهم التكبير (Lightbox Modal Arrows)
+   ========================================================== */
+
+/* 1. تنسيق الزر العام */
+.lightbox-btn {
+    position: absolute;
+    top: 50% !important;        /* التوسط العمودي */
+    transform: translateY(-50%) !important; /* ضبط التوسط بدقة */
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.7) !important; /* خلفية سوداء شفافة */
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50%;         /* جعل الزر دائري */
+    font-size: 1.5rem !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2010 !important;   /* التأكد أنه فوق الصورة */
+    transition: all 0.3s ease;
+    padding: 0 !important;      /* إلغاء أي حشو قديم */
+}
+
+/* 2. تأثير عند المرور */
+.lightbox-btn:hover {
+    background: var(--neon-primary) !important;
+    color: black !important;
+    border-color: var(--neon-primary) !important;
+    transform: translateY(-50%) scale(1.1) !important; /* تكبير بسيط */
+}
+
+/* 3. تحديد الأماكن بدقة */
+.prev-lightbox {
+    left: 20px !important;
+    right: auto !important;
+}
+
+.next-lightbox {
+    right: 20px !important;
+    left: auto !important;
+}
+
+/* 4. تحسين زر الإغلاق (X) ليتماشى معهم */
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    left: 20px; /* أو right حسب تفضيلك */
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+    z-index: 2010;
+    background: rgba(0,0,0,0.5);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.close-lightbox:hover {
+    background: #ff4444;
+    transform: rotate(90deg);
+}
+
+/* 📱 تحسينات للموبايل */
+@media (max-width: 600px) {
+    .lightbox-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem !important;
+    }
+    .prev-lightbox { left: 10px !important; }
+    .next-lightbox { right: 10px !important; }
 }
 </style>
 </head>

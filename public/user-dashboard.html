@@ -391,6 +391,56 @@
 }
 .modern-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4); }
 .modern-action-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+/* --- تصميم مودال الحالة (Status Modal) --- */
+.status-card {
+    border-top: 4px solid transparent; /* لون علوي متغير */
+    overflow: hidden;
+}
+
+.status-icon-box {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2.5rem;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    transition: 0.3s;
+}
+
+/* --- حالة النجاح (Success) --- */
+.status-success .status-icon-box {
+    background: linear-gradient(135deg, #00ff88, #00b862);
+    color: #000;
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+    animation: successPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.status-success h3 { color: #00ff88; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+.status-success { border-top-color: #00ff88; }
+
+/* --- حالة الفشل (Error) --- */
+.status-error .status-icon-box {
+    background: linear-gradient(135deg, #ff4444, #c62828);
+    color: #fff;
+    box-shadow: 0 0 40px rgba(255, 68, 68, 0.3);
+    animation: errorShake 0.5s ease-in-out;
+}
+.status-error h3 { color: #ff4444; text-shadow: 0 0 10px rgba(255,68,68,0.3); }
+.status-error { border-top-color: #ff4444; }
+
+/* --- Animations --- */
+@keyframes successPop {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+}
   </style>
 </head>
 <body class="internal-page">
@@ -430,9 +480,9 @@
                     <a href="home" class="dropdown-link"><i class="fas fa-home"></i> الرئيسية</a>
                     <a href="edit-profile" class="dropdown-link"><i class="fas fa-user-edit"></i> تعديل حسابي</a>
 
-                    <div class="dropdown-item logout-btn" style="color:#ff4444;" onclick="logoutUser()">
-                        <i class="fas fa-sign-out-alt"></i> تسجيل خروج
-                    </div>
+                    <div class="dropdown-item logout-btn" style="color:#ff4444;">
+    <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+</div>
                 </div>
             </div>
         </div>
@@ -575,5 +625,20 @@
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
     <script src="logout.js"></script>
+
+    <div id="payment-status-modal" class="modal modern-modal-overlay" style="display: none;">
+    <div class="modern-modal-content status-card">
+        <div id="status-icon-wrapper" class="status-icon-box">
+            <i id="status-icon" class="fas fa-check"></i>
+        </div>
+
+        <h3 id="status-title" style="font-size: 1.5rem; margin-bottom: 10px;">تمت العملية بنجاح!</h3>
+        <p id="status-message" style="color: #bbb; margin-bottom: 25px; line-height: 1.6;">تم إضافة النقاط إلى محفظتك بنجاح. يمكنك الآن استخدامها في ترقية إعلاناتك.</p>
+
+        <button onclick="closeStatusModal()" class="modern-action-btn" id="status-btn">
+            حسناً، شكراً
+        </button>
+    </div>
+</div>
 </body>
 </html>

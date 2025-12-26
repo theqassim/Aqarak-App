@@ -1832,6 +1832,7 @@ app.post('/api/admin/payment-settings', async (req, res) => {
 });
 
 // 3. POST Manual Charge (الشحن اليدوي لرقم معين)
+// 3. POST Manual Charge (الشحن اليدوي لرقم معين) - معدل
 app.post('/api/admin/manual-charge', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
@@ -1842,20 +1843,23 @@ app.post('/api/admin/manual-charge', async (req, res) => {
 
         const { phone, amount } = req.body;
         
-        // التحقق من وجود المستخدم
         const userRes = await pgQuery('SELECT id FROM users WHERE phone = $1', [phone]);
-        if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'رقم الهاتف غير مسجل في الموقع ❌' });
+        if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'رقم الهاتف غير مسجل ❌' });
         
         const userId = userRes.rows[0].id;
 
-        // إضافة الرصيد للمستخدم
+        // 🔥 جلب سعر النقطة الحالي وحساب المبلغ
+        const priceRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'point_price'");
+        const currentPrice = parseFloat(priceRes.rows[0]?.setting_value || 1);
+        const moneyValue = amount * currentPrice;
+
         await pgQuery('UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2', [amount, userId]);
 
-        // تسجيل المعاملة في السجل (عشان تظهرله في كشف الحساب)
-        await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'deposit', 'مكافأة إدارية (شحن يدوي)', $3)`, 
-            [phone, amount, new Date().toISOString()]);
+        // 🔥 تسجيل المعاملة مع المبلغ الثابت (money_amount)
+        await pgQuery(`INSERT INTO transactions (user_phone, amount, money_amount, type, description, date) VALUES ($1, $2, $3, 'deposit', 'مكافأة إدارية (شحن يدوي)', $4)`, 
+            [phone, amount, moneyValue, new Date().toISOString()]);
 
-        res.json({ success: true, message: `تم شحن ${amount} نقطة للرقم ${phone} بنجاح 🚀` });
+        res.json({ success: true, message: `تم شحن ${amount} نقطة (بقيمة ${moneyValue} ج.م) للرقم ${phone} بنجاح 🚀` });
 
     } catch (error) {
         console.error("Manual Charge Error:", error);
@@ -2059,35 +2063,30 @@ app.get('/api/payment/callback', async (req, res) => {
 
         // لو العملية ناجحة (success=true)
         if (success === "true") {
-            // 1. ندور على الطلب في الداتابيز عندنا برقم الأوردر
             const orderRes = await pgQuery(`SELECT * FROM payment_orders WHERE paymob_order_id = $1`, [order]);
             
             if (orderRes.rows.length > 0) {
                 const pendingOrder = orderRes.rows[0];
 
-                // 2. نتأكد إنه لسه pending عشان منضفش الرصيد مرتين
                 if (pendingOrder.status === 'pending') {
-                    
-                    // أ. تحديث حالة الطلب لـ success
                     await pgQuery(`UPDATE payment_orders SET status = 'success' WHERE id = $1`, [pendingOrder.id]);
-
-                    // ب. إضافة "النقاط" للمستخدم (مش الفلوس)
                     await pgQuery(`UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2`, 
                         [pendingOrder.points_amount, pendingOrder.user_id]);
 
-                    // ج. تسجيل معاملة في السجل
                     const userPhoneRes = await pgQuery('SELECT phone FROM users WHERE id = $1', [pendingOrder.user_id]);
+                    
+                    // 🔥 التعديل هنا: تسجيل المبلغ (money_amount) من الأوردر
                     await pgQuery(
-                        `INSERT INTO transactions (user_phone, amount, type, description, date) 
-                         VALUES ($1, $2, 'deposit', $3, $4)`,
+                        `INSERT INTO transactions (user_phone, amount, money_amount, type, description, date) 
+                         VALUES ($1, $2, $3, 'deposit', $4, $5)`,
                         [
                             userPhoneRes.rows[0].phone, 
                             pendingOrder.points_amount, 
+                            pendingOrder.amount_egp, // المبلغ الفعلي اللي اندفع
                             `شحن ${pendingOrder.points_amount} نقطة (${pendingOrder.payment_method})`,
                             new Date().toISOString()
                         ]
                     );
-                    
                     // إشعار ديسكورد (اختياري)
                     await sendDiscordNotification("💰 عملية شحن ناجحة", [
                         { name: "المستخدم", value: userPhoneRes.rows[0].phone },
@@ -2097,15 +2096,15 @@ app.get('/api/payment/callback', async (req, res) => {
                 }
             }
             // توجيه لصفحة النجاح
-            res.redirect('/user-dashboard.html?payment=success'); 
+            res.redirect('/user-dashboard?payment=success'); 
         } else {
             // توجيه لصفحة الفشل
-            res.redirect('/user-dashboard.html?payment=failed');
+            res.redirect('/user-dashboard?payment=failed');
         }
 
     } catch (error) {
         console.error("Callback Error:", error);
-        res.redirect('/user-dashboard.html?payment=error');
+        res.redirect('/user-dashboard?payment=error');
     }
 });
 
@@ -2678,4 +2677,23 @@ setInterval(async () => {
         }
     } catch (e) { console.error("Cron Job Error:", e); }
 }, 12 * 60 * 60 * 1000); // يفحص مرتين في اليوم
+
+// ==========================================
+// 📊 Public Stats API (للإحصائيات العامة في صفحة من نحن)
+// ==========================================
+app.get('/api/public/stats', async (req, res) => {
+    try {
+        // حساب عدد العقارات والمستخدمين مباشرة من الداتابيز (سريع جداً)
+        const propsRes = await pgQuery('SELECT COUNT(*) FROM properties');
+        const usersRes = await pgQuery('SELECT COUNT(*) FROM users');
+        
+        res.json({
+            properties: parseInt(propsRes.rows[0].count),
+            users: parseInt(usersRes.rows[0].count)
+        });
+    } catch (error) {
+        console.error("Stats Error:", error);
+        res.status(500).json({ properties: 50, users: 100 }); // أرقام احتياطية
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

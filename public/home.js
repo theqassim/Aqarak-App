@@ -333,6 +333,10 @@ window.addEventListener('click', function(e) {
     }
 });
 
+// =========================================
+// 📱 دوال الهيدر والإشعارات
+// =========================================
+
 async function updateNavigation() {
     const nav = document.getElementById('dynamic-nav');
     if(!nav) return;
@@ -341,7 +345,7 @@ async function updateNavigation() {
         const data = await response.json();
 
         if (data.isAuthenticated) {
-            // ✅ تمت إضافة زر الإشعارات هنا
+            // ✅ للمستخدم المسجل
             nav.innerHTML = `
                 <div class="desktop-notif-wrapper">
                     <button class="desktop-notif-btn" onclick="toggleDesktopNotif(event)">
@@ -362,21 +366,26 @@ async function updateNavigation() {
                 <a href="all-properties" class="nav-button">جميع العقارات</a>
                 <a href="all-properties.html?type=buy" class="nav-button">شراء</a>
                 <a href="all-properties.html?type=rent" class="nav-button">ايجار</a>
-                <a href="user-dashboard" class="nav-button">حسابي</a> 
+                <a href="about" class="nav-button">من نحن</a> <a href="user-dashboard" class="nav-button">حسابي</a> 
                 <a href="seller-dashboard" class="sell-btn">اعرض عقارك!</a>
             `;
             
-            // استدعاء التحقق من الإشعارات فوراً بعد رسم الهيدر
+            // استدعاء التحقق من الإشعارات فوراً
             checkNotifications(); 
             
         } else {
+            // ✅ للزائر (غير مسجل)
             nav.innerHTML = `
-                <a href="index" class="nav-button">تسجيل دخول</a>
+                <a href="about" class="nav-button">من نحن</a> <a href="index" class="nav-button">تسجيل دخول</a>
                 <a href="index" class="sell-btn">انشاء حساب</a>
             `;
         }
     } catch (error) {
-        nav.innerHTML = `<a href="index" class="nav-button">تسجيل دخول</a>`;
+        // حالة الخطأ أو عدم الاتصال
+        nav.innerHTML = `
+            <a href="about" class="nav-button">من نحن</a>
+            <a href="index" class="nav-button">تسجيل دخول</a>
+        `;
     }
 }
 // =========================================

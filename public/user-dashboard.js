@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateGreeting();      // تحديث الترحيب
     await loadUserData();  // تحميل البيانات
     checkNotifications();  // تشغيل الإشعارات
-    fetchPaymentConfig();  // 💰 جلب سعر النقطة من الأدمن
+    fetchPaymentConfig();
+    checkPaymentStatus(); 
 
     // تفعيل زر عرض المفضلة
     const favBtn = document.getElementById('show-favorites');
@@ -75,6 +76,74 @@ function updateGreeting() {
         greetingIcon.style.color = '#00d4ff';
     }
 }
+
+function checkPaymentStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment'); // success أو failed
+
+    if (paymentStatus) {
+        // تنظيف الرابط (إزالة ?payment=... عشان لو عمل ريفريش مايطلعش تاني)
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({path: newUrl}, '', newUrl);
+
+        if (paymentStatus === 'success') {
+            showStatusModal(true);
+            // تشغيل صوت نجاح خفيف (اختياري)
+            // const audio = new Audio('/sounds/success.mp3'); audio.play().catch(e=>{});
+        } else {
+            showStatusModal(false);
+        }
+    }
+}
+
+function showStatusModal(isSuccess) {
+    const modal = document.getElementById('payment-status-modal');
+    const content = modal.querySelector('.status-card');
+    const icon = document.getElementById('status-icon');
+    const title = document.getElementById('status-title');
+    const msg = document.getElementById('status-message');
+    const btn = document.getElementById('status-btn');
+
+    modal.style.display = 'block';
+
+    if (isSuccess) {
+        // تفعيل ستايل النجاح
+        content.classList.remove('status-error');
+        content.classList.add('status-success');
+        
+        icon.className = 'fas fa-check';
+        title.textContent = 'تم الدفع بنجاح! 🎉';
+        msg.textContent = 'تمت إضافة النقاط إلى رصيدك فوراً. يمكنك الآن استخدامها لتمييز إعلاناتك أو نشر المزيد.';
+        btn.textContent = 'ممتاز، شكراً';
+        btn.style.background = 'linear-gradient(135deg, #00ff88, #00b862)';
+        btn.style.color = 'black';
+        
+        // تحديث بيانات المستخدم (عشان الرصيد الجديد يظهر)
+        if(typeof loadUserData === 'function') loadUserData();
+
+    } else {
+        // تفعيل ستايل الفشل
+        content.classList.remove('status-success');
+        content.classList.add('status-error');
+        
+        icon.className = 'fas fa-times';
+        title.textContent = 'فشلت عملية الدفع 😓';
+        msg.textContent = 'لم يتم خصم أي مبلغ. يرجى التأكد من بيانات البطاقة أو المحفظة والمحاولة مرة أخرى.';
+        btn.textContent = 'محاولة مرة أخرى';
+        btn.style.background = 'linear-gradient(135deg, #ff4444, #c62828)';
+        btn.style.color = 'white';
+        
+        // عند الضغط يفتح مودال الشحن تاني
+        btn.onclick = function() {
+            closeStatusModal();
+            if(typeof openChargeModal === 'function') openChargeModal();
+        };
+    }
+}
+
+window.closeStatusModal = function() {
+    document.getElementById('payment-status-modal').style.display = 'none';
+};
 
 // ✅ دالة تحميل بيانات المستخدم
 window.loadUserData = async function() {
