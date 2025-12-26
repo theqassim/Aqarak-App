@@ -247,6 +247,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const property = await response.json(); 
 
+        window.currentProperty = property;
+
         // Images Processing
         imageUrls = [];
         if (property.imageUrls) {
