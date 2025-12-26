@@ -686,7 +686,7 @@ app.post('/api/login', async (req, res) => {
     
     // دخول الأدمن (تجاوز الفحص)
     if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD) {
-        const token = jwt.sign({ id: 0, phone: ADMIN_PHONE, role: 'admin', username: 'admin', name: 'المدير العام' }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: 1932024, phone: ADMIN_PHONE, role: 'admin', username: 'admin', name: 'المدير العام' }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('auth_token', token, { httpOnly: true, secure: true, sameSite:'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
         return res.json({ success: true, role: 'admin', username: 'admin', name: 'المدير العام' });
     }
