@@ -209,7 +209,6 @@ async function prefillUserData() {
 
 // === 7. Main Execution (DOMContentLoaded) ===
 document.addEventListener('DOMContentLoaded', async () => {
-    window.currentProperty = property;
     prefillUserData();
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
@@ -304,12 +303,12 @@ if (isAuthenticated && currentUserPhone !== property.sellerPhone) {
 
             publisherHTML = `
     <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
-        <a href="user-profile.html?u=${property.publisherUsername || '#'}" style="text-decoration: none;">
+        <a href="user-profile?u=${property.publisherUsername || '#'}" style="text-decoration: none;">
             <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
         </a>
         <div style="flex: 1;">
             <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
-            <a href="user-profile.html?u=${property.publisherUsername || '#'}" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
+            <a href="user-profile?u=${property.publisherUsername || '#'}" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
                 ${property.sellerName || 'مستخدم عقارك'} ${verifiedBadge}
             </a>
         </div>
