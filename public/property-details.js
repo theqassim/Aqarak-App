@@ -154,54 +154,41 @@ window.shareProperty = async (title) => {
 
 window.handleWhatsappClick = async (link) => { window.open(link, '_blank'); };
 
-// --- 5. Similar Properties Logic ---
 async function loadSimilarProperties(currentProperty) {
     const container = document.getElementById('similar-properties-container');
-    if (!container) return;
+    // تغيير العنوان في الـ HTML ليصبح "عقارات مقترحة"
+    const header = document.querySelector('.similar-properties-section h2');
+    if(header) header.innerHTML = '<i class="fas fa-lightbulb"></i> عقارات مقترحة لك';
 
     try {
-        const response = await fetch(`/api/properties/similar/${currentProperty.id}`);
-        if (!response.ok) throw new Error('فشل جلب البيانات');
-        const similar = await response.json();
+        // استخدام الراوت الجديد
+        const response = await fetch(`/api/properties/suggested/${currentProperty.id}`);
+        const suggested = await response.json();
 
-        if (!similar || similar.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد عقارات مشابهة حالياً.</p>';
+        if (!suggested || suggested.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد اقتراحات حالياً.</p>';
             return;
         }
 
         container.innerHTML = ''; 
-        similar.forEach(prop => {
+        // عرض 3 عقارات فقط
+        suggested.slice(0, 3).forEach(prop => {
             const priceVal = prop.price ? Number(prop.price.replace(/[^0-9.]/g, '')).toLocaleString() : 'N/A';
-            let badges = ''; 
-            if(prop.isFeatured) badges = '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; z-index:2;">مميز</span>';
-
             const card = `
                 <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${prop.id}'" style="position:relative; cursor:pointer;">
-                    ${badges}
-                    <div style="height:200px; overflow:hidden;">
-                        <img src="${prop.imageUrl || 'logo.png'}" alt="${prop.title}" style="width:100%; height:100%; object-fit:cover; transition:0.3s;">
+                    ${prop.isFeatured ? '<span style="position:absolute; top:10px; right:10px; background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; z-index:2;">مميز</span>' : ''}
+                    <div style="height:180px; overflow:hidden;">
+                        <img src="${prop.imageUrl || 'logo.png'}" style="width:100%; height:100%; object-fit:cover;">
                     </div>
-                    <div class="card-content">
-                        <h4 style="font-size:1.1em; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prop.title}</h4>
-                        <p class="price" style="font-size:1.1em; color:#ffd700;">${priceVal} ج.م</p>
-                        <p style="font-size:0.85em; color:#aaa; margin-top:5px;">
-                            <i class="fas fa-map-marker-alt"></i> مشابه لمنطقتك
-                        </p>
-                        <hr style="border-color:#333; margin:10px 0;">
-                        <p style="font-size:0.85em; color:#888; display:flex; justify-content:space-between;">
-                            ${prop.rooms > 0 ? `<span><i class="fas fa-bed"></i> ${prop.rooms}</span>` : ''}
-                            ${prop.bathrooms > 0 ? `<span><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : ''}
-                            <span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>
-                        </p>
+                    <div class="card-content" style="padding:10px;">
+                        <h4 style="font-size:1rem; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;">${prop.title}</h4>
+                        <p class="price" style="font-size:1rem; color:var(--neon-primary); font-weight:bold;">${priceVal} ج.م</p>
                     </div>
                 </div>
             `;
             container.innerHTML += card;
         });
-    } catch (e) {
-        console.error("Error loading similar:", e);
-        container.innerHTML = '<p style="text-align:center; color:#777;">جاري البحث عن عقارات مشابهة...</p>';
-    }
+    } catch (e) { container.innerHTML = ''; }
 }
 
 // --- 6. Auto-fill User Data ---
@@ -285,7 +272,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 🔥 2. منطق عرض الناشر
         let publisherHTML = '';
         let publisherStatsBadge = '';
-
+        let profileImgSrc = property.profile_picture || 'logo.png';
+        let reportBtnHTML = '';
+if (isAuthenticated && currentUserPhone !== property.sellerPhone) {
+    reportBtnHTML = `
+        <button onclick="document.getElementById('report-modal').style.display='flex'" style="background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; margin-right: auto;">
+            <i class="fas fa-flag"></i> إبلاغ
+        </button>
+    `;
+}
         if (property.publisherUsername) {
             // محاولة جلب إحصائيات الناشر
             try {
@@ -307,16 +302,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) { console.error("Error fetching publisher stats", e); }
 
             publisherHTML = `
-                <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
-                        <span><i class="fas fa-user-circle"></i> تم النشر بواسطة:</span>
-                        <a href="user-profile.html?u=${property.publisherUsername}" style="color: #00ff88; text-decoration: none; font-weight: bold; display:flex; align-items:center;">
-                            ${property.sellerName || 'مستخدم عقارك'} ${verifiedBadge}
-                        </a>
-                        ${publisherStatsBadge}
-                    </p>
-                </div>
-            `;
+    <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
+        <a href="user-profile.html?u=${property.publisherUsername || '#'}" style="text-decoration: none;">
+            <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
+        </a>
+        <div style="flex: 1;">
+            <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
+            <a href="user-profile.html?u=${property.publisherUsername || '#'}" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
+                ${property.sellerName || 'مستخدم عقارك'} ${verifiedBadge}
+            </a>
+        </div>
+        ${reportBtnHTML}
+    </div>
+`;
         } else {
             // حالة عدم وجود اسم مستخدم (للمستخدمين القدامى أو الأدمن)
             publisherHTML = `
@@ -872,3 +870,36 @@ window.submitFeatureRequest = async () => {
     } catch (err) { console.error(err); alert('خطأ في الاتصال'); } 
     finally { btn.innerHTML = 'تفعيل التميز الآن <i class="fas fa-arrow-left"></i>'; btn.disabled = false; }
 };
+// أضف هذا في نهاية الملف أو مع الدوال المساعدة
+window.submitUserReport = async () => {
+    const reason = document.getElementById('report-reason').value;
+    const btn = document.querySelector('#report-modal button');
+    
+    // نحتاج sellerPhone من المتغيرات العامة أو نمرره
+    // ملاحظة: تأكد أن المتغير `property` متاح هنا، أو اجعله global window.currentProperty
+    const reportedPhone = window.currentProperty ? window.currentProperty.sellerPhone : null; 
+    
+    if(!reportedPhone) return alert('خطأ في تحديد المستخدم');
+
+    btn.innerHTML = 'جاري الإرسال...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/report-user', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ reportedPhone, reason })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            alert('✅ ' + data.message);
+            window.location.href = 'home'; // إعادة توجيه للرئيسية لإخفاء الإعلانات
+        } else {
+            alert('❌ ' + data.message);
+        }
+    } catch(e) { alert('خطأ في الاتصال'); }
+    finally { btn.innerHTML = 'تأكيد الإبلاغ'; btn.disabled = false; document.getElementById('report-modal').style.display='none'; }
+};
+
+// **هام:** داخل `DOMContentLoaded` عند جلب البيانات، أضف هذا السطر:
+// window.currentProperty = property;

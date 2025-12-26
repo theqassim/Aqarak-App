@@ -485,5 +485,90 @@ input:checked + .slider:before { transform: translateX(26px); }
             }
         }
     </script>
+    <div id="secret-modal" class="modal" style="display: none; position: fixed; z-index: 99999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center;">
+    <div class="modal-content" style="background:#111; padding:20px; border:1px solid #00ff88; width:90%; max-width:400px; text-align:center;">
+        <h3 style="color:#00ff88; margin-bottom:15px;">🔐 المنطقة السرية</h3>
+        <input type="password" id="secret-pass" placeholder="كلمة السر" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:white;">
+        <button onclick="checkSecretAccess()" class="btn-neon-auth">دخول</button>
+        <button onclick="document.getElementById('secret-modal').style.display='none'" style="margin-top:10px; background:none; border:none; color:#aaa; cursor:pointer;">إغلاق</button>
+    </div>
+</div>
+
+<div id="secret-logs-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; padding:20px; overflow-y:auto;">
+    <div style="max-width:800px; margin:0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#00ff88;">💰 سجلات الشحن الناجحة</h2>
+            <button onclick="document.getElementById('secret-logs-container').style.display='none'" style="color:white; background:none; border:none; font-size:1.5rem;">&times;</button>
+        </div>
+        <button onclick="clearSecretLogs()" style="background:#ff4444; color:white; border:none; padding:10px 20px; border-radius:5px; margin-bottom:20px; cursor:pointer;">🗑️ مسح جميع السجلات</button>
+        <div id="logs-table-wrapper"></div>
+    </div>
+</div>
+<script>
+    // 1. منطق الضغطات الخمسة
+    let logoClicks = 0;
+    document.querySelector('.logo').addEventListener('click', (e) => {
+        e.preventDefault(); // منع الرابط لو موجود
+        logoClicks++;
+        if (logoClicks === 5) {
+            document.getElementById('secret-modal').style.display = 'flex';
+            logoClicks = 0;
+        }
+    });
+
+    // 2. التحقق من الباسورد
+    async function checkSecretAccess() {
+        const pass = document.getElementById('secret-pass').value;
+        if (pass === "Qassim&Ammar") {
+            document.getElementById('secret-modal').style.display = 'none';
+            document.getElementById('secret-pass').value = '';
+            await loadSecretLogs();
+        } else {
+            alert("❌ كلمة السر خاطئة!");
+        }
+    }
+
+    // 3. جلب السجلات
+    async function loadSecretLogs() {
+        const wrapper = document.getElementById('secret-logs-container');
+        const tableDiv = document.getElementById('logs-table-wrapper');
+        wrapper.style.display = 'block';
+        tableDiv.innerHTML = '<p style="color:white;">جاري التحميل...</p>';
+
+        try {
+            const res = await fetch('/api/admin/secret-logs');
+            const logs = await res.json();
+            
+            if (logs.length === 0) {
+                tableDiv.innerHTML = '<p style="color:#777; text-align:center;">لا توجد سجلات.</p>';
+                return;
+            }
+
+            let html = '<table style="width:100%; border-collapse:collapse; color:white;">';
+            html += '<tr style="border-bottom:1px solid #444; color:#00ff88;"><th style="padding:10px;">الهاتف</th><th style="padding:10px;">المبلغ</th><th style="padding:10px;">التاريخ</th><th style="padding:10px;">الوصف</th></tr>';
+            
+            logs.forEach(log => {
+                html += `
+                    <tr style="border-bottom:1px solid #333;">
+                        <td style="padding:10px;">${log.user_phone}</td>
+                        <td style="padding:10px; color:#ffd700;">${log.amount}</td>
+                        <td style="padding:10px; font-size:0.8rem;">${new Date(log.date).toLocaleDateString()}</td>
+                        <td style="padding:10px; font-size:0.8rem; color:#aaa;">${log.description}</td>
+                    </tr>
+                `;
+            });
+            html += '</table>';
+            tableDiv.innerHTML = html;
+
+        } catch (e) { tableDiv.innerHTML = 'خطأ في الجلب'; }
+    }
+
+    // 4. مسح السجلات
+    async function clearSecretLogs() {
+        if(!confirm("هل أنت متأكد من مسح كل السجلات؟")) return;
+        await fetch('/api/admin/secret-logs', { method: 'DELETE' });
+        loadSecretLogs();
+    }
+</script>
 </body>
 </html>

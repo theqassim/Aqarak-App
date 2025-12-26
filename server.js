@@ -1191,12 +1191,30 @@ async function checkExpiredFeatured() {
 
 // 3. 🟢 تعديل API جلب العقارات (عشان ينظف العقارات المنتهية قبل العرض)
 // (استبدل الكود القديم اللي عندك بالكود ده)
+// ✅ تعديل API جلب العقارات (لإضافة فلتر الحجب)
 app.get('/api/properties', async (req, res) => { 
     
-    // 🔥 الخطوة الجديدة: فحص العقارات المنتهية أولاً
     await checkExpiredFeatured(); 
 
-    // ✅ التعديل: إضافة JOIN مع جدول المستخدمين لجلب حالة التوثيق (is_verified)
+    let excludePhones = [];
+    
+    // ✅ 1. فحص المستخدم الحالي لجلب قائمة المحظورين
+    const token = req.cookies.auth_token;
+    if (token) {
+        try {
+            const decoded = jwt.decode(token); 
+            if (decoded && decoded.phone) {
+                // جلب من أبلغت عنهم أو أبلغوا عنك
+                const reports = await pgQuery(`
+                    SELECT reported_phone FROM user_reports WHERE reporter_phone = $1
+                    UNION
+                    SELECT reporter_phone FROM user_reports WHERE reported_phone = $1
+                `, [decoded.phone]);
+                excludePhones = reports.rows.map(r => r.reported_phone);
+            }
+        } catch (e) {}
+    }
+
     let sql = `
         SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified 
         FROM properties p
@@ -1209,7 +1227,15 @@ app.get('/api/properties', async (req, res) => {
     
     const { type, limit, offset, keyword, minPrice, maxPrice, rooms, sort } = req.query; 
 
-    // ✅ التعديل: إضافة "p." قبل أسماء الأعمدة لتحديد أنها من جدول properties
+    // ✅ 2. تطبيق فلتر الاستبعاد
+    if (excludePhones.length > 0) {
+        const placeholders = excludePhones.map((_, i) => `$${idx + i}`).join(',');
+        filters.push(`p."sellerPhone" NOT IN (${placeholders})`);
+        excludePhones.forEach(ph => params.push(ph));
+        idx += excludePhones.length;
+    }
+
+    // باقي الفلاتر كما هي...
     if (type) { filters.push(`p.type = $${idx++}`); params.push(type === 'buy' ? 'بيع' : 'إيجار'); } 
     if (keyword) { filters.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx} OR p."hiddenCode" ILIKE $${idx})`); params.push(`%${keyword}%`); idx++; } 
     if (minPrice) { filters.push(`p."numericPrice" >= $${idx++}`); params.push(Number(minPrice)); } 
@@ -1218,9 +1244,7 @@ app.get('/api/properties', async (req, res) => {
     
     if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); 
 
-    // الترتيب: المميز أولاً
     let orderBy = 'ORDER BY p."isFeatured" DESC, p.id DESC'; 
-    
     if (sort === 'price_asc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" ASC'; 
     else if (sort === 'price_desc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" DESC'; 
     else if (sort === 'oldest') orderBy = 'ORDER BY p."isFeatured" DESC, p.id ASC'; 
@@ -1233,42 +1257,66 @@ app.get('/api/properties', async (req, res) => {
     try { const result = await pgQuery(sql, params); res.json(result.rows); } 
     catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching properties' }); } 
 });
-// ✅ تعديل API جلب تفاصيل العقار (لإضافة حالة التوثيق)
-app.get('/api/property/:id', async (req, res) => {
-    try {
-        // بنعمل LEFT JOIN عشان نجيب is_verified من جدول users بناءً على رقم التليفون
-        const sql = `
-            SELECT p.*, u.is_verified, u.profile_picture 
-            FROM properties p
-            LEFT JOIN users u ON p."sellerPhone" = u.phone
-            WHERE p.id = $1
-        `;
-        
-        const r = await pgQuery(sql, [req.params.id]);
-        
-        if (r.rows[0]) {
-            try { 
-                r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); 
-            } catch (e) { 
-                r.rows[0].imageUrls = []; 
-            }
-            res.json(r.rows[0]);
-        } else {
-            res.status(404).json({ message: 'غير موجود' });
-        }
-    } catch (e) { 
-        console.error("Property Fetch Error:", e);
-        res.status(500).json({ message: 'خطأ في السيرفر' });
-    }
-});
 app.get('/api/property-by-code/:code', async (req, res) => { try { const r = await pgQuery(`SELECT id, title, price, "hiddenCode" FROM properties WHERE UPPER("hiddenCode") LIKE UPPER($1)`, [`%${req.params.code}%`]); if(r.rows[0]) res.json(r.rows[0]); else res.status(404).json({message: 'غير موجود'}); } catch(e) { throw e; } });
 app.delete('/api/property/:id', async (req, res) => { try { const resGet = await pgQuery(`SELECT "imageUrls" FROM properties WHERE id=$1`, [req.params.id]); if(resGet.rows[0]) await deleteCloudinaryImages(JSON.parse(resGet.rows[0].imageUrls)); await pgQuery(`DELETE FROM properties WHERE id=$1`, [req.params.id]); res.json({message: 'تم الحذف'}); } catch (e) { throw e; } });
 app.post('/api/favorites', async (req, res) => { const token = req.cookies.auth_token; if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' }); try { const decoded = jwt.verify(token, JWT_SECRET); await pgQuery(`INSERT INTO favorites (user_phone, property_id) VALUES ($1, $2)`, [decoded.phone, req.body.propertyId]); res.status(201).json({ success: true }); } catch (err) { if (err.code === '23505') return res.status(409).json({ message: 'موجودة بالفعل' }); res.status(500).json({ error: 'خطأ سيرفر' }); } });
 app.delete('/api/favorites/:propertyId', async (req, res) => { const token = req.cookies.auth_token; if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' }); try { const decoded = jwt.verify(token, JWT_SECRET); await pgQuery(`DELETE FROM favorites WHERE user_phone = $1 AND property_id = $2`, [decoded.phone, req.params.propertyId]); res.json({ success: true }); } catch (err) { res.status(500).json({ error: 'خطأ' }); } });
 app.get('/api/favorites', async (req, res) => { const token = req.cookies.auth_token; if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' }); try { const decoded = jwt.verify(token, JWT_SECRET); const sql = `SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, f.id AS favorite_id FROM properties p JOIN favorites f ON p.id = f.property_id WHERE f.user_phone = $1 ORDER BY f.id DESC`; const result = await pgQuery(sql, [decoded.phone]); res.json(result.rows); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.get('/api/user/my-properties', async (req, res) => { const token = req.cookies.auth_token; if (!token) return res.status(401).json({ message: 'غير مصرح' }); try { const decoded = jwt.verify(token, JWT_SECRET); const publishedRes = await pgQuery(`SELECT id, title, price, type, "imageUrl", 'active' as status FROM properties WHERE "sellerPhone" = $1`, [decoded.phone]); const pendingRes = await pgQuery(`SELECT id, "propertyTitle" as title, "propertyPrice" as price, "propertyType" as type, 'pending' as status FROM seller_submissions WHERE "sellerPhone" = $1 AND status = 'pending'`, [decoded.phone]); const allProperties = [...publishedRes.rows, ...pendingRes.rows]; allProperties.sort((a, b) => b.id - a.id); res.json(allProperties); } catch (error) { res.status(500).json({ message: 'خطأ سيرفر' }); } });
-app.get('/api/properties/similar/:id', async (req, res) => { try { const propId = req.params.id; const currentRes = await pgQuery('SELECT * FROM properties WHERE id = $1', [propId]); if (currentRes.rows.length === 0) return res.status(404).json({ message: 'العقار غير موجود' }); const current = currentRes.rows[0]; let locationKeyword = ''; const textToSearch = normalizeText(current.title + " " + current.description); for (const [gov, cities] of Object.entries(EGYPT_LOCATIONS)) { if (textToSearch.includes(normalizeText(gov))) { locationKeyword = gov; break; } for (const city of cities) { if (textToSearch.includes(normalizeText(city))) { locationKeyword = city; break; } } if (locationKeyword) break; } if (!locationKeyword) locationKeyword = current.title.split(' ')[0] || ''; const minPrice = Number(current.numericPrice) * 0.75; const maxPrice = Number(current.numericPrice) * 1.25; const sql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE type = $1 AND id != $2 AND "numericPrice" BETWEEN $3 AND $4 AND (title ILIKE $5 OR description ILIKE $5) ORDER BY ABS(rooms - $6) + ABS(bathrooms - $7) ASC, ABS(area - $8) ASC LIMIT 4`; const params = [current.type, propId, minPrice, maxPrice, `%${locationKeyword}%`, safeInt(current.rooms), safeInt(current.bathrooms), safeInt(current.area)]; const result = await pgQuery(sql, params); if (result.rows.length === 0) { const fallbackSql = `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE type = $1 AND id != $2 ORDER BY RANDOM() LIMIT 4`; const fallbackResult = await pgQuery(fallbackSql, [current.type, propId]); return res.json(fallbackResult.rows); } res.json(result.rows); } catch (error) { res.status(500).json({ message: 'Error' }); } });
+// ==========================================================
+// 🧠 راوت العقارات المقترحة (Smart Suggestion)
+// ==========================================================
+app.get('/api/properties/suggested/:id', async (req, res) => {
+    try {
+        const propId = req.params.id;
+        // جلب العقار الحالي
+        const currentRes = await pgQuery('SELECT * FROM properties WHERE id = $1', [propId]);
+        if (currentRes.rows.length === 0) return res.status(404).json([]);
+        
+        const current = currentRes.rows[0];
+        
+        // استخراج الكلمة المفتاحية (أول كلمة من العنوان تعتبر المنطقة التقريبية)
+        const locationKeyword = current.title.split(' ')[0] || ''; 
+        
+        // تحديد نطاق السعر (+/- 30%)
+        const minPrice = Number(current.numericPrice) * 0.7; 
+        const maxPrice = Number(current.numericPrice) * 1.3;
 
+        // ✅ اللوجيك الذكي:
+        // 1. يفضل نفس النوع (شقة/فيلا) +30 نقطة
+        // 2. يفضل نفس الكلمة المفتاحية في العنوان أو الوصف +50 نقطة
+        // 3. يفضل السعر المتقارب +20 نقطة
+        // 4. الترتيب حسب المجموع (Score) والأولوية للمميز
+        
+        const sql = `
+            SELECT id, title, price, "imageUrl", type, "isFeatured",
+            (
+                (CASE WHEN type = $1 THEN 30 ELSE 0 END) +
+                (CASE WHEN title ILIKE $2 OR description ILIKE $2 THEN 50 ELSE 0 END) +
+                (CASE WHEN "numericPrice" BETWEEN $3 AND $4 THEN 20 ELSE 0 END)
+            ) as match_score
+            FROM properties 
+            WHERE id != $5
+            ORDER BY match_score DESC, "isFeatured" DESC
+            LIMIT 3
+        `;
+
+        const result = await pgQuery(sql, [
+            current.type, 
+            `%${locationKeyword}%`, 
+            minPrice, 
+            maxPrice, 
+            propId
+        ]);
+
+        // إرجاع مصفوفة العقارات فقط
+        res.json(result.rows); 
+
+    } catch (error) { 
+        console.error("Suggestion Error:", error);
+        res.status(500).json([]); 
+    }
+});
 // ==========================================================
 // 📊 إحصائيات الأدمن (هام جداً للصفحة الرئيسية للأدمن)
 // ==========================================================
@@ -1847,23 +1895,25 @@ app.post('/api/user/feature-property', async (req, res) => {
 // ============================================================
 // 💳 1. API بدء عملية الشحن (Charge Request)
 // ============================================================
+// ============================================================
+// 💳 1. API بدء عملية الشحن (Charge Request) - معدل (أقل حاجة 1 نقطة)
+// ============================================================
 app.post('/api/payment/charge', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const { points, method, mobileNumber } = req.body; // method: 'card' or 'wallet'
+        const { points, method, mobileNumber } = req.body; 
 
-        if (!points || points < 10) return res.status(400).json({ message: 'أقل عدد نقاط هو 10' });
+        // ✅ التعديل: السماح بنقطة واحدة كحد أدنى
+        if (!points || points < 1) return res.status(400).json({ message: 'أقل عدد نقاط هو 1' });
 
-        // 1. جلب سعر النقطة الحالي من الداتابيز
         const settingRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'point_price'");
-        const pricePerPoint = parseFloat(settingRes.rows[0]?.setting_value || 1); // الافتراضي 1 جنيه
+        const pricePerPoint = parseFloat(settingRes.rows[0]?.setting_value || 1); 
         
-        const amountEGP = points * pricePerPoint; // المبلغ الإجمالي
+        const amountEGP = points * pricePerPoint;
 
-        // 2. تحديد نوع وسيلة الدفع (Integration ID)
         let integrationId;
         if (method === 'wallet') {
             integrationId = process.env.PAYMOB_INTEGRATION_WALLET;
@@ -1872,38 +1922,31 @@ app.post('/api/payment/charge', async (req, res) => {
             integrationId = process.env.PAYMOB_INTEGRATION_CARD;
         }
 
-        // 3. (Paymob Step 1) Authentication Request
-        const authRes = await axios.post('https://accept.paymob.com/api/auth/tokens', {
-            "api_key": process.env.PAYMOB_API_KEY
-        });
+        const authRes = await axios.post('https://accept.paymob.com/api/auth/tokens', { "api_key": process.env.PAYMOB_API_KEY });
         const authToken = authRes.data.token;
 
-        // 4. (Paymob Step 2) Order Registration
         const orderRes = await axios.post('https://accept.paymob.com/api/ecommerce/orders', {
             "auth_token": authToken,
             "delivery_needed": "false",
-            "amount_cents": amountEGP * 100, // المبلغ بالقروش
+            "amount_cents": amountEGP * 100, 
             "currency": "EGP",
             "items": []
         });
         const paymobOrderId = orderRes.data.id;
 
-        // 💾 حفظ الطلب في الداتابيز عندنا (Pending)
         await pgQuery(
             `INSERT INTO payment_orders (user_id, paymob_order_id, amount_egp, points_amount, payment_method, status) 
              VALUES ($1, $2, $3, $4, $5, 'pending')`,
             [decoded.id, paymobOrderId, amountEGP, points, method]
         );
 
-        // 5. (Paymob Step 3) Payment Key Request
-        // بنجيب بيانات المستخدم عشان Paymob بيطلبها (حتى لو وهمية)
         const userRes = await pgQuery('SELECT * FROM users WHERE id = $1', [decoded.id]);
         const user = userRes.rows[0];
 
         const keyRes = await axios.post('https://accept.paymob.com/api/acceptance/payment_keys', {
             "auth_token": authToken,
             "amount_cents": amountEGP * 100,
-            "expiration": 3600, // صلاحية الدفع ساعة
+            "expiration": 3600, 
             "order_id": paymobOrderId,
             "billing_data": {
                 "apartment": "NA", "email": "user@aqarak.com", "floor": "NA", 
@@ -1917,17 +1960,13 @@ app.post('/api/payment/charge', async (req, res) => {
         });
         const paymentToken = keyRes.data.token;
 
-        // 6. الرد حسب النوع
         if (method === 'wallet') {
-            // لو محفظة: بنطلب رابط الدفع المباشر
             const walletPayRes = await axios.post('https://accept.paymob.com/api/acceptance/payments/pay', {
                 "source": { "identifier": mobileNumber, "subtype": "WALLET" },
                 "payment_token": paymentToken
             });
-            // توجيه المستخدم لصفحة فودافون كاش
             return res.json({ success: true, redirectUrl: walletPayRes.data.redirect_url });
         } else {
-            // لو فيزا: بنرجع رابط الـ Iframe
             return res.json({ 
                 success: true, 
                 iframeUrl: `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${paymentToken}` 
@@ -2473,4 +2512,100 @@ app.post('/api/check-request-matches', async (req, res) => {
         res.json({ matches: [] });
     }
 });
+// ============================================================
+// 🚨 نظام الإبلاغ والسجلات السرية والوظائف المجدولة (Cron)
+// ============================================================
+
+// 1. API تقديم بلاغ
+app.post('/api/report-user', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'يجب تسجيل الدخول' });
+
+    try {
+        const reporter = jwt.verify(token, JWT_SECRET);
+        const { reportedPhone, reason } = req.body;
+
+        if (reporter.phone === reportedPhone) return res.status(400).json({ message: 'لا يمكن الإبلاغ عن نفسك' });
+
+        // تسجيل البلاغ
+        await pgQuery(`INSERT INTO user_reports (reporter_phone, reported_phone, reason, created_at) VALUES ($1, $2, $3, $4)`, 
+            [reporter.phone, reportedPhone, reason || 'بدون سبب', new Date().toISOString()]);
+
+        // فحص عدد البلاغات
+        const countRes = await pgQuery(`SELECT COUNT(*) FROM user_reports WHERE reported_phone = $1`, [reportedPhone]);
+        const reportCount = parseInt(countRes.rows[0].count);
+
+        // إشعار ديسكورد (لون أحمر)
+        await sendDiscordNotification("🚨 بلاغ جديد عن مستخدم", [
+            { name: "المُبلِغ", value: reporter.phone },
+            { name: "المُبلَغ عنه", value: reportedPhone },
+            { name: "السبب", value: reason },
+            { name: "إجمالي البلاغات", value: `${reportCount}/10` }
+        ], 15548997); 
+
+        // الحظر التلقائي لو وصل 10
+        if (reportCount >= 10) {
+            await pgQuery(`UPDATE users SET is_banned = TRUE WHERE phone = $1`, [reportedPhone]);
+            await sendDiscordNotification("⛔ حظر تلقائي", [{ name: "المستخدم المحظور", value: reportedPhone }, { name: "السبب", value: "تجاوز 10 بلاغات" }], 0);
+        }
+
+        res.json({ success: true, message: 'تم إرسال البلاغ بنجاح. لن تظهر لك إعلانات هذا المستخدم مرة أخرى.' });
+
+    } catch (e) { res.status(500).json({ message: 'خطأ' }); }
+});
+
+// 2. سجلات المعاملات السرية للأدمن
+app.get('/api/admin/secret-logs', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).send();
+        
+        // جلب معاملات الشحن الناجحة فقط (deposit)
+        const result = await pgQuery("SELECT * FROM transactions WHERE type = 'deposit' ORDER BY date DESC");
+        res.json(result.rows);
+    } catch (e) { res.status(500).json([]); }
+});
+
+app.delete('/api/admin/secret-logs', async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).send();
+        
+        await pgQuery("DELETE FROM transactions WHERE type = 'deposit'"); 
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({}); }
+});
+
+// 3. 🎁 Cron Job: توزيع 2 نقطة مجانية كل أول شهر
+setInterval(async () => {
+    try {
+        const today = new Date();
+        // لو النهاردة يوم 1 في الشهر
+        if (today.getDate() === 1) {
+            // نتأكد إننا منفذناش العملية دي النهاردة
+            const logCheck = await pgQuery("SELECT last_run FROM cron_logs WHERE job_name = 'monthly_points'");
+            const lastRunStr = logCheck.rows[0]?.last_run;
+            const lastRunDate = lastRunStr ? new Date(lastRunStr) : new Date(0);
+
+            // لو فات شهر (أو دي أول مرة)
+            if (today.getMonth() !== lastRunDate.getMonth() || today.getFullYear() !== lastRunDate.getFullYear()) {
+                
+                // التأكد من تفعيل الدفع (عشان لو مش مفعلين الدفع مش هنوزع نقط)
+                const activeRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+                if (activeRes.rows[0]?.setting_value === 'true') {
+                    
+                    console.log("🎁 جاري توزيع النقاط الشهرية المجانية...");
+                    // زود نقطتين لكل الناس
+                    await pgQuery("UPDATE users SET wallet_balance = wallet_balance + 2");
+                    
+                    // تحديث السجل
+                    await pgQuery(`INSERT INTO cron_logs (job_name, last_run) VALUES ('monthly_points', $1) 
+                                   ON CONFLICT (job_name) DO UPDATE SET last_run = $1`, [today.toISOString()]);
+                }
+            }
+        }
+    } catch (e) { console.error("Cron Job Error:", e); }
+}, 12 * 60 * 60 * 1000); // يفحص مرتين في اليوم
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

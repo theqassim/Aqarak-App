@@ -565,6 +565,18 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="report-modal">
+    <div class="modal-content" style="border-color: #ff4444;">
+        <span class="close-modal" onclick="document.getElementById('report-modal').style.display='none'">&times;</span>
+        <h3 style="color: #ff4444; margin-bottom: 15px; text-align: center;"><i class="fas fa-exclamation-triangle"></i> إبلاغ عن المعلن</h3>
+        <p style="text-align: center; color: #ccc; font-size: 0.9rem; margin-bottom: 20px;">سيتم مراجعة البلاغ، ولن تظهر لك إعلانات هذا المستخدم مرة أخرى.</p>
+        
+        <textarea id="report-reason" class="neon-input-white" rows="3" placeholder="سبب الإبلاغ (اختياري)..." style="width: 100%; margin-bottom: 15px; background: #222; color: white; border: 1px solid #444;"></textarea>
+        
+        <button onclick="submitUserReport()" style="width: 100%; background: #ff4444; border: none; padding: 12px; border-radius: 50px; color: white; font-weight: bold; cursor: pointer;">تأكيد الإبلاغ</button>
+    </div>
+</div>
+
     <footer class="main-footer" style="text-align: center; padding: 20px; border-top: 1px solid #333; margin-top: 40px; color: #777;">
         <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
     </footer>

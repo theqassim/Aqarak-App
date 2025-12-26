@@ -281,6 +281,34 @@
             </div>
         </section>
 
+        <div class="mind-reader-container" onclick="scrollToRequest()" style="cursor: pointer; text-align: center; margin: 30px 0;">
+    <h3 class="typewriter-text" style="color: var(--neon-primary); font-weight: bold; font-size: 1.2rem; min-height: 30px;">
+        </h3>
+    <button class="btn btn-sm btn-outline-primary mt-2" style="background:transparent; border:1px solid var(--neon-primary); color:var(--neon-primary); padding:5px 15px; border-radius:20px;">احجز عقارك الآن 👇</button>
+</div>
+
+<script>
+    // سكربت الأنيميشن البسيط
+    const typeText = "في عقار معين في دماغك؟ احجز عقارك دلوقتي 🤔";
+    const typeContainer = document.querySelector('.typewriter-text');
+    let typeIndex = 0;
+    
+    function typeWriterAnim() {
+        if (typeIndex < typeText.length) {
+            typeContainer.innerHTML += typeText.charAt(typeIndex);
+            typeIndex++;
+            setTimeout(typeWriterAnim, 100);
+        } else {
+            setTimeout(() => { typeContainer.innerHTML = ''; typeIndex = 0; typeWriterAnim(); }, 5000);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', typeWriterAnim);
+
+    function scrollToRequest() {
+        document.querySelector('.request-property-section').scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
         <section class="listings-section">
             <h2 class="section-title">أحدث العقارات</h2>
             <div class="adv-grid-container" id="listings-container"></div>
