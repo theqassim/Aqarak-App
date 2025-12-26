@@ -274,6 +274,98 @@ input:checked + .slider:before { transform: translateX(26px); }
 }
 .status-active { color: var(--neon-primary); }
 .status-inactive { color: var(--neon-danger); }
+/* =========================================
+   📊 تصميم سجلات الشحن (Modern Logs)
+   ========================================= */
+#secret-logs-container {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.85) !important; 
+}
+
+.logs-wrapper {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    margin-top: 20px;
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
+}
+
+/* --- تخطيط الجدول (Desktop) --- */
+.logs-header, .log-row {
+    display: grid;
+    /* تقسيم الأعمدة: الهاتف - النقط - الفلوس - التاريخ - الوصف */
+    grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 2fr; 
+    padding: 15px;
+    align-items: center;
+    text-align: center;
+}
+
+.logs-header {
+    background: rgba(0, 255, 136, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: bold;
+    color: #00ff88;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.log-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.3s ease;
+    color: #eee;
+    font-size: 0.95rem;
+}
+
+.log-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* --- تنسيق الخلايا --- */
+.cell-phone { font-family: 'Courier New', monospace; letter-spacing: 1px; color: #fff; }
+.cell-points { color: #FFD700; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.1rem; }
+.cell-money { color: #00ff88; font-weight: bold; text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); font-size: 1.1rem; }
+.cell-date { color: #aaa; font-size: 0.85rem; }
+.cell-desc { color: #888; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- 📱 تحسينات الموبايل (تحويل لبطاقات) --- */
+@media (max-width: 768px) {
+    .logs-header { display: none; } /* إخفاء العناوين في الموبايل */
+
+    .log-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        margin: 15px;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .log-cell {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+    
+    .log-cell:last-child { border-bottom: none; }
+
+    /* إضافة التسمية تلقائياً قبل القيمة */
+    .log-cell::before {
+        content: attr(data-label);
+        color: #888;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .cell-desc { white-space: normal; } /* السماح بالتفاف النص في الوصف */
+}
     </style>
 </head>
 <body class="internal-page">
@@ -494,15 +586,42 @@ input:checked + .slider:before { transform: translateX(26px); }
     </div>
 </div>
 
-<div id="secret-logs-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; padding:20px; overflow-y:auto;">
-    <div style="max-width:800px; margin:0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="color:#00ff88;">💰 سجلات الشحن الناجحة</h2>
-            <button onclick="document.getElementById('secret-logs-container').style.display='none'" style="color:white; background:none; border:none; font-size:1.5rem;">&times;</button>
+<div id="secret-logs-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:99999; padding:20px; overflow-y:auto;">
+    <div style="max-width:900px; margin:40px auto; position:relative;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h2 style="color:#00ff88; font-size:1.8rem; text-shadow:0 0 15px rgba(0,255,136,0.4);">
+                <i class="fas fa-history"></i> سجلات الشحن
+            </h2>
+            <button onclick="document.getElementById('secret-logs-container').style.display='none'" 
+                    style="color:white; background:rgba(255,255,255,0.1); border:none; width:40px; height:40px; border-radius:50%; font-size:1.2rem; cursor:pointer; transition:0.3s;">
+                &times;
+            </button>
         </div>
-        <button onclick="clearSecretLogs()" style="background:#ff4444; color:white; border:none; padding:10px 20px; border-radius:5px; margin-bottom:20px; cursor:pointer;">🗑️ مسح جميع السجلات</button>
-        <div id="logs-table-wrapper"></div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+            <button onclick="clearSecretLogs()" 
+                    style="background:rgba(255, 68, 68, 0.2); color:#ff4444; border:1px solid #ff4444; padding:8px 20px; border-radius:30px; cursor:pointer; font-weight:bold; transition:0.3s;">
+                <i class="fas fa-trash"></i> مسح السجل
+            </button>
+        </div>
+
+        <div class="logs-wrapper">
+            <div class="logs-header">
+                <div>رقم الهاتف</div>
+                <div>النقاط</div>
+                <div>المبلغ (ج.م)</div>
+                <div>التاريخ</div>
+                <div>الوصف</div>
+            </div>
+            
+            <div id="logs-table-body">
+                <p style="text-align:center; padding:20px; color:#aaa;">جاري التحميل...</p>
+            </div>
+        </div>
+
     </div>
+</div>
 </div>
 <script>
     // 1. منطق الضغطات الخمسة
@@ -530,38 +649,52 @@ input:checked + .slider:before { transform: translateX(26px); }
 
     // 3. جلب السجلات
     async function loadSecretLogs() {
-        const wrapper = document.getElementById('secret-logs-container');
-        const tableDiv = document.getElementById('logs-table-wrapper');
-        wrapper.style.display = 'block';
-        tableDiv.innerHTML = '<p style="color:white;">جاري التحميل...</p>';
+    const wrapper = document.getElementById('secret-logs-container');
+    const tableBody = document.getElementById('logs-table-body');
+    
+    wrapper.style.display = 'block';
+    tableBody.innerHTML = '<div style="padding:40px; text-align:center; color:white;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري جلب البيانات...</div>';
 
-        try {
-            const res = await fetch('/api/admin/secret-logs');
-            const logs = await res.json();
+    try {
+        const res = await fetch('/api/admin/secret-logs');
+        const logs = await res.json();
+        
+        // 1. جلب سعر النقطة الحالي لحساب المبلغ التقريبي
+        const currentPriceInput = document.getElementById('point-price');
+        const pointPrice = currentPriceInput ? parseFloat(currentPriceInput.value) : 1;
+
+        if (!logs || logs.length === 0) {
+            tableBody.innerHTML = '<div style="padding:40px; text-align:center; color:#777;">📭 لا توجد سجلات شحن محفوظة.</div>';
+            return;
+        }
+
+        let html = '';
+        
+        logs.forEach(log => {
+            // المبلغ = النقاط * سعر النقطة (تقريبي)
+            // بما أن "amount" في الداتابيز هو النقاط
+            const points = parseFloat(log.amount);
+            const money = (points * pointPrice).toFixed(1); 
+            const date = new Date(log.date).toLocaleDateString('ar-EG');
             
-            if (logs.length === 0) {
-                tableDiv.innerHTML = '<p style="color:#777; text-align:center;">لا توجد سجلات.</p>';
-                return;
-            }
+            html += `
+                <div class="log-row">
+                    <div class="log-cell cell-phone" data-label="الهاتف">${log.user_phone}</div>
+                    <div class="log-cell cell-points" data-label="النقاط">${points} <small>نقطة</small></div>
+                    <div class="log-cell cell-money" data-label="المبلغ">${money} <small>ج.م</small></div>
+                    <div class="log-cell cell-date" data-label="التاريخ">${date}</div>
+                    <div class="log-cell cell-desc" data-label="الوصف" title="${log.description}">${log.description}</div>
+                </div>
+            `;
+        });
 
-            let html = '<table style="width:100%; border-collapse:collapse; color:white;">';
-            html += '<tr style="border-bottom:1px solid #444; color:#00ff88;"><th style="padding:10px;">الهاتف</th><th style="padding:10px;">المبلغ</th><th style="padding:10px;">التاريخ</th><th style="padding:10px;">الوصف</th></tr>';
-            
-            logs.forEach(log => {
-                html += `
-                    <tr style="border-bottom:1px solid #333;">
-                        <td style="padding:10px;">${log.user_phone}</td>
-                        <td style="padding:10px; color:#ffd700;">${log.amount}</td>
-                        <td style="padding:10px; font-size:0.8rem;">${new Date(log.date).toLocaleDateString()}</td>
-                        <td style="padding:10px; font-size:0.8rem; color:#aaa;">${log.description}</td>
-                    </tr>
-                `;
-            });
-            html += '</table>';
-            tableDiv.innerHTML = html;
+        tableBody.innerHTML = html;
 
-        } catch (e) { tableDiv.innerHTML = 'خطأ في الجلب'; }
+    } catch (e) { 
+        console.error(e);
+        tableBody.innerHTML = '<div style="padding:20px; text-align:center; color:#ff4444;">❌ حدث خطأ في جلب البيانات</div>'; 
     }
+}
 
     // 4. مسح السجلات
     async function clearSecretLogs() {

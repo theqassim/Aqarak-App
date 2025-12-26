@@ -404,7 +404,7 @@ window.startChargeProcess = async function() {
     const walletNumber = document.getElementById('wallet-number').value;
     const btn = document.querySelector('#charge-modal button[onclick="startChargeProcess()"]');
 
-    if (!points || points < 10) return alert('أقل عدد للنقاط هو 10');
+    if (!points || points < 1) return alert('أقل عدد للنقاط هو 1');
     if (selectedMethod === 'wallet' && (!walletNumber || walletNumber.length < 11)) {
         return alert('أدخل رقم محفظة صحيح');
     }

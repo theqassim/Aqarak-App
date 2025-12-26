@@ -241,6 +241,43 @@
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        /* --- 🔢 English Numbers Badge Style --- */
+.english-num-tip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 212, 255, 0.1); /* خلفية زرقاء خفيفة */
+    border: 1px solid var(--neon-secondary); /* حدود نيون سماوي */
+    color: var(--neon-secondary);
+    padding: 6px 15px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    font-weight: bold;
+    width: fit-content;
+
+    /* إعدادات الأنيميشن: يشتغل مرة واحدة ويثبت */
+    opacity: 0;
+    transform: translateX(20px);
+    animation: slideInTip 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* حركة الأيقونة داخل الشارة */
+.english-num-tip i {
+    font-size: 1rem;
+}
+
+/* تعريف الحركة (تظهر مرة واحدة) */
+@keyframes slideInTip {
+    0% {
+        opacity: 0;
+        transform: translateX(20px); /* جاي من اليمين */
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0); /* يثبت مكانه */
+    }
+}
     </style>
 </head>
 <body class="internal-page">

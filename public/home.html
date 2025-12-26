@@ -213,6 +213,87 @@
     .action-btn { background: linear-gradient(135deg, #00ff41, #008cff); color: white; border: none; padding: 15px 50px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 100%; }
     .checkbox-container { margin-top: 15px; font-size: 14px; color: #aaa; display: flex; justify-content: center; gap: 8px; cursor: pointer; }
     @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    /* =========================================
+   🔔 ستايلات إشعارات الديسكتوب الجديدة
+   ========================================= */
+.desktop-notif-wrapper {
+    position: relative;
+    margin-left: 15px; /* مسافة بين الجرس وباقي الأزرار */
+}
+
+.desktop-notif-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #ddd;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.desktop-notif-btn:hover {
+    border-color: var(--neon-primary);
+    color: var(--neon-primary);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.desktop-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4444;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    border: 2px solid var(--card-bg);
+    display: none; /* مخفي افتراضياً */
+}
+
+.desktop-notif-dropdown {
+    display: none; /* مخفي افتراضياً */
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    background: var(--card-bg);
+    border: 1px solid var(--neon-primary);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    z-index: 10001;
+    overflow: hidden;
+    max-height: 400px;
+    overflow-y: auto;
+    animation: fadeInDrop 0.2s ease-out;
+}
+
+/* تخصيص السكرول بار للقائمة */
+.desktop-notif-dropdown::-webkit-scrollbar { width: 5px; }
+.desktop-notif-dropdown::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+/* رأس القائمة */
+.notif-header {
+    padding: 10px 15px;
+    background: rgba(0, 255, 136, 0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-weight: bold;
+    color: var(--neon-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@keyframes fadeInDrop {
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
     </style>
 </head>
 <body>

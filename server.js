@@ -317,11 +317,29 @@ async function urlToGenerativePart(url) {
     }
 }
 
+// 🛠️ دالة لجلب الصورة من الرابط وتحويلها لـ Base64 للـ AI
+async function urlToGenerativePart(url) {
+    try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        return {
+            inlineData: {
+                data: Buffer.from(arrayBuffer).toString("base64"),
+                mimeType: "image/webp" 
+            },
+        };
+    } catch (error) {
+        console.error("Error fetching image for AI:", error);
+        return null;
+    }
+}
+
+// 🟢 الدالة المعدلة: لا ترفض أي عقار، بل تحوله للمراجعة
 async function aiCheckProperty(title, description, price, imageUrls) {
     try {
         const imageParts = [];
         if (imageUrls && imageUrls.length > 0) {
-            for (const url of imageUrls.slice(0, 4)) { // فحص حتى 4 صور لدقة أعلى
+            for (const url of imageUrls.slice(0, 4)) { 
                 const part = await urlToGenerativePart(url);
                 if (part) imageParts.push(part);
             }
@@ -335,27 +353,46 @@ async function aiCheckProperty(title, description, price, imageUrls) {
 {
   "status": "approved" أو "rejected" أو "pending",
   "reason": "سبب تقني لنا (للأدمن)",
-  "user_message": "رسالة ودودة للمستخدم بالعامية المصرية تشرح له حالة إعلانه وماذا يفعل",
+  "user_message": "رسالة ودودة للمستخدم بالعامية المصرية تشرح له حالة إعلانه",
   "marketing_description": "وصف تسويقي جذاب بناءً على الصور",
   "detected_location": "اسم المنطقة"
 }
 
-⚠️ معايير الرسائل للمستخدم:
-- Rejected: "يا فندم نعتذر، الإعلان مخالف لأنه (ذكر السبب زي: صور غير عقارية/ألفاظ غير لائقة)".
-- Pending: "إعلانك وصل! بس محتاجين نراجعه يدوي عشان (ذكر السبب زي: الصور مش واضحة/السعر محتاج تأكيد/العنوان محتاج تفاصيل)".
-- Approved: "مبروك! إعلانك اتنشر فوراً وبوصف احترافي".
+⚠️ هام جداً:
+- لو الإعلان سليم وممتاز، اجعل الحالة "approved".
+- لو فيه أي شك أو مخالفة، اجعل الحالة "pending" للمراجعة اليدوية.
 `;
         const result = await modelVision.generateContent([prompt, ...imageParts]);
         const response = await result.response;
         let text = response.text();
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(text);
+        
+        let jsonResult = JSON.parse(text);
+
+        // 🔥🔥 التعديل السحري هنا 🔥🔥
+        // إجبار النظام على عدم الرفض نهائياً
+        if (jsonResult.status === 'rejected') {
+            console.log(`⚠️ AI Wanted to reject, but forced to PENDING. Reason: ${jsonResult.reason}`);
+            
+            jsonResult.status = 'pending'; // تحويل الحالة لمراجعة
+            jsonResult.user_message = "إعلانك وصل! بس محتاجين نراجعه مراجعة سريعة عشان نتأكد من بعض التفاصيل، وهيتنشر فوراً بعد المراجعة.";
+            jsonResult.reason = "⚠️ (AI Rejected this originally) -> " + jsonResult.reason; // تنبيه للأدمن إن الـ AI كان رافضه
+        }
+
+        return jsonResult;
+
     } catch (error) {
         console.error("AI Check Error:", error);
-        return { status: "pending", reason: "AI Technical Error", marketing_description: description, detected_location: "" };
+        // في حالة حدوث خطأ تقني، حوله أيضاً للمراجعة بدلاً من الرفض
+        return { 
+            status: "pending", 
+            reason: "AI Technical Error (Forced Pending)", 
+            user_message: "جاري مراجعة إعلانك يدوياً.",
+            marketing_description: description, 
+            detected_location: "" 
+        };
     }
 }
-
 // دالة توليد كود عشوائي للعقارات
 function generateUniqueCode() {
     return 'AQ-' + Math.floor(100000 + Math.random() * 900000);

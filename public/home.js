@@ -253,30 +253,39 @@ async function checkNotifications() {
         const res = await fetch('/api/user/notifications');
         const data = await res.json();
         
-        const badge = document.getElementById('menu-notif-badge');
-        const innerBadge = document.getElementById('notif-count-text');
-        const list = document.getElementById('menu-notif-list');
+        // عناصر الموبايل
+        const mobBadge = document.getElementById('menu-notif-badge');
+        const mobInnerBadge = document.getElementById('notif-count-text');
+        const mobList = document.getElementById('menu-notif-list');
 
+        // عناصر الديسكتوب (الجديدة)
+        const desktopBadge = document.getElementById('desktop-notif-badge');
+        const desktopList = document.getElementById('desktop-notif-list');
+
+        // تحديث العدادات (Badges)
         if (data.unreadCount > 0) {
-            if(badge) {
-                badge.style.display = 'block';
-                badge.textContent = data.unreadCount > 9 ? '+9' : data.unreadCount;
-            }
-            if(innerBadge) {
-                innerBadge.style.display = 'inline-block';
-                innerBadge.textContent = `${data.unreadCount} جديدة`;
-            }
+            const countText = data.unreadCount > 9 ? '+9' : data.unreadCount;
+            
+            // موبايل
+            if(mobBadge) { mobBadge.style.display = 'block'; mobBadge.textContent = countText; }
+            if(mobInnerBadge) { mobInnerBadge.style.display = 'inline-block'; mobInnerBadge.textContent = `${data.unreadCount} جديدة`; }
+            
+            // ديسكتوب ✅
+            if(desktopBadge) { desktopBadge.style.display = 'block'; desktopBadge.textContent = countText; }
         } else {
-            if(badge) badge.style.display = 'none';
-            if(innerBadge) innerBadge.style.display = 'none';
+            if(mobBadge) mobBadge.style.display = 'none';
+            if(mobInnerBadge) mobInnerBadge.style.display = 'none';
+            if(desktopBadge) desktopBadge.style.display = 'none';
         }
 
-        if (list && data.notifications && data.notifications.length > 0) {
-            list.innerHTML = data.notifications.map(n => `
-                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}">
+        // بناء HTML القائمة
+        let listHTML = '';
+        if (data.notifications && data.notifications.length > 0) {
+            listHTML = data.notifications.map(n => `
+                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}" style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; color: #ddd;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-left:25px;">
                         <strong style="color:white; font-size:0.9rem;">${n.title}</strong>
-                        <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" title="حذف">
+                        <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" title="حذف" style="color:#ff4444; background:none; border:none; cursor:pointer;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -284,10 +293,16 @@ async function checkNotifications() {
                     <span style="font-size:0.65rem; color:#666; display:block; margin-top:5px;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
                 </div>
             `).join('');
+        } else {
+            listHTML = '<p style="text-align:center; color:#555; padding:15px;">لا توجد إشعارات حالياً</p>';
         }
+
+        // وضع المحتوى في القوائم
+        if (mobList) mobList.innerHTML = listHTML;
+        if (desktopList) desktopList.innerHTML = listHTML; // ✅
+
     } catch (e) { console.error("Notif Error", e); }
 }
-
 window.deleteNotification = async (e, id) => {
     e.stopPropagation();
     if(!confirm('حذف هذا الإشعار؟')) return;
@@ -326,13 +341,34 @@ async function updateNavigation() {
         const data = await response.json();
 
         if (data.isAuthenticated) {
+            // ✅ تمت إضافة زر الإشعارات هنا
             nav.innerHTML = `
+                <div class="desktop-notif-wrapper">
+                    <button class="desktop-notif-btn" onclick="toggleDesktopNotif(event)">
+                        <i class="fas fa-bell"></i>
+                        <span id="desktop-notif-badge" class="desktop-badge">0</span>
+                    </button>
+                    <div id="desktop-notif-dropdown" class="desktop-notif-dropdown">
+                        <div class="notif-header">
+                            <span>الإشعارات</span>
+                            <small onclick="markAllRead()" style="cursor:pointer; font-size:0.7rem; text-decoration:underline;">تحديد كمقروء</small>
+                        </div>
+                        <div id="desktop-notif-list">
+                            <p style="text-align:center; color:#777; padding:15px;">جاري التحميل...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <a href="all-properties" class="nav-button">جميع العقارات</a>
                 <a href="all-properties.html?type=buy" class="nav-button">شراء</a>
                 <a href="all-properties.html?type=rent" class="nav-button">ايجار</a>
                 <a href="user-dashboard" class="nav-button">حسابي</a> 
                 <a href="seller-dashboard" class="sell-btn">اعرض عقارك!</a>
             `;
+            
+            // استدعاء التحقق من الإشعارات فوراً بعد رسم الهيدر
+            checkNotifications(); 
+            
         } else {
             nav.innerHTML = `
                 <a href="index" class="nav-button">تسجيل دخول</a>
@@ -343,7 +379,6 @@ async function updateNavigation() {
         nav.innerHTML = `<a href="index" class="nav-button">تسجيل دخول</a>`;
     }
 }
-
 // =========================================
 // 👽 Aqarak AI Core Logic (الشات مع إصلاح الموبايل)
 // =========================================
@@ -517,3 +552,44 @@ function toggleVoiceInput() {
     if (isListening) recognition.stop();
     else recognition.start();
 }
+// ✅ دالة فتح وإغلاق إشعارات الديسكتوب
+window.toggleDesktopNotif = async function(e) {
+    e.stopPropagation(); // منع إغلاق القائمة فوراً عند الضغط
+    const dropdown = document.getElementById('desktop-notif-dropdown');
+    const badge = document.getElementById('desktop-notif-badge');
+    
+    if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+    } else {
+        dropdown.style.display = 'block';
+        
+        // عند الفتح، نعتبر الإشعارات مقروءة (اختياري)
+        if (badge && badge.style.display !== 'none') {
+            badge.style.display = 'none';
+            try { await fetch('/api/user/notifications/read', { method: 'POST' }); } catch(e){}
+        }
+    }
+};
+
+// ✅ دالة تحديد الكل كمقروء (اختياري)
+window.markAllRead = async function() {
+    try { 
+        await fetch('/api/user/notifications/read', { method: 'POST' }); 
+        const badges = document.querySelectorAll('#desktop-notif-badge, #menu-notif-badge, #notif-count-text');
+        badges.forEach(b => b.style.display = 'none');
+        // إزالة ستايل "غير مقروء" من العناصر
+        document.querySelectorAll('.menu-notif-item.unread').forEach(el => el.classList.remove('unread'));
+    } catch(e){}
+};
+
+// ✅ إغلاق القائمة عند الضغط في أي مكان خارجها
+window.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('desktop-notif-dropdown');
+    const btn = e.target.closest('.desktop-notif-btn');
+    const isInsideDropdown = e.target.closest('.desktop-notif-dropdown');
+
+    // إذا ضغط المستخدم خارج الزر وخارج القائمة، أغلق القائمة
+    if (dropdown && dropdown.style.display === 'block' && !btn && !isInsideDropdown) {
+        dropdown.style.display = 'none';
+    }
+});
