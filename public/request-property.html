@@ -4,303 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>احجز عقارك - عقارك</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-<script type="application/ld+json">
-     {
-
-  "@context": "https://schema.org",
-
-  "@type": "RealEstateAgent",
-
-  "name": "منصة عقارك - Aqarak",
-
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
-
-  "url": "https://aqarakeg.com",
-
-  "logo": "https://aqarakeg.com/logo.jpg",
-
-  "image": "https://aqarakeg.com/logo.jpg",
-
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
-
-  "address": {
-
-    "@type": "PostalAddress",
-
-    "addressLocality": "Cairo",
-
-    "addressCountry": "EG"
-
-  },
-
-  "priceRange": "$",
-
-  "contactPoint": {
-
-    "@type": "ContactPoint",
-
-    "telephone": "+201008102237",
-
-    "contactType": "customer service",
-
-    "areaServed": "EG",
-
-    "availableLanguage": ["Arabic"]
-
-  },
-
-  "sameAs": [
-
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-
-  ]
-
-}
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
-        /* --- 🛠️ 1. Reset & Global Styles --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        :root {
-            --glass-bg: rgba(20, 20, 20, 0.98);
-            --neon-primary: #00ff88;
-            --neon-secondary: #00d4ff;
+        /* --- 🎨 نفس متغيرات Home --- */
+        :root { 
+            --glass-bg: rgba(20, 20, 20, 0.98); 
+            --neon-primary: #00ff88; 
+            --neon-secondary: #00d4ff; 
             --neon-pink: #e91e63;
             --card-bg: #1a1a1a;
+            --ai-bg: rgba(10, 15, 20, 0.9);
+            --ai-border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
-        body.internal-page {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            padding-top: 100px !important; /* مسافة للهيدر الثابت */
+        body { 
+            background-color: #0f0f0f; 
+            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); 
+            min-height: 100vh; margin: 0; padding: 0; 
+            font-family: 'Cairo', sans-serif; 
+            color: white; 
+            padding-top: 80px; /* مسافة للهيدر */
         }
 
-        /* --- Header --- */
+        /* --- استيراد ستايلات الهيدر والفوتر من ملف CSS العام إذا وجد، أو كتابتها هنا --- */
+        /* (تم نسخ أهم الستايلات لضمان العمل فوراً) */
+
+        /* 📱 هيدر الموبايل */
+        .mobile-header-custom {
+            display: none; position: fixed; top: 0; left: 0; right: 0;
+            height: 70px; background: rgba(12, 12, 12, 0.98);
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 9999; padding: 0 20px; align-items: center; justify-content: space-between;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.8);
+        }
+        .mob-logo-link img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
+        .menu-toggle-btn { color: var(--neon-secondary); font-size: 1.3rem; cursor: pointer; }
+
+        /* 🖥️ هيدر الديسكتوب */
         .main-header {
-            position: fixed !important; top: 0; left: 0; right: 0; width: 100%; z-index: 9999;
-            background: var(--glass-bg); backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 15px;
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px; display: flex; justify-content: center;
         }
-        .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
-        .logo-container { display: flex; align-items: center; gap: 10px; }
-        .logo { height: 40px; border-radius: 50%; border: 2px solid var(--neon-pink); }
-        .logo-text { font-weight: bold; font-size: 1.1rem; color: white; }
-        .nav-button {
-            text-decoration: none; color: white; border: 1px solid var(--neon-secondary);
-            padding: 6px 20px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
-        }
-        .nav-button:hover { background: var(--neon-secondary); color: black; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1250px; }
+        .logo { height: 40px; width: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
+        .logo-container { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+        .nav-button { color: #ddd; text-decoration: none; padding: 8px 15px; border-radius: 50px; border: 1px solid #444; transition: 0.3s; }
+        .nav-button:hover { border-color: var(--neon-primary); color: var(--neon-primary); }
 
-        /* --- Content & Form --- */
-        .main-content { max-width: 600px; margin: 0 auto; padding: 20px; }
+        @media (max-width: 768px) {
+            .main-header { display: none !important; }
+            .mobile-header-custom { display: flex !important; }
+        }
+
+        /* --- 📝 نموذج الطلب (التصميم الجديد) --- */
+        .request-container {
+            max-width: 700px; margin: 40px auto; padding: 40px 30px;
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
+            border-radius: 25px; border: 1px solid #333;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.05);
+            position: relative; overflow: hidden;
+        }
+        /* خط نيون علوي */
+        .request-container::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary));
+        }
+
+        .form-header { text-align: center; margin-bottom: 40px; }
+        .form-header i { font-size: 3rem; color: var(--neon-primary); margin-bottom: 15px; display: inline-block; animation: float 3s infinite ease-in-out; }
+        .form-header h1 { font-size: 1.8rem; margin: 0; color: white; }
+        .form-header p { color: #aaa; margin-top: 10px; font-size: 0.95rem; line-height: 1.6; }
+
+        .input-group { margin-bottom: 25px; text-align: right; }
+        .input-group label { display: block; color: var(--neon-secondary); margin-bottom: 8px; font-size: 0.9rem; font-weight: bold; }
         
-        .centered-page-content {
-            background: var(--card-bg); border: 1px solid #333; border-radius: 20px; padding: 40px 30px;
-            box-shadow: 0 0 30px rgba(233, 30, 99, 0.1);
+        .neon-input {
+            width: 100%; padding: 15px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #444; border-radius: 12px; color: white;
+            font-family: inherit; transition: 0.3s; font-size: 1rem;
+        }
+        .neon-input:focus {
+            border-color: var(--neon-primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.15); outline: none;
         }
 
-        .input-group { margin-bottom: 20px; text-align: right; }
-        .input-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.9rem; }
+        .btn-submit-neon {
+            width: 100%; padding: 15px; border-radius: 50px; border: none;
+            background: linear-gradient(135deg, var(--neon-primary) 0%, #00b862 100%);
+            color: black; font-weight: bold; font-size: 1.1rem; cursor: pointer;
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+        .btn-submit-neon:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 255, 136, 0.5); }
+        .btn-submit-neon:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* رسالة الحالة */
+        .status-msg { margin-top: 15px; text-align: center; font-size: 0.9rem; padding: 10px; border-radius: 8px; display: none; }
+        .status-msg.error { background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* --- 🛸 نسخ ستايلات الـ AI والفوتر من Home --- */
+        /* (يفترض أنك وضعت ملف styles.css موحد، ولكن سأضع الضروري هنا ليعمل الملف منفرداً) */
+        .ai-orb-container { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 9999; cursor: pointer; }
+        .ai-orb-core { width: 100%; height: 100%; border-radius: 50%; background: #000; border: 2px solid var(--neon-primary); overflow: hidden; }
+        .ai-orb-core img { width: 100%; height: 100%; object-fit: cover; }
         
-        .neon-input-white {
-            width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid #444;
-            color: white; border-radius: 8px; outline: none; transition: 0.3s; font-family: inherit;
-        }
-        .neon-input-white:focus { border-color: var(--neon-pink); box-shadow: 0 0 10px rgba(233, 30, 99, 0.3); }
-
-        .btn-neon-large {
-            padding: 12px; font-size: 1.1rem; border-radius: 50px; cursor: pointer;
-            background: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink);
-            transition: 0.3s; font-weight: bold; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .btn-neon-large:hover { background: var(--neon-pink); color: white; box-shadow: 0 0 20px var(--neon-pink); }
-        .btn-neon-large:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* --- ✨ Modern Success Modal --- */
-        .modal-overlay {
-            display: none; /* مخفي افتراضياً */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
-            z-index: 10000; justify-content: center; align-items: center;
-        }
-
-        .modal-card {
-            background: #151515; border: 1px solid var(--neon-pink);
-            padding: 40px 30px; border-radius: 25px; text-align: center;
-            max-width: 400px; width: 90%;
-            box-shadow: 0 0 50px rgba(233, 30, 99, 0.2);
-            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-        }
-
-        @keyframes modalPop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .success-icon-container {
-            width: 80px; height: 80px; margin: 0 auto 20px;
-            background: rgba(233, 30, 99, 0.1); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-        }
-        
-        .success-icon-container i { font-size: 2.5rem; color: var(--neon-pink); }
-        
-        .pulse-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 2px solid var(--neon-pink); opacity: 0;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
-
-        .modal-title { color: white; font-size: 1.5rem; margin-bottom: 10px; }
-        .modal-text { color: #aaa; margin-bottom: 30px; line-height: 1.6; font-size: 0.95rem; }
-
-        .modal-btn {
-            background: var(--neon-pink); color: white; border: none;
-            padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer;
-            transition: 0.3s; width: 100%; font-size: 1rem;
-        }
-        .modal-btn:hover { background: #c2185b; transform: translateY(-2px); }
+        /* مودال النجاح */
+        .success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .success-content { background: #121212; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--neon-primary); max-width: 400px; width: 90%; animation: popIn 0.4s; }
+        .success-icon { font-size: 4rem; color: var(--neon-primary); margin-bottom: 20px; }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
     </style>
 </head>
-<body class="internal-page">
+<body>
+
+    <header class="mobile-header-custom">
+        <a href="home" class="mob-logo-link"><img src="logo.png" alt="عقارك"></a>
+        <div class="menu-toggle-btn" onclick="window.location.href='home'"><i class="fas fa-home"></i></div>
+    </header>
 
     <header class="main-header">
         <div class="header-container">
             <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">اطلب عقارك</span>
+                <img src="logo.png" class="logo" alt="logo">
+                <span>عقارك - اطلب عقارك</span>
             </div>
             <nav class="main-nav">
-                <a href="home" class="nav-button">العودة للرئيسية</a>
+                <a href="home" class="nav-button">الرئيسية</a>
+                <a href="all-properties" class="nav-button">تصفح العقارات</a>
             </nav>
         </div>
     </header>
 
-    <main class="main-content">
-        <div class="centered-page-content">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <i class="fas fa-magic" style="font-size: 3.5rem; color: var(--neon-pink); margin-bottom: 15px; display: inline-block;"></i>
-                <h2 style="color: white; font-size: 1.8rem;">نظام المطابقة الذكي 🤖</h2>
-                <p style="color: #bbb; margin-top: 10px; line-height: 1.6;">
-                    سجل مواصفات العقار اللي بتدور عليه، وسيب الباقي علينا.<br>
-                    أول ما حد ينشره، هيجيلك إشعار واتساب فوراً!
-                </p>
+    <main>
+        <div class="request-container">
+            <div class="form-header">
+                <i class="fas fa-magic"></i>
+                <h1>نظام المطابقة الذكي 🤖</h1>
+                <p>سجل مواصفات عقارك، وسيقوم الذكاء الاصطناعي بالبحث لك فوراً في قاعدة بياناتنا. إذا لم نجد طلبك، سننشر لك إشعاراً للملاك.</p>
             </div>
 
             <form id="request-form">
                 <div class="input-group">
-                    <label>الاسم بالكامل</label>
-                    <input type="text" id="req-name" class="neon-input-white" required>
+                    <label><i class="fas fa-user"></i> الاسم بالكامل</label>
+                    <input type="text" id="req-name" class="neon-input" required placeholder="اكتب اسمك هنا">
                 </div>
+                
                 <div class="input-group">
-                    <label>رقم الواتساب (لاستلام الإشعار)</label>
-                    <input type="tel" id="req-phone" class="neon-input-white" placeholder="01xxxxxxxxx" required>
+                    <label><i class="fab fa-whatsapp"></i> رقم الواتساب</label>
+                    <input type="tel" id="req-phone" class="neon-input" required placeholder="01xxxxxxxxx">
                 </div>
+                
                 <div class="input-group">
-                    <label>المواصفات المطلوبة بالتفصيل</label>
-                    <textarea id="req-specs" class="neon-input-white" rows="4" 
-                        placeholder="مثال: محتاج شقة في التجمع الخامس، 3 غرف، في حدود 3 مليون جنيه..." required></textarea>
+                    <label><i class="fas fa-list-ul"></i> المواصفات المطلوبة (المكان، السعر، التفاصيل)</label>
+                    <textarea id="req-specs" class="neon-input" rows="5" required placeholder="مثال: أبحث عن شقة في التجمع الخامس، 3 غرف، تشطيب سوبر لوكس، في حدود 3 مليون..."></textarea>
                 </div>
-                <button type="submit" class="btn-neon-large">
-                    <i class="fas fa-bell"></i> تفعيل التنبيه الآن
+
+                <button type="submit" class="btn-submit-neon">
+                    <i class="fas fa-search-location"></i> ابحث وسجل طلبي
                 </button>
+                
+                <div id="request-message" class="status-msg"></div>
             </form>
         </div>
     </main>
 
-    <div class="modal-overlay" id="successModal">
-        <div class="modal-card">
-            <div class="success-icon-container">
-                <div class="pulse-ring"></div>
-                <i class="fas fa-check"></i>
-            </div>
-            <h3 class="modal-title">تم تفعيل التنبيه بنجاح! 🎉</h3>
-            <p class="modal-text">
-                سجلنا طلبك في النظام. بمجرد ما يتوفر عقار مطابق للمواصفات دي، هنبعتلك رسالة واتساب فيها التفاصيل فوراً.
-            </p>
-            <button class="modal-btn" onclick="redirectToHome()">ممتاز، شكراً</button>
+    <div id="successModal" class="success-modal">
+        <div class="success-content">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="color:white; margin-bottom:10px;">تم تسجيل طلبك!</h2>
+            <p style="color:#aaa; margin-bottom:25px;">سيصلك إشعار واتساب فور توفر عقار مطابق للمواصفات.</p>
+            <button onclick="window.location.href='home'" class="btn-submit-neon" style="padding:10px;">العودة للرئيسية</button>
         </div>
     </div>
 
+    <div class="ai-orb-container" onclick="window.location.href='home'">
+        <div class="ai-orb-core">
+            <img src="logo.png" alt="AI">
+        </div>
+    </div>
+
+    <script src="request-property.js"></script> <script src="ban-check.js"></script>
     <script>
-        // 1. تعبئة البيانات تلقائياً لو المستخدم مسجل دخول
+        // تعبئة البيانات تلقائياً
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const res = await fetch('/api/auth/me');
-                if(res.ok) {
-                    const data = await res.json();
-                    if(data.isAuthenticated) {
-                        document.getElementById('req-name').value = data.name || '';
-                        document.getElementById('req-phone').value = data.phone || '';
-                    }
+                const data = await res.json();
+                if(data.isAuthenticated) {
+                    document.getElementById('req-name').value = data.name || '';
+                    document.getElementById('req-phone').value = data.phone || '';
                 }
-            } catch(e) { console.log('Guest mode'); }
+            } catch(e) {}
         });
 
-        // 2. معالجة الفورم وإظهار المودال
-        document.getElementById('request-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const btn = e.target.querySelector('button');
-            const originalContent = btn.innerHTML;
-            
-            // تغيير حالة الزر أثناء التحميل
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التفعيل...';
-            btn.disabled = true;
-
-            const data = {
-                name: document.getElementById('req-name').value,
-                phone: document.getElementById('req-phone').value,
-                specifications: document.getElementById('req-specs').value
-            };
-
-            try {
-                const response = await fetch('/api/request-property', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                
-                if(response.ok) {
-                    // ✅ نجاح: إظهار المودال بدلاً من الـ alert
-                    showSuccessModal();
-                } else {
-                    alert('حدث خطأ أثناء التسجيل، يرجى المحاولة مرة أخرى.');
-                }
-            } catch(err) {
-                alert('فشل الاتصال بالسيرفر.');
-            } finally {
-                // إرجاع الزر لحالته الأصلية
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
-        });
-
-        // وظائف المودال
         function showSuccessModal() {
-            const modal = document.getElementById('successModal');
-            modal.style.display = 'flex'; // تغيير الـ display ليظهر بـ Flexbox
-        }
-
-        function redirectToHome() {
-            window.location.href = 'home';
+            document.getElementById('successModal').style.display = 'flex';
         }
     </script>
-    <script src="ban-check.js"></script>
-    <script src="global-alert.js"></script>
 </body>
 </html>

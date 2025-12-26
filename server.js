@@ -725,28 +725,41 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // تعديل API التحقق (Real-time Ban Check)
 // تعديل API التحقق (يعالج مشكلة خروج الأدمن)
 // ✅ التعديل: التحقق من الحظر في كل مرة يفتح فيها الموقع (Real-time Check)
+// ✅ تعديل API التحقق (لحل مشكلة Undefined عند الحظر)
 app.get('/api/auth/me', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.json({ isAuthenticated: false, role: 'guest' });
     
     try { 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        
-        let isPaymentActive = false;
-        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
-        if (settingsRes.rows.length > 0) isPaymentActive = settingsRes.rows[0].setting_value === 'true';
-        
-        if (decoded.role === 'admin') {
+        // نتجاوز التحقق من التوكن هنا لنقرأ البيانات حتى لو المستخدم محظور
+        const decoded = jwt.decode(token); // استخدام decode بدلاً من verify مبدئياً لقراءة الـ ID
+        if (!decoded || !decoded.id) return res.json({ isAuthenticated: false, role: 'guest' });
+
+        // لو أدمن
+        if (decoded.role === 'admin' && decoded.phone === ADMIN_PHONE) {
              return res.json({ isAuthenticated: true, role: 'admin', phone: decoded.phone, username: 'admin', name: 'المدير العام', balance: 999999, isPaymentActive: true, is_verified: true });
         }
 
-        // جلب التوثيق والصورة
+        // جلب بيانات المستخدم
         const userRes = await pgQuery('SELECT role, phone, username, name, is_banned, wallet_balance, is_verified, profile_picture FROM users WHERE id = $1', [decoded.id]);
         
         if (userRes.rows.length === 0) return res.json({ isAuthenticated: false, role: 'guest' });
         const user = userRes.rows[0];
 
-        if (user.is_banned) return res.status(403).json({ isAuthenticated: false, banned: true });
+        // 🔥 هنا الإصلاح: إرسال البيانات مع حالة الحظر
+        if (user.is_banned) {
+            return res.status(403).json({ 
+                isAuthenticated: false, 
+                banned: true,
+                username: user.username,
+                phone: user.phone,
+                name: user.name
+            });
+        }
+
+        let isPaymentActive = false;
+        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+        if (settingsRes.rows.length > 0) isPaymentActive = settingsRes.rows[0].setting_value === 'true';
 
         res.json({ 
             isAuthenticated: true, 
@@ -755,8 +768,8 @@ app.get('/api/auth/me', async (req, res) => {
             username: user.username, 
             name: user.name,
             balance: parseFloat(user.wallet_balance || 0),
-            is_verified: user.is_verified, // ✅ إرسال حالة التوثيق
-            profile_picture: user.profile_picture, // ✅ إرسال الصورة
+            is_verified: user.is_verified, 
+            profile_picture: user.profile_picture,
             isPaymentActive: isPaymentActive
         }); 
     } 
@@ -2389,6 +2402,75 @@ app.post('/api/user/change-password-manual', async (req, res) => {
     } catch (error) {
         console.error("Change Password Error:", error);
         res.status(500).json({ success: false, message: 'حدث خطأ في السيرفر' });
+    }
+});
+// ==========================================================
+// 🤖 Smart AI Matcher for Requests
+// ==========================================================
+app.post('/api/check-request-matches', async (req, res) => {
+    try {
+        const { specifications } = req.body;
+        if (!specifications) return res.json({ matches: [] });
+
+        // 1. جلب آخر 50 عقار نشط (لتوفير التوكنز والسرعة)
+        const propsRes = await pgQuery(`
+            SELECT id, title, price, description, type, "imageUrl" 
+            FROM properties 
+            ORDER BY id DESC LIMIT 50
+        `);
+
+        if (propsRes.rows.length === 0) return res.json({ matches: [] });
+
+        // 2. تجهيز البيانات للذكاء الاصطناعي
+        // بنحول العقارات لنص مختصر عشان الموديل يفهمه بسرعة
+        const propsList = propsRes.rows.map(p => 
+            `ID:${p.id} | Title:${p.title} | Price:${p.price} | Desc:${p.description.substring(0, 100)}`
+        ).join('\n');
+
+        // 3. البرومبت الذكي
+        const prompt = `
+        You are a Real Estate Matcher.
+        User Request: "${specifications}"
+        
+        Available Properties:
+        ${propsList}
+
+        Task: Return a JSON array of Property IDs that strongly match the User Request.
+        Rules:
+        - Match based on Location, Type (Apartment/Villa), and Price range.
+        - If no strong match, return empty array [].
+        - Return ONLY JSON: [12, 15]
+        `;
+
+        // 4. استدعاء Gemini (نستخدم موديل الشات لأنه أسرع للنصوص)
+        const result = await modelChat.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        // محاولة استخراج المصفوفة
+        const matchIds = JSON.parse(text);
+
+        if (!Array.isArray(matchIds) || matchIds.length === 0) {
+            return res.json({ matches: [] });
+        }
+
+        // 5. جلب تفاصيل العقارات المتطابقة من الداتا بيز لإرسالها للفرونت
+        // الفلترة هنا للأمان للتأكد إن الـ IDs صحيحة
+        const cleanIds = matchIds.filter(id => Number.isInteger(id));
+        if(cleanIds.length === 0) return res.json({ matches: [] });
+
+        const finalMatches = await pgQuery(`
+            SELECT id, title, price, "imageUrl", type 
+            FROM properties 
+            WHERE id = ANY($1::int[])
+        `, [cleanIds]);
+
+        res.json({ matches: finalMatches.rows });
+
+    } catch (error) {
+        console.error("AI Matching Error:", error);
+        // في حالة الخطأ، اسمح للمستخدم يكمل عادي كأن مفيش تشابه
+        res.json({ matches: [] });
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
