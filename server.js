@@ -819,7 +819,6 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // 🟢 استقبال طلب بيع (تم إصلاح مشكلة السعر 0)
 // 🟢 استقبال طلب بيع (النسخة الاحترافية - Modal + AI + Match Maker)
 // 🟢 استقبال طلب بيع (مع نظام الخصم من الرصيد)
-/api/submit-seller-property// 1. استقبال طلب بيع (مع حماية نقاط الأدمن)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ success: false, message: 'سجل دخول أولاً' });
