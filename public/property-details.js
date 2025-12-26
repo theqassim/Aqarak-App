@@ -209,6 +209,7 @@ async function prefillUserData() {
 
 // === 7. Main Execution (DOMContentLoaded) ===
 document.addEventListener('DOMContentLoaded', async () => {
+    window.currentProperty = property;
     prefillUserData();
     const container = document.getElementById('property-detail-container');
     const loadingMessage = document.getElementById('loading-message');
