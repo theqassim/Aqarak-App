@@ -1258,11 +1258,10 @@ app.get('/api/properties', async (req, res) => {
     catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching properties' }); } 
 });
 // ✅ API جلب تفاصيل عقار واحد (مطلوب لصفحة property-details.html)
+// ✅ API لجلب تفاصيل عقار واحد (شامل صورة الناشر والتوثيق)
 app.get('/api/property/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        
-        // نجلب بيانات العقار + بيانات المستخدم (التوثيق والصورة) للعرض
+        // بنعمل LEFT JOIN عشان نجيب is_verified و profile_picture من جدول users
         const sql = `
             SELECT p.*, u.is_verified, u.profile_picture 
             FROM properties p
@@ -1270,16 +1269,24 @@ app.get('/api/property/:id', async (req, res) => {
             WHERE p.id = $1
         `;
         
-        const result = await pgQuery(sql, [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'العقار غير موجود' });
+        const r = await pgQuery(sql, [req.params.id]);
+        
+        if (r.rows[0]) {
+            // معالجة صور العقار (عشان الـ Gallery في الفرونت إند)
+            try { 
+                r.rows[0].imageUrls = JSON.parse(r.rows[0].imageUrls); 
+            } catch (e) { 
+                // لو حصل خطأ في البارس، نستخدم الصورة الرئيسية كبديل أمان
+                r.rows[0].imageUrls = r.rows[0].imageUrl ? [r.rows[0].imageUrl] : []; 
+            }
+            
+            // إرسال البيانات للفرونت إند
+            res.json(r.rows[0]);
+        } else {
+            res.status(404).json({ message: 'غير موجود' });
         }
-
-        res.json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Get Property Error:", error);
+    } catch (e) { 
+        console.error("Property Fetch Error:", e);
         res.status(500).json({ message: 'خطأ في السيرفر' });
     }
 });
