@@ -226,60 +226,56 @@ function normalizeText(text) {
 }
 
 // 2. دالة المطابقة وإرسال الإشعارات (محدثة مع الكود السري)
+// ==========================================
+// 🔥 1. دالة المطابقة الذكية (مع فلتر البلاغات)
+// ==========================================
+// ==========================================
+// 🔥 1. دالة المطابقة الذكية (مع فلتر البلاغات)
+// ==========================================
 async function checkAndNotifyMatches(propertyDetails, hiddenCode) {
     try {
-        console.log("🔍 جاري البحث عن طلبات مطابقة للعقار الجديد...");
+        console.log("🔍 جاري البحث عن طلبات مطابقة...");
+        // توحيد النص للبحث
         const searchText = normalizeText(propertyDetails.title + " " + propertyDetails.description + " " + (propertyDetails.level || ''));
         
-        // نجيب آخر 50 طلب شراء
+        // جلب آخر 50 طلب شراء
         const requests = await pgQuery(`SELECT * FROM property_requests ORDER BY id DESC LIMIT 50`);
         
-        let matchFound = false;
-
         for (const req of requests.rows) {
+            // ⛔ التحقق من البلاغات: هل يوجد بلاغ بين البائع والمشتري؟
+            const reportCheck = await pgQuery(`
+                SELECT 1 FROM user_reports 
+                WHERE (reporter_phone = $1 AND reported_phone = $2) 
+                   OR (reporter_phone = $2 AND reported_phone = $1)
+            `, [propertyDetails.sellerPhone, req.phone]);
+
+            // لو وجدنا بلاغ، نتخطى هذا المشتري فوراً
+            if (reportCheck.rows.length > 0) {
+                console.log(`🚫 تم تجاهل المطابقة بين ${propertyDetails.sellerPhone} و ${req.phone} لوجود بلاغ سابق.`);
+                continue; 
+            }
+
+            // منطق المطابقة (كلمات مفتاحية)
             const reqSpec = normalizeText(req.specifications);
-            
-            // شروط المطابقة: نفس النوع (شقة/فيلا) + كلمة مشتركة
             const isTypeMatch = (searchText.includes("شقه") && reqSpec.includes("شقه")) || 
                                 (searchText.includes("فيلا") && reqSpec.includes("فيلا")) ||
                                 (searchText.includes("محل") && reqSpec.includes("محل"));
 
             const reqWords = reqSpec.split(' ');
             let matchCount = 0;
-            reqWords.forEach(w => {
-                if (w.length > 3 && searchText.includes(w)) matchCount++;
-            });
+            reqWords.forEach(w => { if (w.length > 3 && searchText.includes(w)) matchCount++; });
 
             if (isTypeMatch && matchCount >= 1) {
-                matchFound = true;
-
-                // 1. إشعار للمشتري (طالب العقار)
-                const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد قد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}\n\n📞 للتواصل مع المالك: ${propertyDetails.sellerPhone}`;
+                // ✅ 1. إرسال واتساب للمشتري
+                const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}\n\n📞 رقم المالك: ${propertyDetails.sellerPhone}`;
                 await sendWhatsAppMessage(req.phone, buyerMsg);
 
-                // 2. إشعار للبائع (ناشر العقار)
-                const sellerMsg = `🚀 عقارك لقطة!\n\nيا هندسة، السيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})* وبعتناله تفاصيلك!\n\n👤 اسم المشتري المحتمل: ${req.name}\n📞 رقمه: ${req.phone}\n\nبالتوفيق في البيعة! 😉`;
+                // ✅ 2. إرسال واتساب للمالك
+                const sellerMsg = `🚀 عقارك لقطة!\n\nالسيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})*.\n\n👤 المشتري المهتم: ${req.name}\n📞 رقمه: ${req.phone}\n📝 طلبه: ${req.specifications}\n\nتواصل معاه فوراً وبالتوفيق! 😉`;
                 await sendWhatsAppMessage(propertyDetails.sellerPhone, sellerMsg);
-                
-                // 3. إشعار للأدمن على ديسكورد (بالتفاصيل الكاملة)
-                await sendDiscordNotification("✅ 🔥 تطابق ناجح (Match Alert)", [
-                    { name: "🏠 كود العقار", value: hiddenCode || "غير متوفر" },
-                    { name: "👤 البائع", value: `${propertyDetails.sellerPhone}` },
-                    { name: "👤 المشتري المهتم", value: `${req.name} - ${req.phone}` },
-                    { name: "📝 مواصفات الطلب", value: req.specifications }
-                ], 3066993); // لون أخضر
-
-                console.log(`✅ ماتش! طلب رقم ${req.id} مع العقار الجديد.`);
             }
         }
-
-        if (!matchFound) {
-            console.log("ℹ️ لم يتم العثور على تطابق مباشر حالياً.");
-        }
-
-    } catch (e) {
-        console.error("Matching Error:", e);
-    }
+    } catch (e) { console.error("Matching Error:", e); }
 }
 
 async function sendDiscordNotification(title, fields, color = 3447003, imageUrl = null) {
@@ -823,91 +819,62 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // 🟢 استقبال طلب بيع (تم إصلاح مشكلة السعر 0)
 // 🟢 استقبال طلب بيع (النسخة الاحترافية - Modal + AI + Match Maker)
 // 🟢 استقبال طلب بيع (مع نظام الخصم من الرصيد)
+/api/submit-seller-property// 1. استقبال طلب بيع (مع حماية نقاط الأدمن)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ success: false, message: 'سجل دخول أولاً' });
 
     let realUser;
-    try { 
-        realUser = jwt.verify(token, JWT_SECRET); 
-    } catch (err) { 
-        return res.status(403).json({ success: false, message: 'جلسة غير صالحة' }); 
-    }
+    try { realUser = jwt.verify(token, JWT_SECRET); } catch (err) { return res.status(403).json({ success: false }); }
 
-    const sellerName = realUser.name || realUser.username || 'مستخدم عقارك';
+    const sellerName = realUser.name || 'مستخدم';
     const sellerPhone = realUser.phone; 
-    const publisherUsername = realUser.username; 
-
-    // ✅ 1. تعريف المتغير هنا ليكون مرئياً في نهاية الدالة
     let isPaidSystem = false; 
 
-    // --- 💰 منطق الدفع والخصم (المصحح) ---
-    try {
-        // ✅ قراءة المفتاح الصحيح المتوافق مع لوحة الأدمن
-        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
-        
-        if (settingsRes.rows.length > 0) {
-            // القيمة تخزن كنص 'true' أو 'false'
-            isPaidSystem = settingsRes.rows[0].setting_value === 'true';
-        }
+    // --- 💰 منطق الدفع (الأدمن معفي) ---
+    // 🔥 هذا هو التعديل الأساسي: لو المستخدم "ليس أدمن"، نطبق عليه الدفع
+    if (realUser.role !== 'admin') {
+        try {
+            const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+            if (settingsRes.rows.length > 0) isPaidSystem = settingsRes.rows[0].setting_value === 'true';
 
-        // لو النظام مدفوع، نخصم الرصيد
-        if (isPaidSystem) {
-            const COST_PER_AD = 1; // تكلفة الإعلان الواحد
+            if (isPaidSystem) {
+                const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [sellerPhone]);
+                const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
 
-            // التحقق من رصيد المستخدم
-            const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [sellerPhone]);
-            const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
-
-            if (currentBalance < COST_PER_AD) {
-                return res.status(402).json({ 
-                    success: false, 
-                    message: 'عفواً، رصيد نقاطك لا يكفي لنشر العقار. يرجى شحن رصيدك أولاً.',
-                    needCharge: true 
-                });
+                if (currentBalance < 1) {
+                    return res.status(402).json({ success: false, message: 'رصيدك لا يكفي.', needCharge: true });
+                }
+                // خصم النقطة
+                await pgQuery("UPDATE users SET wallet_balance = wallet_balance - 1 WHERE phone = $1", [sellerPhone]);
+                await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, 1, 'withdraw', 'نشر عقار', $2)`, [sellerPhone, new Date().toISOString()]);
             }
-
-            // خصم الرصيد
-            await pgQuery("UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2", [COST_PER_AD, sellerPhone]);
-            
-            // تسجيل العملية
-            await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', 'خصم تكلفة نشر عقار', $3)`, 
-                [sellerPhone, COST_PER_AD, new Date().toISOString()]);
-                
-            console.log(`💰 تم خصم ${COST_PER_AD} نقطة من ${sellerPhone}`);
-        }
-    } catch (paymentError) {
-        console.error("Payment Error:", paymentError);
-        return res.status(500).json({ success: false, message: 'حدث خطأ في نظام الدفع' });
+        } catch (e) { return res.status(500).json({ success: false, message: 'خطأ دفع' }); }
     }
-    // --- نهاية منطق الدفع ---
 
-    const { 
-        propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
-        propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing,
-        nearby_services, latitude, longitude 
-    } = req.body;
-
-    const latVal = latitude ? parseFloat(latitude) : null;
-    const lngVal = longitude ? parseFloat(longitude) : null;
+    const { propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing, nearby_services, latitude, longitude } = req.body;
     const files = req.files || [];
     const paths = files.map(f => f.path).join(' | ');
-    const code = generateUniqueCode();
-    const englishPrice = toEnglishDigits(propertyPrice); 
-    const numericPrice = parseFloat(englishPrice); 
+    const code = 'AQ-' + Math.floor(100000 + Math.random() * 900000);
+    const englishPrice = toEnglishDigits(propertyPrice);
 
     try {
-        console.log("🤖 AI جاري فحص العقار وتحليل البيانات...");
         const imageUrls = files.map(f => f.path);
-        
         const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls);
 
-        let finalStatus = aiReview.status; 
-        let isPublic = (finalStatus === 'approved');
-        
-        // ✅ 2. استخدام وصف المستخدم دائماً (إلغاء اقتراح AI)
-        const finalDescription = propertyDescription;
+        // لو الـ AI رفضه بسبب سوء المحتوى، نرفضه فوراً
+        if (aiReview.status === 'rejected') {
+             return res.status(400).json({ 
+                success: false, 
+                status: 'rejected', 
+                title: 'تم رفض الإعلان', 
+                message: aiReview.user_message || 'محتوى الإعلان مخالف لسياسات الموقع.',
+                reason: aiReview.reason
+            });
+        }
 
+        let isPublic = (aiReview.status === 'approved');
+        
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
@@ -918,10 +885,9 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         `, [
             sellerName, sellerPhone, propertyTitle, propertyType, englishPrice,
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
-            finalDescription, paths, new Date().toISOString(), finalStatus,
+            propertyDescription, paths, new Date().toISOString(), aiReview.status,
             propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-            aiReview.user_message,
-            nearby_services || '', latVal, lngVal
+            aiReview.user_message, nearby_services || '', parseFloat(latitude), parseFloat(longitude)
         ]);
 
         if (isPublic) {
@@ -933,84 +899,33 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, $15, $16, $17, $18, $19, $20)
                 RETURNING id
             `, [
-                propertyTitle, englishPrice, numericPrice,
-                safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), finalDescription,
+                propertyTitle, englishPrice, parseFloat(englishPrice),
+                safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), propertyDescription,
                 files.length > 0 ? files[0].path : 'logo.png', JSON.stringify(imageUrls), 
-                propertyType, code, sellerName, sellerPhone, publisherUsername,
+                propertyType, code, sellerName, sellerPhone, realUser.username,
                 propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-                nearby_services || '', latVal, lngVal
+                nearby_services || '', parseFloat(latitude), parseFloat(longitude)
             ]);
 
-            // إشعار المطابقة (واتساب)
+            // 🔥 تشغيل المطابقة الذكية
             checkAndNotifyMatches({
                 id: pubRes.rows[0].id,
                 title: propertyTitle,
-                description: finalDescription,
+                description: propertyDescription,
                 price: englishPrice,
                 level: propertyLevel,
                 sellerPhone: sellerPhone
             }, code);
-
-            // Web Push لكل المستخدمين
-            notifyAllUsers(`عقار جديد: ${propertyTitle}`, `تم نشر عقار ${propertyType} بسعر ${englishPrice}`, `/property-details?id=${pubRes.rows[0].id}`);
-
-            // ✅ (تصحيح مكان الإشعار) نرسل "تم النشر" هنا فقط
-            await createNotification(
-                sellerPhone, 
-                'تم النشر بنجاح ✅', 
-                `تم نشر عقارك "${propertyTitle}" فوراً بنجاح ويظهر الآن للجميع.`
-            );
-
-        } else {
-            // ✅ (إضافة) نرسل "قيد المراجعة" لو العقار لم ينشر فوراً
-            await createNotification(
-                sellerPhone, 
-                'طلبك قيد المراجعة ⏳', 
-                `تم استلام عقارك "${propertyTitle}" وسيقوم فريق المراجعة بفحصه في أقرب وقت.`
-            );
         }
 
-        // إشعار ديسكورد (ثابت)
-        await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
-            { name: "👤 المالك", value: sellerName },
-            { name: "🤖 تقرير AI", value: aiReview.reason },
-            { name: "💰 حالة الدفع", value: isPaidSystem ? "تم خصم نقطة واحدة" : "مجاني" }
-        ], isPublic ? 3066993 : 16776960, files[0]?.path);
-
-        await createNotification(
-                sellerPhone, 
-                'تم النشر بنجاح ✅', 
-                `تم نشر عقارك "${propertyTitle}" فوراً بنجاح بعد اجتياز الفحص الآلي.`
-            );
-
-        await sendDiscordNotification(`📢 عقار جديد (${finalStatus})`, [
-            { name: "👤 المالك", value: sellerName },
-            { name: "🤖 تقرير AI", value: aiReview.reason },
-            { name: "💰 حالة الدفع", value: isPaidSystem ? "تم خصم نقطة واحدة" : "مجاني" }
-        ], isPublic ? 3066993 : 16776960, files[0]?.path);
-
-        // ✅ 4. الرد النهائي الديناميكي (إصلاح رسالة الخصم)
         res.status(200).json({ 
             success: true, 
-            status: finalStatus, 
-            // العنوان يتغير حسب المجاني/المدفوع وحسب القبول/المراجعة
-            title: isPublic 
-                ? (isPaidSystem ? "تم النشر وتم خصم 1 نقطة 🎉" : "تم النشر بنجاح 🎉") 
-                : (isPaidSystem ? "طلبك قيد المراجعة (تم خصم نقطة)" : "طلبك قيد المراجعة"),
-            
-            // الرسالة ثابتة من السيستم بدلاً من كلام AI
-            message: isPublic 
-                ? "تم نشر عقارك بنجاح ويظهر الآن لجميع المستخدمين." 
-                : "تم استلام طلبك وسيقوم فريق المراجعة بفحصه في أقرب وقت.",
-            
-            marketing_desc: null, 
-            location: aiReview.detected_location
+            status: aiReview.status, 
+            title: isPublic ? "تم النشر بنجاح 🎉" : "طلبك قيد المراجعة",
+            message: isPublic ? "عقارك منشور الآن." : "سيقوم الفريق بمراجعته."
         }); 
 
-    } catch (err) { 
-        console.error("Route Error:", err); 
-        res.status(500).json({ success: false, message: 'حدث خطأ فني، جرب تاني' }); 
-    }
+    } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'خطأ فني' }); }
 });
 app.post('/api/add-property', uploadProperties.array('propertyImages', 10), async (req, res) => { 
     const files = req.files || []; 
@@ -1235,13 +1150,12 @@ app.get('/api/properties', async (req, res) => {
 
     let excludePhones = [];
     
-    // ✅ 1. فحص المستخدم الحالي لجلب قائمة المحظورين
+    // ✅ 1. فحص المستخدم الحالي لجلب قائمة المحظورين (البلوك الشخصي)
     const token = req.cookies.auth_token;
     if (token) {
         try {
             const decoded = jwt.decode(token); 
             if (decoded && decoded.phone) {
-                // جلب من أبلغت عنهم أو أبلغوا عنك
                 const reports = await pgQuery(`
                     SELECT reported_phone FROM user_reports WHERE reporter_phone = $1
                     UNION
@@ -1252,6 +1166,7 @@ app.get('/api/properties', async (req, res) => {
         } catch (e) {}
     }
 
+    // الاستعلام الأساسي مع ربط جدول المستخدمين
     let sql = `
         SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified 
         FROM properties p
@@ -1264,7 +1179,11 @@ app.get('/api/properties', async (req, res) => {
     
     const { type, limit, offset, keyword, minPrice, maxPrice, rooms, sort } = req.query; 
 
-    // ✅ 2. تطبيق فلتر الاستبعاد
+    // 🔥 التعديل هنا: فلتر إخفاء عقارات المحظورين (Global Ban)
+    // هذا السطر يضمن أن العقار لا يظهر إلا إذا كان صاحبه غير محظور
+    filters.push(`(u.is_banned IS FALSE OR u.is_banned IS NULL)`);
+
+    // ✅ 2. تطبيق فلتر الاستبعاد الشخصي (Block List)
     if (excludePhones.length > 0) {
         const placeholders = excludePhones.map((_, i) => `$${idx + i}`).join(',');
         filters.push(`p."sellerPhone" NOT IN (${placeholders})`);
@@ -1279,8 +1198,10 @@ app.get('/api/properties', async (req, res) => {
     if (maxPrice) { filters.push(`p."numericPrice" <= $${idx++}`); params.push(Number(maxPrice)); } 
     if (rooms) { if (rooms === '4+') { filters.push(`p.rooms >= $${idx++}`); params.push(4); } else { filters.push(`p.rooms = $${idx++}`); params.push(Number(rooms)); } } 
     
+    // تجميع الفلاتر
     if (filters.length > 0) sql += " WHERE " + filters.join(" AND "); 
 
+    // الترتيب
     let orderBy = 'ORDER BY p."isFeatured" DESC, p.id DESC'; 
     if (sort === 'price_asc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" ASC'; 
     else if (sort === 'price_desc') orderBy = 'ORDER BY p."isFeatured" DESC, p."numericPrice" DESC'; 
@@ -1336,50 +1257,81 @@ app.get('/api/user/my-properties', async (req, res) => { const token = req.cooki
 // ==========================================================
 // 🧠 راوت العقارات المقترحة (Smart Suggestion)
 // ==========================================================
+// ==========================================================
+// 🧠 راوت العقارات المقترحة (Smart Suggestion) - معدل
+// ==========================================================
 app.get('/api/properties/suggested/:id', async (req, res) => {
     try {
         const propId = req.params.id;
-        // جلب العقار الحالي
+        
+        // ✅ 1. تحديد قائمة التجاهل (البلاغات الشخصية)
+        // بنشوف لو المستخدم مسجل دخول، نجيب الناس اللي هو حاظرهم
+        let excludePhones = [];
+        const token = req.cookies.auth_token;
+        if (token) {
+            try {
+                const decoded = jwt.decode(token); 
+                if (decoded && decoded.phone) {
+                    const reports = await pgQuery(`
+                        SELECT reported_phone FROM user_reports WHERE reporter_phone = $1
+                        UNION
+                        SELECT reporter_phone FROM user_reports WHERE reported_phone = $1
+                    `, [decoded.phone]);
+                    excludePhones = reports.rows.map(r => r.reported_phone);
+                }
+            } catch (e) {}
+        }
+
+        // 2. جلب بيانات العقار الحالي عشان نعرف نقارن بيه
         const currentRes = await pgQuery('SELECT * FROM properties WHERE id = $1', [propId]);
         if (currentRes.rows.length === 0) return res.status(404).json([]);
         
         const current = currentRes.rows[0];
         
-        // استخراج الكلمة المفتاحية (أول كلمة من العنوان تعتبر المنطقة التقريبية)
+        // استخراج الكلمة المفتاحية (للبحث في نفس المنطقة تقريباً)
         const locationKeyword = current.title.split(' ')[0] || ''; 
         
-        // تحديد نطاق السعر (+/- 30%)
+        // تحديد نطاق السعر المناسب (+/- 30%)
         const minPrice = Number(current.numericPrice) * 0.7; 
         const maxPrice = Number(current.numericPrice) * 1.3;
 
-        // ✅ اللوجيك الذكي:
-        // 1. يفضل نفس النوع (شقة/فيلا) +30 نقطة
-        // 2. يفضل نفس الكلمة المفتاحية في العنوان أو الوصف +50 نقطة
-        // 3. يفضل السعر المتقارب +20 نقطة
-        // 4. الترتيب حسب المجموع (Score) والأولوية للمميز
-        
-        const sql = `
-            SELECT id, title, price, "imageUrl", type, "isFeatured",
+        // ✅ 3. الاستعلام الذكي (مع الفلاتر الجديدة)
+        // عملنا JOIN مع جدول users عشان نتأكد من حالة الحظر (is_banned)
+        let sql = `
+            SELECT p.id, p.title, p.price, p."imageUrl", p.type, p."isFeatured",
             (
-                (CASE WHEN type = $1 THEN 30 ELSE 0 END) +
-                (CASE WHEN title ILIKE $2 OR description ILIKE $2 THEN 50 ELSE 0 END) +
-                (CASE WHEN "numericPrice" BETWEEN $3 AND $4 THEN 20 ELSE 0 END)
+                (CASE WHEN p.type = $1 THEN 30 ELSE 0 END) +
+                (CASE WHEN p.title ILIKE $2 OR p.description ILIKE $2 THEN 50 ELSE 0 END) +
+                (CASE WHEN p."numericPrice" BETWEEN $3 AND $4 THEN 20 ELSE 0 END)
             ) as match_score
-            FROM properties 
-            WHERE id != $5
-            ORDER BY match_score DESC, "isFeatured" DESC
-            LIMIT 3
+            FROM properties p
+            LEFT JOIN users u ON p."sellerPhone" = u.phone
+            WHERE p.id != $5
+            AND (u.is_banned IS FALSE OR u.is_banned IS NULL) -- 🔥 استبعاد المحظورين إدارياً (Global Ban)
         `;
 
-        const result = await pgQuery(sql, [
+        const params = [
             current.type, 
             `%${locationKeyword}%`, 
             minPrice, 
             maxPrice, 
             propId
-        ]);
+        ];
 
-        // إرجاع مصفوفة العقارات فقط
+        let paramIdx = 6; // المؤشر للقيمة القادمة
+
+        // 🔥 إضافة شرط استبعاد البلاغات الشخصية (لو موجودة)
+        if (excludePhones.length > 0) {
+            const placeholders = excludePhones.map((_, i) => `$${paramIdx + i}`).join(',');
+            sql += ` AND p."sellerPhone" NOT IN (${placeholders})`;
+            excludePhones.forEach(ph => params.push(ph));
+        }
+
+        // الترتيب حسب قوة التطابق ثم التميز
+        sql += ` ORDER BY match_score DESC, "isFeatured" DESC LIMIT 3`;
+
+        const result = await pgQuery(sql, params);
+
         res.json(result.rows); 
 
     } catch (error) { 
@@ -1492,6 +1444,8 @@ app.delete('/api/user/property/:id', async (req, res) => {
 });
 
 // 🔄 تعديل العقار (مع خصم نقطة لو النظام مدفوع)
+// 2. تعديل العقار (مع فحص AI صارم ونقاط أدمن لا نهائية)
+// 2. تعديل العقار (مع فحص AI صارم ونقاط أدمن لا نهائية)
 app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
@@ -1500,96 +1454,55 @@ app.put('/api/user/property/:id', uploadProperties.array('newImages', 10), async
         const decoded = jwt.verify(token, JWT_SECRET);
         const propId = req.params.id;
         
-        const { 
-            title, price, description, area, rooms, bathrooms, 
-            level, floors_count, finishing_type 
-        } = req.body;
-
+        const { title, price, description, area, rooms, bathrooms, level, floors_count, finishing_type } = req.body;
         const keptImages = JSON.parse(req.body.keptImages || '[]'); 
         const newFiles = req.files || [];
         const newImageUrls = newFiles.map(f => f.path);
 
-        // التأكد من الملكية
-        const checkRes = await pgQuery(`SELECT "sellerPhone", "sellerName" FROM properties WHERE id = $1`, [propId]);
+        const checkRes = await pgQuery(`SELECT "sellerPhone" FROM properties WHERE id = $1`, [propId]);
         if (checkRes.rows.length === 0) return res.status(404).json({ message: 'غير موجود' });
-        
-        const property = checkRes.rows[0];
-        if (property.sellerPhone !== decoded.phone && decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'لا تملك صلاحية التعديل' });
-        }
+        if (checkRes.rows[0].sellerPhone !== decoded.phone && decoded.role !== 'admin') return res.status(403).json({ message: 'لا تملك الصلاحية' });
 
-        // ============================================================
-        // 💰 1. نظام الدفع والخصم (الجديد)
-        // ============================================================
+        // --- 💰 خصم النقاط (إعفاء الأدمن) ---
         let isPaidSystem = false;
-        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_config'");
-        if (settingsRes.rows.length > 0) {
-            const config = JSON.parse(settingsRes.rows[0].setting_value);
-            isPaidSystem = config.is_active;
-        }
+        const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
+        if (settingsRes.rows.length > 0) isPaidSystem = settingsRes.rows[0].setting_value === 'true';
 
-        // لو النظام مدفوع والمستخدم مش أدمن -> نخصم
+        // 🔥 الشرط: الخصم فقط إذا لم يكن أدمن
         if (isPaidSystem && decoded.role !== 'admin') {
-            const COST_PER_EDIT = 1; // تكلفة التعديل
             const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [decoded.phone]);
-            const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
-
-            if (currentBalance < COST_PER_EDIT) {
-                // حذف الصور الجديدة التي تم رفعها لأن العملية فشلت
-                if (newImageUrls.length > 0) await deleteCloudinaryImages(newImageUrls);
-                
-                return res.status(402).json({ 
-                    success: false, 
-                    message: 'عفواً، رصيدك لا يكفي لتعديل العقار. تكلفة التعديل 1 نقطة.',
-                    needCharge: true 
-                });
+            if ((parseFloat(balanceRes.rows[0]?.wallet_balance || 0)) < 1) {
+                return res.status(402).json({ success: false, message: 'رصيدك لا يكفي لتعديل العقار.', needCharge: true });
             }
-
-            // خصم الرصيد وتسجيل المعاملة
-            await pgQuery("UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2", [COST_PER_EDIT, decoded.phone]);
-            await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', 'خصم تكلفة تعديل عقار', $3)`, 
-                [decoded.phone, COST_PER_EDIT, new Date().toISOString()]);
+            await pgQuery("UPDATE users SET wallet_balance = wallet_balance - 1 WHERE phone = $1", [decoded.phone]);
+            await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, 1, 'withdraw', 'تعديل عقار', $2)`, [decoded.phone, new Date().toISOString()]);
         }
-        // ============================================================
 
-        // 🔧 2. إصلاح السعر والفحص (زي ما هو)
+        // --- 🤖 فحص AI الصارم ---
         const englishPrice = toEnglishDigits(price);
-        const numericPrice = parseFloat(englishPrice);
-
-        console.log("🤖 AI جاري فحص التعديلات...");
         const allImagesForCheck = [...keptImages, ...newImageUrls]; 
         const aiReview = await aiCheckProperty(title, description, englishPrice, allImagesForCheck);
 
+        // 🔥 الرفض الفوري إذا كان المحتوى سيئاً
         if (aiReview.status === 'rejected') {
-            if (newFiles.length > 0) await deleteCloudinaryImages(newImageUrls);
             return res.status(400).json({ 
-                success: false, status: 'rejected',
-                title: 'عذراً، التعديلات مرفوضة', message: 'تحتوي التعديلات على مخالفة.', reason: aiReview.reason 
+                success: false, 
+                status: 'rejected',
+                title: 'عذراً، التعديل مرفوض', 
+                message: 'محتوى التعديل غير منطقي أو مخالف للسياسات.', 
+                reason: aiReview.reason 
             });
         }
 
-        // 3. التحديث في الداتابيز
         const finalImageUrls = [...keptImages, ...newImageUrls];
         const mainImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : 'logo.png';
 
-        const sql = `
-            UPDATE properties 
-            SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, 
-            "imageUrl"=$8, "imageUrls"=$9, "level"=$10, "floors_count"=$11, "finishing_type"=$12, "isFeatured"=FALSE 
-            WHERE id=$13
-        `;
-        
-        await pgQuery(sql, [
-            title, englishPrice, numericPrice, description, safeInt(area), safeInt(rooms), safeInt(bathrooms),
-            mainImageUrl, JSON.stringify(finalImageUrls), level || '', safeInt(floors_count), finishing_type || '', propId
-        ]);
+        const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, "imageUrl"=$8, "imageUrls"=$9, "level"=$10, "floors_count"=$11, "finishing_type"=$12 WHERE id=$13`;
+        await pgQuery(sql, [title, englishPrice, parseFloat(englishPrice), description, safeInt(area), safeInt(rooms), safeInt(bathrooms), mainImageUrl, JSON.stringify(finalImageUrls), level || '', safeInt(floors_count), finishing_type || '', propId]);
 
         res.json({ success: true, message: 'تم تحديث البيانات بنجاح ✅' });
 
-    } catch (error) {
-        console.error("Update Error:", error);
-        res.status(500).json({ message: 'خطأ في السيرفر' });
-    }
+    } catch (error) { console.error(error); res.status(500).json({ message: 'خطأ' }); }
 });
 // ==========================================================
 // 🛡️ نظام الإدارة والشكاوي (Admin & Complaints)
@@ -1888,6 +1801,7 @@ async function checkExpiredFeatured() {
 }
 
 // 3. API تفعيل التميز
+// 3. باقات التميز (نقاط أدمن لا نهائية)
 app.post('/api/user/feature-property', async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: 'غير مصرح' });
@@ -1896,7 +1810,7 @@ app.post('/api/user/feature-property', async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         const { propertyId, planId } = req.body;
 
-        // تعريف الباقات (الأيام مقابل النقاط)
+        // تعريف الباقات
         const plans = {
             1: { days: 14, cost: 20, label: "أسبوعين" },   // أسبوعين
             2: { days: 30, cost: 30, label: "شهر" },       // شهر
@@ -1910,52 +1824,59 @@ app.post('/api/user/feature-property', async (req, res) => {
         const propRes = await pgQuery('SELECT "sellerPhone", "title", "isFeatured" FROM properties WHERE id = $1', [propertyId]);
         if (propRes.rows.length === 0) return res.status(404).json({ message: 'العقار غير موجود' });
         
+        // السماح للأدمن بتعديل أي عقار، وللمستخدم بتعديل عقاره فقط
         if (propRes.rows[0].sellerPhone !== decoded.phone && decoded.role !== 'admin') {
             return res.status(403).json({ message: 'لا تملك هذا العقار' });
         }
 
-        // لو العقار مميز أصلاً، نرفض (أو ممكن نخليه يمدد، بس خلينا نرفض دلوقتي للتبسيط)
         if (propRes.rows[0].isFeatured) {
             return res.status(400).json({ message: 'هذا العقار مميز بالفعل!' });
         }
 
-        // التحقق من الرصيد
-        const userRes = await pgQuery('SELECT wallet_balance FROM users WHERE phone = $1', [decoded.phone]);
-        const balance = parseFloat(userRes.rows[0].wallet_balance || 0);
+        // 🔥 التعديل 1: التحقق من الرصيد (للمستخدمين العاديين فقط)
+        if (decoded.role !== 'admin') {
+            const userRes = await pgQuery('SELECT wallet_balance FROM users WHERE phone = $1', [decoded.phone]);
+            const balance = parseFloat(userRes.rows[0].wallet_balance || 0);
 
-        if (balance < selectedPlan.cost) {
-            return res.status(402).json({ 
-                success: false, 
-                message: `رصيدك غير كافي (${balance} نقطة). تكلفة الباقة ${selectedPlan.cost} نقطة.`,
-                needCharge: true 
-            });
+            if (balance < selectedPlan.cost) {
+                return res.status(402).json({ 
+                    success: false, 
+                    message: `رصيدك غير كافي (${balance} نقطة). تكلفة الباقة ${selectedPlan.cost} نقطة.`,
+                    needCharge: true 
+                });
+            }
         }
 
         // حساب تاريخ الانتهاء
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + selectedPlan.days);
         
-        // تنفيذ الخصم والتفعيل
+        // بدء المعاملة
         await pgQuery('BEGIN');
         
-        // 1. خصم النقط
-        await pgQuery('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2', [selectedPlan.cost, decoded.phone]);
+        // 🔥 التعديل 2: خصم النقاط وتسجيل المعاملة (للمستخدمين العاديين فقط)
+        // الأدمن لا يتم خصم نقاط منه ولا تسجيل معاملة خصم
+        if (decoded.role !== 'admin') {
+            // 1. خصم النقاط
+            await pgQuery('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE phone = $2', [selectedPlan.cost, decoded.phone]);
+            
+            // 2. تسجيل المعاملة المالية
+            await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', $3, $4)`, 
+                [decoded.phone, selectedPlan.cost, `ترقية عقار لمميز (${selectedPlan.label})`, new Date().toISOString()]);
+        }
         
-        // 2. تحديث العقار
+        // 3. تحديث حالة العقار (يتم للجميع)
         await pgQuery(`UPDATE properties SET "isFeatured" = TRUE, "featured_expires_at" = $1 WHERE id = $2`, [expiryDate.toISOString(), propertyId]);
         
-        // 3. تسجيل المعاملة
-        await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, $2, 'withdraw', $3, $4)`, 
-            [decoded.phone, selectedPlan.cost, `ترقية عقار لمميز (${selectedPlan.label})`, new Date().toISOString()]);
-
         await pgQuery('COMMIT');
 
         // إشعار ديسكورد
         await sendDiscordNotification("🌟 عملية تمييز عقار ناجحة", [
             { name: "👤 المستخدم", value: decoded.phone },
+            { name: "👑 الدور", value: decoded.role === 'admin' ? "Admin (مجاني)" : "User (مدفوع)" },
             { name: "🏠 العقار", value: propRes.rows[0].title },
             { name: "⏳ الباقة", value: selectedPlan.label },
-            { name: "💰 الخصم", value: `${selectedPlan.cost} نقطة` }
+            { name: "💰 الخصم", value: decoded.role === 'admin' ? "0 (أدمن)" : `${selectedPlan.cost} نقطة` }
         ], 16776960);
 
         res.json({ success: true, message: `تم تمييز العقار لمدة ${selectedPlan.label} بنجاح! 🎉` });
@@ -2694,6 +2615,196 @@ app.get('/api/public/stats', async (req, res) => {
     } catch (error) {
         console.error("Stats Error:", error);
         res.status(500).json({ properties: 50, users: 100 }); // أرقام احتياطية
+    }
+});
+// ==========================================
+// 🚫 حظر / فك حظر المستخدم (تأثير فوري على العقارات)
+// ==========================================
+app.post('/api/admin/toggle-ban', async (req, res) => {
+    // 1. التحقق من صلاحية الأدمن
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'admin') return res.status(403).json({ message: 'للأدمن فقط' });
+
+        const { phone, isBanned } = req.body; // isBanned: true (حظر) or false (فك)
+
+        // 2. تحديث حالة المستخدم
+        await pgQuery('UPDATE users SET is_banned = $1 WHERE phone = $2', [isBanned, phone]);
+
+        // 3. (اختياري) مسح التوكنز الخاصة بيه عشان يخرج فوراً
+        // await pgQuery('DELETE FROM active_sessions WHERE user_phone = $1', [phone]);
+
+        res.json({ 
+            success: true, 
+            message: isBanned ? `تم حظر المستخدم ${phone} وإخفاء جميع عقاراته 🚫` : `تم فك الحظر عن ${phone} وإعادة إظهار عقاراته ✅` 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+// ==========================================
+// 🔓 إدارة المحظورين (قائمة البلوك + فك الحظر)
+// ==========================================
+
+// 1. جلب قائمة الأشخاص الذين قام المستخدم بحظرهم
+app.get('/api/user/my-reports', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // بنجيب الناس اللي "أنا" (reporter_phone) عملت فيهم بلاغ
+        // وبنجيب اساميهم من جدول الـ users عشان نعرضها
+        const sql = `
+            SELECT r.reported_phone, u.name, r.reason, r.created_at
+            FROM user_reports r
+            LEFT JOIN users u ON r.reported_phone = u.phone
+            WHERE r.reporter_phone = $1
+            ORDER BY r.created_at DESC
+        `;
+        
+        const result = await pgQuery(sql, [decoded.phone]);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ في جلب القائمة' });
+    }
+});
+
+// 2. إلغاء الحظر (حذف البلاغ)
+app.post('/api/user/remove-report', async (req, res) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ message: 'غير مصرح' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { reportedPhone } = req.body;
+
+        await pgQuery(
+            'DELETE FROM user_reports WHERE reporter_phone = $1 AND reported_phone = $2',
+            [decoded.phone, reportedPhone]
+        );
+
+        res.json({ success: true, message: 'تم إلغاء الحظر بنجاح ✅' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'خطأ في السيرفر' });
+    }
+});
+// ==========================================================
+// 🧠 AI Smart Search Logic (محرك البحث الذكي)
+// ==========================================================
+
+// 1. دالة تحليل البحث باستخدام Gemini
+async function aiParseSearchQuery(query) {
+    try {
+        const prompt = `
+        You are a Real Estate Search Assistant for Egypt.
+        User Query: "${query}"
+        
+        Task: Correct spelling (Arabic/Franco), extract location, property type, and price budget if found.
+        
+        Return JSON ONLY:
+        {
+            "corrected_text": "Corrected Arabic Text",
+            "keywords": ["keyword1", "keyword2"],
+            "location": "City/Area Name or null",
+            "type": "buy/rent or null",
+            "property_type": "apartment/villa/shop or null",
+            "max_price": number or null
+        }
+        `;
+
+        const result = await modelChat.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("AI Search Parse Error:", error);
+        return null; // في حالة الخطأ نعود للبحث التقليدي
+    }
+}
+
+// 2. راوت البحث الذكي الجديد
+app.get('/api/ai-search', async (req, res) => {
+    const { query, limit = 6, offset = 0 } = req.query;
+
+    if (!query) return res.json([]);
+
+    try {
+        // أ) تحليل الجملة بالذكاء الاصطناعي
+        const aiData = await aiParseSearchQuery(query);
+        console.log("🤖 AI Search Analysis:", aiData);
+
+        let sql = `
+            SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified 
+            FROM properties p
+            LEFT JOIN users u ON p."sellerPhone" = u.phone
+            WHERE (u.is_banned IS FALSE OR u.is_banned IS NULL)
+        `;
+        
+        const params = [];
+        let idx = 1;
+        const filters = [];
+
+        // ب) بناء استعلام SQL بناءً على فهم الـ AI
+        if (aiData) {
+            // 1. البحث بالنص المصحح والكلمات المفتاحية
+            if (aiData.keywords && aiData.keywords.length > 0) {
+                const textConditions = aiData.keywords.map(k => {
+                    params.push(`%${k}%`);
+                    return `(p.title ILIKE $${idx++} OR p.description ILIKE $${idx-1} OR p.nearby_services ILIKE $${idx-1})`;
+                });
+                filters.push(`(${textConditions.join(' OR ')})`);
+            }
+
+            // 2. فلتر الموقع (أقوى فلتر)
+            if (aiData.location) {
+                filters.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx} OR p.nearby_services ILIKE $${idx})`);
+                params.push(`%${aiData.location}%`);
+                idx++;
+            }
+
+            // 3. فلتر نوع العملية (بيع/إيجار)
+            if (aiData.type) {
+                const opType = (aiData.type === 'buy' || aiData.type === 'بيع') ? 'بيع' : 'إيجار';
+                filters.push(`p.type = $${idx++}`);
+                params.push(opType);
+            }
+
+            // 4. فلتر السعر (لو ذكر رقم تقريبي)
+            if (aiData.max_price) {
+                filters.push(`p."numericPrice" <= $${idx++}`);
+                params.push(aiData.max_price * 1.2); // سماحية 20% زيادة
+            }
+
+        } else {
+            // فشل الـ AI، نستخدم البحث العادي القديم كبديل
+            filters.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx})`);
+            params.push(`%${query}%`);
+            idx++;
+        }
+
+        if (filters.length > 0) sql += " AND " + filters.join(" AND ");
+
+        // ج) الترتيب (المميز أولاً)
+        sql += ` ORDER BY p."isFeatured" DESC, p.id DESC LIMIT $${idx++} OFFSET $${idx++}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await pgQuery(sql, params);
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error("Search Error:", err);
+        res.status(500).json({ message: 'Search Failed' });
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

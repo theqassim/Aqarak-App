@@ -621,3 +621,103 @@ window.resetPasswordViaOTP = async function() {
         }
     } catch(e) { console.error(e); }
 };
+// تشغيل الفحص عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    checkBlockedUsers();
+});
+
+// متغير عالمي لتخزين القائمة عشان منطلبش السيرفر مرتين
+let blockedUsersList = [];
+
+async function checkBlockedUsers() {
+    try {
+        const res = await fetch('/api/user/my-reports');
+        if (res.ok) {
+            blockedUsersList = await res.json();
+            const card = document.getElementById('blocked-users-card');
+            const badge = document.getElementById('blocked-count-badge');
+
+            // 🔥 اللوجيك: لو القائمة فيها ناس، أظهر الكارت
+            if (blockedUsersList.length > 0 && card) {
+                card.style.display = 'block'; 
+                card.style.animation = 'slideDown 0.5s ease-out'; // أنيميشن ظهور
+                if(badge) badge.textContent = blockedUsersList.length;
+            } else if (card) {
+                card.style.display = 'none'; // اختفاء لو مفيش حد
+            }
+        }
+    } catch (e) {
+        console.error("Error checking blocked users:", e);
+    }
+}
+
+function openBlockedUsersModal() {
+    const modal = document.getElementById('blocked-users-modal');
+    const container = document.getElementById('blocked-list-container');
+    modal.style.display = 'block';
+    
+    // رسم العناصر في المودال بناءً على القائمة المحفوظة
+    if (blockedUsersList.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">القائمة فارغة</p>';
+        return;
+    }
+
+    let html = '';
+    blockedUsersList.forEach(user => {
+        html += `
+            <div class="blocked-row" id="row-${user.reported_phone}">
+                <div class="blocked-info">
+                    <h4>${user.name || 'مستخدم عقارك'}</h4>
+                    <p><i class="fas fa-phone-alt"></i> ${user.reported_phone}</p>
+                    <p style="color:#ff4444; font-size:0.7rem;">${user.reason || 'بدون سبب'}</p>
+                </div>
+                <button onclick="unblockUser('${user.reported_phone}')" class="btn-mini-unblock">
+                    فك الحظر
+                </button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function closeBlockedModal() {
+    document.getElementById('blocked-users-modal').style.display = 'none';
+}
+
+async function unblockUser(phone) {
+    if(!confirm("فك الحظر عن هذا المستخدم؟")) return;
+
+    try {
+        const res = await fetch('/api/user/remove-report', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ reportedPhone: phone })
+        });
+
+        if (res.ok) {
+            // 1. حذف الصف من المودال
+            const row = document.getElementById(`row-${phone}`);
+            if(row) row.remove();
+
+            // 2. تحديث القائمة المحلية والعداد
+            blockedUsersList = blockedUsersList.filter(u => u.reported_phone !== phone);
+            
+            // 3. لو القائمة فضيت، نخفي الكارت ونقفل المودال
+            if (blockedUsersList.length === 0) {
+                closeBlockedModal();
+                const card = document.getElementById('blocked-users-card');
+                if(card) {
+                    card.style.transition = '0.5s';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.style.display = 'none', 500);
+                }
+            } else {
+                // تحديث العداد بس
+                const badge = document.getElementById('blocked-count-badge');
+                if(badge) badge.textContent = blockedUsersList.length;
+            }
+        }
+    } catch (e) {
+        alert("خطأ في الاتصال");
+    }
+}

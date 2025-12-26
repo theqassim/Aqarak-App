@@ -77,6 +77,10 @@ function setupSearchLogic() {
 // 🏘️ جلب وعرض العقارات (محدث للبحث)
 // =========================================
 
+// =========================================
+// 🏘️ جلب وعرض العقارات (مع دعم AI Search)
+// =========================================
+
 async function fetchLatestProperties(isFirstLoad = false) {
     if (isLoading) return;
     isLoading = true;
@@ -84,20 +88,31 @@ async function fetchLatestProperties(isFirstLoad = false) {
     const container = document.getElementById('listings-container');
     const loadMoreBtn = document.getElementById('load-more-btn');
 
+    // إظهار اللودينج
     if (isFirstLoad && container) {
         currentOffset = 0;
-        // مؤشر تحميل أثناء البحث
-        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--neon-primary); padding: 50px;"><i class="fas fa-circle-notch fa-spin fa-2x"></i><p style="margin-top:10px; color:#aaa;">جاري البحث...</p></div>';
+        
+        // رسالة مختلفة لو بحث
+        const loadingMsg = currentSearchQuery 
+            ? '<i class="fas fa-robot fa-spin fa-2x"></i><p style="margin-top:10px; color:#00ff88;">الذكاء الاصطناعي يبحث لك عن أفضل النتائج...</p>'
+            : '<i class="fas fa-circle-notch fa-spin fa-2x"></i><p style="margin-top:10px; color:#aaa;">جاري التحميل...</p>';
+
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px;">${loadingMsg}</div>`;
         if(loadMoreBtn) loadMoreBtn.style.display = 'none';
     } else {
         if(loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
     }
 
     try {
-        // بناء الرابط: لو فيه بحث بنزوده على الرابط
-        let url = `/api/properties?limit=${LIMIT}&offset=${currentOffset}`;
-        if (currentSearchQuery) {
-            url += `&keyword=${encodeURIComponent(currentSearchQuery)}`;
+        let url;
+        
+        // 🔥 التعديل الجوهري هنا: اختيار الراوت المناسب
+        if (currentSearchQuery && currentSearchQuery.trim() !== '') {
+            // لو فيه بحث -> استخدم راوت الذكاء الاصطناعي
+            url = `/api/ai-search?limit=${LIMIT}&offset=${currentOffset}&query=${encodeURIComponent(currentSearchQuery)}`;
+        } else {
+            // لو مفيش بحث -> استخدم الراوت العادي (أسرع للعرض الأولي)
+            url = `/api/properties?limit=${LIMIT}&offset=${currentOffset}`;
         }
 
         const response = await fetch(url);
@@ -109,14 +124,17 @@ async function fetchLatestProperties(isFirstLoad = false) {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
                     <i class="fas fa-search" style="font-size: 3rem; color: #333; margin-bottom: 15px;"></i>
-                    <p style="color: #ccc; font-size: 1.1rem;">لم يتم العثور على عقارات تطابق بحثك.</p>
-                    <button onclick="clearSearch()" style="background:none; border:1px solid var(--neon-primary); color:var(--neon-primary); padding:8px 20px; border-radius:20px; margin-top:10px; cursor:pointer;">عرض كل العقارات</button>
+                    <p style="color: #ccc; font-size: 1.1rem;">
+                        ${currentSearchQuery ? 'لم نجد عقارات مطابقة تماماً، حاول تغيير كلمات البحث.' : 'لا توجد عقارات حالياً.'}
+                    </p>
+                    ${currentSearchQuery ? '<button onclick="clearSearch()" style="background:none; border:1px solid var(--neon-primary); color:var(--neon-primary); padding:8px 20px; border-radius:20px; margin-top:10px; cursor:pointer;">عرض الكل</button>' : ''}
                 </div>
             `;
             isLoading = false;
             return;
         }
 
+        // رسم الكروت (نفس الكود القديم)
         properties.forEach(prop => {
             const bgImage = prop.imageUrl || 'logo.png';
             let priceText = parseInt(prop.price || 0).toLocaleString();
@@ -151,15 +169,16 @@ async function fetchLatestProperties(isFirstLoad = false) {
 
         currentOffset += properties.length;
 
-        // زر تحميل المزيد
-        if (!document.getElementById('load-more-container') && container) {
-            const btnContainer = document.createElement('div');
-            btnContainer.id = 'load-more-container';
-            btnContainer.style.gridColumn = "1 / -1";
-            btnContainer.style.textAlign = 'center';
-            btnContainer.style.marginTop = '20px';
-            btnContainer.innerHTML = `<button id="load-more-btn" class="load-more-btn">عرض المزيد <i class="fas fa-arrow-down"></i></button>`;
-            container.parentNode.appendChild(btnContainer);
+        // منطق زر تحميل المزيد
+        const btnContainer = document.getElementById('load-more-container');
+        if (!btnContainer && container) {
+            const newBtnDiv = document.createElement('div');
+            newBtnDiv.id = 'load-more-container';
+            newBtnDiv.style.gridColumn = "1 / -1";
+            newBtnDiv.style.textAlign = 'center';
+            newBtnDiv.style.marginTop = '20px';
+            newBtnDiv.innerHTML = `<button id="load-more-btn" class="load-more-btn">عرض المزيد <i class="fas fa-arrow-down"></i></button>`;
+            container.parentNode.appendChild(newBtnDiv);
             document.getElementById('load-more-btn').addEventListener('click', () => fetchLatestProperties(false));
         }
 
@@ -179,7 +198,6 @@ async function fetchLatestProperties(isFirstLoad = false) {
         isLoading = false;
     }
 }
-
 // دالة مساعدة لمسح البحث والعودة للرئيسية
 window.clearSearch = function() {
     document.querySelectorAll('.search-bar').forEach(el => el.value = '');

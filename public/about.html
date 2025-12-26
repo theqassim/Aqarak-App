@@ -27,7 +27,7 @@
             font-family: 'Cairo', sans-serif;
             color: white;
             margin: 0;
-            padding-top: 80px; /* مسافة عشان الهيدر الثابت */
+            padding-top: 80px;
             overflow-x: hidden;
         }
 
@@ -48,22 +48,40 @@
         .nav-link:hover { background: var(--neon-secondary); color: black; }
 
         /* =========================================
-           ✨ 2. الأنيميشن (Animations)
+           ✨ 2. Scroll Reveal Animations (السحر هنا)
            ========================================= */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        /* الحالة المبدئية (مخفي) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px); /* نازل لتحت 50 بكسل */
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
         }
 
+        /* الحالة النشطة (ظاهر) - الجافاسكريبت هيضيف الكلاس ده */
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* تأخيرات زمنية للعناصر المتتالية */
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+
+        /* أنيميشن مستمر للصور والعناصر */
         @keyframes floatImg {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-15px); }
         }
-
         @keyframes glowPulse {
             0% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
             50% { box-shadow: 0 0 25px rgba(0, 255, 136, 0.5); }
             100% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+        }
+        @keyframes fadeInUpHero {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* =========================================
@@ -71,9 +89,10 @@
            ========================================= */
 
         /* --- Hero Section --- */
+        /* الهيرو بيظهر أول ما الصفحة تفتح مش محتاج سكرول */
         .hero-section {
             text-align: center; padding: 60px 20px;
-            animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: fadeInUpHero 1s ease-out forwards;
         }
         .hero-title {
             font-size: 3rem; font-weight: 800; margin-bottom: 20px;
@@ -93,15 +112,12 @@
         .feature-card {
             background: rgba(30, 30, 30, 0.4); border: 1px solid rgba(255,255,255,0.1);
             padding: 30px; border-radius: 20px; text-align: center;
-            opacity: 0; animation: fadeInUp 0.8s ease-out forwards;
             transition: 0.3s;
+            /* Scroll Reveal applied in HTML */
         }
-        .feature-card:nth-child(1) { animation-delay: 0.3s; }
-        .feature-card:nth-child(2) { animation-delay: 0.5s; }
-        .feature-card:nth-child(3) { animation-delay: 0.7s; }
-
         .feature-card:hover {
-            transform: translateY(-10px); background: rgba(255,255,255,0.05);
+            transform: translateY(-10px) !important; /* Override reveal transform on hover */
+            background: rgba(255,255,255,0.05);
             border-color: var(--neon-primary);
         }
         .feature-icon { font-size: 2.5rem; margin-bottom: 20px; color: var(--neon-primary); transition: 0.4s; }
@@ -113,7 +129,7 @@
             background: rgba(255, 255, 255, 0.02); border-radius: 25px;
             display: flex; align-items: center; gap: 50px;
             border: 1px solid rgba(0, 212, 255, 0.2);
-            opacity: 0; animation: fadeInUp 1s ease-out 0.9s forwards;
+            /* Scroll Reveal applied in HTML */
         }
         .story-img {
             flex: 1; max-width: 350px; border-radius: 20px; overflow: hidden;
@@ -130,7 +146,6 @@
             margin: 80px auto; padding: 40px 20px;
             background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.05), transparent);
             border-top: 1px solid #333; border-bottom: 1px solid #333;
-            opacity: 0; animation: fadeInUp 0.8s ease-out 1.2s forwards;
         }
         .stat-box { text-align: center; }
         .stat-number { font-size: 3.5rem; font-weight: 800; color: white; display: block; margin-bottom: 5px; }
@@ -145,15 +160,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 25px; width: 350px; overflow: hidden;
             position: relative; text-align: center;
-            opacity: 0; transform: scale(0.9);
-            animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             transition: 0.4s ease;
         }
-        .founders-grid .founder-card:nth-child(1) { animation-delay: 1.4s; }
-        .founders-grid .founder-card:nth-child(2) { animation-delay: 1.6s; }
 
         .founder-card:hover {
-            transform: translateY(-15px) scale(1.02);
+            transform: translateY(-15px) scale(1.02) !important;
             border-color: var(--neon-secondary);
             box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
         }
@@ -189,7 +200,7 @@
         .founder-bio { color: #ccc; font-size: 0.95rem; line-height: 1.6; }
 
         /* زر تواصل */
-        .contact-btn-wrapper { text-align: center; margin-bottom: 60px; opacity: 0; animation: fadeInUp 1s ease-out 1.8s forwards; }
+        .contact-btn-wrapper { text-align: center; margin-bottom: 60px; }
         .whatsapp-contact-btn {
             background: #25d366; color: white; padding: 15px 40px; border-radius: 50px;
             text-decoration: none; font-weight: bold; font-size: 1.2rem;
@@ -230,28 +241,28 @@
     </section>
 
     <section class="features-grid">
-        <div class="feature-card">
+        <div class="feature-card reveal delay-1">
             <i class="fas fa-robot feature-icon"></i>
             <h3 style="color:white; margin-bottom:10px;">ذكاء اصطناعي حقيقي</h3>
             <p style="color:#aaa;">نظامنا بيفهم طلبك بدقة، وبيعمل "Match" ذكي بين البائع والمشتري لتوفير وقتك ومجهودك.</p>
         </div>
         
-        <div class="feature-card">
+        <div class="feature-card reveal delay-2">
             <i class="fas fa-balance-scale feature-icon" style="color: #00d4ff;"></i>
             <h3 style="color:white; margin-bottom:10px;">أمان قانوني</h3>
             <p style="color:#aaa;">بفضل خلفيتنا القانونية، نهتم بمراجعة العقارات والتحقق من المستخدمين لضمان بيئة خالية من النصب.</p>
         </div>
 
-        <div class="feature-card">
+        <div class="feature-card reveal delay-3">
             <i class="fas fa-users-cog feature-icon" style="color: #ffd700;"></i>
             <h3 style="color:white; margin-bottom:10px;">سوق عقاري متكامل</h3>
             <p style="color:#aaa;">
-                منصتنا تجمع الملاك والوسطاء المحترفين في مكان واحد. هدفنا هو توفير أكبر تنوع من العقارات أمامك، مع ضمان تواصل مباشر وشفاف مع المعلن أياً كانت صفته.
+                منصتنا تجمع الملاك والوسطاء المحترفين في مكان واحد. هدفنا هو توفير أكبر تنوع من العقارات أمامك، مع ضمان تواصل مباشر وشفاف مع المعلن.
             </p>
         </div>
     </section>
 
-    <section class="story-section">
+    <section class="story-section reveal">
         <div class="story-img">
             <img src="logo.jpg" alt="Aqarak Vision">
         </div>
@@ -266,7 +277,7 @@
         </div>
     </section>
 
-    <section class="stats-container">
+    <section class="stats-container reveal">
         <div class="stat-box">
             <span class="stat-number" id="live-prop-count">...</span>
             <span class="stat-label">عقار متاح الآن</span>
@@ -282,11 +293,11 @@
     </section>
 
     <section class="founders-section">
-        <h2 style="text-align: center; margin-bottom: 50px; font-size: 2.2rem; color: white;">فريق القيادة</h2>
+        <h2 class="reveal" style="text-align: center; margin-bottom: 50px; font-size: 2.2rem; color: white;">فريق القيادة</h2>
         
         <div class="founders-grid">
             
-            <div class="founder-card">
+            <div class="founder-card reveal delay-1">
                 <div class="img-wrapper">
                     <img src="qassim.jpg" alt="Qassim Ahmed" onerror="this.src='logo.jpg'">
                 </div>
@@ -306,7 +317,7 @@
                 </div>
             </div>
 
-            <div class="founder-card">
+            <div class="founder-card reveal delay-2">
                 <div class="img-wrapper">
                     <img src="ammar.jpg" alt="Ammar Mohsen" onerror="this.src='logo.jpg'">
                 </div>
@@ -329,7 +340,7 @@
         </div>
     </section>
 
-    <div class="contact-btn-wrapper">
+    <div class="contact-btn-wrapper reveal delay-3">
         <h3 style="color:white; margin-bottom:20px;">هل لديك استفسار أو اقتراح؟</h3>
         <a href="https://wa.me/201008102237" target="_blank" class="whatsapp-contact-btn">
             <i class="fab fa-whatsapp"></i> تواصل معنا مباشرة
@@ -342,18 +353,33 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // جلب الإحصائيات الحقيقية من السيرفر
+            
+            // 1. تفعيل Scroll Reveal Animation
+            const revealElements = document.querySelectorAll('.reveal');
+            
+            const revealOnScroll = () => {
+                const windowHeight = window.innerHeight;
+                const elementVisible = 150; // المسافة اللي يظهر عندها العنصر
+
+                revealElements.forEach((el) => {
+                    const elementTop = el.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - elementVisible) {
+                        el.classList.add('active');
+                    }
+                });
+            };
+
+            window.addEventListener('scroll', revealOnScroll);
+            revealOnScroll(); // تشغيل مرة واحدة في البداية
+
+            // 2. جلب الإحصائيات الحقيقية
             try {
-                // نستخدم API الإحصائيات العامة اللي ضفناها في السيرفر
                 const res = await fetch('/api/public/stats');
                 if (res.ok) {
                     const data = await res.json();
-                    
-                    // تحريك الأرقام من 0 للرقم الحقيقي
                     animateValue("live-prop-count", 0, data.properties, 2000);
                     animateValue("live-user-count", 0, data.users, 2000);
                 } else {
-                    // Fallback لو حصل مشكلة
                     document.getElementById('live-prop-count').textContent = "+50";
                 }
             } catch (e) {
@@ -362,13 +388,10 @@
             }
         });
 
-        // دالة الأنيميشن للأرقام
         function animateValue(id, start, end, duration) {
             const obj = document.getElementById(id);
             if(!obj) return;
-            
             if (end === 0) { obj.innerHTML = "0"; return; }
-
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;

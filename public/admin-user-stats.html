@@ -385,6 +385,26 @@
             btn.disabled = false;
         }
     }
+    async function toggleUserBan(phone, shouldBan) {
+    if(!confirm(shouldBan ? "هل أنت متأكد من حظر هذا المستخدم وإخفاء عقاراته؟" : "فك الحظر؟")) return;
+
+    try {
+        const res = await fetch('/api/admin/toggle-ban', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: phone, isBanned: shouldBan })
+        });
+        
+        const data = await res.json();
+        if(res.ok) {
+            alert(data.message);
+            // تحديث الجدول أو الصفحة
+            location.reload();
+        } else {
+            alert('خطأ: ' + data.message);
+        }
+    } catch(e) { console.error(e); alert('خطأ في الاتصال'); }
+}
 </script>
 <script src="global-alert.js"></script>
 
