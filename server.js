@@ -20,27 +20,25 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-// --- 🛡️ بداية كود الحماية المحدث (Helmet Fix) ---
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       
-      // السماح بالسكربتات الخارجية
+      // ✅ 1. هنا ضفتلك رابط المكتبة عشان السكربت يشتغل
       scriptSrc: [
         "'self'", 
-        "'unsafe-inline'", // للسماح بالسكربتات المكتوبة داخل ملفات HTML
+        "'unsafe-inline'", 
         "https://accept.paymob.com", 
         "https://cdnjs.cloudflare.com", 
         "https://cdn.jsdelivr.net", 
         "https://pagead2.googlesyndication.com",
-        "https://tpc.googlesyndication.com"
+        "https://tpc.googlesyndication.com",
+        "https://esm.sh" 
       ],
 
-      // 👇 هذا هو السطر الأهم لحل مشكلة القوائم والأزرار (onclick)
       scriptSrcAttr: ["'unsafe-inline'"], 
 
-      // الستايلات والخطوط
       styleSrc: [
         "'self'", 
         "'unsafe-inline'", 
@@ -49,7 +47,6 @@ app.use(helmet({
         "https://cdn.jsdelivr.net"
       ],
       
-      // الصور
       imgSrc: [
         "'self'", 
         "data:", 
@@ -57,7 +54,6 @@ app.use(helmet({
         "https://pagead2.googlesyndication.com"
       ],
       
-      // الخطوط
       fontSrc: [
         "'self'", 
         "data:", 
@@ -66,7 +62,6 @@ app.use(helmet({
         "https://cdn.jsdelivr.net"
       ],
       
-      // الـ iFrame (للدفع والإعلانات)
       frameSrc: [
         "'self'", 
         "https://accept.paymob.com", 
@@ -74,11 +69,12 @@ app.use(helmet({
         "https://tpc.googlesyndication.com"
       ],
       
-      // 👇 تم إضافة رابط جوجل الجديد هنا لحل مشكلة الإعلانات
+      // ✅ 2. هنا ضفتلك رابط مشروع Supabase عشان يقدر يجيب البيانات
       connectSrc: [
         "'self'", 
         "https://accept.paymob.com",
-        "https://ep1.adtrafficquality.google" 
+        "https://ep1.adtrafficquality.google",
+        "https://scncapmhnshjpocenqpm.supabase.co" 
       ],
       
       objectSrc: ["'none'"],
@@ -87,7 +83,6 @@ app.use(helmet({
   },
   crossOriginEmbedderPolicy: false
 }));
-// --- 🛡️ نهاية كود الحماية ---
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
@@ -406,25 +401,8 @@ async function urlToGenerativePart(url) {
     }
 }
 
-// 🛠️ دالة لجلب الصورة من الرابط وتحويلها لـ Base64 للـ AI
-async function urlToGenerativePart(url) {
-    try {
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        return {
-            inlineData: {
-                data: Buffer.from(arrayBuffer).toString("base64"),
-                mimeType: "image/webp" 
-            },
-        };
-    } catch (error) {
-        console.error("Error fetching image for AI:", error);
-        return null;
-    }
-}
-
-// 🟢 الدالة المعدلة: لا ترفض أي عقار، بل تحوله للمراجعة
-async function aiCheckProperty(title, description, price, imageUrls) {
+// 👁️ دالة الفحص بالذكاء الاصطناعي (محدثة لمقارنة النوع)
+async function aiCheckProperty(title, description, price, imageUrls, propertyType) {
     try {
         const imageParts = [];
         if (imageUrls && imageUrls.length > 0) {
@@ -434,51 +412,41 @@ async function aiCheckProperty(title, description, price, imageUrls) {
             }
         }
 
+        // 🔥 برومبت مقارنة النوع بالصورة
         const prompt = `
-أنت خبير عقاري ومراقب محتوى مصري. راجع البيانات والصور:
-العنوان: ${title} | الوصف: ${description} | السعر: ${price}
+أنت مراقب محتوى عقاري.
+بيانات العقار:
+- النوع المختار: "${propertyType}"
+- العنوان: "${title}"
+- الوصف: "${description}"
 
-المطلوب رد بصيغة JSON فقط:
+المطلوب: فحص الصور ومقارنتها مع "النوع المختار":
+1. لو النوع "أرض" (land) والصور لـ "شقة" أو "أثاث" -> الحالة: pending، السبب: "الصور لا تطابق النوع (مختار أرض والصور لشقة)".
+2. لو النوع "شقة" (apartment) والصور "أرض فضاء" -> الحالة: pending، السبب: "الصور لا تطابق النوع (مختار شقة والصور لأرض)".
+3. لو النوع "عمارة" والصور "شقة من الداخل فقط" -> الحالة: pending، السبب: "يرجى إضافة صورة لواجهة العمارة".
+4. لو الصور مظلمة أو غير واضحة -> الحالة: pending، السبب: "الصور غير واضحة".
+5. لو كله تمام -> الحالة: approved.
+
+رد بصيغة JSON فقط:
 {
-  "status": "approved" أو "rejected" أو "pending",
-  "reason": "سبب تقني لنا (للأدمن)",
-  "user_message": "رسالة ودودة للمستخدم بالعامية المصرية تشرح له حالة إعلانه",
-  "marketing_description": "وصف تسويقي جذاب بناءً على الصور",
-  "detected_location": "اسم المنطقة"
+  "status": "approved" أو "pending",
+  "reason": "سبب التعليق باختصار",
+  "user_message": "رسالة للمستخدم باللهجة المصرية تشرح له ليه الإعلان تحت المراجعة أو تباركه لو اتقبل",
+  "marketing_description": "وصف تسويقي"
 }
-
-⚠️ هام جداً:
-- لو الإعلان سليم وممتاز، اجعل الحالة "approved".
-- لو فيه أي شك أو مخالفة، اجعل الحالة "pending" للمراجعة اليدوية.
 `;
         const result = await modelVision.generateContent([prompt, ...imageParts]);
         const response = await result.response;
-        let text = response.text();
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        
-        let jsonResult = JSON.parse(text);
-
-        // 🔥🔥 التعديل السحري هنا 🔥🔥
-        // إجبار النظام على عدم الرفض نهائياً
-        if (jsonResult.status === 'rejected') {
-            console.log(`⚠️ AI Wanted to reject, but forced to PENDING. Reason: ${jsonResult.reason}`);
-            
-            jsonResult.status = 'pending'; // تحويل الحالة لمراجعة
-            jsonResult.user_message = "إعلانك وصل! بس محتاجين نراجعه مراجعة سريعة عشان نتأكد من بعض التفاصيل، وهيتنشر فوراً بعد المراجعة.";
-            jsonResult.reason = "⚠️ (AI Rejected this originally) -> " + jsonResult.reason; // تنبيه للأدمن إن الـ AI كان رافضه
-        }
-
-        return jsonResult;
+        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(text);
 
     } catch (error) {
         console.error("AI Check Error:", error);
-        // في حالة حدوث خطأ تقني، حوله أيضاً للمراجعة بدلاً من الرفض
         return { 
             status: "pending", 
-            reason: "AI Technical Error (Forced Pending)", 
-            user_message: "جاري مراجعة إعلانك يدوياً.",
-            marketing_description: description, 
-            detected_location: "" 
+            reason: "خطأ تقني", 
+            user_message: "جاري المراجعة اليدوية.",
+            marketing_description: description 
         };
     }
 }
@@ -912,6 +880,7 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // 🟢 استقبال طلب بيع (تم إصلاح مشكلة السعر 0)
 // 🟢 استقبال طلب بيع (النسخة الاحترافية - Modal + AI + Match Maker)
 // 🟢 استقبال طلب بيع (مع نظام الخصم من الرصيد)
+// 🟢 استقبال طلب بيع (محدث)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ success: false, message: 'سجل دخول أولاً' });
@@ -923,8 +892,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     let isPaidSystem = false; 
 
-    // --- 💰 منطق الدفع (الأدمن معفي) ---
-    // 🔥 هذا هو التعديل الأساسي: لو المستخدم "ليس أدمن"، نطبق عليه الدفع
+    // منطق الدفع (زي ما هو)
     if (realUser.role !== 'admin') {
         try {
             const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
@@ -934,72 +902,77 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 const balanceRes = await pgQuery("SELECT wallet_balance FROM users WHERE phone = $1", [sellerPhone]);
                 const currentBalance = parseFloat(balanceRes.rows[0]?.wallet_balance || 0);
 
-                if (currentBalance < 1) {
-                    return res.status(402).json({ success: false, message: 'رصيدك لا يكفي.', needCharge: true });
-                }
-                // خصم النقطة
+                if (currentBalance < 1) return res.status(402).json({ success: false, message: 'رصيدك لا يكفي.', needCharge: true });
                 await pgQuery("UPDATE users SET wallet_balance = wallet_balance - 1 WHERE phone = $1", [sellerPhone]);
                 await pgQuery(`INSERT INTO transactions (user_phone, amount, type, description, date) VALUES ($1, 1, 'withdraw', 'نشر عقار', $2)`, [sellerPhone, new Date().toISOString()]);
             }
         } catch (e) { return res.status(500).json({ success: false, message: 'خطأ دفع' }); }
     }
 
-    const { propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing, nearby_services, latitude, longitude } = req.body;
+    // استقبال البيانات الجديدة
+    const { 
+        propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
+        propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing, 
+        nearby_services, latitude, longitude,
+        governorate, city, unitCount, landType 
+    } = req.body;
+
     const files = req.files || [];
     const paths = files.map(f => f.path).join(' | ');
+    const imageUrls = files.map(f => f.path);
     const code = 'AQ-' + Math.floor(100000 + Math.random() * 900000);
     const englishPrice = toEnglishDigits(propertyPrice);
 
     try {
-        const imageUrls = files.map(f => f.path);
-        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls);
+        // تمرير النوع للـ AI للفحص
+        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls, propertyType);
 
-        // لو الـ AI رفضه بسبب سوء المحتوى، نرفضه فوراً
-        if (aiReview.status === 'rejected') {
-             return res.status(400).json({ 
-                success: false, 
-                status: 'rejected', 
-                title: 'تم رفض الإعلان', 
-                message: aiReview.user_message || 'محتوى الإعلان مخالف لسياسات الموقع.',
-                reason: aiReview.reason
-            });
-        }
-
-        let isPublic = (aiReview.status === 'approved');
+        const isPublic = (aiReview.status === 'approved');
         
+        // إعداد رسالة الإشعار
+        const notifTitle = isPublic ? "مبروك! تم النشر ✅" : "مراجعة الإعلان ⚠️";
+        const notifBody = aiReview.user_message || "تم استلام إعلانك.";
+
+        // حفظ في جدول submissions
         await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
              "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate", status,
              "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note", 
-             "nearby_services", "latitude", "longitude") 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+             "nearby_services", "latitude", "longitude", "governorate", "city", "unit_count") 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
         `, [
             sellerName, sellerPhone, propertyTitle, propertyType, englishPrice,
             safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), aiReview.status,
-            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-            aiReview.user_message, nearby_services || '', parseFloat(latitude), parseFloat(longitude)
+            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || landType || '', // تخزين نوع الأرض في التشطيب
+            aiReview.reason, // تخزين سبب الـ AI
+            nearby_services || '', parseFloat(latitude), parseFloat(longitude),
+            governorate || '', city || '', safeInt(unitCount)
         ]);
+
+        // إرسال الإشعار بالسبب
+        await createNotification(sellerPhone, notifTitle, notifBody);
 
         if (isPublic) {
             const pubRes = await pgQuery(`
                 INSERT INTO properties 
                 (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, 
                  "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal", 
-                 "level", "floors_count", "finishing_type", "nearby_services", "latitude", "longitude")
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, $15, $16, $17, $18, $19, $20)
+                 "level", "floors_count", "finishing_type", "nearby_services", "latitude", "longitude",
+                 "governorate", "city", "unit_count")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, false, false, $15, $16, $17, $18, $19, $20, $21, $22, $23)
                 RETURNING id
             `, [
                 propertyTitle, englishPrice, parseFloat(englishPrice),
                 safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), propertyDescription,
                 files.length > 0 ? files[0].path : 'logo.png', JSON.stringify(imageUrls), 
                 propertyType, code, sellerName, sellerPhone, realUser.username,
-                propertyLevel || '', safeInt(propertyFloors), propertyFinishing || '',
-                nearby_services || '', parseFloat(latitude), parseFloat(longitude)
+                propertyLevel || '', safeInt(propertyFloors), propertyFinishing || landType || '',
+                nearby_services || '', parseFloat(latitude), parseFloat(longitude),
+                governorate || '', city || '', safeInt(unitCount)
             ]);
 
-            // 🔥 تشغيل المطابقة الذكية
             checkAndNotifyMatches({
                 id: pubRes.rows[0].id,
                 title: propertyTitle,
@@ -1013,8 +986,9 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         res.status(200).json({ 
             success: true, 
             status: aiReview.status, 
-            title: isPublic ? "تم النشر بنجاح 🎉" : "طلبك قيد المراجعة",
-            message: isPublic ? "عقارك منشور الآن." : "سيقوم الفريق بمراجعته."
+            title: notifTitle,
+            message: notifBody,
+            reason: aiReview.reason
         }); 
 
     } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'خطأ فني' }); }
@@ -2951,6 +2925,21 @@ app.post('/api/contact-us', async (req, res) => {
     } catch (error) {
         console.error("Contact Error:", error);
         res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+    }
+});// --- 🛠️ رابط تحديث المحافظات والمدن (شغله مرة واحدة) ---
+app.get('/update-db-geo', async (req, res) => {
+    try {
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "governorate" TEXT`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "city" TEXT`);
+        await pgQuery(`ALTER TABLE properties ADD COLUMN IF NOT EXISTS "unit_count" INTEGER`); // عدد الوحدات للعمارة
+        
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "governorate" TEXT`);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "city" TEXT`);
+        await pgQuery(`ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "unit_count" INTEGER`);
+
+        res.send('✅ تم تحديث قاعدة البيانات: أضيفت المحافظة، المدينة، وعدد الوحدات.');
+    } catch (error) {
+        res.status(500).send('❌ خطأ: ' + error.message);
     }
 });
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

@@ -134,16 +134,34 @@ async function fetchLatestProperties(isFirstLoad = false) {
             return;
         }
 
-        // رسم الكروت (نفس الكود القديم)
         properties.forEach(prop => {
             const bgImage = prop.imageUrl || 'logo.png';
             let priceText = parseInt(prop.price || 0).toLocaleString();
             const isSale = (prop.type === 'بيع' || prop.type === 'buy');
             const typeClass = isSale ? 'is-sale' : 'is-rent';
             const typeText = isSale ? 'للبيع' : 'للإيجار';
-            const roomsHtml = prop.rooms ? `<span style="margin-left:8px;"><i class="fas fa-bed"></i> ${prop.rooms}</span>` : '';
-            const bathsHtml = prop.bathrooms ? `<span style="margin-left:8px;"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>` : '';
-            const areaHtml = prop.area ? `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>` : '';
+            
+            // --- 💡 المنطق الجديد للأيقونات ---
+            let featuresHtml = '';
+
+            // 1. لو أرض: نعرض المساحة ونوعها فقط
+            if (prop.type === 'land' || prop.type === 'أرض') {
+                featuresHtml += `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>`;
+                // لو نوع الأرض متخزن في finishing_type
+                if(prop.finishing_type) featuresHtml += `<span style="margin-right:10px;"><i class="fas fa-layer-group"></i> ${prop.finishing_type}</span>`;
+            
+            // 2. لو عمارة: نعرض المساحة + عدد الأدوار
+            } else if (prop.type === 'building' || prop.type === 'عمارة') {
+                featuresHtml += `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>`;
+                if(prop.floors_count) featuresHtml += `<span style="margin-right:10px;"><i class="fas fa-building"></i> ${prop.floors_count} دور</span>`;
+
+            // 3. الطبيعي (شقة/فيلا): غرف وحمامات ومساحة
+            } else {
+                if (prop.rooms) featuresHtml += `<span style="margin-left:8px;"><i class="fas fa-bed"></i> ${prop.rooms}</span>`;
+                if (prop.bathrooms) featuresHtml += `<span style="margin-left:8px;"><i class="fas fa-bath"></i> ${prop.bathrooms}</span>`;
+                if (prop.area) featuresHtml += `<span><i class="fas fa-ruler-combined"></i> ${prop.area} م²</span>`;
+            }
+
             const featuredClass = prop.isFeatured ? 'featured-card-glow' : '';
             let extraBadges = prop.isFeatured ? `<div class="featured-crown"><i class="fas fa-crown"></i> مميز</div>` : '';
             const verifiedBadge = prop.is_verified ? 
@@ -159,7 +177,9 @@ async function fetchLatestProperties(isFirstLoad = false) {
                     </div>
                     <div class="adv-card-body">
                         <h3 class="adv-title" title="${prop.title}">${verifiedBadge} ${prop.title}</h3>
-                        <div class="adv-features">${roomsHtml}${bathsHtml}${areaHtml}</div>
+                        
+                        <div class="adv-features">${featuresHtml}</div>
+                        
                         <a href="property-details?id=${prop.id}" class="adv-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
                     </div>
                 </div>

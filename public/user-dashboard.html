@@ -483,6 +483,137 @@
     transition: 0.3s;
 }
 .btn-mini-unblock:hover { background: #ff4444; color: white; }
+    /* ============================================================
+       💎 تحديث تصميم القائمة المنسدلة (لتطابق الصفحة الرئيسية)
+    ============================================================ */
+
+    /* 1. الحاوية الأساسية للقائمة */
+    .profile-dropdown {
+        /* خلفية داكنة جداً وشبه معتمة */
+        background: rgba(10, 10, 10, 0.96) !important;
+        
+        /* تأثير ضبابي قوي (Blur) */
+        backdrop-filter: blur(40px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+        
+        /* حدود دقيقة جداً */
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        
+        /* تدوير الحواف */
+        border-radius: 24px !important;
+        
+        /* ظل قوي لفصل القائمة عن الخلفية */
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9) !important;
+        
+        padding: 12px !important;
+        overflow: hidden !important;
+    }
+
+    /* 2. روابط القائمة (Links) */
+    .dropdown-link {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        padding: 14px 18px !important;
+        border-radius: 16px !important;
+        margin-bottom: 4px !important;
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .dropdown-link i {
+        color: var(--neon-primary) !important; /* لون الأيقونات نيون */
+        width: 25px;
+        text-align: center;
+    }
+
+    /* تأثير التمرير (Hover) على الروابط */
+    .dropdown-link:hover {
+        background: linear-gradient(90deg, rgba(0, 255, 136, 0.15), transparent) !important;
+        transform: translateX(-5px) !important;
+        color: var(--neon-primary) !important;
+        border-color: rgba(0, 255, 136, 0.2) !important;
+    }
+
+    /* 3. عناصر الإشعارات داخل القائمة */
+    .menu-notif-item {
+        position: relative;
+        padding: 15px !important;
+        margin-bottom: 8px !important;
+        border-radius: 18px !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        transition: 0.3s;
+        overflow: hidden;
+        color: #e0e0e0 !important;
+    }
+
+    .menu-notif-item strong {
+        color: #ffffff !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        font-weight: 600 !important;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .menu-notif-item.unread {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 212, 255, 0.03)) !important;
+        border-right: 4px solid var(--neon-primary) !important;
+    }
+
+    /* زر حذف الإشعار */
+    .notif-delete-btn {
+        opacity: 0;
+        position: absolute !important;
+        top: 50% !important;
+        left: 10px !important;
+        transform: translateY(-50%) scale(0.8);
+        width: 30px;
+        height: 30px;
+        border-radius: 50% !important;
+        background: rgba(255, 68, 68, 0.1) !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s !important;
+        border: none;
+        cursor: pointer;
+        color: #ff4444;
+    }
+
+    .menu-notif-item:hover .notif-delete-btn {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+
+    .notif-delete-btn:hover {
+        background: #ff4444 !important;
+        color: white !important;
+    }
+
+    /* 4. زر التنبيهات (Toggle) */
+    .notif-toggle-btn {
+        justify-content: space-between;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #fff !important;
+    }
+    
+    .notif-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: var(--neon-primary) !important;
+    }
+
+    .notifications-container {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255,255,255,0.05) !important;
+        border-radius: 12px;
+        margin: 5px 0 15px 0;
+    }
   </style>
 </head>
 <body class="internal-page">

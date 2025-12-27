@@ -318,6 +318,21 @@
 
                 <div class="grid-2">
                     <div class="input-group">
+                        <label>المحافظة</label>
+                        <select id="gov-select" name="governorate" class="neon-input-white" required>
+                            <option value="">اختر المحافظة...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>المدينة / المنطقة</label>
+                        <select id="city-select" name="city" class="neon-input-white" required>
+                            <option value="">اختر المدينة...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="input-group">
                         <label>فئة العقار</label>
                         <select id="property-category" name="propertyCategory" class="neon-input-white" onchange="toggleFields()" required>
                             <option value="apartment" selected>شقة / دوبلكس</option>
@@ -340,13 +355,12 @@
 
                 <div class="input-group">
                     <label>عنوان الإعلان</label>
-                    <input type="text" name="propertyTitle" class="neon-input-white" required>
+                    <input type="text" name="propertyTitle" class="neon-input-white" required placeholder="مثال: شقة للبيع في التجمع الخامس...">
                 </div>
 
                 <div class="english-num-tip">
-    <i class="fas fa-keyboard"></i>
-    يرجى كتابة الأرقام بالإنجليزية فقط (123)
-</div>
+                    <i class="fas fa-keyboard"></i> يرجى كتابة الأرقام بالإنجليزية فقط (123)
+                </div>
 
                 <div class="grid-2">
                     <div class="input-group">
@@ -382,12 +396,12 @@
                     </select>
                 </div>
 
-                <div class="grid-2">
-                    <div class="input-group" id="rooms-group">
+                <div class="grid-2" id="rooms-group">
+                    <div class="input-group">
                         <label>الغرف</label>
                         <input type="number" id="property-rooms" name="propertyRooms" class="neon-input-white" min="0" max="50" dir="ltr" style="text-align: right;">
                     </div>
-                    <div class="input-group" id="bath-group">
+                    <div class="input-group">
                         <label>الحمامات</label>
                         <input type="number" id="property-bathrooms" name="propertyBathrooms" class="neon-input-white" min="0" max="20" dir="ltr" style="text-align: right;">
                     </div>
@@ -408,11 +422,16 @@
                     </select>
                 </div>
 
-                <div class="input-group" id="floors-count-group" style="display:none;">
-                    <label>عدد الأدوار</label>
-                    <input type="number" name="propertyFloors" id="property-floors" class="neon-input-white" min="1" max="50" dir="ltr" style="text-align: right;">
+                <div class="grid-2" id="building-details-group" style="display:none;">
+                    <div class="input-group">
+                        <label>عدد الأدوار</label>
+                        <input type="number" name="propertyFloors" id="property-floors" class="neon-input-white" min="1" max="50" dir="ltr" style="text-align: right;" placeholder="مثال: 5">
+                    </div>
+                    <div class="input-group">
+                        <label>عدد الشقق/الوحدات</label>
+                        <input type="number" name="unitCount" id="property-units" class="neon-input-white" min="1" max="100" dir="ltr" style="text-align: right;" placeholder="مثال: 10">
+                    </div>
                 </div>
-
                 <div class="input-group">
                     <label>وصف تفصيلي</label>
                     <textarea id="property-description" name="propertyDescription" rows="5" class="neon-input-white" placeholder="اكتب كل التفاصيل اللي تخلي المشتري يختار عقارك..."></textarea>
