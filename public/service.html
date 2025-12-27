@@ -20,7 +20,7 @@
         --glass-border: rgba(255, 255, 255, 0.1);
         --neon-primary: #00ff88;
         --neon-secondary: #00d4ff;
-        --neon-purple: #d500f9;
+        --neon-gold: #ffd700;
         --text-main: #ffffff;
         --text-muted: #aaaaaa;
       }
@@ -108,7 +108,6 @@
       .hero-section {
         text-align: center;
         padding: 120px 20px 40px;
-        position: relative;
       }
       .hero-title {
         font-size: 2.8rem;
@@ -132,12 +131,10 @@
         margin: 0 auto 60px;
         padding: 0 20px;
       }
-
       .services-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 30px;
-        perspective: 1000px;
       }
 
       .service-card {
@@ -157,21 +154,27 @@
         backdrop-filter: blur(10px);
       }
 
-      .service-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
+      .service-card.pinned {
+        border-color: var(--neon-gold);
         background: linear-gradient(
-          90deg,
-          var(--neon-secondary),
-          var(--neon-primary)
+          145deg,
+          rgba(255, 215, 0, 0.05),
+          rgba(20, 20, 20, 0.8)
         );
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: 0.4s;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+      }
+      .service-card.pinned::after {
+        content: "شريك مميز";
+        position: absolute;
+        top: 15px;
+        right: -30px;
+        background: var(--neon-gold);
+        color: black;
+        font-size: 0.7rem;
+        font-weight: bold;
+        padding: 5px 30px;
+        transform: rotate(45deg);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
 
       .service-card:hover {
@@ -179,8 +182,9 @@
         border-color: rgba(255, 255, 255, 0.2);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
       }
-      .service-card:hover::before {
-        transform: scaleX(1);
+      .service-card.pinned:hover {
+        border-color: var(--neon-gold);
+        box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2);
       }
 
       .card-icon-wrapper {
@@ -198,11 +202,16 @@
         position: relative;
         z-index: 2;
       }
+      .service-card.pinned .card-icon-wrapper {
+        border-color: var(--neon-gold);
+      }
 
       .service-card:hover .card-icon-wrapper {
         border-color: var(--neon-primary);
-        box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
         transform: scale(1.1) rotate(5deg);
+      }
+      .service-card.pinned:hover .card-icon-wrapper {
+        border-color: var(--neon-gold);
       }
 
       .card-icon-wrapper img {
@@ -215,6 +224,9 @@
       .service-card:hover .card-icon-wrapper img {
         filter: grayscale(0%);
       }
+      .service-card.pinned .card-icon-wrapper img {
+        filter: grayscale(0%);
+      }
 
       .card-title {
         color: white;
@@ -225,6 +237,9 @@
       }
       .service-card:hover .card-title {
         color: var(--neon-primary);
+      }
+      .service-card.pinned .card-title {
+        color: var(--neon-gold);
       }
 
       .card-desc {
@@ -246,7 +261,6 @@
         transition: 0.3s;
         border: 1px solid;
       }
-
       .btn-web {
         border-color: var(--neon-secondary);
         color: var(--neon-secondary);
@@ -256,7 +270,6 @@
         color: black;
         box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
       }
-
       .btn-fb {
         border-color: #1877f2;
         color: #1877f2;
@@ -272,27 +285,15 @@
         padding: 40px;
         color: #666;
         font-size: 1.1rem;
+        grid-column: 1/-1;
       }
-      .loading-state i {
-        display: block;
-        font-size: 3rem;
-        margin-bottom: 15px;
-        color: var(--neon-secondary);
-      }
-
       .coming-soon-card {
         border-style: dashed;
         border-color: #444;
         opacity: 0.7;
-      }
-      .coming-soon-card:hover {
-        transform: none;
-        border-color: #444;
-        box-shadow: none;
-        opacity: 1;
-      }
-      .coming-soon-card .card-icon-wrapper {
-        border-color: #444;
+        grid-column: 1/-1;
+        max-width: 400px;
+        margin: 0 auto;
       }
 
       @keyframes fadeInDown {
@@ -323,7 +324,6 @@
           transform: scale(1);
         }
       }
-
       .reveal {
         animation: popIn 0.6s ease-out forwards;
         opacity: 0;
@@ -354,17 +354,14 @@
           <img src="logo.jpg" alt="عقارك" class="logo-img" />
           <span class="logo-text">عقارك</span>
         </a>
-        <a href="home" class="nav-btn">
-          <i class="fas fa-home"></i> الرئيسية
-        </a>
+        <a href="home" class="nav-btn"><i class="fas fa-home"></i> الرئيسية</a>
       </div>
     </header>
 
     <section class="hero-section">
       <h1 class="hero-title">شركاء النجاح والخدمات</h1>
       <p class="hero-desc">
-        لأن راحتك تهمنا، جمعنا لك نخبة من أفضل الشركات المتخصصة في التشطيبات،
-        الديكور، والنقل لخدمة عقارك الجديد بأعلى جودة.
+        نخبة من أفضل الشركات والخدمات التي نثق بها لخدمة منزلك.
       </p>
     </section>
 
@@ -372,9 +369,7 @@
       <div id="services-grid" class="services-grid"></div>
     </main>
 
-    <footer>
-      <p>جميع الحقوق محفوظة © 2025 - منصة عقارك</p>
-    </footer>
+    <footer><p>جميع الحقوق محفوظة © 2025 - منصة عقارك</p></footer>
 
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
@@ -384,46 +379,47 @@
         const container = document.getElementById("services-grid");
 
         container.innerHTML = `
-            <div class="loading-state" style="grid-column: 1/-1;">
-                <i class="fas fa-circle-notch fa-spin"></i>
-                <p>جاري تحميل الخدمات المميزة...</p>
-            </div>
-        `;
+            <div class="loading-state">
+                <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 15px; color: var(--neon-secondary);"></i>
+                <p>جاري تحميل الخدمات...</p>
+            </div>`;
 
         try {
           const res = await fetch("/api/services");
           const services = await res.json();
-
           container.innerHTML = "";
 
           if (services.length === 0) {
             container.innerHTML = `
-                <div class="service-card coming-soon-card reveal" style="grid-column: 1/-1; max-width: 400px; margin: 0 auto;">
-                    <div class="card-icon-wrapper">
-                        <i class="fas fa-rocket" style="font-size: 40px; color: #555;"></i>
-                    </div>
+                <div class="service-card coming-soon-card reveal">
+                    <div class="card-icon-wrapper"><i class="fas fa-rocket" style="font-size: 40px; color: #555;"></i></div>
                     <h3 class="card-title" style="color:#777">قريباً..</h3>
-                    <p class="card-desc">نعمل حالياً على ضم أفضل الشركاء لخدمتكم. انتظروا تحديثاتنا!</p>
-                </div>
-            `;
+                    <p class="card-desc">انتظروا شركاء جدد قريباً.</p>
+                </div>`;
             return;
           }
 
           services.forEach((service, index) => {
             const isFb = service.link_type === "facebook";
+            const isPinned = service.is_pinned;
 
             const icon = isFb
               ? '<i class="fab fa-facebook-f"></i>'
               : '<i class="fas fa-globe"></i>';
             const btnText = isFb ? "زيارة الصفحة" : "زيارة الموقع";
             const btnClass = isFb ? "btn-fb" : "btn-web";
-
-            const delay = index * 100;
+            const pinnedClass = isPinned ? "pinned" : "";
 
             const cardHTML = `
-                <a href="${service.link_url}" target="_blank" class="service-card reveal" style="animation-delay: ${delay}ms">
+                <a href="${
+                  service.link_url
+                }" target="_blank" class="service-card ${pinnedClass} reveal" style="animation-delay: ${
+              index * 100
+            }ms">
                     <div class="card-icon-wrapper">
-                        <img src="${service.image_url}" alt="${service.title}" onerror="this.src='logo.jpg'">
+                        <img src="${service.image_url}" alt="${
+              service.title
+            }" onerror="this.src='logo.jpg'">
                     </div>
                     <h3 class="card-title">${service.title}</h3>
                     <p class="card-desc">${service.description}</p>
@@ -435,13 +431,7 @@
             container.insertAdjacentHTML("beforeend", cardHTML);
           });
         } catch (e) {
-          console.error(e);
-          container.innerHTML = `
-            <div class="loading-state" style="grid-column: 1/-1; color: #ff4444;">
-                <i class="fas fa-wifi"></i>
-                <p>عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.</p>
-            </div>
-          `;
+          container.innerHTML = `<div class="loading-state" style="color:#ff4444;">حدث خطأ في الاتصال</div>`;
         }
       });
     </script>
