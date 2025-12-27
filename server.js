@@ -3919,9 +3919,12 @@ app.post(
 
 app.get("/api/services", async (req, res) => {
   try {
-    const result = await pgQuery("SELECT * FROM services ORDER BY id DESC");
+    const result = await pgQuery(
+      "SELECT * FROM services ORDER BY is_pinned DESC, id DESC"
+    );
     res.json(result.rows);
   } catch (e) {
+    console.error("Fetch Services Error:", e);
     res.status(500).json([]);
   }
 });
@@ -3950,6 +3953,25 @@ app.delete("/api/admin/service/:id", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "خطأ سيرفر" });
+  }
+});
+app.put("/api/admin/service/pin/:id", async (req, res) => {
+  const token = req.cookies.auth_token;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== "admin")
+      return res.status(403).json({ message: "غير مصرح" });
+
+    const { isPinned } = req.body;
+    await pgQuery("UPDATE services SET is_pinned = $1 WHERE id = $2", [
+      isPinned,
+      req.params.id,
+    ]);
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Pin Error:", e);
+    res.status(500).json({ message: "Error" });
   }
 });
 app.listen(PORT, () => {
