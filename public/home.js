@@ -297,20 +297,27 @@ async function checkNotifications() {
         }
 
         // بناء HTML القائمة
-        let listHTML = '';
-        if (data.notifications && data.notifications.length > 0) {
-            listHTML = data.notifications.map(n => `
-                <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}" style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; color: #ddd;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-left:25px;">
-                        <strong style="color:white; font-size:0.9rem;">${n.title}</strong>
-                        <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" title="حذف" style="color:#ff4444; background:none; border:none; cursor:pointer;">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <p style="color:#aaa; font-size:0.8rem; margin:0; line-height:1.4;">${n.message}</p>
-                    <span style="font-size:0.65rem; color:#666; display:block; margin-top:5px;">${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+       // داخل دالة checkNotifications في home.js
+let listHTML = '';
+if (data.notifications && data.notifications.length > 0) {
+    listHTML = data.notifications.map(n => `
+        <div class="menu-notif-item ${n.is_read ? '' : 'unread'}" id="notif-${n.id}">
+            <div style="padding-left: 20px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                    <span style="width:6px; height:6px; background:var(--neon-primary); border-radius:50%; display:${n.is_read ? 'none' : 'block'}"></span>
+                    <strong style="color:white; font-size:0.95rem;">${n.title}</strong>
                 </div>
-            `).join('');
+                <p style="color:#bbb; font-size:0.85rem; margin:0; line-height:1.5;">${n.message}</p>
+                <div style="margin-top:8px; font-size:0.7rem; color:#666; display:flex; align-items:center; gap:5px;">
+                    <i class="far fa-clock"></i>
+                    ${new Date(n.created_at).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}
+                </div>
+            </div>
+            <button onclick="deleteNotification(event, ${n.id})" class="notif-delete-btn" title="حذف">
+                <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
+            </button>
+        </div>
+    `).join('');
         } else {
             listHTML = '<p style="text-align:center; color:#555; padding:15px;">لا توجد إشعارات حالياً</p>';
         }
@@ -371,10 +378,13 @@ async function updateNavigation() {
                         <span id="desktop-notif-badge" class="desktop-badge">0</span>
                     </button>
                     <div id="desktop-notif-dropdown" class="desktop-notif-dropdown">
-                        <div class="notif-header">
-                            <span>الإشعارات</span>
-                            <small onclick="markAllRead()" style="cursor:pointer; font-size:0.7rem; text-decoration:underline;">تحديد كمقروء</small>
-                        </div>
+                        // في تحديث Navigation، استبدل الـ Header الخاص بالإشعارات بهذا:
+<div class="notif-header">
+    <span style="color:white;">التنبيهات</span>
+    <span onclick="markAllRead()" class="mark-read-all" style="cursor:pointer;">
+        <i class="fas fa-check-double"></i> قراءة الكل
+    </span>
+</div>
                         <div id="desktop-notif-list">
                             <p style="text-align:center; color:#777; padding:15px;">جاري التحميل...</p>
                         </div>

@@ -573,6 +573,96 @@
         width: 40px; height: 40px; font-size: 1rem;
     }
 }
+/* --- 💎 القائمة المنسدلة العصرية (Mobile & Desktop) --- */
+.mobile-dropdown, .desktop-notif-dropdown {
+    background: rgba(15, 15, 15, 0.85) !important;
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 10px rgba(255,255,255,0.05) !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+}
+
+/* تحسين روابط القائمة */
+.dropdown-link {
+    padding: 14px 18px !important;
+    border-radius: 16px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dropdown-link:hover {
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.15), transparent) !important;
+    transform: translateX(-5px) !important;
+    color: var(--neon-primary) !important;
+}
+
+/* --- 🔔 نظام الإشعارات المتطور --- */
+.menu-notif-item {
+    position: relative;
+    padding: 15px !important;
+    margin-bottom: 8px !important;
+    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    transition: 0.3s;
+    overflow: hidden;
+}
+
+.menu-notif-item.unread {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 212, 255, 0.03)) !important;
+    border-right: 4px solid var(--neon-primary) !important;
+}
+
+/* زر الحذف الجديد (أنيق وغير مستفز) */
+.notif-delete-btn {
+    opacity: 0; /* مخفي ويظهر عند الهوفر */
+    position: absolute !important;
+    top: 50% !important;
+    left: 10px !important;
+    transform: translateY(-50%) scale(0.8);
+    width: 30px;
+    height: 30px;
+    border-radius: 50% !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s !important;
+}
+
+.menu-notif-item:hover .notif-delete-btn {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
+.notif-delete-btn:hover {
+    background: #ff4444 !important;
+    color: white !important;
+}
+
+/* Header الإشعارات */
+.notif-header {
+    padding: 10px 10px 15px !important;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+.mark-read-all {
+    font-size: 0.75rem;
+    color: var(--neon-secondary);
+    background: rgba(0, 212, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.mark-read-all:hover {
+    background: var(--neon-secondary);
+    color: black;
+}
     </style>
 </head>
 <body>
