@@ -21,32 +21,61 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 app.set('trust proxy', 1);
-// ============================================================
-// 🛡️ إعدادات الحماية (Helmet)
-// ============================================================
-// --- 🛡️ بداية كود الحماية الشامل (Helmet) ---
-app.use(helmet());
-app.use(
-  helmet.contentSecurityPolicy({
+// --- 🛡️ بداية كود الحماية الموحد (Helmet Fixed) ---
+app.use(helmet({
+  contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      // 👇 رجعنا 'unsafe-inline' هنا عشان نضمن إن القوائم وأي كود JS يشتغل
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accept.paymob.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
       
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      // السماح بتشغيل السكربتات الداخلية (عشان القوائم) + Paymob + مكتبات خارجية + إعلانات جوجل
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://accept.paymob.com", 
+        "https://cdnjs.cloudflare.com", 
+        "https://cdn.jsdelivr.net", 
+        "https://pagead2.googlesyndication.com"
+      ],
       
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      // السماح بالستايلات + خطوط جوجل
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://cdnjs.cloudflare.com", 
+        "https://fonts.googleapis.com", 
+        "https://cdn.jsdelivr.net"
+      ],
       
-      // حل مشكلة أيقونات FontAwesome
-      fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
+      // السماح بالصور من سيرفرك + Cloudinary + Data URIs
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "https://res.cloudinary.com"
+      ],
       
-      frameSrc: ["'self'", "https://accept.paymob.com"],
+      // السماح بتحميل الخطوط والأيقونات
+      fontSrc: [
+        "'self'", 
+        "data:", 
+        "https://cdnjs.cloudflare.com", 
+        "https://fonts.gstatic.com", 
+        "https://cdn.jsdelivr.net"
+      ],
+      
+      // السماح بالـ iFrame عشان الدفع والإعلانات
+      frameSrc: [
+        "'self'", 
+        "https://accept.paymob.com", 
+        "https://googleads.g.doubleclick.net"
+      ],
+      
       connectSrc: ["'self'", "https://accept.paymob.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
-  })
-);
+  },
+  crossOriginEmbedderPolicy: false // عشان ميعملش مشاكل مع تحميل الصور الخارجية
+}));
 // --- 🛡️ نهاية كود الحماية ---
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
