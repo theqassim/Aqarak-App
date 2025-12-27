@@ -650,3 +650,69 @@ window.addEventListener('click', function(e) {
         dropdown.style.display = 'none';
     }
 });
+// سكربت الأنيميشن البسيط
+    const typeText = "في عقار معين في دماغك؟ احجز عقارك دلوقتي 🤔";
+    const typeContainer = document.querySelector('.typewriter-text');
+    let typeIndex = 0;
+    
+    function typeWriterAnim() {
+        if (typeIndex < typeText.length) {
+            typeContainer.innerHTML += typeText.charAt(typeIndex);
+            typeIndex++;
+            setTimeout(typeWriterAnim, 100);
+        } else {
+            setTimeout(() => { typeContainer.innerHTML = ''; typeIndex = 0; typeWriterAnim(); }, 5000);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', typeWriterAnim);
+
+    function scrollToRequest() {
+        document.querySelector('.request-property-section').scrollIntoView({ behavior: 'smooth' });
+    }
+     // دوال الشكاوى
+        function openComplaintModal() { document.getElementById('complaint-modal').style.display = 'flex'; }
+        function closeComplaintModal() { document.getElementById('complaint-modal').style.display = 'none'; }
+        async function submitComplaint() {
+            const btn = document.querySelector('#complaint-modal .action-btn');
+            const originalText = btn.innerHTML;
+            const text = document.getElementById('complaint-text').value;
+            if(!text) return alert('اكتب تفاصيل الشكوى');
+            
+            btn.innerHTML = 'جاري الإرسال...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/submit-complaint', {
+                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({content: text})
+                });
+                if(res.ok) { alert('تم الإرسال بنجاح ✅'); closeComplaintModal(); document.getElementById('complaint-text').value=''; }
+                else { alert('يجب تسجيل الدخول أولاً'); }
+            } catch(e) { alert('خطأ في الاتصال'); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        // PWA Popup Logic
+        window.onload = function() {
+            var expiryDate = new Date('2026-03-03'); 
+            var today = new Date();
+            if (!localStorage.getItem('hidePromoForever') && !sessionStorage.getItem('hidePromoSession') && today < expiryDate) {
+                document.getElementById('promoPopup').style.display = 'flex';
+            }
+        };
+        function closePopup() {
+            document.getElementById('promoPopup').style.display = 'none';
+            if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hidePromoForever', 'true');
+            else sessionStorage.setItem('hidePromoSession', 'true');
+        }
+        
+        // IOS Prompt
+        window.closeIosPrompt = () => {
+            document.getElementById('ios-install-prompt').style.display = 'none';
+            localStorage.setItem('iosPromptDismissed', Date.now());
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || (window.matchMedia('(display-mode: standalone)').matches);
+            if (isIos && !isStandalone && !localStorage.getItem('iosPromptDismissed')) {
+                setTimeout(() => { document.getElementById('ios-install-prompt').style.display = 'flex'; }, 3000);
+            }
+        });

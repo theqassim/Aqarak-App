@@ -458,3 +458,14 @@ document.getElementById('seller-form').addEventListener('submit', async function
         btn.innerHTML = originalText; btn.disabled = false;
     }
 });
+       // تحويل الأرقام العربية لإنجليزية ومنع الحروف
+document.addEventListener('input', function (e) {
+    // طبق على أي حقل نوعه number أو tel أو له كلاس number-only
+    if (e.target.type === 'number' || e.target.type === 'tel' || e.target.classList.contains('number-only')) {
+        let val = e.target.value;
+        // استبدال الأرقام العربية
+        val = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+        // حذف أي شيء ليس رقماً
+        e.target.value = val.replace(/[^0-9.]/g, '');
+    }
+});

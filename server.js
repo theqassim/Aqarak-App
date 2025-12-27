@@ -25,7 +25,6 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       
-      // ✅ 1. هنا ضفتلك رابط المكتبة عشان السكربت يشتغل
       scriptSrc: [
         "'self'", 
         "'unsafe-inline'", 
@@ -34,7 +33,8 @@ app.use(helmet({
         "https://cdn.jsdelivr.net", 
         "https://pagead2.googlesyndication.com",
         "https://tpc.googlesyndication.com",
-        "https://esm.sh" 
+        "https://esm.sh",
+        "https://unpkg.com" // ✅ ضروري عشان مكتبة الخرائط JS
       ],
 
       scriptSrcAttr: ["'unsafe-inline'"], 
@@ -44,14 +44,18 @@ app.use(helmet({
         "'unsafe-inline'", 
         "https://cdnjs.cloudflare.com", 
         "https://fonts.googleapis.com", 
-        "https://cdn.jsdelivr.net"
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com" // ✅ ضروري عشان استايل الخريطة CSS
       ],
       
       imgSrc: [
         "'self'", 
         "data:", 
         "https://res.cloudinary.com",
-        "https://pagead2.googlesyndication.com"
+        "https://pagead2.googlesyndication.com",
+        "https://unpkg.com", // ✅ عشان أيقونة الدبوس (Marker)
+        "https://*.basemaps.cartocdn.com", // ✅ عشان صور الخريطة نفسها (Tiles)
+        "https://*.openstreetmap.org"
       ],
       
       fontSrc: [
@@ -69,12 +73,13 @@ app.use(helmet({
         "https://tpc.googlesyndication.com"
       ],
       
-      // ✅ 2. هنا ضفتلك رابط مشروع Supabase عشان يقدر يجيب البيانات
       connectSrc: [
         "'self'", 
         "https://accept.paymob.com",
         "https://ep1.adtrafficquality.google",
-        "https://scncapmhnshjpocenqpm.supabase.co" 
+        "https://scncapmhnshjpocenqpm.supabase.co",
+        "https://nominatim.openstreetmap.org", // ✅ عشان البحث عن المناطق يشتغل
+        "https://overpass-api.de" // ✅ عشان خدمة تحليل الخدمات المحيطة
       ],
       
       objectSrc: ["'none'"],

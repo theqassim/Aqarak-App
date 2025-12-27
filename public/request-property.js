@@ -181,3 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'none';
     });
 });
+ document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                if(res.ok) {
+                    const data = await res.json();
+                    if(data.isAuthenticated) {
+                        document.getElementById('req-name').value = data.name || '';
+                        document.getElementById('req-phone').value = data.phone || '';
+                    }
+                }
+            } catch(e) {}
+        });
+        function showSuccessModal() { document.getElementById('successModal').style.display = 'flex'; }

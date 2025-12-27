@@ -183,20 +183,5 @@
 
     <script src="request-property.js"></script>
     <script src="ban-check.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch('/api/auth/me');
-                if(res.ok) {
-                    const data = await res.json();
-                    if(data.isAuthenticated) {
-                        document.getElementById('req-name').value = data.name || '';
-                        document.getElementById('req-phone').value = data.phone || '';
-                    }
-                }
-            } catch(e) {}
-        });
-        function showSuccessModal() { document.getElementById('successModal').style.display = 'flex'; }
-    </script>
 </body>
 </html>
