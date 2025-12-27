@@ -292,92 +292,42 @@
         </nav>
       </div>
     </header>
-
-    <main class="services-container">
-      <div class="section-header">
-        <h1>شركاء النجاح</h1>
-        <p>نقدم لك أفضل الخدمات المتكاملة لعقارك من خلال شركائنا الموثوقين</p>
-      </div>
-
-      <div class="services-grid">
-        <a
-          href="https://elhandaseya-gallery.onrender.com"
-          target="_blank"
-          class="service-card"
-        >
-          <div class="card-logo-wrapper">
-            <img
-              src="photo_2025-12-05_20-58-48.png"
-              alt="لوجو الهندسية ميتال"
-            />
-          </div>
-          <h3 class="card-title">الهندسية ميتال</h3>
-          <p class="card-desc">
-            الخيار الأول لأعمال الألوميتال والواجهات. جودة عالية، تصميمات عصرية،
-            وتشطيبات تليق بمنزلك.
-          </p>
-          <span class="visit-btn"
-            >زيارة الموقع <i class="fas fa-arrow-left"></i
-          ></span>
-        </a>
-
-        <div class="service-card coming-soon">
-          <div class="card-logo-wrapper" style="background: #222">
-            <i
-              class="fas fa-paint-roller"
-              style="font-size: 40px; color: #555"
-            ></i>
-          </div>
-          <h3 class="card-title" style="color: #777">تشطيبات وديكور</h3>
-          <p class="card-desc">
-            قريباً.. سنقوم بإضافة أفضل شركات الديكور والتشطيبات الداخلية.
-          </p>
-          <span class="visit-btn">قريباً</span>
-        </div>
-
-        <div class="service-card coming-soon">
-          <div class="card-logo-wrapper" style="background: #222">
-            <i
-              class="fas fa-truck-moving"
-              style="font-size: 40px; color: #555"
-            ></i>
-          </div>
-          <h3 class="card-title" style="color: #777">نقل أثاث</h3>
-          <p class="card-desc">
-            قريباً.. خدمات نقل الأثاث بأمان واحترافية لضمان سلامة منقولاتك.
-          </p>
-          <span class="visit-btn">قريباً</span>
-        </div>
-      </div>
-    </main>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        const container = document.querySelector('.services-grid');
-        
-        // تفريغ المحتوى القديم وعرض تحميل
-        container.innerHTML = '<p style="color:#aaa; width:100%; text-align:center;">جاري تحميل الخدمات...</p>';
-        
+      document.addEventListener("DOMContentLoaded", async () => {
+        const container = document.querySelector(".services-grid");
+
+        container.innerHTML =
+          '<p style="color:#aaa; width:100%; text-align:center;">جاري تحميل الخدمات...</p>';
+
         try {
-            const res = await fetch('/api/services');
-            const services = await res.json();
-            
-            container.innerHTML = ''; // مسح رسالة التحميل
+          const res = await fetch("/api/services");
+          const services = await res.json();
 
-            if(services.length === 0) {
-                container.innerHTML = '<p style="color:#aaa; width:100%; text-align:center;">لا توجد خدمات حالياً.</p>';
-                return;
-            }
+          container.innerHTML = "";
 
-            services.forEach(service => {
-                // تحديد الأيقونة والنص حسب النوع
-                let btnIcon = service.link_type === 'facebook' ? '<i class="fab fa-facebook"></i>' : '<i class="fas fa-globe"></i>';
-                let btnText = service.link_type === 'facebook' ? 'زيارة الصفحة' : 'زيارة الموقع';
-                let btnClass = service.link_type === 'facebook' ? 'visit-btn fb-btn' : 'visit-btn web-btn';
-                
-                // تصميم الكارت
-                const cardHTML = `
+          if (services.length === 0) {
+            container.innerHTML =
+              '<p style="color:#aaa; width:100%; text-align:center;">لا توجد خدمات حالياً.</p>';
+            return;
+          }
+
+          services.forEach((service) => {
+            let btnIcon =
+              service.link_type === "facebook"
+                ? '<i class="fab fa-facebook"></i>'
+                : '<i class="fas fa-globe"></i>';
+            let btnText =
+              service.link_type === "facebook"
+                ? "زيارة الصفحة"
+                : "زيارة الموقع";
+            let btnClass =
+              service.link_type === "facebook"
+                ? "visit-btn fb-btn"
+                : "visit-btn web-btn";
+
+            const cardHTML = `
                     <a href="${service.link_url}" target="_blank" class="service-card" style="text-decoration:none;">
                         <div class="card-logo-wrapper">
                             <img src="${service.image_url}" alt="${service.title}" style="width:100%; height:100%; object-fit:contain; border-radius:50%;">
@@ -389,13 +339,14 @@
                         </span>
                     </a>
                 `;
-                
-                container.insertAdjacentHTML('beforeend', cardHTML);
-            });
+
+            container.insertAdjacentHTML("beforeend", cardHTML);
+          });
         } catch (e) {
-            container.innerHTML = '<p style="color:red; text-align:center;">فشل تحميل الخدمات.</p>';
+          container.innerHTML =
+            '<p style="color:red; text-align:center;">فشل تحميل الخدمات.</p>';
         }
-    });
-</script>
+      });
+    </script>؛
   </body>
 </html>
