@@ -653,6 +653,57 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.get("/property-details", async (req, res) => {
+  const propertyId = req.query.id;
+
+  if (!propertyId) {
+    return res.sendFile(
+      path.join(__dirname, "public", "property-details.html")
+    );
+  }
+
+  try {
+    const result = await pgQuery(
+      'SELECT title, description, "imageUrl" FROM properties WHERE id = $1',
+      [propertyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.sendFile(
+        path.join(__dirname, "public", "property-details.html")
+      );
+    }
+
+    const property = result.rows[0];
+    const filePath = path.join(__dirname, "public", "property-details.html");
+
+    let htmlContent = await fs.readFile(filePath, "utf8");
+
+    htmlContent = htmlContent
+      .replace(/{{TITLE}}/g, property.title || "عقار جديد")
+      .replace(
+        /{{DESCRIPTION}}/g,
+        (property.description || "تفاصيل العقار على موقع عقارك").substring(
+          0,
+          160
+        )
+      )
+      .replace(
+        /{{IMAGE}}/g,
+        property.imageUrl || "https://aqarakeg.com/logo.png"
+      )
+      .replace(
+        /{{URL}}/g,
+        `https://aqarakeg.com/property-details?id=${propertyId}`
+      );
+
+    res.send(htmlContent);
+  } catch (error) {
+    console.error("Error serving dynamic property details:", error);
+    res.sendFile(path.join(__dirname, "public", "property-details.html"));
+  }
+});
+
 app.use(
   express.static(path.join(__dirname, "public"), {
     extensions: ["html"],
