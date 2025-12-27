@@ -2806,4 +2806,58 @@ app.get('/api/ai-search', async (req, res) => {
         res.status(500).json({ message: 'Search Failed' });
     }
 });
+// ==========================================
+// 📞 نظام اتصل بنا (Contact Us)
+// ==========================================
+
+// 1. إنشاء جدول الرسائل (شغل السيرفر مرة واحدة لإنشائه)
+app.get('/init-contact-table', async (req, res) => {
+    try {
+        await pgQuery(`
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                phone TEXT,
+                subject TEXT,
+                message TEXT,
+                created_at TEXT
+            )
+        `);
+        res.send('✅ تم إنشاء جدول رسائل التواصل بنجاح');
+    } catch (e) {
+        res.status(500).send('❌ خطأ: ' + e.message);
+    }
+});
+
+// 2. استقبال الرسالة من صفحة اتصل بنا
+app.post('/api/contact-us', async (req, res) => {
+    const { name, phone, subject, message } = req.body;
+
+    if (!name || !phone || !message) {
+        return res.status(400).json({ message: 'يرجى ملء كافة البيانات المطلوبة' });
+    }
+
+    try {
+        // أ) الحفظ في قاعدة البيانات
+        // تأكد أنك فتحت الرابط /init-contact-table مرة واحدة لإنشاء الجدول
+        await pgQuery(
+            `INSERT INTO contact_messages (name, phone, subject, message, created_at) VALUES ($1, $2, $3, $4, $5)`,
+            [name, phone, subject, message, new Date().toISOString()]
+        );
+
+        // ب) إرسال إشعار ديسكورد للأدمن
+        await sendDiscordNotification("📩 رسالة تواصل جديدة", [
+            { name: "👤 الاسم", value: name },
+            { name: "📱 الهاتف", value: phone },
+            { name: "📌 الموضوع", value: subject },
+            { name: "📝 الرسالة", value: message }
+        ], 3447003); // لون أزرق
+
+        res.json({ success: true, message: 'تم استلام رسالتك بنجاح' });
+
+    } catch (error) {
+        console.error("Contact Error:", error);
+        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+    }
+});
 app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });

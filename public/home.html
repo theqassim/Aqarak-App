@@ -294,6 +294,138 @@
     from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+/* =========================================
+   🦶 الفوتر الفخم الجديد (Luxury Footer)
+   ========================================= */
+.main-footer {
+    position: relative;
+    background: #080808; /* لون داكن جداً */
+    padding: 60px 0 30px;
+    margin-top: 60px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+/* تأثير الإضاءة العلوية للفوتر */
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-primary), transparent);
+    box-shadow: 0 0 30px var(--neon-primary);
+    opacity: 0.7;
+}
+
+.footer-content-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+/* حاوية الروابط */
+.footer-nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px 30px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(5px);
+}
+
+/* تصميم الرابط الفخم */
+.footer-link-item {
+    color: #bbb;
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.footer-link-item i {
+    font-size: 1rem;
+    transition: 0.3s;
+    color: #666;
+}
+
+/* تأثير الهوفر */
+.footer-link-item:hover {
+    color: white;
+    background: rgba(0, 255, 136, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
+}
+
+.footer-link-item:hover i {
+    color: var(--neon-primary);
+}
+
+/* أيقونات السوشيال ميديا */
+.footer-social-icons {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.social-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.social-icon:hover {
+    background: var(--neon-primary);
+    color: black;
+    border-color: var(--neon-primary);
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+/* حقوق الملكية */
+.copyright-text {
+    color: #555;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+}
+
+.copyright-text span {
+    color: var(--neon-primary);
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+@media (max-width: 600px) {
+    .footer-nav-links {
+        flex-direction: column;
+        gap: 5px;
+        background: transparent;
+        border: none;
+    }
+}
     </style>
 </head>
 <body>
@@ -405,21 +537,41 @@
     </main>
 
     <footer class="main-footer">
-        <div class="footer-links" style="margin-bottom: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-            <a href="about" style="color: #ccc; text-decoration: none; transition: 0.3s;">من نحن</a>
-            <span style="color: #444;">|</span>
-            <a href="contact" style="color: #ccc; text-decoration: none; transition: 0.3s;">اتصل بنا</a>
-            <span style="color: #444;">|</span>
-            <a href="terms" style="color: #ccc; text-decoration: none; transition: 0.3s;">الشروط والأحكام</a>
+    <div class="footer-content-wrapper">
+        
+        <div style="opacity: 0.5; margin-bottom: 10px;">
+            <img src="logo.png" alt="Aqarak" style="width: 40px; filter: grayscale(100%);">
         </div>
 
-        <div class="social-links" style="margin-bottom:15px;">
-            <a href="https://www.facebook.com/share/17H591aR7r/" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://www.instagram.com/aqarak.eg" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-instagram"></i></a>
-            <a href="https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38" target="_blank" style="color:#aaa; margin:0 10px; font-size:1.2rem;"><i class="fab fa-whatsapp"></i></a>
+        <div class="footer-nav-links">
+            <a href="about" class="footer-link-item">
+                <i class="fas fa-users"></i> من نحن
+            </a>
+            <a href="contact" class="footer-link-item">
+                <i class="fas fa-headset"></i> اتصل بنا
+            </a>
+            <a href="terms" class="footer-link-item">
+                <i class="fas fa-file-contract"></i> الشروط والأحكام
+            </a>
         </div>
-        <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
-    </footer>
+
+        <div class="footer-social-icons">
+            <a href="https://www.facebook.com/share/17H591aR7r/" target="_blank" class="social-icon" title="Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://www.instagram.com/aqarak.eg" target="_blank" class="social-icon" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38" target="_blank" class="social-icon" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+        </div>
+
+        <p class="copyright-text">
+            جميع الحقوق محفوظة © 2025 - <span>عقارك</span>
+        </p>
+    </div>
+</footer>
 
     <button onclick="openComplaintModal()" class="complaint-float-btn" style="position:fixed; bottom:20px; left:20px; background:rgba(255,68,68,0.1); color:#ff4444; border:1px solid #ff4444; padding:10px 20px; border-radius:50px; cursor:pointer; font-weight:bold; backdrop-filter:blur(5px); z-index:9000;">
         <i class="fas fa-exclamation-circle"></i> شكوى؟
