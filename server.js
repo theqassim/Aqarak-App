@@ -407,7 +407,7 @@ async function urlToGenerativePart(url) {
 }
 
 // 👁️ دالة الفحص بالذكاء الاصطناعي (محدثة لمقارنة النوع)
-async function aiCheckProperty(title, description, price, imageUrls, propertyType) {
+async function aiCheckProperty(title, description, price, imageUrls, category) {
     try {
         const imageParts = [];
         if (imageUrls && imageUrls.length > 0) {
@@ -417,27 +417,28 @@ async function aiCheckProperty(title, description, price, imageUrls, propertyTyp
             }
         }
 
-        // 🔥 برومبت مقارنة النوع بالصورة
+        // 🔥 برومبت مقارنة الفئة (Category) بالصور
+        // لاحظ هنا بنستخدم category بدلاً من type
         const prompt = `
-أنت مراقب محتوى عقاري.
-بيانات العقار:
-- النوع المختار: "${propertyType}"
+أنت مراقب جودة لمنصة عقارية.
+البيانات المقدمة:
+- تصنيف العقار: "${category}" (مثل: apartment, villa, land, store, building)
 - العنوان: "${title}"
 - الوصف: "${description}"
 
-المطلوب: فحص الصور ومقارنتها مع "النوع المختار":
-1. لو النوع "أرض" (land) والصور لـ "شقة" أو "أثاث" -> الحالة: pending، السبب: "الصور لا تطابق النوع (مختار أرض والصور لشقة)".
-2. لو النوع "شقة" (apartment) والصور "أرض فضاء" -> الحالة: pending، السبب: "الصور لا تطابق النوع (مختار شقة والصور لأرض)".
-3. لو النوع "عمارة" والصور "شقة من الداخل فقط" -> الحالة: pending، السبب: "يرجى إضافة صورة لواجهة العمارة".
-4. لو الصور مظلمة أو غير واضحة -> الحالة: pending، السبب: "الصور غير واضحة".
-5. لو كله تمام -> الحالة: approved.
+المطلوب: فحص الصور ومقارنتها مع "تصنيف العقار" فقط (تجاهل هل هو بيع أم إيجار):
+1. لو التصنيف "land" (أرض) والصور تحتوي على أثاث أو شقة من الداخل -> الحالة: pending، السبب: "الصور لا تطابق التصنيف (مختار أرض والصور لشقة)".
+2. لو التصنيف "apartment" (شقة) والصور لأرض فضاء فقط -> الحالة: pending، السبب: "الصور لا تطابق التصنيف (مختار شقة والصور لأرض)".
+3. لو التصنيف "building" (عمارة) والصور لشقة من الداخل فقط ولا توجد واجهة -> الحالة: pending، السبب: "يرجى إضافة صورة لواجهة العمارة".
+4. لو الصور سوداء تماماً أو غير واضحة -> الحالة: pending، السبب: "الصور غير واضحة".
+5. لو الصور تطابق التصنيف -> الحالة: approved.
 
 رد بصيغة JSON فقط:
 {
-  "status": "approved" أو "pending",
-  "reason": "سبب التعليق باختصار",
-  "user_message": "رسالة للمستخدم باللهجة المصرية تشرح له ليه الإعلان تحت المراجعة أو تباركه لو اتقبل",
-  "marketing_description": "وصف تسويقي"
+  "status": "approved" أو "pending" أو "rejected",
+  "reason": "سبب التعليق باختصار للعرض للمستخدم",
+  "user_message": "رسالة للمستخدم باللهجة المصرية توضح النتيجة",
+  "marketing_description": "اكتب وصف تسويقي جذاب جداً لهذا العقار بناءً على الصور والبيانات"
 }
 `;
         const result = await modelVision.generateContent([prompt, ...imageParts]);
@@ -449,8 +450,8 @@ async function aiCheckProperty(title, description, price, imageUrls, propertyTyp
         console.error("AI Check Error:", error);
         return { 
             status: "pending", 
-            reason: "خطأ تقني", 
-            user_message: "جاري المراجعة اليدوية.",
+            reason: "خطأ تقني في الفحص", 
+            user_message: "جاري المراجعة اليدوية بواسطة الإدارة.",
             marketing_description: description 
         };
     }
@@ -886,6 +887,7 @@ app.post('/api/logout', (req, res) => { res.clearCookie('auth_token'); res.json(
 // 🟢 استقبال طلب بيع (النسخة الاحترافية - Modal + AI + Match Maker)
 // 🟢 استقبال طلب بيع (مع نظام الخصم من الرصيد)
 // 🟢 استقبال طلب بيع (محدث)
+// 🟢 استقبال طلب بيع (تم الإصلاح: إرسال الفئة للـ AI + إشعار ديسكورد)
 app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ success: false, message: 'سجل دخول أولاً' });
@@ -897,7 +899,7 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const sellerPhone = realUser.phone; 
     let isPaidSystem = false; 
 
-    // منطق الدفع (زي ما هو)
+    // --- منطق الخصم (كما هو) ---
     if (realUser.role !== 'admin') {
         try {
             const settingsRes = await pgQuery("SELECT setting_value FROM bot_settings WHERE setting_key = 'payment_active'");
@@ -914,9 +916,10 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
         } catch (e) { return res.status(500).json({ success: false, message: 'خطأ دفع' }); }
     }
 
-    // استقبال البيانات الجديدة
+    // استقبال البيانات (لاحظ إضافة propertyCategory)
     const { 
-        propertyTitle, propertyType, propertyPrice, propertyArea, propertyDescription, 
+        propertyTitle, propertyType, propertyCategory, // ✅ هنا المتغير المهم
+        propertyPrice, propertyArea, propertyDescription, 
         propertyRooms, propertyBathrooms, propertyLevel, propertyFloors, propertyFinishing, 
         nearby_services, latitude, longitude,
         governorate, city, unitCount, landType 
@@ -929,38 +932,51 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
     const englishPrice = toEnglishDigits(propertyPrice);
 
     try {
-        // تمرير النوع للـ AI للفحص
-        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls, propertyType);
+        // 🔥 تمرير propertyCategory (شقة/أرض) للـ AI بدلاً من propertyType
+        const aiReview = await aiCheckProperty(propertyTitle, propertyDescription, englishPrice, imageUrls, propertyCategory);
 
         const isPublic = (aiReview.status === 'approved');
         
-        // إعداد رسالة الإشعار
         const notifTitle = isPublic ? "مبروك! تم النشر ✅" : "مراجعة الإعلان ⚠️";
         const notifBody = aiReview.user_message || "تم استلام إعلانك.";
 
         // حفظ في جدول submissions
-        await pgQuery(`
+        const subRes = await pgQuery(`
             INSERT INTO seller_submissions 
             ("sellerName", "sellerPhone", "propertyTitle", "propertyType", "propertyPrice", "propertyArea", 
              "propertyRooms", "propertyBathrooms", "propertyDescription", "imagePaths", "submissionDate", status,
              "propertyLevel", "propertyFloors", "propertyFinishing", "ai_review_note", 
              "nearby_services", "latitude", "longitude", "governorate", "city", "unit_count") 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+            RETURNING id
         `, [
-            sellerName, sellerPhone, propertyTitle, propertyType, englishPrice,
-            safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
+            sellerName, sellerPhone, propertyTitle, propertyCategory, // ✅ نخزن الفئة هنا لأنها الأهم، أو ممكن تخزن propertyType حسب هيكل جدولك
+            englishPrice, safeInt(propertyArea), safeInt(propertyRooms), safeInt(propertyBathrooms), 
             propertyDescription, paths, new Date().toISOString(), aiReview.status,
-            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || landType || '', // تخزين نوع الأرض في التشطيب
-            aiReview.reason, // تخزين سبب الـ AI
+            propertyLevel || '', safeInt(propertyFloors), propertyFinishing || landType || '', 
+            aiReview.reason, 
             nearby_services || '', parseFloat(latitude), parseFloat(longitude),
             governorate || '', city || '', safeInt(unitCount)
         ]);
 
-        // إرسال الإشعار بالسبب
+        // إشعار داخلي للمستخدم
         await createNotification(sellerPhone, notifTitle, notifBody);
 
+        // ✅ إشعار ديسكورد للأدمن (هذا ما كان ينقصك)
+        await sendDiscordNotification(
+            isPublic ? "✅ إعلان جديد (مقبول تلقائياً)" : "⚠️ إعلان جديد (قيد المراجعة)", 
+            [
+                { name: "👤 المالك", value: `${sellerName} - ${sellerPhone}` },
+                { name: "🏠 العقار", value: `${propertyTitle} (${propertyCategory})` },
+                { name: "💰 السعر", value: englishPrice },
+                { name: "🤖 قرار AI", value: `${aiReview.status} - ${aiReview.reason}` }
+            ], 
+            isPublic ? 3066993 : 16776960 // لون أخضر لو مقبول، برتقالي لو مراجعة
+        );
+
         if (isPublic) {
-            const pubRes = await pgQuery(`
+            // ... (كود النشر المباشر كما هو بدون تغيير) ...
+             const pubRes = await pgQuery(`
                 INSERT INTO properties 
                 (title, price, "numericPrice", rooms, bathrooms, area, description, "imageUrl", "imageUrls", type, 
                  "hiddenCode", "sellerName", "sellerPhone", "publisherUsername", "isFeatured", "isLegal", 
@@ -972,7 +988,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
                 propertyTitle, englishPrice, parseFloat(englishPrice),
                 safeInt(propertyRooms), safeInt(propertyBathrooms), safeInt(propertyArea), propertyDescription,
                 files.length > 0 ? files[0].path : 'logo.png', JSON.stringify(imageUrls), 
-                propertyType, code, sellerName, sellerPhone, realUser.username,
+                propertyCategory, // تخزين الفئة هنا (apartment/land) بدلاً من sale/rent لو حابب
+                code, sellerName, sellerPhone, realUser.username,
                 propertyLevel || '', safeInt(propertyFloors), propertyFinishing || landType || '',
                 nearby_services || '', parseFloat(latitude), parseFloat(longitude),
                 governorate || '', city || '', safeInt(unitCount)
@@ -993,7 +1010,8 @@ app.post('/api/submit-seller-property', uploadSeller.array('images', 10), async 
             status: aiReview.status, 
             title: notifTitle,
             message: notifBody,
-            reason: aiReview.reason
+            reason: aiReview.reason,
+            marketing_desc: aiReview.marketing_description
         }); 
 
     } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'خطأ فني' }); }
