@@ -263,6 +263,96 @@
           flex-direction: column;
         }
       }
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.98);
+        --neon-secondary: #00d4ff;
+        --text-white: #ffffff;
+      }
+
+      .main-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 9999;
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1250px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+      }
+
+      .logo {
+        height: 45px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-secondary);
+      }
+
+      .logo-text {
+        color: var(--text-white);
+        font-weight: bold;
+        font-size: 1.1rem;
+        font-family: "Cairo", sans-serif;
+      }
+
+      .nav-button {
+        text-decoration: none;
+        color: var(--text-white);
+        border: 1px solid var(--neon-secondary);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "Cairo", sans-serif;
+        background: transparent;
+      }
+
+      .nav-button:hover {
+        background: var(--neon-secondary);
+        color: black;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+      }
+
+      .nav-button.active {
+        background: var(--neon-secondary);
+        color: black;
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+      }
+
+      @media (max-width: 768px) {
+        .logo-text {
+          display: none;
+        }
+        .logo {
+          height: 40px;
+        }
+        .nav-button {
+          padding: 6px 12px;
+          font-size: 0.8rem;
+        }
+      }
     </style>
   </head>
   <body>
