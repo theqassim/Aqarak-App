@@ -527,50 +527,59 @@
 }
 .copyright-text span { color: var(--neon-primary); font-weight: bold; }
 
-/* 🔥🔥🔥 تحسينات الموبايل القوية 🔥🔥🔥 */
+/* 🔥 تحسينات الفوتر للموبايل (نسخة مدمجة وأنيقة) 🔥 */
 @media (max-width: 768px) {
     .main-footer {
-        padding-bottom: 100px; /* مسافة كبيرة تحت عشان الزراير العائمة */
+        padding-top: 30px; /* قللنا المسافة اللي فوق */
+        padding-bottom: 110px !important; /* مسافة كافية للزراير العائمة بس مش مبالغ فيها */
+        margin-top: 40px;
     }
 
     .footer-content-wrapper {
-        gap: 20px;
-        width: 100%;
-        box-sizing: border-box;
+        gap: 15px; /* تقليل المسافات بين العناصر */
+        padding: 0 20px;
     }
 
-    /* تحويل الروابط لقائمة رأسية شيك */
+    /* الصندوق الزجاجي */
     .footer-nav-links {
         flex-direction: column;
         width: 100%;
-        box-sizing: border-box;
-        border-radius: 20px; /* تدوير أقل للموبايل */
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.03); /* استرجاع الخلفية الزجاجية */
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px; /* تصغير الحواف الداخلية للصندوق */
+        gap: 8px; /* تقليل المسافة بين الزراير */
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.02); /* تخفيف الخلفية شوية */
     }
 
-    /* جعل الأزرار بعرض كامل */
+    /* الزراير نفسها */
     .footer-link-item {
         width: 100%;
-        justify-content: center; /* توسيط الكلام */
-        background: rgba(0, 0, 0, 0.3); /* خلفية غامقة للزر نفسه */
-        padding: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-sizing: border-box;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px 10px; /* تصغير سمك الزرار */
+        font-size: 0.9rem; /* تصغير الخط تكه بسيطة */
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
     }
     
-    .footer-link-item:hover, .footer-link-item:active {
-        background: rgba(0, 255, 136, 0.15);
-        border-color: var(--neon-primary);
+    .footer-link-item i {
+        font-size: 0.9rem; /* تصغير الأيقونة */
     }
 
-    /* تكبير وتوسيط السوشيال ميديا */
+    /* أيقونات السوشيال ميديا */
     .footer-social-icons {
         gap: 15px;
+        margin-top: 5px;
     }
+    
     .social-icon {
-        width: 40px; height: 40px; font-size: 1rem;
+        width: 38px; /* تصغير الدوائر */
+        height: 38px;
+        font-size: 1rem;
+    }
+    
+    .copyright-text {
+        font-size: 0.75rem; /* تصغير خط الحقوق */
+        opacity: 0.7;
     }
 }
     </style>

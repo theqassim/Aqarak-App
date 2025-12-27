@@ -9,9 +9,12 @@ const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const helmet = require('helmet');
 
 // 🟢 إضافات الواتساب
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, RemoteAuth } = require('whatsapp-web.js');
+// نحتاج fs-extra عشان التعامل مع ملفات الجلسة
+const fs = require('fs-extra');
 const qrcode = require('qrcode-terminal');
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -20,6 +23,26 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 app.set('trust proxy', 1);
+// ============================================================
+// 🛡️ إعدادات الحماية (Helmet)
+// ============================================================
+app.use(helmet());
+
+// تعديل سياسة المحتوى عشان الصور (Cloudinary) والدفع (Paymob) يشتغلوا
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accept.paymob.com"], // عشان سكريبتات الدفع
+      styleSrc: ["'self'", "'unsafe-inline'"], // عشان الستايلات الداخلية
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // ⚠️ مهم جداً عشان صور Cloudinary تظهر
+      frameSrc: ["'self'", "https://accept.paymob.com"], // ⚠️ مهم جداً عشان iFrame الدفع يفتح
+      connectSrc: ["'self'", "https://accept.paymob.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 const APP_URL = "https://aqarakeg.com"; 
@@ -132,23 +155,44 @@ function toEnglishDigits(str) {
 
 
 // ==========================================================
-// 🧠 1. نظام الواتساب (WhatsApp QR)
+// 🧠 1. نظام الواتساب (WhatsApp QR + RemoteAuth)
 // ==========================================================
 
-// إعداد عميل الواتساب مع إعدادات خاصة لسيرفر Render
+// كلاس لتخزين الجلسة في قاعدة البيانات (PostgreSQL)
+class PostgresStore {
+    constructor(pool) { this.pool = pool; }
+    async sessionExists(options) {
+        try { const res = await this.pool.query('SELECT 1 FROM whatsapp_sessions WHERE session_id = $1', [options.session]); return res.rows.length > 0; } catch (e) { return false; }
+    }
+    async save(options) {
+        const filePath = `${options.session}.zip`;
+        if (await fs.pathExists(filePath)) {
+            const data = await fs.readFile(filePath);
+            await this.pool.query(`INSERT INTO whatsapp_sessions (session_id, data) VALUES ($1, $2) ON CONFLICT (session_id) DO UPDATE SET data = $2`, [options.session, data]);
+            await fs.remove(filePath); // حذف الملف المحلي لتوفير المساحة
+        }
+    }
+    async extract(options) {
+        const res = await this.pool.query('SELECT data FROM whatsapp_sessions WHERE session_id = $1', [options.session]);
+        if (res.rows.length > 0) await fs.writeFile(options.path, res.rows[0].data);
+    }
+    async delete(options) { await this.pool.query('DELETE FROM whatsapp_sessions WHERE session_id = $1', [options.session]); }
+}
+
+const store = new PostgresStore(dbPool);
+
 const whatsappClient = new Client({
-    authStrategy: new LocalAuth({ clientId: "aqarak-session" }), // حفظ الجلسة باسم محدد
+    authStrategy: new RemoteAuth({
+        clientId: "aqarak-session",
+        store: store,
+        backupSyncIntervalMs: 600000 // حفظ نسخة كل 10 دقائق
+    }),
     puppeteer: {
         headless: true,
         args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // ⚠️ مهم جداً: يمنع امتلاء الذاكرة المؤقتة ويحل مشكلة الانهيار
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--single-process', // يقلل استهلاك الرامات
-            '--disable-gpu'
+            '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote',
+            '--single-process', '--disable-gpu'
         ]
     }
 });
@@ -158,11 +202,14 @@ whatsappClient.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
 });
 
+whatsappClient.on('remote_session_saved', () => {
+    console.log('💾 تم حفظ جلسة الواتساب في الداتابيز بنجاح!');
+});
+
 whatsappClient.on('ready', () => {
     console.log('✅ الواتساب متصل وجاهز!');
 });
 
-// التعامل مع فصل الاتصال وإعادة التشغيل تلقائياً
 whatsappClient.on('disconnected', (reason) => {
     console.log('❌ تم فصل الواتساب:', reason);
     whatsappClient.initialize();
@@ -433,7 +480,7 @@ async function createTables() {
         `CREATE TABLE IF NOT EXISTS property_offers (id SERIAL PRIMARY KEY, property_id INTEGER, buyer_name TEXT, buyer_phone TEXT, offer_price TEXT, created_at TEXT)`,
         `CREATE TABLE IF NOT EXISTS subscriptions (id SERIAL PRIMARY KEY, endpoint TEXT UNIQUE, keys TEXT)`,
         `CREATE TABLE IF NOT EXISTS bot_settings (id SERIAL PRIMARY KEY, setting_key TEXT UNIQUE, setting_value TEXT)`,
-        
+`CREATE TABLE IF NOT EXISTS whatsapp_sessions (session_id TEXT PRIMARY KEY, data BYTEA)`,
         // الجدول الجديد للشكاوي
         `CREATE TABLE IF NOT EXISTS complaints (
             id SERIAL PRIMARY KEY,
