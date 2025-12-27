@@ -20,24 +20,27 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-app.set('trust proxy', 1);
-// --- 🛡️ بداية كود الحماية الموحد (Helmet Fixed) ---
+// --- 🛡️ بداية كود الحماية المحدث (Helmet Fix) ---
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       
-      // السماح بتشغيل السكربتات الداخلية (عشان القوائم) + Paymob + مكتبات خارجية + إعلانات جوجل
+      // السماح بالسكربتات الخارجية
       scriptSrc: [
         "'self'", 
-        "'unsafe-inline'", 
+        "'unsafe-inline'", // للسماح بالسكربتات المكتوبة داخل ملفات HTML
         "https://accept.paymob.com", 
         "https://cdnjs.cloudflare.com", 
         "https://cdn.jsdelivr.net", 
-        "https://pagead2.googlesyndication.com"
+        "https://pagead2.googlesyndication.com",
+        "https://tpc.googlesyndication.com"
       ],
-      
-      // السماح بالستايلات + خطوط جوجل
+
+      // 👇 هذا هو السطر الأهم لحل مشكلة القوائم والأزرار (onclick)
+      scriptSrcAttr: ["'unsafe-inline'"], 
+
+      // الستايلات والخطوط
       styleSrc: [
         "'self'", 
         "'unsafe-inline'", 
@@ -46,14 +49,15 @@ app.use(helmet({
         "https://cdn.jsdelivr.net"
       ],
       
-      // السماح بالصور من سيرفرك + Cloudinary + Data URIs
+      // الصور
       imgSrc: [
         "'self'", 
         "data:", 
-        "https://res.cloudinary.com"
+        "https://res.cloudinary.com",
+        "https://pagead2.googlesyndication.com"
       ],
       
-      // السماح بتحميل الخطوط والأيقونات
+      // الخطوط
       fontSrc: [
         "'self'", 
         "data:", 
@@ -62,21 +66,29 @@ app.use(helmet({
         "https://cdn.jsdelivr.net"
       ],
       
-      // السماح بالـ iFrame عشان الدفع والإعلانات
+      // الـ iFrame (للدفع والإعلانات)
       frameSrc: [
         "'self'", 
         "https://accept.paymob.com", 
-        "https://googleads.g.doubleclick.net"
+        "https://googleads.g.doubleclick.net",
+        "https://tpc.googlesyndication.com"
       ],
       
-      connectSrc: ["'self'", "https://accept.paymob.com"],
+      // 👇 تم إضافة رابط جوجل الجديد هنا لحل مشكلة الإعلانات
+      connectSrc: [
+        "'self'", 
+        "https://accept.paymob.com",
+        "https://ep1.adtrafficquality.google" 
+      ],
+      
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
   },
-  crossOriginEmbedderPolicy: false // عشان ميعملش مشاكل مع تحميل الصور الخارجية
+  crossOriginEmbedderPolicy: false
 }));
 // --- 🛡️ نهاية كود الحماية ---
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 const APP_URL = "https://aqarakeg.com"; 
