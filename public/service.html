@@ -17,50 +17,11 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-
         "@type": "RealEstateAgent",
-
         "name": "منصة عقارك - Aqarak",
-
-        "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
-
         "url": "https://aqarakeg.com",
-
         "logo": "https://aqarakeg.com/logo.jpg",
-
-        "image": "https://aqarakeg.com/logo.jpg",
-
-        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
-
-        "address": {
-          "@type": "PostalAddress",
-
-          "addressLocality": "Cairo",
-
-          "addressCountry": "EG"
-        },
-
-        "priceRange": "$",
-
-        "contactPoint": {
-          "@type": "ContactPoint",
-
-          "telephone": "+201008102237",
-
-          "contactType": "customer service",
-
-          "areaServed": "EG",
-
-          "availableLanguage": ["Arabic"]
-        },
-
-        "sameAs": [
-          "https://www.facebook.com/share/1ADgNDLXc6/",
-
-          "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-          "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-        ]
+        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات."
       }
     </script>
     <style>
@@ -71,15 +32,12 @@
         width: 100%;
         overflow-x: hidden;
       }
-
       :root {
         --glass-bg: rgba(20, 20, 20, 0.98);
         --neon-primary: #00ff88;
         --neon-secondary: #00d4ff;
         --card-bg: #1a1a1a;
-        --text-main: #ffffff;
       }
-
       body.internal-page {
         background-color: #0f0f0f;
         background-image: radial-gradient(
@@ -90,7 +48,6 @@
         min-height: 100vh;
         font-family: "Cairo", sans-serif;
         color: white;
-        padding-top: 0 !important;
       }
 
       .main-header {
@@ -100,10 +57,8 @@
         background: var(--glass-bg);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         padding: 10px 15px;
-        margin: 0 !important;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       }
-
       .header-container {
         display: flex;
         justify-content: space-between;
@@ -111,7 +66,6 @@
         max-width: 1250px;
         margin: 0 auto;
       }
-
       .nav-button {
         text-decoration: none;
         color: white;
@@ -134,12 +88,10 @@
         margin: 40px auto 20px;
         padding: 0 20px;
       }
-
       .section-header {
         text-align: center;
         margin-bottom: 50px;
       }
-
       .section-header h1 {
         color: var(--neon-primary);
         font-size: 2.5rem;
@@ -156,6 +108,7 @@
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 30px;
         justify-content: center;
+        min-height: 200px;
       }
 
       .service-card {
@@ -170,7 +123,6 @@
         text-decoration: none;
         display: block;
       }
-
       .service-card:hover {
         transform: translateY(-10px);
         border-color: var(--neon-secondary);
@@ -188,14 +140,15 @@
         justify-content: center;
         border: 3px solid #333;
         transition: 0.3s;
+        overflow: hidden;
       }
       .service-card:hover .card-logo-wrapper {
         border-color: var(--neon-secondary);
         box-shadow: 0 0 15px var(--neon-secondary);
       }
       .card-logo-wrapper img {
-        max-width: 70%;
-        max-height: 70%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
       }
 
@@ -236,25 +189,6 @@
         box-shadow: none;
         border-color: #333;
       }
-      .coming-soon .card-logo-wrapper {
-        border-color: #444 !important;
-        box-shadow: none !important;
-      }
-      .coming-soon .visit-btn {
-        border-color: #555;
-        color: #555;
-        pointer-events: none;
-      }
-
-      @media (max-width: 768px) {
-        .section-header h1 {
-          font-size: 2rem;
-          margin-top: 10px;
-        }
-        .services-container {
-          padding: 0 15px;
-        }
-      }
     </style>
   </head>
   <body class="internal-page">
@@ -292,14 +226,30 @@
         </nav>
       </div>
     </header>
+
+    <main class="services-container">
+      <div class="section-header">
+        <h1>شركاء النجاح</h1>
+        <p>نخبة من أفضل الشركات والخدمات التي نثق بها لخدمة منزلك.</p>
+      </div>
+
+      <div class="services-grid"></div>
+    </main>
+
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
+
     <script>
       document.addEventListener("DOMContentLoaded", async () => {
         const container = document.querySelector(".services-grid");
 
+        if (!container) {
+          console.error("❌ عنصر .services-grid غير موجود في الصفحة!");
+          return;
+        }
+
         container.innerHTML =
-          '<p style="color:#aaa; width:100%; text-align:center;">جاري تحميل الخدمات...</p>';
+          '<p style="color:#aaa; width:100%; text-align:center; padding: 20px;">جاري تحميل الخدمات...</p>';
 
         try {
           const res = await fetch("/api/services");
@@ -308,8 +258,14 @@
           container.innerHTML = "";
 
           if (services.length === 0) {
-            container.innerHTML =
-              '<p style="color:#aaa; width:100%; text-align:center;">لا توجد خدمات حالياً.</p>';
+            container.innerHTML = `
+                <div class="service-card coming-soon" style="margin: 0 auto;">
+                    <div class="card-logo-wrapper" style="background: #222">
+                        <i class="fas fa-briefcase" style="font-size: 40px; color: #555"></i>
+                    </div>
+                    <h3 class="card-title" style="color: #777">لا توجد خدمات</h3>
+                    <p class="card-desc">انتظروا قريباً إضافة شركاء جدد.</p>
+                </div>`;
             return;
           }
 
@@ -330,7 +286,7 @@
             const cardHTML = `
                     <a href="${service.link_url}" target="_blank" class="service-card" style="text-decoration:none;">
                         <div class="card-logo-wrapper">
-                            <img src="${service.image_url}" alt="${service.title}" style="width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                            <img src="${service.image_url}" alt="${service.title}" onerror="this.src='logo.jpg'">
                         </div>
                         <h3 class="card-title">${service.title}</h3>
                         <p class="card-desc">${service.description}</p>
@@ -339,12 +295,12 @@
                         </span>
                     </a>
                 `;
-
             container.insertAdjacentHTML("beforeend", cardHTML);
           });
         } catch (e) {
+          console.error(e);
           container.innerHTML =
-            '<p style="color:red; text-align:center;">فشل تحميل الخدمات.</p>';
+            '<p style="color:red; text-align:center;">فشل تحميل الخدمات، تأكد من الاتصال بالإنترنت.</p>';
         }
       });
     </script>
