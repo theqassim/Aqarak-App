@@ -4,7 +4,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg'); 
 const multer = require('multer');
-const fs = require('fs'); 
+const fs = require('fs-extra');
 const webPush = require('web-push');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
@@ -13,8 +13,6 @@ const helmet = require('helmet');
 
 // 🟢 إضافات الواتساب
 const { Client, RemoteAuth } = require('whatsapp-web.js');
-// نحتاج fs-extra عشان التعامل مع ملفات الجلسة
-const fs = require('fs-extra');
 const qrcode = require('qrcode-terminal');
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
