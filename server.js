@@ -167,7 +167,6 @@ class PostgresStore {
         if (await fs.pathExists(filePath)) {
             const data = await fs.readFile(filePath);
             await this.pool.query(`INSERT INTO whatsapp_sessions (session_id, data) VALUES ($1, $2) ON CONFLICT (session_id) DO UPDATE SET data = $2`, [options.session, data]);
-            await fs.remove(filePath); // حذف الملف المحلي لتوفير المساحة
         }
     }
     async extract(options) {
