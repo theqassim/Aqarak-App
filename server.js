@@ -24,23 +24,30 @@ app.set('trust proxy', 1);
 // ============================================================
 // 🛡️ إعدادات الحماية (Helmet)
 // ============================================================
+// --- 🛡️ بداية كود الحماية الشامل (Helmet) ---
 app.use(helmet());
-
-// تعديل سياسة المحتوى عشان الصور (Cloudinary) والدفع (Paymob) يشتغلوا
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accept.paymob.com"], // عشان سكريبتات الدفع
-      styleSrc: ["'self'", "'unsafe-inline'"], // عشان الستايلات الداخلية
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // ⚠️ مهم جداً عشان صور Cloudinary تظهر
-      frameSrc: ["'self'", "https://accept.paymob.com"], // ⚠️ مهم جداً عشان iFrame الدفع يفتح
+      // 👇 رجعنا 'unsafe-inline' هنا عشان نضمن إن القوائم وأي كود JS يشتغل
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accept.paymob.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      
+      // حل مشكلة أيقونات FontAwesome
+      fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
+      
+      frameSrc: ["'self'", "https://accept.paymob.com"],
       connectSrc: ["'self'", "https://accept.paymob.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },
   })
 );
+// --- 🛡️ نهاية كود الحماية ---
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'aqarak-secure-secret-key-2025';
 const APP_URL = "https://aqarakeg.com"; 
