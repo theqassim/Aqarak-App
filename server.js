@@ -191,6 +191,16 @@ const dbPool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+const storageServices = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "aqarak_services",
+    format: async () => "webp",
+    public_id: (req, file) => `service-${Date.now()}`,
+  },
+});
+const uploadService = multer({ storage: storageServices });
+
 function pgQuery(sql, params = []) {
   return dbPool.query(sql, params);
 }
@@ -567,7 +577,7 @@ async function createTables() {
             created_at TEXT
         )`,
 
-        `CREATE TABLE IF NOT EXISTS services (
+    `CREATE TABLE IF NOT EXISTS services (
     id SERIAL PRIMARY KEY,
     title TEXT,
     description TEXT,
@@ -1118,32 +1128,26 @@ app.post("/api/login", async (req, res) => {
   try {
     const r = await pgQuery(`SELECT * FROM users WHERE phone=$1`, [phone]);
     if (!r.rows[0])
-      return res
-        .status(404)
-        .json({
-          success: false,
-          errorType: "phone",
-          message: "رقم الهاتف غير مسجل",
-        });
+      return res.status(404).json({
+        success: false,
+        errorType: "phone",
+        message: "رقم الهاتف غير مسجل",
+      });
 
     if (r.rows[0].is_banned) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message:
-            "⛔ حسابك محظور من استخدام الموقع. تواصل مع الإدارة عبر واتساب.",
-        });
+      return res.status(403).json({
+        success: false,
+        message:
+          "⛔ حسابك محظور من استخدام الموقع. تواصل مع الإدارة عبر واتساب.",
+      });
     }
 
     if (!(await bcrypt.compare(password, r.rows[0].password)))
-      return res
-        .status(401)
-        .json({
-          success: false,
-          errorType: "password",
-          message: "كلمة المرور خطأ",
-        });
+      return res.status(401).json({
+        success: false,
+        errorType: "password",
+        message: "كلمة المرور خطأ",
+      });
 
     const user = r.rows[0];
     const token = jwt.sign(
@@ -1298,13 +1302,11 @@ app.post(
           );
 
           if (currentBalance < 1)
-            return res
-              .status(402)
-              .json({
-                success: false,
-                message: "رصيدك لا يكفي.",
-                needCharge: true,
-              });
+            return res.status(402).json({
+              success: false,
+              message: "رصيدك لا يكفي.",
+              needCharge: true,
+            });
           await pgQuery(
             "UPDATE users SET wallet_balance = wallet_balance - 1 WHERE phone = $1",
             [sellerPhone]
@@ -1534,13 +1536,11 @@ app.post(
 
     try {
       const result = await pgQuery(sql, params);
-      res
-        .status(201)
-        .json({
-          success: true,
-          message: "تم نشر العقار بنجاح! 🎉",
-          id: result.rows[0].id,
-        });
+      res.status(201).json({
+        success: true,
+        message: "تم نشر العقار بنجاح! 🎉",
+        id: result.rows[0].id,
+      });
     } catch (err) {
       console.error("Add Property Error:", err);
       res.status(400).json({ message: "حدث خطأ أثناء النشر: " + err.message });
@@ -2338,13 +2338,11 @@ app.put(
           [decoded.phone]
         );
         if (parseFloat(balanceRes.rows[0]?.wallet_balance || 0) < 1) {
-          return res
-            .status(402)
-            .json({
-              success: false,
-              message: "رصيدك لا يكفي لتعديل العقار.",
-              needCharge: true,
-            });
+          return res.status(402).json({
+            success: false,
+            message: "رصيدك لا يكفي لتعديل العقار.",
+            needCharge: true,
+          });
         }
         await pgQuery(
           "UPDATE users SET wallet_balance = wallet_balance - 1 WHERE phone = $1",
@@ -3301,12 +3299,10 @@ app.post("/api/user/delete", async (req, res) => {
   } catch (error) {
     console.error("Delete Account Error:", error);
     if (error.code === "23503") {
-      return res
-        .status(400)
-        .json({
-          message:
-            "لا يمكن حذف الحساب لوجود بيانات مالية أو سجلات مرتبطة أخرى لم يتم مسحها.",
-        });
+      return res.status(400).json({
+        message:
+          "لا يمكن حذف الحساب لوجود بيانات مالية أو سجلات مرتبطة أخرى لم يتم مسحها.",
+      });
     }
     res.status(500).json({ message: "خطأ في السيرفر أثناء الحذف" });
   }
@@ -3886,6 +3882,74 @@ app.get("/update-db-geo", async (req, res) => {
     );
   } catch (error) {
     res.status(500).send("❌ خطأ: " + error.message);
+  }
+});
+app.post(
+  "/api/admin/add-service",
+  uploadService.single("image"),
+  async (req, res) => {
+    const token = req.cookies.auth_token;
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded.role !== "admin")
+        return res.status(403).json({ message: "غير مصرح" });
+
+      const { title, description, linkType, linkUrl } = req.body;
+      const imageUrl = req.file ? req.file.path : "";
+
+      await pgQuery(
+        `INSERT INTO services (title, description, image_url, link_type, link_url, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          title,
+          description,
+          imageUrl,
+          linkType,
+          linkUrl,
+          new Date().toISOString(),
+        ]
+      );
+
+      res.json({ success: true });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ message: "خطأ سيرفر" });
+    }
+  }
+);
+
+app.get("/api/services", async (req, res) => {
+  try {
+    const result = await pgQuery("SELECT * FROM services ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json([]);
+  }
+});
+
+app.delete("/api/admin/service/:id", async (req, res) => {
+  const token = req.cookies.auth_token;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== "admin")
+      return res.status(403).json({ message: "غير مصرح" });
+
+    const id = req.params.id;
+
+    const srvRes = await pgQuery(
+      "SELECT image_url FROM services WHERE id = $1",
+      [id]
+    );
+    if (srvRes.rows.length > 0) {
+      const imgUrl = srvRes.rows[0].image_url;
+      if (imgUrl) await deleteCloudinaryImages([imgUrl]);
+    }
+
+    await pgQuery("DELETE FROM services WHERE id = $1", [id]);
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "خطأ سيرفر" });
   }
 });
 app.listen(PORT, () => {
