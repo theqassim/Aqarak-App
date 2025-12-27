@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>عقارك - إدارة الخدمات</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <style>
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.98);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --card-bg: #1a1a1a;
+        --neon-purple: #ff00ff;
+      }
+      body {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
+        min-height: 100vh;
+        font-family: "Cairo", sans-serif;
+        color: white;
+        margin: 0;
+        padding-top: 80px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .form-box {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 40px;
+      }
+      .form-box::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--neon-purple),
+          var(--neon-secondary)
+        );
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ccc;
+        font-weight: bold;
+      }
+      .neon-input {
+        width: 100%;
+        padding: 12px;
+        background: #111;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 8px;
+        font-family: "Cairo";
+        outline: none;
+        transition: 0.3s;
+        box-sizing: border-box;
+      }
+      .neon-input:focus {
+        border-color: var(--neon-purple);
+        box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+      }
+
+      .btn-submit {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(45deg, var(--neon-purple), #d500f9);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 1.1rem;
+        margin-top: 10px;
+      }
+
+      .type-selector {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+      .type-option {
+        flex: 1;
+        padding: 15px;
+        border: 1px solid #444;
+        border-radius: 10px;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.3s;
+        background: #0f0f0f;
+      }
+      .type-option.selected {
+        border-color: var(--neon-purple);
+        background: rgba(255, 0, 255, 0.1);
+        color: var(--neon-purple);
+      }
+      .type-option i {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      .services-list {
+        display: grid;
+        gap: 15px;
+      }
+      .service-item {
+        display: flex;
+        align-items: center;
+        background: #151515;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        justify-content: space-between;
+      }
+      .service-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .service-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #555;
+      }
+      .btn-delete {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+        border: 1px solid #ff4444;
+        padding: 8px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .btn-delete:hover {
+        background: #ff4444;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2
+        style="
+          text-align: center;
+          margin-bottom: 30px;
+          color: var(--neon-purple);
+        "
+      >
+        إضافة خدمة / شريك نجاح
+      </h2>
+
+      <form id="add-service-form" class="form-box">
+        <div class="input-group">
+          <label>اسم الشركة / الخدمة</label>
+          <input
+            type="text"
+            name="title"
+            class="neon-input"
+            required
+            placeholder="مثال: الهندسية ميتال"
+          />
+        </div>
+
+        <div class="input-group">
+          <label>شعار الشركة (Logo)</label>
+          <input
+            type="file"
+            name="image"
+            class="neon-input"
+            accept="image/*"
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label>نوع الرابط</label>
+          <div class="type-selector">
+            <div class="type-option selected" onclick="selectType('website')">
+              <i class="fas fa-globe"></i> <span>موقع إلكتروني</span>
+            </div>
+            <div class="type-option" onclick="selectType('facebook')">
+              <i class="fab fa-facebook"></i> <span>صفحة فيسبوك</span>
+            </div>
+          </div>
+          <input type="hidden" name="linkType" id="linkType" value="website" />
+        </div>
+
+        <div class="input-group">
+          <label>الرابط (URL)</label>
+          <input
+            type="url"
+            name="linkUrl"
+            class="neon-input"
+            required
+            placeholder="https://..."
+          />
+        </div>
+
+        <div class="input-group">
+          <label>وصف مختصر</label>
+          <textarea
+            name="description"
+            class="neon-input"
+            rows="3"
+            required
+            placeholder="وصف الخدمة..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          نشر الخدمة <i class="fas fa-rocket"></i>
+        </button>
+      </form>
+
+      <h2
+        style="
+          text-align: center;
+          margin-bottom: 20px;
+          color: #ccc;
+          border-top: 1px solid #333;
+          padding-top: 20px;
+        "
+      >
+        الخدمات الحالية
+      </h2>
+      <div id="services-list-container" class="services-list">
+        <p style="text-align: center; color: #777">جاري التحميل...</p>
+      </div>
+
+      <a
+        href="admin-home"
+        style="
+          display: block;
+          text-align: center;
+          margin-top: 30px;
+          color: #aaa;
+          text-decoration: none;
+          margin-bottom: 30px;
+        "
+        >رجوع للوحة التحكم</a
+      >
+    </div>
+
+    <script>
+      function selectType(type) {
+        document.getElementById("linkType").value = type;
+        document
+          .querySelectorAll(".type-option")
+          .forEach((el) => el.classList.remove("selected"));
+        event.currentTarget.classList.add("selected");
+      }
+
+      async function fetchServicesAdmin() {
+        const container = document.getElementById("services-list-container");
+        try {
+          const res = await fetch("/api/services");
+          const services = await res.json();
+
+          if (services.length === 0) {
+            container.innerHTML =
+              '<p style="text-align:center; color:#777;">لا توجد خدمات مضافة.</p>';
+            return;
+          }
+
+          let html = "";
+          services.forEach((srv) => {
+            html += `
+                        <div class="service-item">
+                            <div class="service-info">
+                                <img src="${srv.image_url}" class="service-img" alt="logo">
+                                <div>
+                                    <h4 style="margin:0; color:white;">${srv.title}</h4>
+                                    <small style="color:#888;">${srv.link_type}</small>
+                                </div>
+                            </div>
+                            <button onclick="deleteService(${srv.id})" class="btn-delete">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    `;
+          });
+          container.innerHTML = html;
+        } catch (e) {
+          container.innerHTML =
+            '<p style="color:red; text-align:center;">خطأ في التحميل</p>';
+        }
+      }
+
+      async function deleteService(id) {
+        if (!confirm("هل أنت متأكد من حذف هذه الخدمة؟")) return;
+
+        try {
+          const res = await fetch(`/api/admin/service/${id}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert("تم الحذف بنجاح ✅");
+            fetchServicesAdmin();
+          } else {
+            alert("فشل الحذف");
+          }
+        } catch (e) {
+          alert("خطأ في الاتصال");
+        }
+      }
+
+      document
+        .getElementById("add-service-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = document.querySelector(".btn-submit");
+          btn.innerHTML = "جاري النشر...";
+          btn.disabled = true;
+
+          const formData = new FormData(e.target);
+          try {
+            const res = await fetch("/api/admin/add-service", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert("تمت الإضافة بنجاح! 🎉");
+              e.target.reset();
+              fetchServicesAdmin();
+            } else {
+              alert("خطأ: " + data.message);
+            }
+          } catch (err) {
+            alert("حدث خطأ في الاتصال");
+          } finally {
+            btn.innerHTML = 'نشر الخدمة <i class="fas fa-rocket"></i>';
+            btn.disabled = false;
+          }
+        });
+
+      document.addEventListener("DOMContentLoaded", fetchServicesAdmin);
+    </script>
+  </body>
+</html>

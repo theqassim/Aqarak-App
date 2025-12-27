@@ -1,11 +1,14 @@
-(function() {    const currentEmail = localStorage.getItem('userEmail');
+(function () {
+  const currentEmail = localStorage.getItem("userEmail");
 
-    if (!currentEmail) {
-        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-        
-        localStorage.setItem('userEmail', guestId);
-        console.log('✅ Guest Mode Activated:', guestId);
-    }
+  if (!currentEmail) {
+    const guestId = `guest_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 5)}`;
 
-    localStorage.removeItem('userRole'); 
+    localStorage.setItem("userEmail", guestId);
+    console.log("✅ Guest Mode Activated:", guestId);
+  }
+
+  localStorage.removeItem("userRole");
 })();

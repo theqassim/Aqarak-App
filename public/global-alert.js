@@ -1,10 +1,6 @@
-// global-alert.js
-// 💎 هذا الملف يقوم بتحويل كل تنبيهات الموقع إلى شكل فخم وعصري تلقائياً
-
-(function() {
-    // 1. حقن الـ CSS الخاص بالمودال الفخم (Golden/Dark Theme)
-    const style = document.createElement('style');
-    style.innerHTML = `
+(function () {
+  const style = document.createElement("style");
+  style.innerHTML = `
         /* الخلفية المعتمة */
         .lux-alert-overlay {
             display: none;
@@ -105,10 +101,9 @@
             100% { transform: scale(1); }
         }
     `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 
-    // 2. حقن HTML المودال في الصفحة
-    const modalHTML = `
+  const modalHTML = `
         <div id="luxAlertOverlay" class="lux-alert-overlay">
             <div class="lux-alert-card">
                 <div class="lux-alert-icon">
@@ -119,45 +114,33 @@
             </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-    // 3. تعريف العناصر
-    const overlay = document.getElementById('luxAlertOverlay');
-    const msgElem = document.getElementById('luxAlertMessage');
-    const btnElem = document.getElementById('luxAlertBtn');
+  const overlay = document.getElementById("luxAlertOverlay");
+  const msgElem = document.getElementById("luxAlertMessage");
+  const btnElem = document.getElementById("luxAlertBtn");
 
-    // 4. دالة الإغلاق
-    function closeLuxAlert() {
-        overlay.classList.remove('lux-show');
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, 300); // انتظر انتهاء الأنيميشن
-    }
+  function closeLuxAlert() {
+    overlay.classList.remove("lux-show");
+    setTimeout(() => {
+      overlay.style.display = "none";
+    }, 300);
+  }
 
-    // ربط زر الإغلاق
-    btnElem.addEventListener('click', closeLuxAlert);
-    
-    // إغلاق عند الضغط في الخلفية (اختياري)
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeLuxAlert();
+  btnElem.addEventListener("click", closeLuxAlert);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeLuxAlert();
+  });
+
+  window.alert = function (message) {
+    msgElem.textContent = message;
+
+    overlay.style.display = "flex";
+    requestAnimationFrame(() => {
+      overlay.classList.add("lux-show");
     });
+  };
 
-    // 5. 🔥 السحر هنا: استبدال دالة alert الأصلية
-    window.alert = function(message) {
-        // وضع الرسالة
-        msgElem.textContent = message;
-        
-        // إظهار المودال
-        overlay.style.display = 'flex';
-        // تأخير بسيط لتشغيل الترانزيشن
-        requestAnimationFrame(() => {
-            overlay.classList.add('lux-show');
-        });
-        
-        // تشغيل صوت بسيط (اختياري - يعطي فخامة)
-        // const audio = new Audio('/sounds/alert.mp3'); audio.play().catch(e=>{});
-    };
-
-    console.log("✨ Luxury Alert System Activated");
-
+  console.log("✨ Luxury Alert System Activated");
 })();

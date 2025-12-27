@@ -1,146 +1,164 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>عقارك - خدماتنا وشركاؤنا</title>
-    <link rel="stylesheet" href="styles.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-<script type="application/ld+json">
-     {
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
 
-  "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
 
-  "@type": "RealEstateAgent",
+        "name": "منصة عقارك - Aqarak",
 
-  "name": "منصة عقارك - Aqarak",
+        "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
 
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+        "url": "https://aqarakeg.com",
 
-  "url": "https://aqarakeg.com",
+        "logo": "https://aqarakeg.com/logo.jpg",
 
-  "logo": "https://aqarakeg.com/logo.jpg",
+        "image": "https://aqarakeg.com/logo.jpg",
 
-  "image": "https://aqarakeg.com/logo.jpg",
+        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
 
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+        "address": {
+          "@type": "PostalAddress",
 
-  "address": {
+          "addressLocality": "Cairo",
 
-    "@type": "PostalAddress",
+          "addressCountry": "EG"
+        },
 
-    "addressLocality": "Cairo",
+        "priceRange": "$",
 
-    "addressCountry": "EG"
+        "contactPoint": {
+          "@type": "ContactPoint",
 
-  },
+          "telephone": "+201008102237",
 
-  "priceRange": "$",
+          "contactType": "customer service",
 
-  "contactPoint": {
+          "areaServed": "EG",
 
-    "@type": "ContactPoint",
+          "availableLanguage": ["Arabic"]
+        },
 
-    "telephone": "+201008102237",
+        "sameAs": [
+          "https://www.facebook.com/share/1ADgNDLXc6/",
 
-    "contactType": "customer service",
+          "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
 
-    "areaServed": "EG",
-
-    "availableLanguage": ["Arabic"]
-
-  },
-
-  "sameAs": [
-
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-
-  ]
-
-}
+          "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+        ]
+      }
     </script>
-<style>
-    /* --- 🛠️ تصفير الهوامش للإجبار على الالتصاق --- */
-    html, body {
+    <style>
+      html,
+      body {
         margin: 0 !important;
         padding: 0 !important;
         width: 100%;
         overflow-x: hidden;
-    }
+      }
 
-    /* --- 🎨 Design System --- */
-    :root {
+      :root {
         --glass-bg: rgba(20, 20, 20, 0.98);
         --neon-primary: #00ff88;
         --neon-secondary: #00d4ff;
         --card-bg: #1a1a1a;
         --text-main: #ffffff;
-    }
+      }
 
-    body.internal-page {
+      body.internal-page {
         background-color: #0f0f0f;
-        background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
         min-height: 100vh;
-        font-family: 'Cairo', sans-serif;
+        font-family: "Cairo", sans-serif;
         color: white;
-        /* 🔥 تعديل هام: شيلنا المسافة الكبيرة لأن الهيدر بقى جزء من الصفحة مش طاير فوقها */
         padding-top: 0 !important;
-    }
+      }
 
-    /* --- Header (التعديل هنا) --- */
-    .main-header {
-        position: relative !important; /* 🔥 تغيير من fixed لـ relative */
+      .main-header {
+        position: relative !important;
         width: 100% !important;
         z-index: 9999;
         background: var(--glass-bg);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         padding: 10px 15px;
         margin: 0 !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    .header-container {
-        display: flex; justify-content: space-between; align-items: center;
-        max-width: 1250px; margin: 0 auto;
-    }
-    
-    .nav-button {
-        text-decoration: none; color: white; border: 1px solid var(--neon-primary);
-        padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s;
-        display: flex; align-items: center; gap: 5px;
-    }
-    .nav-button:hover { background: var(--neon-primary); color: black; }
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
 
-    /* --- Services Content --- */
-    .services-container {
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1250px;
+        margin: 0 auto;
+      }
+
+      .nav-button {
+        text-decoration: none;
+        color: white;
+        border: 1px solid var(--neon-primary);
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-button:hover {
+        background: var(--neon-primary);
+        color: black;
+      }
+
+      .services-container {
         max-width: 1200px;
-        /* 🔥 مسافة صغيرة من فوق عشان الكلام ميكونش لازق في الهيدر */
-        margin: 40px auto 20px; 
+        margin: 40px auto 20px;
         padding: 0 20px;
-    }
+      }
 
-    .section-header { text-align: center; margin-bottom: 50px; }
-    
-    .section-header h1 {
-        color: var(--neon-primary); font-size: 2.5rem; margin-bottom: 10px;
+      .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+
+      .section-header h1 {
+        color: var(--neon-primary);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
         text-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-    }
-    .section-header p { color: #aaa; font-size: 1.1rem; }
+      }
+      .section-header p {
+        color: #aaa;
+        font-size: 1.1rem;
+      }
 
-    .services-grid {
+      .services-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 30px; justify-content: center;
-    }
+        gap: 30px;
+        justify-content: center;
+      }
 
-    /* Cards Design */
-    .service-card {
+      .service-card {
         background: var(--card-bg);
         border: 1px solid #333;
         border-radius: 20px;
@@ -151,103 +169,233 @@
         overflow: hidden;
         text-decoration: none;
         display: block;
-    }
+      }
 
-    .service-card:hover {
+      .service-card:hover {
         transform: translateY(-10px);
         border-color: var(--neon-secondary);
         box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
-    }
+      }
 
-    .card-logo-wrapper {
-        width: 100px; height: 100px; margin: 0 auto 20px;
-        background: #fff; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        border: 3px solid #333; transition: 0.3s;
-    }
-    .service-card:hover .card-logo-wrapper { border-color: var(--neon-secondary); box-shadow: 0 0 15px var(--neon-secondary); }
-    .card-logo-wrapper img { max-width: 70%; max-height: 70%; object-fit: contain; }
+      .card-logo-wrapper {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 20px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #333;
+        transition: 0.3s;
+      }
+      .service-card:hover .card-logo-wrapper {
+        border-color: var(--neon-secondary);
+        box-shadow: 0 0 15px var(--neon-secondary);
+      }
+      .card-logo-wrapper img {
+        max-width: 70%;
+        max-height: 70%;
+        object-fit: contain;
+      }
 
-    .card-title { color: white; font-size: 1.5rem; margin-bottom: 10px; font-weight: bold; }
-    .card-desc { color: #ccc; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
+      .card-title {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+      .card-desc {
+        color: #ccc;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
 
-    .visit-btn {
-        display: inline-block; padding: 10px 25px;
-        background: transparent; border: 1px solid var(--neon-secondary);
-        color: var(--neon-secondary); border-radius: 50px;
-        font-weight: bold; transition: 0.3s;
-    }
-    .service-card:hover .visit-btn { background: var(--neon-secondary); color: black; }
+      .visit-btn {
+        display: inline-block;
+        padding: 10px 25px;
+        background: transparent;
+        border: 1px solid var(--neon-secondary);
+        color: var(--neon-secondary);
+        border-radius: 50px;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .service-card:hover .visit-btn {
+        background: var(--neon-secondary);
+        color: black;
+      }
 
-    .coming-soon { opacity: 0.6; cursor: default; }
-    .coming-soon:hover { transform: none; box-shadow: none; border-color: #333; }
-    .coming-soon .card-logo-wrapper { border-color: #444 !important; box-shadow: none !important; }
-    .coming-soon .visit-btn { border-color: #555; color: #555; pointer-events: none; }
+      .coming-soon {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .coming-soon:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: #333;
+      }
+      .coming-soon .card-logo-wrapper {
+        border-color: #444 !important;
+        box-shadow: none !important;
+      }
+      .coming-soon .visit-btn {
+        border-color: #555;
+        color: #555;
+        pointer-events: none;
+      }
 
-    /* --- Media Queries --- */
-    @media (max-width: 768px) {
+      @media (max-width: 768px) {
         .section-header h1 {
-            font-size: 2rem;
-            margin-top: 10px;
+          font-size: 2rem;
+          margin-top: 10px;
         }
         .services-container {
-            padding: 0 15px;
+          padding: 0 15px;
         }
-    }
-</style>
-</head>
-<body class="internal-page">
-
+      }
+    </style>
+  </head>
+  <body class="internal-page">
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <a href="home" style="display: flex; align-items: center; text-decoration: none; gap: 10px;">
-                    <img src="logo.jpg" alt="شعار عقارك" class="logo" style="height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary);">
-                    <span style="color: white; font-weight: bold; font-size: 1.2rem;">الخدمات</span>
-                </a>
-            </div>
-            <nav class="main-nav">
-                <a href="home" class="nav-button">الرئيسية <i class="fas fa-home"></i></a>
-            </nav>
+      <div class="header-container">
+        <div class="logo-container">
+          <a
+            href="home"
+            style="
+              display: flex;
+              align-items: center;
+              text-decoration: none;
+              gap: 10px;
+            "
+          >
+            <img
+              src="logo.jpg"
+              alt="شعار عقارك"
+              class="logo"
+              style="
+                height: 40px;
+                border-radius: 50%;
+                border: 2px solid var(--neon-primary);
+              "
+            />
+            <span style="color: white; font-weight: bold; font-size: 1.2rem"
+              >الخدمات</span
+            >
+          </a>
         </div>
+        <nav class="main-nav">
+          <a href="home" class="nav-button"
+            >الرئيسية <i class="fas fa-home"></i
+          ></a>
+        </nav>
+      </div>
     </header>
 
     <main class="services-container">
-        <div class="section-header">
-            <h1>شركاء النجاح</h1>
-            <p>نقدم لك أفضل الخدمات المتكاملة لعقارك من خلال شركائنا الموثوقين</p>
+      <div class="section-header">
+        <h1>شركاء النجاح</h1>
+        <p>نقدم لك أفضل الخدمات المتكاملة لعقارك من خلال شركائنا الموثوقين</p>
+      </div>
+
+      <div class="services-grid">
+        <a
+          href="https://elhandaseya-gallery.onrender.com"
+          target="_blank"
+          class="service-card"
+        >
+          <div class="card-logo-wrapper">
+            <img
+              src="photo_2025-12-05_20-58-48.png"
+              alt="لوجو الهندسية ميتال"
+            />
+          </div>
+          <h3 class="card-title">الهندسية ميتال</h3>
+          <p class="card-desc">
+            الخيار الأول لأعمال الألوميتال والواجهات. جودة عالية، تصميمات عصرية،
+            وتشطيبات تليق بمنزلك.
+          </p>
+          <span class="visit-btn"
+            >زيارة الموقع <i class="fas fa-arrow-left"></i
+          ></span>
+        </a>
+
+        <div class="service-card coming-soon">
+          <div class="card-logo-wrapper" style="background: #222">
+            <i
+              class="fas fa-paint-roller"
+              style="font-size: 40px; color: #555"
+            ></i>
+          </div>
+          <h3 class="card-title" style="color: #777">تشطيبات وديكور</h3>
+          <p class="card-desc">
+            قريباً.. سنقوم بإضافة أفضل شركات الديكور والتشطيبات الداخلية.
+          </p>
+          <span class="visit-btn">قريباً</span>
         </div>
 
-        <div class="services-grid">
-            <a href="https://elhandaseya-gallery.onrender.com" target="_blank" class="service-card">
-                <div class="card-logo-wrapper">
-                    <img src="photo_2025-12-05_20-58-48.png" alt="لوجو الهندسية ميتال">
-                </div>
-                <h3 class="card-title">الهندسية ميتال</h3>
-                <p class="card-desc">الخيار الأول لأعمال الألوميتال والواجهات. جودة عالية، تصميمات عصرية، وتشطيبات تليق بمنزلك.</p>
-                <span class="visit-btn">زيارة الموقع <i class="fas fa-arrow-left"></i></span>
-            </a>
-
-            <div class="service-card coming-soon">
-                <div class="card-logo-wrapper" style="background:#222;">
-                    <i class="fas fa-paint-roller" style="font-size: 40px; color: #555;"></i>
-                </div>
-                <h3 class="card-title" style="color: #777;">تشطيبات وديكور</h3>
-                <p class="card-desc">قريباً.. سنقوم بإضافة أفضل شركات الديكور والتشطيبات الداخلية.</p>
-                <span class="visit-btn">قريباً</span>
-            </div>
-
-            <div class="service-card coming-soon">
-                <div class="card-logo-wrapper" style="background:#222;">
-                    <i class="fas fa-truck-moving" style="font-size: 40px; color: #555;"></i>
-                </div>
-                <h3 class="card-title" style="color: #777;">نقل أثاث</h3>
-                <p class="card-desc">قريباً.. خدمات نقل الأثاث بأمان واحترافية لضمان سلامة منقولاتك.</p>
-                <span class="visit-btn">قريباً</span>
-            </div>
+        <div class="service-card coming-soon">
+          <div class="card-logo-wrapper" style="background: #222">
+            <i
+              class="fas fa-truck-moving"
+              style="font-size: 40px; color: #555"
+            ></i>
+          </div>
+          <h3 class="card-title" style="color: #777">نقل أثاث</h3>
+          <p class="card-desc">
+            قريباً.. خدمات نقل الأثاث بأمان واحترافية لضمان سلامة منقولاتك.
+          </p>
+          <span class="visit-btn">قريباً</span>
         </div>
+      </div>
     </main>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
-</body>
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const container = document.querySelector('.services-grid');
+        
+        // تفريغ المحتوى القديم وعرض تحميل
+        container.innerHTML = '<p style="color:#aaa; width:100%; text-align:center;">جاري تحميل الخدمات...</p>';
+        
+        try {
+            const res = await fetch('/api/services');
+            const services = await res.json();
+            
+            container.innerHTML = ''; // مسح رسالة التحميل
+
+            if(services.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; width:100%; text-align:center;">لا توجد خدمات حالياً.</p>';
+                return;
+            }
+
+            services.forEach(service => {
+                // تحديد الأيقونة والنص حسب النوع
+                let btnIcon = service.link_type === 'facebook' ? '<i class="fab fa-facebook"></i>' : '<i class="fas fa-globe"></i>';
+                let btnText = service.link_type === 'facebook' ? 'زيارة الصفحة' : 'زيارة الموقع';
+                let btnClass = service.link_type === 'facebook' ? 'visit-btn fb-btn' : 'visit-btn web-btn';
+                
+                // تصميم الكارت
+                const cardHTML = `
+                    <a href="${service.link_url}" target="_blank" class="service-card" style="text-decoration:none;">
+                        <div class="card-logo-wrapper">
+                            <img src="${service.image_url}" alt="${service.title}" style="width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                        </div>
+                        <h3 class="card-title">${service.title}</h3>
+                        <p class="card-desc">${service.description}</p>
+                        <span class="${btnClass}" style="display: inline-block; padding: 10px 25px; border: 1px solid var(--neon-secondary); color: var(--neon-secondary); border-radius: 50px; font-weight: bold; transition: 0.3s;">
+                            ${btnText} ${btnIcon}
+                        </span>
+                    </a>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        } catch (e) {
+            container.innerHTML = '<p style="color:red; text-align:center;">فشل تحميل الخدمات.</p>';
+        }
+    });
+</script>
+  </body>
 </html>

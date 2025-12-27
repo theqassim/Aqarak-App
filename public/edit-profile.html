@@ -1,166 +1,390 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
     <title>عقارك - تعديل الحساب</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <style>
-        /* --- 🎨 الأساسيات --- */
-        :root { --glass-bg: rgba(20, 20, 20, 0.95); --neon-primary: #00ff88; --neon-secondary: #00d4ff; --card-bg: #1a1a1a; }
-        body { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; color: white; padding-top: 80px; }
-        * { box-sizing: border-box; }
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.95);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --card-bg: #1a1a1a;
+      }
+      body {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        font-family: "Cairo", sans-serif;
+        color: white;
+        padding-top: 80px;
+      }
+      * {
+        box-sizing: border-box;
+      }
 
-        /* --- 📱 هيدر الموبايل --- */
-        .mobile-header-custom {
-            display: flex; position: fixed; top: 0; left: 0; right: 0; height: 70px;
-            background: rgba(12, 12, 12, 0.98); backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08); z-index: 9999;
-            padding: 0 20px; align-items: center; justify-content: space-between;
-        }
-        .mob-logo-link img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-primary); }
-        .page-title-header { color: white; font-size: 1.1rem; font-weight: bold; position: absolute; left: 50%; transform: translateX(-50%); }
-        .back-btn { color: #ccc; font-size: 1.4rem; cursor: pointer; text-decoration: none; }
+      .mobile-header-custom {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: rgba(12, 12, 12, 0.98);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 9999;
+        padding: 0 20px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .mob-logo-link img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-primary);
+      }
+      .page-title-header {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .back-btn {
+        color: #ccc;
+        font-size: 1.4rem;
+        cursor: pointer;
+        text-decoration: none;
+      }
 
-        /* --- 🖼️ كونتينر التعديل --- */
-        .edit-container {
-            max-width: 500px; margin: 20px auto; padding: 30px 20px;
-            background: var(--card-bg); border-radius: 20px;
-            border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            text-align: center;
-        }
+      .edit-container {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 30px 20px;
+        background: var(--card-bg);
+        border-radius: 20px;
+        border: 1px solid #333;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
 
-        /* --- 🔄 أنيميشن الصورة --- */
-        .profile-flip-wrapper {
-            width: 120px; height: 120px; margin: 0 auto 30px auto;
-            position: relative; perspective: 1000px; cursor: pointer;
+      .profile-flip-wrapper {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px auto;
+        position: relative;
+        perspective: 1000px;
+        cursor: pointer;
+      }
+      .flip-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+        animation: initialFlip 2.5s ease-in-out forwards;
+      }
+      .flip-front,
+      .flip-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid var(--neon-primary);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+      }
+      .flip-front img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .flip-back {
+        transform: rotateY(180deg);
+        background: #111;
+        position: relative;
+      }
+      .flip-back img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.7);
+        transition: 0.3s;
+      }
+      .flip-back:hover img {
+        filter: brightness(0.4);
+      }
+      .upload-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 2rem;
+        opacity: 0;
+        transition: 0.3s;
+        z-index: 2;
+      }
+      .flip-back:hover .upload-icon {
+        opacity: 1;
+      }
+      @keyframes initialFlip {
+        0% {
+          transform: rotateY(0deg);
         }
-        .flip-inner {
-            position: relative; width: 100%; height: 100%; text-align: center;
-            transition: transform 0.8s; transform-style: preserve-3d;
-            animation: initialFlip 2.5s ease-in-out forwards;
+        40% {
+          transform: rotateY(0deg);
         }
-        .flip-front, .flip-back {
-            position: absolute; width: 100%; height: 100%;
-            -webkit-backface-visibility: hidden; backface-visibility: hidden;
-            border-radius: 50%; overflow: hidden;
-            border: 3px solid var(--neon-primary);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-            display: flex; align-items: center; justify-content: center;
-            background: #000;
+        100% {
+          transform: rotateY(180deg);
         }
-        .flip-front img { width: 100%; height: 100%; object-fit: cover; }
-        .flip-back { transform: rotateY(180deg); background: #111; position: relative; }
-        .flip-back img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); transition: 0.3s; }
-        .flip-back:hover img { filter: brightness(0.4); }
-        .upload-icon {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 2rem; opacity: 0; transition: 0.3s; z-index: 2;
-        }
-        .flip-back:hover .upload-icon { opacity: 1; }
-        @keyframes initialFlip { 0% { transform: rotateY(0deg); } 40% { transform: rotateY(0deg); } 100% { transform: rotateY(180deg); } }
+      }
 
-        /* --- 📝 الحقول --- */
-        .input-group { margin-bottom: 20px; text-align: right; }
-        .input-label { color: #888; font-size: 0.9rem; margin-bottom: 8px; display: block; }
-        .neon-input {
-            width: 100%; padding: 12px; background: #222;
-            border: 1px solid #444; border-radius: 10px;
-            color: white; font-family: inherit; transition: 0.3s;
-        }
-        .neon-input:focus { border-color: var(--neon-secondary); outline: none; }
-        .neon-input:disabled { background: #1a1a1a; color: #555; border-color: #333; cursor: not-allowed; }
-        .hint-text { font-size: 0.75rem; color: #aaa; margin-top: 5px; display: block; }
-        .hint-warning { color: #ffeb3b; }
+      .input-group {
+        margin-bottom: 20px;
+        text-align: right;
+      }
+      .input-label {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+      }
+      .neon-input {
+        width: 100%;
+        padding: 12px;
+        background: #222;
+        border: 1px solid #444;
+        border-radius: 10px;
+        color: white;
+        font-family: inherit;
+        transition: 0.3s;
+      }
+      .neon-input:focus {
+        border-color: var(--neon-secondary);
+        outline: none;
+      }
+      .neon-input:disabled {
+        background: #1a1a1a;
+        color: #555;
+        border-color: #333;
+        cursor: not-allowed;
+      }
+      .hint-text {
+        font-size: 0.75rem;
+        color: #aaa;
+        margin-top: 5px;
+        display: block;
+      }
+      .hint-warning {
+        color: #ffeb3b;
+      }
 
-        /* --- 🔘 الأزرار --- */
-        .btn-save {
-            width: 100%; padding: 12px; border-radius: 50px;
-            background: linear-gradient(135deg, var(--neon-primary), #00cc6a);
-            color: black; font-weight: bold; font-size: 1rem;
-            border: none; cursor: pointer; transition: 0.3s; margin-top: 10px;
-        }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3); }
-        .btn-save:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+      .btn-save {
+        width: 100%;
+        padding: 12px;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--neon-primary), #00cc6a);
+        color: black;
+        font-weight: bold;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+      .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+      }
+      .btn-save:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
 
-        /* 🔴 زر الحذف الجديد */
-        .btn-delete {
-            width: 100%; padding: 12px; border-radius: 50px;
-            background: rgba(255, 68, 68, 0.1); border: 1px solid #ff4444;
-            color: #ff4444; margin-top: 30px; cursor: pointer;
-            font-weight: bold; transition: 0.3s;
-        }
-        .btn-delete:hover { background: #ff4444; color: white; box-shadow: 0 0 15px rgba(255, 68, 68, 0.4); }
+      .btn-delete {
+        width: 100%;
+        padding: 12px;
+        border-radius: 50px;
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid #ff4444;
+        color: #ff4444;
+        margin-top: 30px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .btn-delete:hover {
+        background: #ff4444;
+        color: white;
+        box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+      }
 
-        /* المودال */
-        .modal { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 20000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(5px);
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <header class="mobile-header-custom">
-        <a href="home" class="mob-logo-link"><img src="logo.png"></a>
-        <span class="page-title-header">تعديل الملف الشخصي</span>
-        <a href="home" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <a href="home" class="mob-logo-link"><img src="logo.png" /></a>
+      <span class="page-title-header">تعديل الملف الشخصي</span>
+      <a href="home" class="back-btn"><i class="fas fa-arrow-left"></i></a>
     </header>
 
     <div class="edit-container">
-        
-        <div class="profile-flip-wrapper" onclick="document.getElementById('profile-upload').click()">
-            <div class="flip-inner">
-                <div class="flip-front"><img src="logo.png" alt="Logo"></div>
-                <div class="flip-back">
-                    <img id="current-profile-img" src="logo.png" alt="User">
-                    <i class="fas fa-camera upload-icon"></i>
-                </div>
-            </div>
+      <div
+        class="profile-flip-wrapper"
+        onclick="document.getElementById('profile-upload').click()"
+      >
+        <div class="flip-inner">
+          <div class="flip-front"><img src="logo.png" alt="Logo" /></div>
+          <div class="flip-back">
+            <img id="current-profile-img" src="logo.png" alt="User" />
+            <i class="fas fa-camera upload-icon"></i>
+          </div>
         </div>
-        <input type="file" id="profile-upload" hidden accept="image/*" onchange="previewImage(event)">
+      </div>
+      <input
+        type="file"
+        id="profile-upload"
+        hidden
+        accept="image/*"
+        onchange="previewImage(event)"
+      />
 
-        <form id="edit-profile-form">
-            <div class="input-group">
-                <label class="input-label">الاسم</label>
-                <input type="text" id="display-name" class="neon-input" disabled>
-            </div>
+      <form id="edit-profile-form">
+        <div class="input-group">
+          <label class="input-label">الاسم</label>
+          <input type="text" id="display-name" class="neon-input" disabled />
+        </div>
 
-            <div class="input-group">
-                <label class="input-label">رقم الهاتف</label>
-                <input type="text" id="display-phone" class="neon-input" disabled style="direction: ltr; text-align: right;">
-            </div>
+        <div class="input-group">
+          <label class="input-label">رقم الهاتف</label>
+          <input
+            type="text"
+            id="display-phone"
+            class="neon-input"
+            disabled
+            style="direction: ltr; text-align: right"
+          />
+        </div>
 
-            <div class="input-group">
-                <label class="input-label">اسم المستخدم (Username)</label>
-                <input type="text" id="edit-username" class="neon-input" placeholder="username">
-                <span class="hint-text hint-warning"><i class="fas fa-info-circle"></i> يمكنك تغيير اسم المستخدم مرة واحدة كل شهر.</span>
-            </div>
+        <div class="input-group">
+          <label class="input-label">اسم المستخدم (Username)</label>
+          <input
+            type="text"
+            id="edit-username"
+            class="neon-input"
+            placeholder="username"
+          />
+          <span class="hint-text hint-warning"
+            ><i class="fas fa-info-circle"></i> يمكنك تغيير اسم المستخدم مرة
+            واحدة كل شهر.</span
+          >
+        </div>
 
-            <button type="submit" class="btn-save" id="save-btn">حفظ التغييرات</button>
-        </form>
-
-        <button onclick="document.getElementById('deleteModal').style.display='block'" class="btn-delete">
-            <i class="fas fa-trash-alt"></i> حذف الحساب نهائياً
+        <button type="submit" class="btn-save" id="save-btn">
+          حفظ التغييرات
         </button>
+      </form>
+
+      <button
+        onclick="document.getElementById('deleteModal').style.display='block'"
+        class="btn-delete"
+      >
+        <i class="fas fa-trash-alt"></i> حذف الحساب نهائياً
+      </button>
     </div>
 
     <div id="deleteModal" class="modal">
-        <div style="background:#1c2630; width:90%; max-width:400px; margin:20% auto; padding:25px; border-radius:15px; border:1px solid #ff4444; text-align:center; position:relative;">
-            <span onclick="document.getElementById('deleteModal').style.display='none'" style="position:absolute; top:10px; left:15px; color:#777; cursor:pointer; font-size:1.5rem;">&times;</span>
-            
-            <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:#ff4444; margin-bottom:15px;"></i>
-            <h3 style="color:#ff4444; margin-bottom:10px;">هل أنت متأكد؟</h3>
-            <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">
-                سيتم حذف حسابك وجميع إعلاناتك نهائياً. هذا الإجراء لا يمكن التراجع عنه.
-            </p>
-            
-            <div class="input-group">
-                <input type="password" id="delete-pass" class="neon-input" placeholder="أدخل كلمة المرور للتأكيد" style="border-color:#ff4444;">
-            </div>
-            
-            <button class="btn-delete" style="margin-top:10px; background:#ff4444; color:white;" onclick="confirmDeleteAccount()">تأكيد الحذف</button>
+      <div
+        style="
+          background: #1c2630;
+          width: 90%;
+          max-width: 400px;
+          margin: 20% auto;
+          padding: 25px;
+          border-radius: 15px;
+          border: 1px solid #ff4444;
+          text-align: center;
+          position: relative;
+        "
+      >
+        <span
+          onclick="document.getElementById('deleteModal').style.display='none'"
+          style="
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            color: #777;
+            cursor: pointer;
+            font-size: 1.5rem;
+          "
+          >&times;</span
+        >
+
+        <i
+          class="fas fa-exclamation-triangle"
+          style="font-size: 3rem; color: #ff4444; margin-bottom: 15px"
+        ></i>
+        <h3 style="color: #ff4444; margin-bottom: 10px">هل أنت متأكد؟</h3>
+        <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 20px">
+          سيتم حذف حسابك وجميع إعلاناتك نهائياً. هذا الإجراء لا يمكن التراجع
+          عنه.
+        </p>
+
+        <div class="input-group">
+          <input
+            type="password"
+            id="delete-pass"
+            class="neon-input"
+            placeholder="أدخل كلمة المرور للتأكيد"
+            style="border-color: #ff4444"
+          />
         </div>
+
+        <button
+          class="btn-delete"
+          style="margin-top: 10px; background: #ff4444; color: white"
+          onclick="confirmDeleteAccount()"
+        >
+          تأكيد الحذف
+        </button>
+      </div>
     </div>
 
     <script src="edit-profile.js"></script>
-</body>
+  </body>
 </html>

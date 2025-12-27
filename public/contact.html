@@ -1,252 +1,387 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>اتصل بنا - عقارك</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="icon" type="image/png" href="logo.png">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+
     <style>
-        /* =========================================
-           🎨 الأساسيات (Dark Neon Theme)
-           ========================================= */
-        :root {
-            --glass-bg: rgba(20, 20, 20, 0.95);
-            --neon-primary: #00ff88;
-            --neon-secondary: #00d4ff;
-            --text-gray: #aaa;
-        }
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.95);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --text-gray: #aaa;
+      }
 
-        body {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            margin: 0;
-            padding-top: 80px;
-            overflow-x: hidden;
-        }
+      body {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
+        min-height: 100vh;
+        font-family: "Cairo", sans-serif;
+        color: white;
+        margin: 0;
+        padding-top: 80px;
+        overflow-x: hidden;
+      }
 
-        /* --- الهيدر --- */
-        .main-header {
-            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
-            background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0;
-        }
-        .header-content {
-            max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-        }
-        .nav-link { 
-            color: white; text-decoration: none; padding: 6px 15px; 
-            border: 1px solid var(--neon-primary); border-radius: 20px; 
-            font-size: 0.9rem; transition: 0.3s;
-        }
-        .nav-link:hover { background: var(--neon-primary); color: black; }
+      .main-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 0;
+      }
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+      }
+      .nav-link {
+        color: white;
+        text-decoration: none;
+        padding: 6px 15px;
+        border: 1px solid var(--neon-primary);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        transition: 0.3s;
+      }
+      .nav-link:hover {
+        background: var(--neon-primary);
+        color: black;
+      }
 
-        /* --- Hero Section --- */
-        .contact-hero {
-            text-align: center; padding: 40px 20px;
+      .contact-hero {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .hero-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #fff, var(--neon-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero-desc {
+        color: var(--text-gray);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .contact-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 40px;
+        align-items: start;
+      }
+
+      .info-side {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .info-card {
+        background: rgba(30, 30, 30, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: 0.3s;
+        text-decoration: none;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .info-card:hover {
+        border-color: var(--neon-primary);
+        transform: translateX(-10px);
+        background: rgba(0, 255, 136, 0.05);
+      }
+
+      .icon-box {
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 255, 136, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--neon-primary);
+        font-size: 1.5rem;
+        transition: 0.3s;
+      }
+
+      .info-card:hover .icon-box {
+        background: var(--neon-primary);
+        color: black;
+        box-shadow: 0 0 15px var(--neon-primary);
+      }
+
+      .info-text h3 {
+        margin: 0 0 5px;
+        font-size: 1.1rem;
+        color: white;
+      }
+      .info-text p {
+        margin: 0;
+        color: #aaa;
+        font-size: 0.9rem;
+      }
+
+      .form-wrapper {
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        border-radius: 25px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+      .input-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ccc;
+        font-size: 0.9rem;
+      }
+      .neon-input {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #444;
+        border-radius: 10px;
+        color: white;
+        font-family: "Cairo", sans-serif;
+        transition: 0.3s;
+      }
+      .neon-input:focus {
+        border-color: var(--neon-secondary);
+        outline: none;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, var(--neon-primary), #00cc6a);
+        border: none;
+        border-radius: 10px;
+        color: black;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+      }
+
+      .hidden-el {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.8s ease-out;
+      }
+
+      .show-el {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .delay-1 {
+        transition-delay: 0.1s;
+      }
+      .delay-2 {
+        transition-delay: 0.2s;
+      }
+      .delay-3 {
+        transition-delay: 0.3s;
+      }
+      .delay-4 {
+        transition-delay: 0.4s;
+      }
+
+      @media (max-width: 768px) {
+        .contact-container {
+          grid-template-columns: 1fr;
         }
         .hero-title {
-            font-size: 2.5rem; font-weight: bold; margin-bottom: 10px;
-            background: linear-gradient(135deg, #fff, var(--neon-secondary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          font-size: 2rem;
         }
-        .hero-desc { color: var(--text-gray); max-width: 600px; margin: 0 auto; }
-
-        /* --- Layout Grid --- */
-        .contact-container {
-            max-width: 1100px; margin: 40px auto; padding: 0 20px;
-            display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px;
-            align-items: start;
-        }
-
-        /* --- Info Cards (Left) - Clickable Links --- */
-        .info-side {
-            display: flex; flex-direction: column; gap: 20px;
-        }
-
-        /* تحويل الكروت لروابط */
-        .info-card {
-            background: rgba(30, 30, 30, 0.4); border: 1px solid rgba(255,255,255,0.1);
-            padding: 25px; border-radius: 20px; 
-            display: flex; align-items: center; gap: 20px; transition: 0.3s;
-            text-decoration: none; /* إزالة الخط السفلي للروابط */
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* تأثير عند التحويم */
         .info-card:hover {
-            border-color: var(--neon-primary); 
-            transform: translateX(-10px); /* حركة بسيطة لليمين */
-            background: rgba(0, 255, 136, 0.05);
+          transform: translateY(-5px);
         }
-
-        .icon-box {
-            width: 50px; height: 50px; background: rgba(0, 255, 136, 0.1);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            color: var(--neon-primary); font-size: 1.5rem; transition: 0.3s;
-        }
-
-        .info-card:hover .icon-box {
-            background: var(--neon-primary); color: black;
-            box-shadow: 0 0 15px var(--neon-primary);
-        }
-
-        .info-text h3 { margin: 0 0 5px; font-size: 1.1rem; color: white; }
-        .info-text p { margin: 0; color: #aaa; font-size: 0.9rem; }
-
-        /* --- Contact Form (Right) --- */
-        .form-wrapper {
-            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 40px; border-radius: 25px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
-        }
-
-        .input-group { margin-bottom: 20px; }
-        .input-label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.9rem; }
-        .neon-input {
-            width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.3);
-            border: 1px solid #444; border-radius: 10px; color: white;
-            font-family: 'Cairo', sans-serif; transition: 0.3s;
-        }
-        .neon-input:focus {
-            border-color: var(--neon-secondary); outline: none;
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-        }
-
-        .submit-btn {
-            width: 100%; padding: 12px; background: linear-gradient(135deg, var(--neon-primary), #00cc6a);
-            border: none; border-radius: 10px; color: black; font-weight: bold; font-size: 1.1rem;
-            cursor: pointer; transition: 0.3s; margin-top: 10px;
-        }
-        .submit-btn:hover {
-            transform: translateY(-2px); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-        }
-
-        /* --- 🔥 Scroll Animation Classes --- */
-        .hidden-el {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.8s ease-out;
-        }
-        
-        .show-el {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* تأخير بسيط للعناصر المتتالية */
-        .delay-1 { transition-delay: 0.1s; }
-        .delay-2 { transition-delay: 0.2s; }
-        .delay-3 { transition-delay: 0.3s; }
-        .delay-4 { transition-delay: 0.4s; }
-
-        @media (max-width: 768px) {
-            .contact-container { grid-template-columns: 1fr; }
-            .hero-title { font-size: 2rem; }
-            .info-card:hover { transform: translateY(-5px); } /* في الموبايل الحركة لأعلى */
-        }
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <header class="main-header">
-        <div class="header-content">
-            <a href="home" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-                <img src="logo.png" alt="Logo" style="width: 40px; border-radius: 50%; border: 2px solid var(--neon-primary);">
-                <span style="color: white; font-weight: bold; font-size: 1.2rem;">عقارك</span>
-            </a>
-            <a href="home" class="nav-link"><i class="fas fa-home"></i> الرئيسية</a>
-        </div>
+      <div class="header-content">
+        <a
+          href="home"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+          "
+        >
+          <img
+            src="logo.png"
+            alt="Logo"
+            style="
+              width: 40px;
+              border-radius: 50%;
+              border: 2px solid var(--neon-primary);
+            "
+          />
+          <span style="color: white; font-weight: bold; font-size: 1.2rem"
+            >عقارك</span
+          >
+        </a>
+        <a href="home" class="nav-link"><i class="fas fa-home"></i> الرئيسية</a>
+      </div>
     </header>
 
     <section class="contact-hero hidden-el">
-        <h1 class="hero-title">تواصل معنا</h1>
-        <p class="hero-desc">نحن هنا للإجابة على استفساراتك ومساعدتك في رحلتك العقارية.</p>
+      <h1 class="hero-title">تواصل معنا</h1>
+      <p class="hero-desc">
+        نحن هنا للإجابة على استفساراتك ومساعدتك في رحلتك العقارية.
+      </p>
     </section>
 
     <div class="contact-container">
-        
-        <div class="info-side">
-            <a href="tel:+201008102237" class="info-card hidden-el delay-1">
-                <div class="icon-box"><i class="fas fa-phone-alt"></i></div>
-                <div class="info-text">
-                    <h3>اتصل بنا</h3>
-                    <p>01008102237</p>
-                    <small style="color:var(--neon-primary); font-size:0.7rem;">اضغط للاتصال</small>
-                </div>
-            </a>
+      <div class="info-side">
+        <a href="tel:+201008102237" class="info-card hidden-el delay-1">
+          <div class="icon-box"><i class="fas fa-phone-alt"></i></div>
+          <div class="info-text">
+            <h3>اتصل بنا</h3>
+            <p>01008102237</p>
+            <small style="color: var(--neon-primary); font-size: 0.7rem"
+              >اضغط للاتصال</small
+            >
+          </div>
+        </a>
 
-            <a href="mailto:aqarakproperty@gmail.com" class="info-card hidden-el delay-2">
-                <div class="icon-box"><i class="fas fa-envelope"></i></div>
-                <div class="info-text">
-                    <h3>البريد الإلكتروني</h3>
-                    <p>aqarakproperty@gmail.com</p>
-                </div>
-            </a>
+        <a
+          href="mailto:aqarakproperty@gmail.com"
+          class="info-card hidden-el delay-2"
+        >
+          <div class="icon-box"><i class="fas fa-envelope"></i></div>
+          <div class="info-text">
+            <h3>البريد الإلكتروني</h3>
+            <p>aqarakproperty@gmail.com</p>
+          </div>
+        </a>
 
-            <a href="https://wa.me/201008102237" target="_blank" class="info-card hidden-el delay-3">
-                <div class="icon-box"><i class="fab fa-whatsapp"></i></div>
-                <div class="info-text">
-                    <h3>واتساب</h3>
-                    <p>تواصل معنا مباشرة</p>
-                </div>
-            </a>
-            <a href="#" class="info-card hidden-el delay-4">
-                <div class="icon-box"><i class="fas fa-map-marker-alt"></i></div>
-                <div class="info-text">
-                    <h3>المقر الرئيسي</h3>
-                    <p>القاهرة، مصر</p>
-                    <small style="color:var(--neon-secondary); font-size:0.7rem;">العمل اونلاين في الوقت الحالي</small>
-                </div>
-            </a>
-        </div>
+        <a
+          href="https://wa.me/201008102237"
+          target="_blank"
+          class="info-card hidden-el delay-3"
+        >
+          <div class="icon-box"><i class="fab fa-whatsapp"></i></div>
+          <div class="info-text">
+            <h3>واتساب</h3>
+            <p>تواصل معنا مباشرة</p>
+          </div>
+        </a>
+        <a href="#" class="info-card hidden-el delay-4">
+          <div class="icon-box"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="info-text">
+            <h3>المقر الرئيسي</h3>
+            <p>القاهرة، مصر</p>
+            <small style="color: var(--neon-secondary); font-size: 0.7rem"
+              >العمل اونلاين في الوقت الحالي</small
+            >
+          </div>
+        </a>
+      </div>
 
-        <div class="form-wrapper hidden-el">
-            <h2 style="color:white; margin-bottom:20px;">أرسل لنا رسالة</h2>
-            <form id="contactForm" onsubmit="handleContactSubmit(event)">
-                <div class="input-group">
-                    <label class="input-label">الاسم بالكامل</label>
-                    <input type="text" id="contact-name" class="neon-input" required>
-                </div>
+      <div class="form-wrapper hidden-el">
+        <h2 style="color: white; margin-bottom: 20px">أرسل لنا رسالة</h2>
+        <form id="contactForm" onsubmit="handleContactSubmit(event)">
+          <div class="input-group">
+            <label class="input-label">الاسم بالكامل</label>
+            <input type="text" id="contact-name" class="neon-input" required />
+          </div>
 
-                <div class="input-group">
-                    <label class="input-label">رقم الهاتف</label>
-                    <input type="tel" id="contact-phone" class="neon-input" placeholder="01xxxxxxxxx" required>
-                </div>
+          <div class="input-group">
+            <label class="input-label">رقم الهاتف</label>
+            <input
+              type="tel"
+              id="contact-phone"
+              class="neon-input"
+              placeholder="01xxxxxxxxx"
+              required
+            />
+          </div>
 
-                <div class="input-group">
-                    <label class="input-label">الموضوع</label>
-                    <select id="contact-subject" class="neon-input">
-                        <option value="inquiry">استفسار عام</option>
-                        <option value="support">دعم فني</option>
-                        <option value="partnership">اقتراح شراكة</option>
-                        <option value="complaint">شكوى</option>
-                    </select>
-                </div>
+          <div class="input-group">
+            <label class="input-label">الموضوع</label>
+            <select id="contact-subject" class="neon-input">
+              <option value="inquiry">استفسار عام</option>
+              <option value="support">دعم فني</option>
+              <option value="partnership">اقتراح شراكة</option>
+              <option value="complaint">شكوى</option>
+            </select>
+          </div>
 
-                <div class="input-group">
-                    <label class="input-label">الرسالة</label>
-                    <textarea id="contact-message" class="neon-input" rows="4" placeholder="اكتب تفاصيل رسالتك..." required></textarea>
-                </div>
+          <div class="input-group">
+            <label class="input-label">الرسالة</label>
+            <textarea
+              id="contact-message"
+              class="neon-input"
+              rows="4"
+              placeholder="اكتب تفاصيل رسالتك..."
+              required
+            ></textarea>
+          </div>
 
-                <button type="submit" class="submit-btn" id="send-btn">إرسال الرسالة <i class="fas fa-paper-plane"></i></button>
-            </form>
-        </div>
-
+          <button type="submit" class="submit-btn" id="send-btn">
+            إرسال الرسالة <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
     </div>
 
-    <footer style="text-align:center; padding:30px; border-top:1px solid #333; color:#777; margin-top:20px;">
-        <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+    <footer
+      style="
+        text-align: center;
+        padding: 30px;
+        border-top: 1px solid #333;
+        color: #777;
+        margin-top: 20px;
+      "
+    >
+      <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
     </footer>
 
     <script src="contact.js"></script>
-
-</body>
+  </body>
 </html>

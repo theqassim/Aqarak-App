@@ -1,19 +1,17 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // التحقق من حالة المستخدم
-        const response = await fetch('/api/auth/me');
-        
-        // في السيرفر اللي عملناه، المستخدم المحظور بيرجع كود 403
-        if (response.status === 403) {
-            const data = await response.json();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch("/api/auth/me");
 
-            if (data.banned) {
-                // 1. تجهيز رابط الواتساب والرسالة
-                const message = `مرحباً دعم عقارك،\nحسابي (@${data.username}) تم حظره وأريد الاستفسار.\nرقم الهاتف: ${data.phone}`;
-                const waUrl = `https://wa.me/201008102237?text=${encodeURIComponent(message)}`;
+    if (response.status === 403) {
+      const data = await response.json();
 
-                // 2. استبدال محتوى الصفحة بتصميم المودال العصري
-                document.body.innerHTML = `
+      if (data.banned) {
+        const message = `مرحباً دعم عقارك،\nحسابي (@${data.username}) تم حظره وأريد الاستفسار.\nرقم الهاتف: ${data.phone}`;
+        const waUrl = `https://wa.me/201008102237?text=${encodeURIComponent(
+          message
+        )}`;
+
+        document.body.innerHTML = `
                     <style>
                         /* إعدادات الصفحة للحظر */
                         body { 
@@ -103,14 +101,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
 
-                // 3. تشغيل زر الخروج
-                document.getElementById('forceLogoutBtn').addEventListener('click', async () => {
-                    await fetch('/api/logout', { method: 'POST' });
-                    window.location.href = '/'; 
-                });
-            }
-        }
-    } catch (e) {
-        console.error("Ban check error", e);
+        document
+          .getElementById("forceLogoutBtn")
+          .addEventListener("click", async () => {
+            await fetch("/api/logout", { method: "POST" });
+            window.location.href = "/";
+          });
+      }
     }
+  } catch (e) {
+    console.error("Ban check error", e);
+  }
 });

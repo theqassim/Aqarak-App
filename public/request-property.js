@@ -1,9 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const requestForm = document.getElementById('request-form');
+document.addEventListener("DOMContentLoaded", () => {
+  const requestForm = document.getElementById("request-form");
 
-    // 🎨 ستايلات المودال
-    const style = document.createElement('style');
-    style.innerHTML = `
+  const style = document.createElement("style");
+  style.innerHTML = `
         .team-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px);
@@ -45,10 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 
-    // HTML المودال (نصوص بشرية)
-    const modalHTML = `
+  const modalHTML = `
         <div id="teamMatchModal" class="team-modal-overlay">
             <div class="team-modal-content">
                 <div class="team-modal-header">
@@ -72,125 +70,135 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-    const modal = document.getElementById('teamMatchModal');
-    const matchesGrid = document.getElementById('matchesGrid');
-    const btnProceed = document.getElementById('btnProceedRequest');
-    const btnClose = document.getElementById('btnCloseModal');
-    
-    let currentFormData = null;
+  const modal = document.getElementById("teamMatchModal");
+  const matchesGrid = document.getElementById("matchesGrid");
+  const btnProceed = document.getElementById("btnProceedRequest");
+  const btnClose = document.getElementById("btnCloseModal");
 
-    if (requestForm) {
-        requestForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+  let currentFormData = null;
 
-            const submitBtn = requestForm.querySelector('button[type="submit"]');
-            const originalBtnContent = submitBtn.innerHTML;
-            
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث في قاعدة البيانات...';
-            submitBtn.disabled = true;
+  if (requestForm) {
+    requestForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-            const typeVal = document.getElementById('req-type').value;
-            const priceVal = document.getElementById('req-price').value;
-            const locVal = document.getElementById('req-location').value;
-            const notesVal = document.getElementById('req-notes').value;
+      const submitBtn = requestForm.querySelector('button[type="submit"]');
+      const originalBtnContent = submitBtn.innerHTML;
 
-            const data = {
-                name: document.getElementById('req-name').value,
-                phone: document.getElementById('req-phone').value,
-                type: typeVal,
-                maxPrice: priceVal,
-                location: locVal,
-                notes: notesVal,
-                // تجميع المواصفات كنص عشان الداتابيز القديمة
-                specifications: `مطلوب ${typeVal} في ${locVal}، بحد أقصى ${priceVal} جنية. ملاحظات: ${notesVal}`
-            };
-            
-            currentFormData = data;
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> جاري البحث في قاعدة البيانات...';
+      submitBtn.disabled = true;
 
-            try {
-                // إرسال البيانات المفصلة للبحث
-                const matchResponse = await fetch('/api/check-request-matches', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data),
-                });
+      const typeVal = document.getElementById("req-type").value;
+      const priceVal = document.getElementById("req-price").value;
+      const locVal = document.getElementById("req-location").value;
+      const notesVal = document.getElementById("req-notes").value;
 
-                const matchResult = await matchResponse.json();
+      const data = {
+        name: document.getElementById("req-name").value,
+        phone: document.getElementById("req-phone").value,
+        type: typeVal,
+        maxPrice: priceVal,
+        location: locVal,
+        notes: notesVal,
+        specifications: `مطلوب ${typeVal} في ${locVal}، بحد أقصى ${priceVal} جنية. ملاحظات: ${notesVal}`,
+      };
 
-                if (matchResult.matches && matchResult.matches.length > 0) {
-                    showMatchesModal(matchResult.matches);
-                    submitBtn.innerHTML = originalBtnContent;
-                    submitBtn.disabled = false;
-                    return;
-                }
+      currentFormData = data;
 
-                await submitFinalRequest(data);
-
-            } catch (error) {
-                console.error('Check Failed:', error);
-                await submitFinalRequest(data);
-            }
+      try {
+        const matchResponse = await fetch("/api/check-request-matches", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         });
-    }
 
-    function showMatchesModal(matches) {
-        matchesGrid.innerHTML = matches.map(prop => `
-            <a href="/property-details?id=${prop.id}" target="_blank" class="match-card">
-                <img src="${prop.imageUrl || 'logo.png'}" class="match-img" alt="${prop.title}">
+        const matchResult = await matchResponse.json();
+
+        if (matchResult.matches && matchResult.matches.length > 0) {
+          showMatchesModal(matchResult.matches);
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+          return;
+        }
+
+        await submitFinalRequest(data);
+      } catch (error) {
+        console.error("Check Failed:", error);
+        await submitFinalRequest(data);
+      }
+    });
+  }
+
+  function showMatchesModal(matches) {
+    matchesGrid.innerHTML = matches
+      .map(
+        (prop) => `
+            <a href="/property-details?id=${
+              prop.id
+            }" target="_blank" class="match-card">
+                <img src="${
+                  prop.imageUrl || "logo.png"
+                }" class="match-img" alt="${prop.title}">
                 <div class="match-info">
                     <div class="match-title">${prop.title}</div>
-                    <div class="match-price">${parseInt(prop.price).toLocaleString()} ج.م</div>
+                    <div class="match-price">${parseInt(
+                      prop.price
+                    ).toLocaleString()} ج.م</div>
                 </div>
             </a>
-        `).join('');
-        
-        modal.style.display = 'flex';
+        `
+      )
+      .join("");
+
+    modal.style.display = "flex";
+  }
+
+  async function submitFinalRequest(data) {
+    try {
+      const response = await fetch("/api/request-property", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) throw new Error("فشل الإرسال");
+
+      modal.style.display = "none";
+      if (typeof showSuccessModal === "function") showSuccessModal();
+    } catch (error) {
+      alert("حدث خطأ أثناء الاتصال.");
+    } finally {
+      const submitBtn = requestForm.querySelector('button[type="submit"]');
+      submitBtn.innerHTML = '<i class="fas fa-search"></i> ابحث بدقة';
+      submitBtn.disabled = false;
     }
+  }
 
-    async function submitFinalRequest(data) {
-        try {
-            const response = await fetch('/api/request-property', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
+  btnProceed.addEventListener("click", async () => {
+    const submitBtn = requestForm.querySelector('button[type="submit"]');
+    submitBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الطلب...';
+    await submitFinalRequest(currentFormData);
+  });
 
-            if (!response.ok) throw new Error('فشل الإرسال');
-
-            modal.style.display = 'none';
-            if(typeof showSuccessModal === 'function') showSuccessModal();
-
-        } catch (error) {
-            alert('حدث خطأ أثناء الاتصال.');
-        } finally {
-            const submitBtn = requestForm.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '<i class="fas fa-search"></i> ابحث بدقة';
-            submitBtn.disabled = false;
-        }
-    }
-
-    btnProceed.addEventListener('click', async () => {
-        const submitBtn = requestForm.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الطلب...';
-        await submitFinalRequest(currentFormData);
-    });
-
-    btnClose.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+  btnClose.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
 });
- document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch('/api/auth/me');
-                if(res.ok) {
-                    const data = await res.json();
-                    if(data.isAuthenticated) {
-                        document.getElementById('req-name').value = data.name || '';
-                        document.getElementById('req-phone').value = data.phone || '';
-                    }
-                }
-            } catch(e) {}
-        });
-        function showSuccessModal() { document.getElementById('successModal').style.display = 'flex'; }
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/auth/me");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.isAuthenticated) {
+        document.getElementById("req-name").value = data.name || "";
+        document.getElementById("req-phone").value = data.phone || "";
+      }
+    }
+  } catch (e) {}
+});
+function showSuccessModal() {
+  document.getElementById("successModal").style.display = "flex";
+}

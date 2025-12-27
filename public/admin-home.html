@@ -66,7 +66,6 @@
 }
     </script>
     <style>
-        /* --- 🛠️ 1. Reset & Global Styles --- */
         * {
             box-sizing: border-box;
             margin: 0; padding: 0;
@@ -91,13 +90,11 @@
             color: white;
             overflow-x: hidden;
             
-            /* 🔥 هام جداً: مسافة عشان الهيدر الثابت */
             padding-top: 100px !important; 
         }
 
-        /* --- 🔒 2. الهيدر الثابت (Admin Header) --- */
         .main-header {
-            position: fixed !important; /* 🔥 تثبيت في السقف */
+            position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
@@ -129,7 +126,6 @@
         .logout-btn { border-color: var(--neon-danger); color: var(--neon-danger); }
         .logout-btn:hover { background: var(--neon-danger); color: white; }
 
-        /* --- Dashboard Grid --- */
         .main-content { 
             max-width: 1200px; 
             margin: 0 auto; 
@@ -144,7 +140,6 @@
             text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
         }
 
-        /* --- Cards Grid --- */
         .admin-dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -169,7 +164,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
         }
         
-        /* الشريط الملون أعلى الكارت */
         .dashboard-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
             background: var(--card-color, var(--neon-secondary));
@@ -186,27 +180,24 @@
             border: 1px solid var(--card-color, var(--neon-secondary));
             color: var(--card-color, var(--neon-secondary)); background: transparent;
             font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.3s;
-            margin-top: auto; /* دفع الزر للأسفل */
+            margin-top: auto;
         }
         .btn-neon-auth:hover { background: var(--card-color, var(--neon-secondary)); color: black; }
 
-        /* --- تحسينات الموبايل --- */
         @media (max-width: 768px) {
             body.internal-page {
-                /* 🔥 زيادة المسافة في الموبايل */
                 padding-top: 130px !important; 
             }
             .page-title { font-size: 1.6rem; margin-bottom: 25px; }
-            .logo-text { display: none; } /* إخفاء النص لتوفير مساحة */
+            .logo-text { display: none; }
             .logo { height: 40px; }
         }
-        /* --- 🛠️ ستايلات كارت التحكم في الدفع --- */
 .payment-controls {
     display: flex;
     flex-direction: column;
     gap: 15px;
     width: 100%;
-    text-align: right; /* عشان النصوص تكون عربي مظبوطة */
+    text-align: right;
     margin-bottom: 15px;
 }
 
@@ -221,7 +212,6 @@
 
 .control-label { font-size: 0.9rem; color: #ccc; }
 
-/* شكل زرار التبديل (Switch) */
 .switch {
     position: relative;
     display: inline-block;
@@ -248,11 +238,9 @@
     transition: .4s;
     border-radius: 50%;
 }
-/* لما يكون شغال */
 input:checked + .slider { background-color: var(--neon-primary); }
 input:checked + .slider:before { transform: translateX(26px); }
 
-/* حقل سعر النقطة */
 .price-input {
     background: #000;
     border: 1px solid #555;
@@ -266,7 +254,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 }
 .price-input:focus { border-color: var(--neon-gold); }
 
-/* نص الحالة (مفعل/متوقف) */
 #payment-status-text {
     font-size: 0.8rem;
     font-weight: bold;
@@ -274,9 +261,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 }
 .status-active { color: var(--neon-primary); }
 .status-inactive { color: var(--neon-danger); }
-/* =========================================
-   📊 تصميم سجلات الشحن (Modern Logs)
-   ========================================= */
 #secret-logs-container {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -292,10 +276,8 @@ input:checked + .slider:before { transform: translateX(26px); }
     box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
 }
 
-/* --- تخطيط الجدول (Desktop) --- */
 .logs-header, .log-row {
     display: grid;
-    /* تقسيم الأعمدة: الهاتف - النقط - الفلوس - التاريخ - الوصف */
     grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 2fr; 
     padding: 15px;
     align-items: center;
@@ -323,16 +305,14 @@ input:checked + .slider:before { transform: translateX(26px); }
     background: rgba(255, 255, 255, 0.03);
 }
 
-/* --- تنسيق الخلايا --- */
 .cell-phone { font-family: 'Courier New', monospace; letter-spacing: 1px; color: #fff; }
 .cell-points { color: #FFD700; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.1rem; }
 .cell-money { color: #00ff88; font-weight: bold; text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); font-size: 1.1rem; }
 .cell-date { color: #aaa; font-size: 0.85rem; }
 .cell-desc { color: #888; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* --- 📱 تحسينات الموبايل (تحويل لبطاقات) --- */
 @media (max-width: 768px) {
-    .logs-header { display: none; } /* إخفاء العناوين في الموبايل */
+    .logs-header { display: none; }
 
     .log-row {
         display: flex;
@@ -356,7 +336,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     
     .log-cell:last-child { border-bottom: none; }
 
-    /* إضافة التسمية تلقائياً قبل القيمة */
     .log-cell::before {
         content: attr(data-label);
         color: #888;
@@ -364,7 +343,7 @@ input:checked + .slider:before { transform: translateX(26px); }
         font-weight: bold;
     }
     
-    .cell-desc { white-space: normal; } /* السماح بالتفاف النص في الوصف */
+    .cell-desc { white-space: normal; }
 }
     </style>
 </head>
@@ -478,6 +457,12 @@ input:checked + .slider:before { transform: translateX(26px); }
                 <button onclick="openNotifModal()" class="btn-neon-auth">إرسال الآن</button>
             </div>
 
+            <div class="dashboard-card" style="--card-color: #ff00ff;"> <i class="fas fa-handshake icon-large"></i>
+    <h2 class="card-title">إدارة الخدمات</h2>
+    <p class="card-desc">إضافة شركاء نجاح وخدمات جديدة.</p>
+    <a href="admin-services" class="btn-neon-auth">إضافة خدمة</a>
+</div>
+
             <div class="dashboard-card" style="--card-color: #00ff88;">
                 <i class="fas fa-user-check icon-large" style="color: #00ff88;"></i>
                 <h2 class="card-title">توثيق المستخدمين</h2>
@@ -563,7 +548,6 @@ input:checked + .slider:before { transform: translateX(26px); }
                 if (data.success) {
                     alert('✅ ' + data.message);
                     document.getElementById('notif-modal').style.display = 'none';
-                    // تفريغ الحقول
                     document.getElementById('notif-title').value = '';
                     document.getElementById('notif-message').value = '';
                 } else {
@@ -624,10 +608,9 @@ input:checked + .slider:before { transform: translateX(26px); }
 </div>
 </div>
 <script>
-    // 1. منطق الضغطات الخمسة
     let logoClicks = 0;
     document.querySelector('.logo').addEventListener('click', (e) => {
-        e.preventDefault(); // منع الرابط لو موجود
+        e.preventDefault();
         logoClicks++;
         if (logoClicks === 5) {
             document.getElementById('secret-modal').style.display = 'flex';
@@ -635,7 +618,6 @@ input:checked + .slider:before { transform: translateX(26px); }
         }
     });
 
-    // 2. التحقق من الباسورد
     async function checkSecretAccess() {
         const pass = document.getElementById('secret-pass').value;
         if (pass === "Qassim&Ammar") {
@@ -647,7 +629,6 @@ input:checked + .slider:before { transform: translateX(26px); }
         }
     }
 
-    // 3. جلب السجلات
     async function loadSecretLogs() {
     const wrapper = document.getElementById('secret-logs-container');
     const tableBody = document.getElementById('logs-table-body');
@@ -659,7 +640,6 @@ input:checked + .slider:before { transform: translateX(26px); }
         const res = await fetch('/api/admin/secret-logs');
         const logs = await res.json();
         
-        // مش محتاجين نجيب السعر الحالي للحساب، بس ممكن نخليه كـ fallback
         const currentPriceInput = document.getElementById('point-price');
         const currentPointPrice = currentPriceInput ? parseFloat(currentPriceInput.value) : 1;
 
@@ -673,8 +653,6 @@ input:checked + .slider:before { transform: translateX(26px); }
         logs.forEach(log => {
             const points = parseFloat(log.amount);
             
-            // 🔥 هنا التغيير: استخدام القيمة المحفوظة في الداتابيز
-            // لو مفيش قيمة محفوظة (للعمليات القديمة جداً)، بنستخدم المعادلة القديمة
             let moneyValue = log.money_amount;
             if (!moneyValue || moneyValue == 0) {
                  moneyValue = points * currentPointPrice;
@@ -702,7 +680,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     }
 }
 
-    // 4. مسح السجلات
     async function clearSecretLogs() {
         if(!confirm("هل أنت متأكد من مسح كل السجلات؟")) return;
         await fetch('/api/admin/secret-logs', { method: 'DELETE' });

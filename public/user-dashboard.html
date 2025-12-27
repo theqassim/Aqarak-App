@@ -8,16 +8,13 @@
     <link rel="icon" type="image/png" href="logo.png">
     
 <style>
-    /* --- 🛠️ 1. الأساسيات --- */
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root { --glass-bg: rgba(20, 20, 20, 0.95); --neon-primary: #00ff88; --neon-secondary: #00d4ff; --neon-danger: #ff4444; --neon-gold: #ffd700; --card-bg: #1a1a1a; }
     body.internal-page { background-color: #0f0f0f; background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%); min-height: 100vh; font-family: 'Cairo', sans-serif; color: white; overflow-x: hidden; padding-top: 80px !important; }
 
-    /* --- 🔒 2. الهيدر --- */
     .main-header { position: fixed !important; top: 0; left: 0; right: 0; width: 100%; height: 70px; z-index: 9999; background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; padding: 0 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
     .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto; width: 100%; }
 
-    /* --- 3. القائمة المنسدلة --- */
     .profile-menu-container { position: relative; margin-right: 15px; display: flex; align-items: center; }
     
     .dashboard-profile-toggle {
@@ -39,10 +36,9 @@
         border: 2px solid #1a1a1a; z-index: 2; display: none; 
     }
 
-    /* القائمة المنسدلة (الأساسية للديسكتوب) */
     .profile-dropdown { 
         display: none; 
-        position: absolute; /* في الديسكتوب تكون absolute بالنسبة للزر */
+        position: absolute;
         top: 60px; left: 10px; width: 280px; 
         background: rgba(20, 20, 20, 0.98); backdrop-filter: blur(15px); 
         border: 1px solid var(--neon-primary); border-radius: 15px; 
@@ -50,14 +46,13 @@
         z-index: 10000; animation: slideDown 0.3s ease-out; 
     }
     
-    /* 🔥 إصلاح الموبايل: جعل القائمة ثابتة بالنسبة للشاشة 🔥 */
     @media (max-width: 600px) {
         .profile-dropdown { 
-            position: fixed !important; /* هذا هو الحل */
+            position: fixed !important;
             top: 75px !important; 
             left: 50% !important; 
-            transform: translateX(-50%) !important; /* توسيط دقيق */
-            width: 90% !important; /* عرض 90% من الشاشة */
+            transform: translateX(-50%) !important;
+            width: 90% !important;
             max-width: 350px;
         }
     }
@@ -72,11 +67,10 @@
     .dropdown-link:hover { background: rgba(0, 255, 136, 0.1); color: var(--neon-primary); }
     .dropdown-link i { width: 25px; text-align: center; }
     
-    /* --- 🔔 تصميم الإشعارات (Clean Style) --- */
     .notif-toggle-btn { 
         justify-content: space-between; 
-        background: transparent; /* خلفية شفافة */
-        border: none; /* بدون حدود */
+        background: transparent;
+        border: none;
     }
     .notif-toggle-btn:hover {
         background: rgba(0, 255, 136, 0.1);
@@ -118,7 +112,6 @@
         .greeting-main { font-size: 0.8rem; }
     }
 
-    /* Cards & Content */
     .main-content { max-width: 1200px; margin: 0 auto; padding: 20px 15px; }
     .page-title { text-align: center; margin-bottom: 30px; font-size: 1.8rem; color: var(--neon-primary); text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
     .admin-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
@@ -143,7 +136,7 @@
     
     .listings-container { 
         display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* شبكة متجاوبة */
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 20px; 
         padding: 10px 0;
     }
@@ -168,10 +161,9 @@
         box-shadow: 0 10px 20px rgba(0, 255, 136, 0.15);
     }
 
-    /* حاوية الصورة */
     .fav-img-link {
         width: 100%;
-        height: 180px; /* ارتفاع ثابت للصورة */
+        height: 180px;
         position: relative;
         overflow: hidden;
         display: block;
@@ -186,7 +178,6 @@
 
     .fav-card:hover .fav-img { transform: scale(1.1); }
 
-    /* بادج السعر فوق الصورة */
     .price-badge {
         position: absolute;
         bottom: 10px;
@@ -201,7 +192,6 @@
         border: 1px solid rgba(255, 215, 0, 0.3);
     }
 
-    /* المحتوى */
     .fav-content {
         padding: 15px;
         flex: 1;
@@ -217,7 +207,7 @@
         margin-bottom: 8px;
         line-height: 1.4;
         display: -webkit-box;
-        -webkit-line-clamp: 2; /* يظهر سطرين فقط */
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -231,7 +221,6 @@
         gap: 5px;
     }
 
-    /* الأزرار */
     .fav-actions {
         display: flex;
         gap: 10px;
@@ -273,9 +262,8 @@
     }
     .btn-fav-remove:hover { background: #ff4444; color: white; transform: rotate(90deg); }
 
-    /* 📱 تظبيط الموبايل */
     @media (max-width: 600px) {
-        .listings-container { grid-template-columns: 1fr; } /* كارت واحد في الصف */
+        .listings-container { grid-template-columns: 1fr; }
         .fav-card { flex-direction: row; height: 120px; }
         .fav-img-link { width: 120px; height: 100%; }
         .price-badge { font-size: 0.75rem; padding: 2px 8px; bottom: 5px; left: 5px; }
@@ -285,10 +273,9 @@
         .btn-fav-view { padding: 5px 0; font-size: 0.8rem; }
         .btn-fav-remove { width: 32px; height: 32px; }
     }
-    /* --- ➕ علامة الزائد الجديدة (شيك) --- */
 .dropdown-points {
     position: relative;
-    padding-right: 35px; /* مساحة للعلامة */
+    padding-right: 35px;
     border: 1px solid rgba(255, 215, 0, 0.3);
     background: rgba(255, 215, 0, 0.05);
     cursor: pointer;
@@ -298,20 +285,19 @@
     position: absolute;
     right: -8px; top: -8px;
     width: 20px; height: 20px;
-    background: #ff4444; /* لون أحمر مميز */
+    background: #ff4444;
     color: white;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 0.75rem;
-    border: 2px solid #1a1a1a; /* فاصل عن الخلفية */
+    border: 2px solid #1a1a1a;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* --- 💎 تصميم المودال العصري (Modern UI) --- */
 .modern-modal-overlay {
     background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    z-index: 20000; /* عشان يغطي على كل حاجة */
+    z-index: 20000;
 }
 
 .modern-modal-content {
@@ -345,7 +331,6 @@
     box-shadow: 0 10px 20px rgba(0, 255, 136, 0.2);
 }
 
-/* أزرار الدفع */
 .modern-methods-grid { display: flex; gap: 12px; margin-bottom: 25px; }
 .modern-method-card {
     flex: 1; background: rgba(255, 255, 255, 0.03);
@@ -362,11 +347,9 @@
 }
 .modern-method-card.active .check-mark { display: flex; }
 
-/* Wallet Style */
 #btn-wallet.active { border-color: #ff4444; background: rgba(255, 68, 68, 0.05); }
 #btn-wallet.active .check-mark { background: #ff4444; color: white; }
 
-/* Inputs */
 .modern-input-group { margin-bottom: 20px; text-align: right; }
 .modern-input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #ddd; }
 .input-wrapper { position: relative; }
@@ -378,7 +361,6 @@
 .input-wrapper input:focus { border-color: #00ff88; background: #0a0a0c; }
 .unit-tag { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; font-weight: bold; }
 
-/* Summary & Button */
 .modern-summary {
     background: #141418; padding: 15px; border-radius: 12px;
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
@@ -391,9 +373,8 @@
 }
 .modern-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4); }
 .modern-action-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
-/* --- تصميم مودال الحالة (Status Modal) --- */
 .status-card {
-    border-top: 4px solid transparent; /* لون علوي متغير */
+    border-top: 4px solid transparent;
     overflow: hidden;
 }
 
@@ -407,7 +388,6 @@
     transition: 0.3s;
 }
 
-/* --- حالة النجاح (Success) --- */
 .status-success .status-icon-box {
     background: linear-gradient(135deg, #00ff88, #00b862);
     color: #000;
@@ -417,7 +397,6 @@
 .status-success h3 { color: #00ff88; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
 .status-success { border-top-color: #00ff88; }
 
-/* --- حالة الفشل (Error) --- */
 .status-error .status-icon-box {
     background: linear-gradient(135deg, #ff4444, #c62828);
     color: #fff;
@@ -427,7 +406,6 @@
 .status-error h3 { color: #ff4444; text-shadow: 0 0 10px rgba(255,68,68,0.3); }
 .status-error { border-top-color: #ff4444; }
 
-/* --- Animations --- */
 @keyframes successPop {
     0% { transform: scale(0); opacity: 0; }
     60% { transform: scale(1.1); }
@@ -441,14 +419,12 @@
     60% { transform: translateX(-5px); }
     80% { transform: translateX(5px); }
 }
-/* حاوية القائمة */
 .blocked-list-wrapper {
     max-height: 350px;
     overflow-y: auto;
     padding: 10px 5px;
 }
 
-/* العنصر الواحد (الصف) */
 .blocked-row {
     display: flex;
     justify-content: space-between;
@@ -467,11 +443,9 @@
     transform: translateX(-3px);
 }
 
-/* بيانات المستخدم */
 .blocked-info h4 { margin: 0 0 5px; color: white; font-size: 0.95rem; }
 .blocked-info p { margin: 0; color: #888; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
 
-/* زر فك الحظر الصغير */
 .btn-mini-unblock {
     background: transparent;
     border: 1px solid #ff4444;
@@ -483,33 +457,23 @@
     transition: 0.3s;
 }
 .btn-mini-unblock:hover { background: #ff4444; color: white; }
-    /* ============================================================
-       💎 تحديث تصميم القائمة المنسدلة (لتطابق الصفحة الرئيسية)
-    ============================================================ */
 
-    /* 1. الحاوية الأساسية للقائمة */
     .profile-dropdown {
-        /* خلفية داكنة جداً وشبه معتمة */
         background: rgba(10, 10, 10, 0.96) !important;
         
-        /* تأثير ضبابي قوي (Blur) */
         backdrop-filter: blur(40px) saturate(200%) !important;
         -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
         
-        /* حدود دقيقة جداً */
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         
-        /* تدوير الحواف */
         border-radius: 24px !important;
         
-        /* ظل قوي لفصل القائمة عن الخلفية */
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9) !important;
         
         padding: 12px !important;
         overflow: hidden !important;
     }
 
-    /* 2. روابط القائمة (Links) */
     .dropdown-link {
         color: #ffffff !important;
         background: rgba(255, 255, 255, 0.03) !important;
@@ -525,12 +489,11 @@
     }
 
     .dropdown-link i {
-        color: var(--neon-primary) !important; /* لون الأيقونات نيون */
+        color: var(--neon-primary) !important;
         width: 25px;
         text-align: center;
     }
 
-    /* تأثير التمرير (Hover) على الروابط */
     .dropdown-link:hover {
         background: linear-gradient(90deg, rgba(0, 255, 136, 0.15), transparent) !important;
         transform: translateX(-5px) !important;
@@ -538,7 +501,6 @@
         border-color: rgba(0, 255, 136, 0.2) !important;
     }
 
-    /* 3. عناصر الإشعارات داخل القائمة */
     .menu-notif-item {
         position: relative;
         padding: 15px !important;
@@ -564,7 +526,6 @@
         border-right: 4px solid var(--neon-primary) !important;
     }
 
-    /* زر حذف الإشعار */
     .notif-delete-btn {
         opacity: 0;
         position: absolute !important;
@@ -594,7 +555,6 @@
         color: white !important;
     }
 
-    /* 4. زر التنبيهات (Toggle) */
     .notif-toggle-btn {
         justify-content: space-between;
         background: transparent !important;

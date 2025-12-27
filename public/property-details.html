@@ -1,668 +1,973 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta charset="UTF-8" />
     <title>عقارك - تفاصيل العقار</title>
-    <link rel="stylesheet" href="styles.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-<script type="application/ld+json">
-     {
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
 
-  "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
 
-  "@type": "RealEstateAgent",
+        "name": "منصة عقارك - Aqarak",
 
-  "name": "منصة عقارك - Aqarak",
+        "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
 
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+        "url": "https://aqarakeg.com",
 
-  "url": "https://aqarakeg.com",
+        "logo": "https://aqarakeg.com/logo.jpg",
 
-  "logo": "https://aqarakeg.com/logo.jpg",
+        "image": "https://aqarakeg.com/logo.jpg",
 
-  "image": "https://aqarakeg.com/logo.jpg",
+        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
 
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+        "address": {
+          "@type": "PostalAddress",
 
-  "address": {
+          "addressLocality": "Cairo",
 
-    "@type": "PostalAddress",
+          "addressCountry": "EG"
+        },
 
-    "addressLocality": "Cairo",
+        "priceRange": "$",
 
-    "addressCountry": "EG"
+        "contactPoint": {
+          "@type": "ContactPoint",
 
-  },
+          "telephone": "+201008102237",
 
-  "priceRange": "$",
+          "contactType": "customer service",
 
-  "contactPoint": {
+          "areaServed": "EG",
 
-    "@type": "ContactPoint",
+          "availableLanguage": ["Arabic"]
+        },
 
-    "telephone": "+201008102237",
+        "sameAs": [
+          "https://www.facebook.com/share/1ADgNDLXc6/",
 
-    "contactType": "customer service",
+          "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
 
-    "areaServed": "EG",
-
-    "availableLanguage": ["Arabic"]
-
-  },
-
-  "sameAs": [
-
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-
-  ]
-
-}
+          "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+        ]
+      }
     </script>
     <style>
-    /* --- 🎨 1. الأساسيات --- */
-    :root {
+      :root {
         --glass-bg: rgba(20, 20, 20, 0.98);
         --neon-primary: #00ff88;
         --neon-secondary: #00d4ff;
         --card-bg: #1a1a1a;
         --text-main: #ffffff;
-    }
+      }
 
-    body.internal-page {
+      body.internal-page {
         background-color: #0f0f0f;
-        background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
         min-height: 100vh;
         margin: 0 !important;
         padding: 0 !important;
-        font-family: 'Cairo', sans-serif;
+        font-family: "Cairo", sans-serif;
         color: white;
         overflow-x: hidden;
-    }
+      }
 
-    /* --- 2. الهيدر --- */
-    .main-header {
-        position: sticky; top: 0; z-index: 1000;
+      .main-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
         background: var(--glass-bg);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         padding: 10px 15px;
-    }
-    .header-container {
-        display: flex; justify-content: space-between; align-items: center;
-        max-width: 1250px; margin: 0 auto;
-    }
-    .nav-button {
-        text-decoration: none; color: white; border: 1px solid var(--neon-primary);
-        padding: 6px 15px; border-radius: 50px; font-size: 0.9rem; transition: 0.3s;
-    }
-    .nav-button:hover { background: var(--neon-primary); color: black; }
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1250px;
+        margin: 0 auto;
+      }
+      .nav-button {
+        text-decoration: none;
+        color: white;
+        border: 1px solid var(--neon-primary);
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        transition: 0.3s;
+      }
+      .nav-button:hover {
+        background: var(--neon-primary);
+        color: black;
+      }
 
-    /* --- 3. تخطيط الصفحة (Layout Fixes) --- */
-    .property-detail-container {
+      .property-detail-container {
         max-width: 1200px;
         margin: 30px auto;
         padding: 0 20px;
-    }
+      }
 
-    /* الشبكة الرئيسية: تقسيم الشاشة */
-    .details-layout {
+      .details-layout {
         display: grid;
-        /* في الديسك توب: عمودين (الصور يمين والمعلومات شمال أو العكس حسب اللغة) */
-        grid-template-columns: 1.2fr 0.8fr; 
+        grid-template-columns: 1.2fr 0.8fr;
         gap: 30px;
-        align-items: start; /* محاذاة العناصر من الأعلى */
-    }
+        align-items: start;
+      }
 
-    /* --- 4. كارت المعلومات (التفاصيل) --- */
-    .details-info-frame {
+      .details-info-frame {
         background: var(--card-bg);
         border-radius: 16px;
         padding: 25px;
         border: 1px solid #333;
-        height: fit-content; /* مهم جداً: الارتفاع على قد المحتوى */
-        /* لا نضع order هنا، الترتيب الافتراضي للـ HTML هو الحكم */
-    }
+        height: fit-content;
+      }
 
-    /* النصوص والعناوين */
-    .page-title { font-size: 1.6rem; margin: 10px 0; line-height: 1.4; color: white; }
-    .detail-price { font-size: 1.8rem; color: var(--neon-primary); font-weight: bold; margin: 15px 0; }
-    
-    /* المواصفات */
-    .specs-list {
-        list-style: none; padding: 0; margin: 20px 0;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-        border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 15px 0;
-    }
-    .specs-list li { color: #ddd; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-    
-    /* الوصف (عشان ميبوظش الدنيا لو طويل) */
-    .property-description-box {
-        max-height: 300px; /* حد أقصى للارتفاع */
-        overflow-y: auto;  /* سكرول لو الكلام كتير */
+      .page-title {
+        font-size: 1.6rem;
+        margin: 10px 0;
+        line-height: 1.4;
+        color: white;
+      }
+      .detail-price {
+        font-size: 1.8rem;
+        color: var(--neon-primary);
+        font-weight: bold;
+        margin: 15px 0;
+      }
+
+      .specs-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+        padding: 15px 0;
+      }
+      .specs-list li {
+        color: #ddd;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .property-description-box {
+        max-height: 300px;
+        overflow-y: auto;
         padding-right: 5px;
         margin-top: 20px;
         line-height: 1.6;
         color: #ccc;
-    }
-    /* تخصيص السكرول بار */
-    .property-description-box::-webkit-scrollbar { width: 5px; }
-    .property-description-box::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+      }
+      .property-description-box::-webkit-scrollbar {
+        width: 5px;
+      }
+      .property-description-box::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 10px;
+      }
 
-    /* --- 5. معرض الصور --- */
-    .image-gallery-frame {
+      .image-gallery-frame {
         background: var(--card-bg);
         border-radius: 16px;
         padding: 10px;
         border: 1px solid #333;
         height: fit-content;
-    }
+      }
 
-    .main-image-container {
+      .main-image-container {
         position: relative;
-        height: 400px; /* ارتفاع ثابت للصورة الكبيرة */
+        height: 400px;
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 15px;
         border: 1px solid #444;
-    }
-    .main-image { width: 100%; height: 100%; object-fit: cover; }
+      }
+      .main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-    /* شريط الصور المصغرة */
-    .image-thumbnails {
+      .image-thumbnails {
         display: flex;
         gap: 10px;
         overflow-x: auto;
         padding-bottom: 5px;
-    }
-    .thumbnail-image {
-        width: 80px; height: 80px; flex-shrink: 0; /* يمنع الانكماش */
-        border-radius: 8px; object-fit: cover;
-        cursor: pointer; opacity: 0.6; border: 2px solid transparent; transition: 0.3s;
-    }
-    .thumbnail-image.active, .thumbnail-image:hover { opacity: 1; border-color: var(--neon-primary); }
+      }
+      .thumbnail-image {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        object-fit: cover;
+        cursor: pointer;
+        opacity: 0.6;
+        border: 2px solid transparent;
+        transition: 0.3s;
+      }
+      .thumbnail-image.active,
+      .thumbnail-image:hover {
+        opacity: 1;
+        border-color: var(--neon-primary);
+      }
 
-    /* أزرار التنقل */
-    .gallery-nav-btn {
-        position: absolute; top: 50%; transform: translateY(-50%);
-        background: rgba(0,0,0,0.6); color: white; border: none;
-        width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;
-    }
-    .prev-btn { left: 10px; } .next-btn { right: 10px; }
+      .gallery-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
+      .prev-btn {
+        left: 10px;
+      }
+      .next-btn {
+        right: 10px;
+      }
 
-    /* --- 6. عناصر إضافية (بادجات، أزرار) --- */
-    .property-type { padding: 5px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; margin-left: 10px; }
-    .sale { background: var(--neon-primary); color: black; }
-    .rent { background: var(--neon-secondary); color: black; }
-    
-    .badge-featured-main {
-        display: inline-block; background: linear-gradient(45deg, #FFD700, #FFA500);
-        color: black; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;
+      .property-type {
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+      .sale {
+        background: var(--neon-primary);
+        color: black;
+      }
+      .rent {
+        background: var(--neon-secondary);
+        color: black;
+      }
+
+      .badge-featured-main {
+        display: inline-block;
+        background: linear-gradient(45deg, #ffd700, #ffa500);
+        color: black;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.85rem;
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-    }
+      }
 
-    .btn-neon-auth {
-        border: 1px solid var(--neon-primary); color: var(--neon-primary); background: transparent;
-        padding: 12px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1rem;
-        display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; width: 100%;
-    }
-    .action-buttons-group { display: flex; gap: 10px; margin-top: 15px; }
+      .btn-neon-auth {
+        border: 1px solid var(--neon-primary);
+        color: var(--neon-primary);
+        background: transparent;
+        padding: 12px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: 0.3s;
+        width: 100%;
+      }
+      .action-buttons-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
 
-    /* --- 🔥 7. حل مشاكل الموبايل (Mobile Fixes) 🔥 --- */
-    @media (max-width: 900px) {
+      @media (max-width: 900px) {
         .property-detail-container {
-            margin: 15px auto;
-            padding: 0 10px;
+          margin: 15px auto;
+          padding: 0 10px;
         }
 
         .details-layout {
-            /* تحويل الشبكة لعمود واحد */
-            grid-template-columns: 1fr;
-            gap: 20px;
-            display: flex;       /* نستخدم فليكس للتحكم في الترتيب */
-            flex-direction: column; 
+          grid-template-columns: 1fr;
+          gap: 20px;
+          display: flex;
+          flex-direction: column;
         }
 
-        /* ✅ الحل السحري لترتيب الموبايل: المعلومات أولاً ثم الصور */
         .details-info-frame {
-            order: 1; /* يظهر أولاً */
-            width: 100%;
-            box-sizing: border-box; /* يمنع الخروج عن الشاشة */
+          order: 1;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .image-gallery-frame {
-            order: 2; /* يظهر ثانياً */
-            width: 100%;
-            box-sizing: border-box;
+          order: 2;
+          width: 100%;
+          box-sizing: border-box;
         }
 
-        /* تحسين حجم الصور في الموبايل */
         .main-image-container {
-            height: 280px; /* تصغير الارتفاع قليلاً */
+          height: 280px;
         }
-        
-        .page-title { font-size: 1.4rem; }
-        .detail-price { font-size: 1.6rem; }
-        
-        /* جعل الأزرار تأتي تحت بعض في الموبايل */
-        .action-buttons-group { flex-direction: column; }
-    }
 
-    /* ستايلات المودال (الصور والاوفر) */
-    .modal-overlay, .lightbox-overlay {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-    }
-    .modal-content { background: #1c2630; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; border: 1px solid var(--neon-primary); position: relative; }
-    .lightbox-content img { max-width: 100%; max-height: 80vh; border-radius: 10px; }
-    .close-modal, .close-lightbox { position: absolute; top: 15px; left: 15px; color: white; font-size: 1.5rem; cursor: pointer; }
-    .lightbox-btn { position: absolute; background: none; border: none; color: white; font-size: 2rem; cursor: pointer; padding: 10px; z-index: 2001; }
-    .prev-lightbox { left: 10px; } .next-lightbox { right: 10px; }
-    
-    /* فورم العرض */
-    .input-group { margin-bottom: 15px; }
-    .input-group label { display: block; color: #aaa; margin-bottom: 5px; }
-    .neon-input-white { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-    .btn-offer-submit { width: 100%; background: var(--neon-primary); border: none; padding: 12px; border-radius: 50px; font-weight: bold; cursor: pointer; }
-    /* --- 🧠 صندوق تحليل الـ AI --- */
-.ai-insight-box {
-    background: rgba(0, 212, 255, 0.03); /* خلفية زرقاء خفيفة جداً */
-    border: 1px solid var(--neon-secondary);
-    border-radius: 12px;
-    padding: 20px;
-    margin: 25px 0;
-    position: relative;
-    overflow: hidden;
-}
+        .page-title {
+          font-size: 1.4rem;
+        }
+        .detail-price {
+          font-size: 1.6rem;
+        }
 
-.ai-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 10px;
-}
+        .action-buttons-group {
+          flex-direction: column;
+        }
+      }
 
-.ai-icon {
-    font-size: 2.5rem;
-    color: var(--neon-secondary);
-    animation: float 3s ease-in-out infinite; /* حركة طفو */
-}
+      .modal-overlay,
+      .lightbox-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      }
+      .modal-content {
+        background: #1c2630;
+        padding: 25px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 450px;
+        border: 1px solid var(--neon-primary);
+        position: relative;
+      }
+      .lightbox-content img {
+        max-width: 100%;
+        max-height: 80vh;
+        border-radius: 10px;
+      }
+      .close-modal,
+      .close-lightbox {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      .lightbox-btn {
+        position: absolute;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        padding: 10px;
+        z-index: 2001;
+      }
+      .prev-lightbox {
+        left: 10px;
+      }
+      .next-lightbox {
+        right: 10px;
+      }
 
-.ai-header h4 {
-    margin: 0;
-    color: white;
-    font-size: 1.2rem;
-}
+      .input-group {
+        margin-bottom: 15px;
+      }
+      .input-group label {
+        display: block;
+        color: #aaa;
+        margin-bottom: 5px;
+      }
+      .neon-input-white {
+        width: 100%;
+        padding: 10px;
+        background: #222;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 8px;
+        box-sizing: border-box;
+      }
+      .btn-offer-submit {
+        width: 100%;
+        background: var(--neon-primary);
+        border: none;
+        padding: 12px;
+        border-radius: 50px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .ai-insight-box {
+        background: rgba(0, 212, 255, 0.03);
+        border: 1px solid var(--neon-secondary);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 25px 0;
+        position: relative;
+        overflow: hidden;
+      }
 
-.ai-subtitle {
-    font-size: 0.8rem;
-    color: var(--neon-secondary);
-    font-weight: bold;
-    letter-spacing: 0.5px;
-}
+      .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+      }
 
-.ai-content p {
-    color: #ddd;
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
+      .ai-icon {
+        font-size: 2.5rem;
+        color: var(--neon-secondary);
+        animation: float 3s ease-in-out infinite;
+      }
 
-.services-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
+      .ai-header h4 {
+        margin: 0;
+        color: white;
+        font-size: 1.2rem;
+      }
 
-.service-tag {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid #444;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: 0.3s;
-}
+      .ai-subtitle {
+        font-size: 0.8rem;
+        color: var(--neon-secondary);
+        font-weight: bold;
+        letter-spacing: 0.5px;
+      }
 
-.service-tag i { color: var(--neon-primary); }
+      .ai-content p {
+        color: #ddd;
+        line-height: 1.6;
+        margin-bottom: 15px;
+      }
 
-.service-tag:hover {
-    border-color: var(--neon-secondary);
-    background: rgba(0, 212, 255, 0.1);
-    transform: translateY(-2px);
-}
+      .services-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-/* ============================================================
-   💎 ستايلات مودال التميز الفخم (Luxury Glass Modal)
-   ============================================================ */
-.glass-modal-overlay {
-    display: none; 
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9); z-index: 10001;
-    justify-content: center; align-items: center;
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    perspective: 1000px; /* عمق ثلاثي الأبعاد */
-}
+      .service-tag {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #444;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: 0.3s;
+      }
 
-.glass-card {
-    background: linear-gradient(145deg, rgba(30, 30, 30, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
-    border: 1px solid rgba(255, 215, 0, 0.3); /* حدود ذهبية خفيفة */
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(255, 215, 0, 0.05);
-    border-radius: 25px;
-    padding: 30px 20px;
-    width: 90%; max-width: 400px;
-    text-align: center;
-    position: relative;
-    transform-style: preserve-3d;
-    animation: cardFloat 6s ease-in-out infinite;
-}
+      .service-tag i {
+        color: var(--neon-primary);
+      }
 
-/* التاج المتحرك 3D */
-.crown-3d-container {
-    font-size: 3.5rem;
-    color: #FFD700;
-    margin-bottom: 15px;
-    text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
-    animation: crownRotate 5s infinite linear;
-    display: inline-block;
-}
+      .service-tag:hover {
+        border-color: var(--neon-secondary);
+        background: rgba(0, 212, 255, 0.1);
+        transform: translateY(-2px);
+      }
 
-/* خيارات الباقات */
-.plan-radio-label {
-    display: flex; justify-content: space-between; align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #444;
-    padding: 12px 15px; border-radius: 12px;
-    margin-bottom: 12px; cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative; overflow: hidden;
-}
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+      .glass-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10001;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        perspective: 1000px;
+      }
 
-.plan-radio-label:hover {
-    border-color: #FFD700;
-    background: rgba(255, 215, 0, 0.05);
-    transform: translateX(-5px);
-}
+      .glass-card {
+        background: linear-gradient(
+          145deg,
+          rgba(30, 30, 30, 0.9) 0%,
+          rgba(20, 20, 20, 0.95) 100%
+        );
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 50px rgba(255, 215, 0, 0.15),
+          inset 0 0 20px rgba(255, 215, 0, 0.05);
+        border-radius: 25px;
+        padding: 30px 20px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: cardFloat 6s ease-in-out infinite;
+      }
 
-/* عند اختيار باقة (تأثير التفعيل) */
-.plan-radio-input:checked + .plan-radio-label {
-    border-color: #FFD700;
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-}
+      .crown-3d-container {
+        font-size: 3.5rem;
+        color: #ffd700;
+        margin-bottom: 15px;
+        text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+        animation: crownRotate 5s infinite linear;
+        display: inline-block;
+      }
 
-/* إخفاء الدوائر الزرقاء القديمة */
-.plan-radio-input { display: none; }
+      .plan-radio-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid #444;
+        padding: 12px 15px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
 
-/* النصوص */
-.plan-title { display: block; color: white; font-weight: bold; font-size: 1rem; }
-.plan-sub { font-size: 0.8rem; color: #aaa; }
-.plan-price { color: #FFD700; font-weight: bold; font-size: 1.1rem; }
+      .plan-radio-label:hover {
+        border-color: #ffd700;
+        background: rgba(255, 215, 0, 0.05);
+        transform: translateX(-5px);
+      }
 
-/* زر التفعيل الذهبي */
-.btn-gold-3d {
-    background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
-    background-size: 200% 200%;
-    color: #000; border: none; padding: 15px; width: 100%;
-    border-radius: 50px; font-weight: bold; font-size: 1.1rem;
-    cursor: pointer; margin-top: 20px;
-    box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
-    transition: 0.3s;
-    animation: goldShine 3s infinite linear;
-}
+      .plan-radio-input:checked + .plan-radio-label {
+        border-color: #ffd700;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 215, 0, 0.15),
+          transparent
+        );
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+      }
 
-.btn-gold-3d:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6); }
+      .plan-radio-input {
+        display: none;
+      }
 
-/* الأنيميشن */
-@keyframes crownRotate { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-@keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes goldShine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-/* --- 🛠️ إصلاح أسهم معرض الصور (Gallery Arrows Fix) --- */
-    .main-image-container {
-        position: relative !important; /* ضروري عشان الأسهم تفضل جوه الصندوق */
-        overflow: hidden; /* يمنع خروج الصورة عن الحواف */
-    }
+      .plan-title {
+        display: block;
+        color: white;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+      .plan-sub {
+        font-size: 0.8rem;
+        color: #aaa;
+      }
+      .plan-price {
+        color: #ffd700;
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
 
-    .gallery-nav-btn {
+      .btn-gold-3d {
+        background: linear-gradient(45deg, #ffd700, #ffa500, #ffd700);
+        background-size: 200% 200%;
+        color: #000;
+        border: none;
+        padding: 15px;
+        width: 100%;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        margin-top: 20px;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        transition: 0.3s;
+        animation: goldShine 3s infinite linear;
+      }
+
+      .btn-gold-3d:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+      }
+
+      @keyframes crownRotate {
+        0% {
+          transform: rotateY(0deg);
+        }
+        100% {
+          transform: rotateY(360deg);
+        }
+      }
+      @keyframes cardFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+      @keyframes goldShine {
+        0% {
+          background-position: 0% 50%;
+        }
+        100% {
+          background-position: 100% 50%;
+        }
+      }
+      .main-image-container {
+        position: relative !important;
+        overflow: hidden;
+      }
+
+      .gallery-nav-btn {
         position: absolute !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        z-index: 10 !important; /* يرفع الأسهم فوق الصورة وأي بادجات */
-        width: 45px !important;   /* تكبير الزر قليلاً */
+        z-index: 10 !important;
+        width: 45px !important;
         height: 45px !important;
         border-radius: 50%;
-        background: rgba(0, 0, 0, 0.6) !important; /* خلفية داكنة واضحة */
+        background: rgba(0, 0, 0, 0.6) !important;
         color: white !important;
         border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        display: flex !important;       /* فليكس بوكس لتوسيط السهم نفسه */
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
 
-    .gallery-nav-btn:hover {
+      .gallery-nav-btn:hover {
         background: var(--neon-primary) !important;
         color: black !important;
         border-color: var(--neon-primary) !important;
-    }
+      }
 
-    /* تحديد مكان السهم اليمين واليسار بدقة */
-    .prev-btn {
-        left: 15px !important;   /* تثبيت في اليسار */
-        right: auto !important;  /* إلغاء أي قيمة لليمين */
-    }
+      .prev-btn {
+        left: 15px !important;
+        right: auto !important;
+      }
 
-    .next-btn {
-        right: 15px !important;  /* تثبيت في اليمين */
-        left: auto !important;   /* إلغاء أي قيمة للييسار */
-    }
+      .next-btn {
+        right: 15px !important;
+        left: auto !important;
+      }
 
-    /* في الموبايل نصغرهم شوية عشان مايغطوش الصورة */
-    @media (max-width: 600px) {
+      @media (max-width: 600px) {
         .gallery-nav-btn {
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 0.9rem !important;
+          width: 35px !important;
+          height: 35px !important;
+          font-size: 0.9rem !important;
         }
-        .prev-btn { left: 10px !important; }
-        .next-btn { right: 10px !important; }
-    }
-    /* علامة التوثيق الذهبية (مثل فيسبوك) */
-/* 🔥 تصميم علامة التوثيق الذهبية (ستايل فيسبوك) 🔥 */
-.fb-gold-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;  
-    height: 18px;
-    background-color: #FFD700; /* خلفية ذهبية */
-    color: #fff; /* علامة الصح بيضاء */
-    border-radius: 50%;
-    font-size: 10px; 
-    margin-right: 5px;
-    border: 1.5px solid #fff; 
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); 
-    vertical-align: middle;
-    transform: translateY(-1px);
-}/* ==========================================================
-   🔍 إصلاح أسهم التكبير (Lightbox Modal Arrows)
-   ========================================================== */
+        .prev-btn {
+          left: 10px !important;
+        }
+        .next-btn {
+          right: 10px !important;
+        }
+      }
+      .fb-gold-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background-color: #ffd700;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        margin-right: 5px;
+        border: 1.5px solid #fff;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        vertical-align: middle;
+        transform: translateY(-1px);
+      }
 
-/* 1. تنسيق الزر العام */
-.lightbox-btn {
-    position: absolute;
-    top: 50% !important;        /* التوسط العمودي */
-    transform: translateY(-50%) !important; /* ضبط التوسط بدقة */
-    width: 50px;
-    height: 50px;
-    background: rgba(0, 0, 0, 0.7) !important; /* خلفية سوداء شفافة */
-    color: #fff !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 50%;         /* جعل الزر دائري */
-    font-size: 1.5rem !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 2010 !important;   /* التأكد أنه فوق الصورة */
-    transition: all 0.3s ease;
-    padding: 0 !important;      /* إلغاء أي حشو قديم */
-}
+      .lightbox-btn {
+        position: absolute;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.7) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 50%;
+        font-size: 1.5rem !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2010 !important;
+        transition: all 0.3s ease;
+        padding: 0 !important;
+      }
 
-/* 2. تأثير عند المرور */
-.lightbox-btn:hover {
-    background: var(--neon-primary) !important;
-    color: black !important;
-    border-color: var(--neon-primary) !important;
-    transform: translateY(-50%) scale(1.1) !important; /* تكبير بسيط */
-}
+      .lightbox-btn:hover {
+        background: var(--neon-primary) !important;
+        color: black !important;
+        border-color: var(--neon-primary) !important;
+        transform: translateY(-50%) scale(1.1) !important;
+      }
 
-/* 3. تحديد الأماكن بدقة */
-.prev-lightbox {
-    left: 20px !important;
-    right: auto !important;
-}
+      .prev-lightbox {
+        left: 20px !important;
+        right: auto !important;
+      }
 
-.next-lightbox {
-    right: 20px !important;
-    left: auto !important;
-}
+      .next-lightbox {
+        right: 20px !important;
+        left: auto !important;
+      }
 
-/* 4. تحسين زر الإغلاق (X) ليتماشى معهم */
-.close-lightbox {
-    position: absolute;
-    top: 20px;
-    left: 20px; /* أو right حسب تفضيلك */
-    font-size: 2rem;
-    color: #fff;
-    cursor: pointer;
-    z-index: 2010;
-    background: rgba(0,0,0,0.5);
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: 0.3s;
-}
-.close-lightbox:hover {
-    background: #ff4444;
-    transform: rotate(90deg);
-}
-
-/* 📱 تحسينات للموبايل */
-@media (max-width: 600px) {
-    .lightbox-btn {
+      .close-lightbox {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 2rem;
+        color: #fff;
+        cursor: pointer;
+        z-index: 2010;
+        background: rgba(0, 0, 0, 0.5);
         width: 40px;
         height: 40px;
-        font-size: 1.2rem !important;
-    }
-    .prev-lightbox { left: 10px !important; }
-    .next-lightbox { right: 10px !important; }
-}
-</style>
-</head>
-<body class="internal-page">
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: 0.3s;
+      }
+      .close-lightbox:hover {
+        background: #ff4444;
+        transform: rotate(90deg);
+      }
 
+      @media (max-width: 600px) {
+        .lightbox-btn {
+          width: 40px;
+          height: 40px;
+          font-size: 1.2rem !important;
+        }
+        .prev-lightbox {
+          left: 10px !important;
+        }
+        .next-lightbox {
+          right: 10px !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="internal-page">
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <a href="home" style="display: flex; align-items: center; text-decoration: none; gap: 10px;">
-                    <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                    <span style="color: white; font-weight: bold;">عقارك</span>
-                </a>
-            </div>
-             <nav class="main-nav">
-                <a href="home" class="nav-button">الرئيسية <i class="fas fa-home"></i></a>
-            </nav>
+      <div class="header-container">
+        <div class="logo-container">
+          <a
+            href="home"
+            style="
+              display: flex;
+              align-items: center;
+              text-decoration: none;
+              gap: 10px;
+            "
+          >
+            <img src="logo.jpg" alt="شعار عقارك" class="logo" />
+            <span style="color: white; font-weight: bold">عقارك</span>
+          </a>
         </div>
+        <nav class="main-nav">
+          <a href="home" class="nav-button"
+            >الرئيسية <i class="fas fa-home"></i
+          ></a>
+        </nav>
+      </div>
     </header>
 
     <main class="main-content">
-        <div class="property-detail-container" id="property-detail-container">
-            <div id="loading-message" style="text-align: center; padding: 50px; color: var(--neon-primary);">
-                <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                <p>جاري تحميل التفاصيل...</p>
-            </div>
+      <div class="property-detail-container" id="property-detail-container">
+        <div
+          id="loading-message"
+          style="text-align: center; padding: 50px; color: var(--neon-primary)"
+        >
+          <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+          <p>جاري تحميل التفاصيل...</p>
         </div>
+      </div>
     </main>
 
     <div id="lightbox-modal" class="lightbox-overlay">
-        <span class="close-lightbox">&times;</span>
-        <button class="lightbox-btn prev-lightbox">❮</button>
-        <div class="lightbox-content" style="text-align: center;">
-            <img id="lightbox-img" src="" alt="صورة مكبرة">
-            <div class="lightbox-counter" style="color: white; margin-top: 10px;"></div>
-        </div>
-        <button class="lightbox-btn next-lightbox">❯</button>
+      <span class="close-lightbox">&times;</span>
+      <button class="lightbox-btn prev-lightbox">❮</button>
+      <div class="lightbox-content" style="text-align: center">
+        <img id="lightbox-img" src="" alt="صورة مكبرة" />
+        <div
+          class="lightbox-counter"
+          style="color: white; margin-top: 10px"
+        ></div>
+      </div>
+      <button class="lightbox-btn next-lightbox">❯</button>
     </div>
 
     <div id="offer-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeOfferModal()">&times;</span>
-            <h3 style="color: var(--neon-secondary); text-align: center; margin-bottom: 15px;">
-                <i class="fas fa-money-bill-wave"></i> تقديم عرض سعر
-            </h3>
-            <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 20px;">
-                أدخل السعر المناسب لك وسنقوم بإبلاغ المالك.
-            </p>
-            <form id="offer-form">
-                <div class="input-group">
-                    <label>الاسم</label>
-                    <input type="text" id="offer-name" class="neon-input-white" required>
-                </div>
-                <div class="input-group">
-                    <label>رقم الهاتف</label>
-                    <input type="tel" id="offer-phone" class="neon-input-white" required>
-                </div>
-                <div class="input-group">
-                    <label>سعر العرض (ج.م)</label>
-                    <input type="number" id="offer-price" class="neon-input-white" placeholder="مثال: 1500000" required>
-                </div>
-                <button type="submit" class="btn-offer-submit">إرسال العرض</button>
-            </form>
-        </div>
+      <div class="modal-content">
+        <span class="close-modal" onclick="closeOfferModal()">&times;</span>
+        <h3
+          style="
+            color: var(--neon-secondary);
+            text-align: center;
+            margin-bottom: 15px;
+          "
+        >
+          <i class="fas fa-money-bill-wave"></i> تقديم عرض سعر
+        </h3>
+        <p
+          style="
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+          "
+        >
+          أدخل السعر المناسب لك وسنقوم بإبلاغ المالك.
+        </p>
+        <form id="offer-form">
+          <div class="input-group">
+            <label>الاسم</label>
+            <input
+              type="text"
+              id="offer-name"
+              class="neon-input-white"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <label>رقم الهاتف</label>
+            <input
+              type="tel"
+              id="offer-phone"
+              class="neon-input-white"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <label>سعر العرض (ج.م)</label>
+            <input
+              type="number"
+              id="offer-price"
+              class="neon-input-white"
+              placeholder="مثال: 1500000"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-offer-submit">إرسال العرض</button>
+        </form>
+      </div>
     </div>
 
     <div class="modal-overlay" id="report-modal">
-    <div class="modal-content" style="border-color: #ff4444;">
-        <span class="close-modal" onclick="document.getElementById('report-modal').style.display='none'">&times;</span>
-        <h3 style="color: #ff4444; margin-bottom: 15px; text-align: center;"><i class="fas fa-exclamation-triangle"></i> إبلاغ عن المعلن</h3>
-        <p style="text-align: center; color: #ccc; font-size: 0.9rem; margin-bottom: 20px;">سيتم مراجعة البلاغ، ولن تظهر لك إعلانات هذا المستخدم مرة أخرى.</p>
-        
-        <textarea id="report-reason" class="neon-input-white" rows="3" placeholder="سبب الإبلاغ (اختياري)..." style="width: 100%; margin-bottom: 15px; background: #222; color: white; border: 1px solid #444;"></textarea>
-        
-        <button onclick="submitUserReport()" style="width: 100%; background: #ff4444; border: none; padding: 12px; border-radius: 50px; color: white; font-weight: bold; cursor: pointer;">تأكيد الإبلاغ</button>
-    </div>
-</div>
+      <div class="modal-content" style="border-color: #ff4444">
+        <span
+          class="close-modal"
+          onclick="document.getElementById('report-modal').style.display='none'"
+          >&times;</span
+        >
+        <h3 style="color: #ff4444; margin-bottom: 15px; text-align: center">
+          <i class="fas fa-exclamation-triangle"></i> إبلاغ عن المعلن
+        </h3>
+        <p
+          style="
+            text-align: center;
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+          "
+        >
+          سيتم مراجعة البلاغ، ولن تظهر لك إعلانات هذا المستخدم مرة أخرى.
+        </p>
 
-    <footer class="main-footer" style="text-align: center; padding: 20px; border-top: 1px solid #333; margin-top: 40px; color: #777;">
-        <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+        <textarea
+          id="report-reason"
+          class="neon-input-white"
+          rows="3"
+          placeholder="سبب الإبلاغ (اختياري)..."
+          style="
+            width: 100%;
+            margin-bottom: 15px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+          "
+        ></textarea>
+
+        <button
+          onclick="submitUserReport()"
+          style="
+            width: 100%;
+            background: #ff4444;
+            border: none;
+            padding: 12px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+          "
+        >
+          تأكيد الإبلاغ
+        </button>
+      </div>
+    </div>
+
+    <footer
+      class="main-footer"
+      style="
+        text-align: center;
+        padding: 20px;
+        border-top: 1px solid #333;
+        margin-top: 40px;
+        color: #777;
+      "
+    >
+      <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
     </footer>
 
     <script src="guest.js"></script>
-    <script src="utils.js"></script> 
+    <script src="utils.js"></script>
     <script type="module" src="property-details.js"></script>
     <script src="app.js"></script>
     <script src="reload.js"></script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
-</body>
+  </body>
 </html>

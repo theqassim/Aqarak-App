@@ -1,7 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. 🎨 حقن تصميم ومحتوى مودال الخروج الفخم (مرة واحدة)
-    const logoutModalHTML = `
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. 🎨 حقن تصميم ومحتوى مودال الخروج الفخم (مرة واحدة)
+  const logoutModalHTML = `
         <style>
             #luxLogoutModal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
             .lux-logout-card { 
@@ -40,67 +39,71 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', logoutModalHTML);
+  document.body.insertAdjacentHTML("beforeend", logoutModalHTML);
 
-    // 2. تعريف العناصر
-    const modal = document.getElementById('luxLogoutModal');
-    const confirmBtn = document.getElementById('confirmLogoutBtn');
-    const cancelBtn = document.getElementById('cancelLogoutBtn');
-    
-    // 3. دالة تنفيذ الخروج الفعلية
-    async function performLogout() {
-        try {
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الخروج...'; 
-            confirmBtn.disabled = true;
-            
-            // طلب للسيرفر لمسح الكوكيز
-            await fetch('/api/logout', { method: 'POST' });
+  // 2. تعريف العناصر
+  const modal = document.getElementById("luxLogoutModal");
+  const confirmBtn = document.getElementById("confirmLogoutBtn");
+  const cancelBtn = document.getElementById("cancelLogoutBtn");
 
-            // مسح البيانات المحلية
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('userPhone');
-            localStorage.removeItem('username');
-            localStorage.clear();
-            
-            // التوجيه
-            window.location.href = 'index'; 
-        } catch (error) {
-            console.error('Logout failed:', error);
-            // تنظيف إجباري في حالة الخطأ
-            localStorage.clear();
-            window.location.href = 'index';
-        }
+  // 3. دالة تنفيذ الخروج الفعلية
+  async function performLogout() {
+    try {
+      confirmBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> جاري الخروج...';
+      confirmBtn.disabled = true;
+
+      // طلب للسيرفر لمسح الكوكيز
+      await fetch("/api/logout", { method: "POST" });
+
+      // مسح البيانات المحلية
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userPhone");
+      localStorage.removeItem("username");
+      localStorage.clear();
+
+      // التوجيه
+      window.location.href = "index";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // تنظيف إجباري في حالة الخطأ
+      localStorage.clear();
+      window.location.href = "index";
     }
+  }
 
-    // إغلاق المودال
-    cancelBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+  // إغلاق المودال
+  cancelBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
 
-    // إغلاق عند الضغط خارج الكارت
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-    });
+  // إغلاق عند الضغط خارج الكارت
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  });
 
-    // 4. معالجة إعادة تحميل الصفحة (للكاش)
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            window.location.reload();
-        }
-    });
+  // 4. معالجة إعادة تحميل الصفحة (للكاش)
+  window.addEventListener("pageshow", function (event) {
+    if (
+      event.persisted ||
+      (window.performance && window.performance.navigation.type === 2)
+    ) {
+      window.location.reload();
+    }
+  });
 
-    // 5. ربط الأزرار بالمودال الجديد
-    const logoutButtons = document.querySelectorAll('.logout-btn');
-    
-    logoutButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            // فتح المودال الفخم بدلاً من confirm()
-            modal.style.display = 'flex';
-            
-            // ربط زر التأكيد داخل المودال
-            confirmBtn.onclick = performLogout;
-        });
+  // 5. ربط الأزرار بالمودال الجديد
+  const logoutButtons = document.querySelectorAll(".logout-btn");
+
+  logoutButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      // فتح المودال الفخم بدلاً من confirm()
+      modal.style.display = "flex";
+
+      // ربط زر التأكيد داخل المودال
+      confirmBtn.onclick = performLogout;
     });
+  });
 });
