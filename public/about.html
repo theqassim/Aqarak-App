@@ -218,6 +218,57 @@
             .hero-title { font-size: 2.2rem; }
             .stats-container { gap: 30px; }
         }
+        /* --- تنسيقات صور المؤسسين والأنيميشن --- */
+@keyframes float-pulse {
+    0% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.2);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 15px 25px rgba(13, 110, 253, 0.3);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.2);
+    }
+}
+
+.founder-img {
+    width: 160px;       /* حجم الصورة */
+    height: 160px;
+    object-fit: cover;  /* عشان الصورة متتمطش */
+    border-radius: 50%; /* يخليها دائرية */
+    border: 3px solid #fff;
+    animation: float-pulse 4s ease-in-out infinite; /* تشغيل الأنيميشن */
+    margin-bottom: 15px;
+}
+/* تنسيق الصورة الدائرية والأنيميشن */
+.founder-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%; /* دائرة كاملة */
+    object-fit: cover;
+    border: 3px solid var(--neon-primary); /* إطار نيون */
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    animation: float-pulse 4s ease-in-out infinite; /* تشغيل الأنيميشن */
+}
+
+/* تعريف حركة الطفو والنبض */
+@keyframes float-pulse {
+    0% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+    }
+    50% {
+        transform: translateY(-10px) scale(1.05);
+        box-shadow: 0 15px 25px rgba(0, 255, 136, 0.4);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+    }
+}
     </style>
 </head>
 <body>
@@ -264,7 +315,7 @@
 
     <section class="story-section reveal">
         <div class="story-img">
-            <img src="logo.jpg" alt="Aqarak Vision">
+            <img src="logo.png" alt="Aqarak Vision">
         </div>
         <div class="story-content">
             <h2>رؤيتنا وهدفنا</h2>
@@ -294,50 +345,51 @@
 
     <section class="founders-section">
         <h2 class="reveal" style="text-align: center; margin-bottom: 50px; font-size: 2.2rem; color: white;">فريق القيادة</h2>
-        
         <div class="founders-grid">
-            
-            <div class="founder-card reveal delay-1">
-                <div class="img-wrapper">
-                    <img src="qassim.jpg" alt="Qassim Ahmed" onerror="this.src='logo.jpg'">
-                </div>
-                <div class="founder-info">
-                    <h3 class="founder-name">قاسم أحمد</h3>
-                    <span class="founder-role">المؤسس & المدير التنفيذي (CEO)</span>
-                    
-                    <div class="role-badges">
-                        <span class="role-badge badge-law"><i class="fas fa-balance-scale"></i> قانوني</span>
-                        <span class="role-badge badge-tech"><i class="fas fa-code"></i> مبرمج Full-Stack</span>
-                        <span class="role-badge badge-tech"><i class="fab fa-google"></i> خبير SEO</span>
-                    </div>
-
-                    <p class="founder-bio">
-                        طالب في المجال القانوني، وهو العقل المدبر وراء البنية البرمجية للمنصة. يجمع بين الخبرة القانونية لضمان سلامة التعاملات، والمهارة التقنية العالية لضمان ظهور العقارات في صدارة محركات البحث.
-                    </p>
-                </div>
-            </div>
-
-            <div class="founder-card reveal delay-2">
-                <div class="img-wrapper">
-                    <img src="ammar.jpg" alt="Ammar Mohsen" onerror="this.src='logo.jpg'">
-                </div>
-                <div class="founder-info">
-                    <h3 class="founder-name">عمار محسن</h3>
-                    <span class="founder-role">الشريك المؤسس & مدير العمليات (COO)</span>
-                    
-                    <div class="role-badges">
-                        <span class="role-badge badge-biz"><i class="fas fa-chart-line"></i> إدارة أعمال</span>
-                        <span class="role-badge badge-biz"><i class="fas fa-lightbulb"></i> تسويق</span>
-                        <span class="role-badge badge-biz"><i class="fas fa-tasks"></i> إدارة عمليات</span>
-                    </div>
-
-                    <p class="founder-bio">
-                        طالب إدارة أعمال، والمسؤول الأول عن الاستراتيجيات والتطوير الإداري. يقود فريق التسويق ويحول الأفكار الإبداعية إلى واقع ملموس، مما يضمن نمو المنصة وانتشارها القوي في السوق.
-                    </p>
-                </div>
-            </div>
-
+    
+    <div class="founder-card reveal delay-1">
+        <div style="text-align: center; padding-top: 25px;">
+            <img src="qassim.jpg" alt="Qassim Ahmed" class="founder-img" onerror="this.src='logo.jpg'">
         </div>
+
+        <div class="founder-info">
+            <h3 class="founder-name">قاسم أحمد</h3>
+            <span class="founder-role">المؤسس & المدير التنفيذي (CEO)</span>
+            
+            <div class="role-badges">
+                <span class="role-badge badge-law"><i class="fas fa-balance-scale"></i> قانوني</span>
+                <span class="role-badge badge-tech"><i class="fas fa-code"></i> مبرمج Full-Stack</span>
+                <span class="role-badge badge-tech"><i class="fab fa-google"></i> خبير SEO</span>
+            </div>
+
+            <p class="founder-bio">
+                طالب في المجال القانوني، وهو العقل المدبر وراء البنية البرمجية للمنصة. يجمع بين الخبرة القانونية لضمان سلامة التعاملات، والمهارة التقنية العالية لضمان ظهور العقارات في صدارة محركات البحث.
+            </p>
+        </div>
+    </div>
+
+    <div class="founder-card reveal delay-2">
+        <div style="text-align: center; padding-top: 25px;">
+            <img src="ammar.jpg" alt="Ammar Mohsen" class="founder-img" onerror="this.src='logo.jpg'">
+        </div>
+
+        <div class="founder-info">
+            <h3 class="founder-name">عمار محسن</h3>
+            <span class="founder-role">الشريك المؤسس & مدير العمليات (COO)</span>
+            
+            <div class="role-badges">
+                <span class="role-badge badge-biz"><i class="fas fa-chart-line"></i> إدارة أعمال</span>
+                <span class="role-badge badge-biz"><i class="fas fa-lightbulb"></i> تسويق</span>
+                <span class="role-badge badge-biz"><i class="fas fa-tasks"></i> إدارة عمليات</span>
+            </div>
+
+            <p class="founder-bio">
+                طالب إدارة أعمال، والمسؤول الأول عن الاستراتيجيات والتطوير الإداري. يقود فريق التسويق ويحول الأفكار الإبداعية إلى واقع ملموس، مما يضمن نمو المنصة وانتشارها القوي في السوق.
+            </p>
+        </div>
+    </div>
+
+</div>
     </section>
 
     <div class="contact-btn-wrapper reveal delay-3">
