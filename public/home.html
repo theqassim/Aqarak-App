@@ -426,6 +426,153 @@
         border: none;
     }
 }
+/* =========================================
+   🦶 الفوتر الفخم (محدث للموبايل واللابتوب)
+   ========================================= */
+.main-footer {
+    position: relative;
+    background: #080808;
+    padding: 60px 0 30px;
+    margin-top: 60px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+/* خط الإضاءة العلوي */
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-primary), transparent);
+    box-shadow: 0 0 30px var(--neon-primary);
+    opacity: 0.7;
+}
+
+.footer-content-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    padding: 0 20px; /* هوامش جانبية */
+}
+
+/* حاوية الروابط (لابتوب) */
+.footer-nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px 30px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(5px);
+}
+
+/* شكل الرابط */
+.footer-link-item {
+    color: #bbb;
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-link-item:hover {
+    color: white;
+    background: rgba(0, 255, 136, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
+}
+
+.footer-link-item i { color: #666; transition:0.3s; }
+.footer-link-item:hover i { color: var(--neon-primary); }
+
+/* السوشيال ميديا */
+.footer-social-icons {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.social-icon {
+    width: 45px; height: 45px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex; align-items: center; justify-content: center;
+    color: #aaa; text-decoration: none; font-size: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.4s;
+}
+
+.social-icon:hover {
+    background: var(--neon-primary); color: black;
+    border-color: var(--neon-primary);
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+.copyright-text {
+    color: #555; font-size: 0.85rem; margin-top: 10px;
+}
+.copyright-text span { color: var(--neon-primary); font-weight: bold; }
+
+/* 🔥🔥🔥 تحسينات الموبايل القوية 🔥🔥🔥 */
+@media (max-width: 768px) {
+    .main-footer {
+        padding-bottom: 100px; /* مسافة كبيرة تحت عشان الزراير العائمة */
+    }
+
+    .footer-content-wrapper {
+        gap: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* تحويل الروابط لقائمة رأسية شيك */
+    .footer-nav-links {
+        flex-direction: column;
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 20px; /* تدوير أقل للموبايل */
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03); /* استرجاع الخلفية الزجاجية */
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* جعل الأزرار بعرض كامل */
+    .footer-link-item {
+        width: 100%;
+        justify-content: center; /* توسيط الكلام */
+        background: rgba(0, 0, 0, 0.3); /* خلفية غامقة للزر نفسه */
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-sizing: border-box;
+    }
+    
+    .footer-link-item:hover, .footer-link-item:active {
+        background: rgba(0, 255, 136, 0.15);
+        border-color: var(--neon-primary);
+    }
+
+    /* تكبير وتوسيط السوشيال ميديا */
+    .footer-social-icons {
+        gap: 15px;
+    }
+    .social-icon {
+        width: 40px; height: 40px; font-size: 1rem;
+    }
+}
     </style>
 </head>
 <body>
