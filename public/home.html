@@ -663,6 +663,56 @@
     background: var(--neon-secondary);
     color: black;
 }
+/* --- 💎 تحديث الخلفية لتصبح أغمق وأكثر وضوحاً --- */
+.mobile-dropdown, .desktop-notif-dropdown {
+    /* تغيير الخلفية من 0.85 إلى 0.95 لتصبح شبه معتمة وأغمق */
+    background: rgba(10, 10, 10, 0.96) !important; 
+    
+    /* زيادة قوة البلور (Blur) لمنع تشتت العين بالخلفية */
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    
+    /* إضافة حدود أوضح قليلاً */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    
+    /* ظل خلفي لتمييز القائمة عن المحتوى */
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* --- تحسين وضوح النصوص داخل الإشعارات --- */
+.menu-notif-item {
+    /* جعل خلفية كل إشعار أغمق */
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.menu-notif-item strong {
+    /* التأكد من أن العنوان أبيض ناصع */
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* إضافة ظل خفيف للنص لزيادة الوضوح */
+    font-weight: 600 !important;
+}
+
+.menu-notif-item p {
+    /* تفتيح لون الوصف قليلاً لتباين أفضل مع الخلفية الغامقة */
+    color: #e0e0e0 !important; 
+    font-weight: 300;
+}
+
+/* --- تحسين روابط القائمة المنسدلة --- */
+.dropdown-link {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.dropdown-link i {
+    color: var(--neon-primary) !important; /* جعل الأيقونات زاهية */
+}
+
+/* تحسين شكل الهوفر ليصبح أوضح */
+.dropdown-link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--neon-primary) !important;
+}
     </style>
 </head>
 <body>
@@ -708,8 +758,8 @@
 
             <a href="user-dashboard" class="dropdown-link"><i class="fas fa-user-circle"></i> حسابي</a>
             <a href="all-properties" class="dropdown-link"><i class="fas fa-building"></i> جميع العقارات</a>
-            <a href="all-properties.html?type=buy" class="dropdown-link" style="color:var(--neon-primary);"><i class="fas fa-key"></i> عقارات للبيع</a>
-            <a href="all-properties.html?type=rent" class="dropdown-link" style="color:var(--neon-secondary);"><i class="fas fa-door-open"></i> عقارات للإيجار</a>
+            <a href="all-properties.html?type=buy" class="dropdown-link"><i class="fas fa-key"></i> عقارات للبيع</a>
+            <a href="all-properties.html?type=rent" class="dropdown-link"><i class="fas fa-door-open"></i> عقارات للإيجار</a>
             <a href="about" class="dropdown-link"><i class="fas fa-info-circle"></i> من نحن</a>
         </div>
     </header>
