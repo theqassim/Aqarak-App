@@ -226,15 +226,11 @@ class PostgresStore {
 
 const store = new PostgresStore(dbPool);
 
-// ==========================================================
-// 🧠 نظام الواتساب (WhatsApp QR + RemoteAuth + Monitoring)
-// ==========================================================
-
 const whatsappClient = new Client({
     authStrategy: new RemoteAuth({
         clientId: "aqarak-session",
         store: store,
-        backupSyncIntervalMs: 600000 // حفظ نسخة احتياطية في الداتابيز كل 10 دقائق
+        backupSyncIntervalMs: 600000 // حفظ نسخة كل 10 دقائق
     }),
     puppeteer: {
         headless: true,
@@ -246,55 +242,24 @@ const whatsappClient = new Client({
     }
 });
 
-// 1. عرض الـ QR Code عند الحاجة لربط جديد
 whatsappClient.on('qr', (qr) => {
     console.log('📱 QR Code received. Scan it NOW:');
     qrcode.generate(qr, { small: true });
 });
 
-// 2. عند نجاح استرجاع الجلسة من الداتابيز
-whatsappClient.on('authenticated', () => {
-    console.log('🔓 تم استعادة الجلسة بنجاح!');
-});
-
-// 3. تأكيد حفظ التغييرات الجديدة في الداتابيز
 whatsappClient.on('remote_session_saved', () => {
     console.log('💾 تم حفظ جلسة الواتساب في الداتابيز بنجاح!');
 });
 
-// 4. عند فشل المصادقة (تنبيه ديسكورد)
-whatsappClient.on('auth_failure', async (msg) => {
-    console.error('❌ فشل في المصادقة:', msg);
-    await sendDiscordNotification("⚠️ تنبيه: فشل مصادقة الواتساب", [
-        { name: "الرسالة", value: msg },
-        { name: "الإجراء", value: "قد تحتاج لمسح الـ QR Code مجدداً." }
-    ], 15548997);
-});
-
-// 5. عند فصل الاتصال (تنبيه ديسكورد + إعادة محاولة تلقائية)
-whatsappClient.on('disconnected', async (reason) => {
-    console.log('❌ تم فصل الواتساب:', reason);
-    await sendDiscordNotification("📴 تنبيه: الواتساب غير متصل", [
-        { name: "السبب", value: reason },
-        { name: "الحالة", value: "يحاول النظام الآن إعادة الاتصال تلقائياً..." }
-    ], 15548997);
-    
-    // محاولة إعادة التشغيل بعد 5 ثواني
-    setTimeout(() => {
-        whatsappClient.initialize();
-    }, 5000);
-});
-
-// 6. عند جاهزية العمل (تنبيه ديسكورد باللون الأخضر)
-whatsappClient.on('ready', async () => {
+whatsappClient.on('ready', () => {
     console.log('✅ الواتساب متصل وجاهز!');
-    await sendDiscordNotification("🟢 الواتساب متصل الآن", [
-        { name: "الحالة", value: "النظام يعمل بشكل طبيعي وجاهز لإرسال الأكواد." }
-    ], 3066993);
 });
 
-// تشغيل النظام
-whatsappClient.initialize();
+whatsappClient.on('disconnected', (reason) => {
+    console.log('❌ تم فصل الواتساب:', reason);
+    whatsappClient.initialize();
+    
+});
 
 whatsappClient.initialize();
 async function sendWhatsAppMessage(phone, message) {
