@@ -7,21 +7,42 @@
     />
     <meta charset="UTF-8" />
     <title>عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر</title>
-    <meta name="description" content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي." />
-    <meta name="keywords" content="عقارات مصر, بيع شقق, شراء عقارات, إيجار شقق, عقارك, Aqarak, استثمار عقاري" />
+    <meta
+      name="description"
+      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+    />
+    <meta
+      name="keywords"
+      content="عقارات مصر, بيع شقق, شراء عقارات, إيجار شقق, عقارك, Aqarak, استثمار عقاري"
+    />
     <link rel="canonical" href="https://www.aqarakeg.com/" />
-    
+
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.aqarakeg.com/" />
-    <meta property="og:title" content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر" />
-    <meta property="og:description" content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي." />
+    <meta
+      property="og:title"
+      content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر"
+    />
+    <meta
+      property="og:description"
+      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+    />
     <meta property="og:image" content="https://www.aqarakeg.com/logo.png" />
 
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://www.aqarakeg.com/" />
-    <meta property="twitter:title" content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر" />
-    <meta property="twitter:description" content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي." />
-    <meta property="twitter:image" content="https://www.aqarakeg.com/logo.png" />
+    <meta
+      property="twitter:title"
+      content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر"
+    />
+    <meta
+      property="twitter:description"
+      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+    />
+    <meta
+      property="twitter:image"
+      content="https://www.aqarakeg.com/logo.png"
+    />
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="stylesheet"
@@ -761,6 +782,30 @@
           </div>
           <button class="btn-submit" onclick="resetPassword()">
             تغيير كلمة المرور
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="warningModal" class="modal">
+      <div class="modal-content" style="border-color: #ffaa00">
+        <span class="close-modal" onclick="closeWarningModal()">&times;</span>
+        <div style="text-align: center">
+          <i
+            class="fas fa-exclamation-triangle"
+            style="font-size: 3rem; color: #ffaa00; margin-bottom: 15px"
+          ></i>
+          <h3 style="color: white; margin-bottom: 10px">تنبيه</h3>
+          <p
+            id="warning-message"
+            style="color: #ccc; font-size: 1.1rem; margin-bottom: 20px"
+          ></p>
+          <button
+            class="btn-submit"
+            onclick="closeWarningModal()"
+            style="background: #ffaa00; color: #000"
+          >
+            حسناً
           </button>
         </div>
       </div>

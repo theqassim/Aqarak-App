@@ -670,16 +670,10 @@ const typeContainer = document.querySelector(".typewriter-text");
 let typeIndex = 0;
 
 function typeWriterAnim() {
-  if (typeIndex < typeText.length) {
+  if (typeContainer && typeIndex < typeText.length) {
     typeContainer.innerHTML += typeText.charAt(typeIndex);
     typeIndex++;
     setTimeout(typeWriterAnim, 100);
-  } else {
-    setTimeout(() => {
-      typeContainer.innerHTML = "";
-      typeIndex = 0;
-      typeWriterAnim();
-    }, 5000);
   }
 }
 document.addEventListener("DOMContentLoaded", typeWriterAnim);

@@ -25,6 +25,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.disabled = true;
 
       const phone = document.getElementById("login-phone").value;
+      if (phone.length < 11) {
+        showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
+        return;
+      }
       const password = document.getElementById("login-password").value;
 
       try {
@@ -81,7 +85,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       msg.textContent = "";
       isUsernameValid = false;
 
-      if (val.length < 5) return;
+      if (val.length < 3) return;
+
+      const hasLetters = /[a-z]/.test(val);
+      if (!hasLetters) {
+        iconError.style.display = "block";
+        msg.textContent =
+          "يجب أن يحتوي الاسم على حروف (لا يمكن أن يكون أرقاماً فقط)";
+        return;
+      }
 
       typingTimer = setTimeout(async () => {
         try {
@@ -127,12 +139,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       ).value;
 
       if (!isOtpSent) {
-        if (username.length < 5) {
-          alert("اسم المستخدم قصير جداً");
+        if (phone.length < 11) {
+          showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
           return;
         }
+
+        if (username.length < 3) {
+          showWarning("اسم المستخدم قصير جداً (يجب أن يكون 3 حروف على الأقل)");
+          return;
+        }
+
+        if (!/[a-z]/.test(username)) {
+          showWarning("اسم المستخدم يجب أن يحتوي على حروف إنجليزية.");
+          return;
+        }
+
         if (!isUsernameValid) {
-          alert("تأكد من صحة اسم المستخدم");
+          showWarning("اسم المستخدم غير متاح أو مستخدم بالفعل");
           return;
         }
         if (password !== confirmPassword) {
@@ -366,3 +389,18 @@ document.addEventListener("input", function (e) {
     e.target.value = val.replace(/[^0-9.]/g, "");
   }
 });
+window.showWarning = function (message) {
+  document.getElementById("warning-message").textContent = message;
+  document.getElementById("warningModal").style.display = "flex";
+};
+
+window.closeWarningModal = function () {
+  document.getElementById("warningModal").style.display = "none";
+};
+
+window.onclick = (event) => {
+  const modal = document.getElementById("forgotModal");
+  const warnModal = document.getElementById("warningModal");
+  if (event.target == modal) closeForgotModal();
+  if (event.target == warnModal) closeWarningModal();
+};

@@ -1940,7 +1940,7 @@ app.get("/api/properties", async (req, res) => {
   }
 
   let sql = `
-        SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified 
+        SELECT p.id, p.title, p.price, p.rooms, p.bathrooms, p.area, p."imageUrl", p.type, p."isFeatured", p."isLegal", p."sellerPhone", u.is_verified, p.governorate, p.city 
         FROM properties p
         LEFT JOIN users u ON p."sellerPhone" = u.phone
     `;
