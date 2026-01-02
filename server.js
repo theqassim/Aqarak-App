@@ -139,7 +139,7 @@ const DEFAULT_SYSTEM_INSTRUCTION = `
 const modelVision = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PHONE = "01008102237";
+const ADMIN_PHONE = process.env.ADMIN_PHONE;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SALT_ROUNDS = 10;
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
@@ -4050,6 +4050,74 @@ app.put("/api/admin/service/pin/:id", async (req, res) => {
     res.status(500).json({ message: "Error" });
   }
 });
+
+const requireAdmin = (req, res, next) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.redirect("/");
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role === "admin" && decoded.phone === ADMIN_PHONE) {
+      return next();
+    } else {
+      return res.redirect("/");
+    }
+  } catch (err) {
+    return res.redirect("/");
+  }
+};
+
+app.get("/admin-home", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
+});
+
+app.get("/admin-submissions", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-submissions.html")
+  );
+});
+
+app.get("/admin-requests", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "protected_pages", "admin-requests.html"));
+});
+
+app.get("/admin-complaints", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-complaints.html")
+  );
+});
+app.get("/admin-complaints.html", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-complaints.html")
+  );
+});
+
+app.get("/admin-users", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "protected_pages", "admin-users.html"));
+});
+
+app.get("/admin-user-stats", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-user-stats.html")
+  );
+});
+
+app.get("/admin-add-property", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-add-property.html")
+  );
+});
+
+app.get("/admin-edit-property", requireAdmin, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "protected_pages", "admin-edit-property.html")
+  );
+});
+
+app.get("/admin-services", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "protected_pages", "admin-services.html"));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
