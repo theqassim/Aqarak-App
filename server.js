@@ -357,21 +357,29 @@ function normalizeText(text) {
     .replace(/(ؤ|ئ)/g, "ء")
     .toLowerCase();
 }
-
-async function checkAndNotifyMatches(propertyDetails, hiddenCode) {
+async function checkAndNotifyMatches(propertyDetails) {
   try {
-    console.log("🔍 جاري البحث عن طلبات مطابقة...");
-    const searchText = normalizeText(
-      propertyDetails.title +
-        " " +
-        propertyDetails.description +
-        " " +
-        (propertyDetails.level || "")
-    );
+    console.log(`🔍 جاري البحث عن مهتمين بالعقار: ${propertyDetails.title}`);
 
     const requests = await pgQuery(
-      `SELECT * FROM property_requests ORDER BY id DESC LIMIT 50`
+      `
+            SELECT * FROM property_requests 
+            WHERE 
+                ("governorate" = $1 OR "governorate" IS NULL OR "governorate" = '')
+                AND ("city" = $2 OR "city" IS NULL OR "city" = '')
+                AND ("req_type" = $3 OR "req_type" IS NULL)
+                AND ("max_price" >= $4 * 0.9) -- السماح بفرق 10%
+            ORDER BY id DESC LIMIT 50
+        `,
+      [
+        propertyDetails.governorate || "",
+        propertyDetails.city || "",
+        propertyDetails.type,
+        parseFloat(propertyDetails.numericPrice || 0),
+      ]
     );
+
+    console.log(`✅ وجدنا ${requests.rows.length} طلب مطابق.`);
 
     for (const req of requests.rows) {
       const reportCheck = await pgQuery(
@@ -383,32 +391,13 @@ async function checkAndNotifyMatches(propertyDetails, hiddenCode) {
         [propertyDetails.sellerPhone, req.phone]
       );
 
-      if (reportCheck.rows.length > 0) {
-        console.log(
-          `🚫 تم تجاهل المطابقة بين ${propertyDetails.sellerPhone} و ${req.phone} لوجود بلاغ سابق.`
-        );
-        continue;
-      }
+      if (reportCheck.rows.length > 0) continue;
 
-      const reqSpec = normalizeText(req.specifications);
-      const isTypeMatch =
-        (searchText.includes("شقه") && reqSpec.includes("شقه")) ||
-        (searchText.includes("فيلا") && reqSpec.includes("فيلا")) ||
-        (searchText.includes("محل") && reqSpec.includes("محل"));
+      const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nطلبك توفر عندنا في "عقارك"! 🏠\nعقار جديد: *${propertyDetails.title}*\n📍 الموقع: ${propertyDetails.city} - ${propertyDetails.governorate}\n💰 السعر: ${propertyDetails.price} ج.م\n\n🔗 التفاصيل والصور: ${APP_URL}/property-details?id=${propertyDetails.id}\n\n📞 للتواصل مع المالك: ${propertyDetails.sellerPhone}`;
+      await sendWhatsAppMessage(req.phone, buyerMsg);
 
-      const reqWords = reqSpec.split(" ");
-      let matchCount = 0;
-      reqWords.forEach((w) => {
-        if (w.length > 3 && searchText.includes(w)) matchCount++;
-      });
-
-      if (isTypeMatch && matchCount >= 1) {
-        const buyerMsg = `🎉 بشرى سارة يا ${req.name}!\n\nتم نشر عقار جديد يطابق طلبك: *${propertyDetails.title}*.\n💰 السعر: ${propertyDetails.price}\n\n🔗 التفاصيل: ${APP_URL}/property-details?id=${propertyDetails.id}\n\n📞 رقم المالك: ${propertyDetails.sellerPhone}`;
-        await sendWhatsAppMessage(req.phone, buyerMsg);
-
-        const sellerMsg = `🚀 عقارك لقطة!\n\nالسيستم لقى مشتري كان طالب نفس مواصفات عقارك *(${propertyDetails.title})*.\n\n👤 المشتري المهتم: ${req.name}\n📞 رقمه: ${req.phone}\n📝 طلبه: ${req.specifications}\n\nتواصل معاه فوراً وبالتوفيق! 😉`;
-        await sendWhatsAppMessage(propertyDetails.sellerPhone, sellerMsg);
-      }
+      const sellerMsg = `🚀 عقارك لقطة ومطلوب!\n\nالسيستم لقى مشتري مهتم بنفس مواصفات عقارك *(${propertyDetails.title})*.\n\n👤 الاسم: ${req.name}\n📞 رقمه: ${req.phone}\n\nتواصل معاه فوراً وبالتوفيق! 😉`;
+      await sendWhatsAppMessage(propertyDetails.sellerPhone, sellerMsg);
     }
   } catch (e) {
     console.error("Matching Error:", e);
@@ -1055,7 +1044,7 @@ app.post("/api/chat", async (req, res) => {
 app.post("/api/check-username", async (req, res) => {
   const { username } = req.body;
   if (!username) return res.json({ available: false });
-  if (username.length < 5)
+  if (username.length < 3 || username.length > 20)
     return res.json({ available: false, message: "invalid_length" });
   const validRegex = /^[a-z0-9_.]+$/;
   if (!validRegex.test(username))
@@ -1122,7 +1111,7 @@ app.post(
         return res.status(403).json({ message: "⛔ هذا الرقم محظور." });
       }
 
-      if (username.length < 5)
+      if (username.length < 3 || username.length > 20)
         return res.status(400).json({ message: "اسم المستخدم قصير" });
 
       const userCheck = await pgQuery(
@@ -1734,6 +1723,17 @@ app.post("/api/admin/publish-submission", async (req, res) => {
       `تمت مراجعة عقارك "${sub.propertyTitle}" والموافقة عليه. هو الآن منشور ويظهر للجميع.`
     );
 
+    checkAndNotifyMatches({
+      id: newPropertyId,
+      title: sub.propertyTitle,
+      price: sub.propertyPrice,
+      numericPrice: parseFloat(sub.propertyPrice.replace(/[^0-9.]/g, "")),
+      type: sub.propertyType,
+      governorate: sub.governorate,
+      city: sub.city,
+      sellerPhone: sub.sellerPhone,
+    });
+
     notifyAllUsers(
       `عقار جديد!`,
       sub.propertyTitle,
@@ -1826,23 +1826,48 @@ app.put(
   }
 );
 app.post("/api/request-property", async (req, res) => {
-  const { name, phone, email, specifications } = req.body;
+  const {
+    name,
+    phone,
+    email,
+    specifications,
+    type,
+    maxPrice,
+    location,
+    governorate,
+    city,
+  } = req.body;
   try {
     await pgQuery(
-      `INSERT INTO property_requests (name, phone, email, specifications, "submissionDate") VALUES ($1, $2, $3, $4, $5)`,
-      [name, phone, email, specifications, new Date().toISOString()]
+      `INSERT INTO property_requests 
+            (name, phone, email, specifications, "req_type", "max_price", "governorate", "city", "submissionDate") 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        name,
+        phone,
+        email,
+        specifications,
+        type,
+        parseFloat(maxPrice || 0),
+        governorate,
+        city,
+        new Date().toISOString(),
+      ]
     );
+
     await sendDiscordNotification(
-      "📩 طلب عقار مخصص",
+      "📩 طلب عقار مخصص جديد",
       [
         { name: "👤 الاسم", value: name },
-        { name: "📝 المواصفات", value: specifications },
+        { name: "📍 المنطقة", value: `${city} - ${governorate}` },
+        { name: "💰 الميزانية", value: `${maxPrice}` },
       ],
       15158332
     );
     res.status(200).json({ success: true });
   } catch (err) {
-    throw err;
+    console.error(err);
+    res.status(500).json({ message: "خطأ" });
   }
 });
 app.get("/api/admin/seller-submissions", async (req, res) => {
