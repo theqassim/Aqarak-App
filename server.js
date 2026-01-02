@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 const { Client, RemoteAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
@@ -19,6 +20,28 @@ const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: "⛔ لقد تجاوزت الحد المسموح من الطلبات، يرجى الانتظار قليلاً.",
+  },
+});
+
+app.use(limiter);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    message: "⛔ محاولات دخول كثيرة خاطئة، تم حظر المحاولة مؤقتاً.",
+  },
+});
+app.use("/api/login", loginLimiter);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -4118,8 +4141,8 @@ app.get("/admin-services", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-services.html"));
 });
 
-app.get('*', (req, res) => {
-    res.redirect('/');
+app.get("*", (req, res) => {
+  res.redirect("/");
 });
 
 app.listen(PORT, () => {
