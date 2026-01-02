@@ -21,6 +21,8 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -112,7 +114,6 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
-app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "aqarak-secure-secret-key-2025";
 const APP_URL = "https://aqarakeg.com";
