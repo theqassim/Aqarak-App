@@ -40,10 +40,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       "prop-count-badge"
     ).innerText = `${data.properties.length} عقار`;
 
-    const joinDate = new Date(data.created_at);
-    const dateStr = joinDate.getFullYear();
-    document.getElementById("join-date-text").innerText = `عضو منذ ${dateStr}`;
+    let joinYear = "2025";
+    if (data.created_at) {
+      const joinDate = new Date(data.created_at);
+      if (!isNaN(joinDate.getFullYear())) {
+        joinYear = joinDate.getFullYear();
+      }
+    }
+    document.getElementById("join-date-text").innerText = `عضو منذ ${joinYear}`;
 
+    if (data.phone) {
+      fetchReviews(data.phone);
+    } else {
+      document.getElementById("reviews-list").innerHTML =
+        '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات (بيانات المستخدم غير مكتملة).</p>';
+    }
     if (data.phone) {
       fetchReviews(data.phone);
     } else {

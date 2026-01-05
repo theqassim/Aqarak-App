@@ -1157,7 +1157,15 @@ app.post(
 
       await pgQuery(
         `INSERT INTO users (name, username, phone, password, role, profile_picture, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [name, username, phone, hashedPassword, "user", profilePicUrl, new Date().toISOString()]
+        [
+          name,
+          username,
+          phone,
+          hashedPassword,
+          "user",
+          profilePicUrl,
+          new Date().toISOString(),
+        ]
       );
 
       delete otpStore[phone];
@@ -2281,33 +2289,6 @@ app.get("/api/admin/counts", async (req, res) => {
     res.json({
       pendingCount: parseInt(pendingRes.rows[0].count),
       requestsCount: parseInt(requestsRes.rows[0].count),
-    });
-  } catch (error) {
-    res.status(500).json({ message: "خطأ سيرفر" });
-  }
-});
-
-app.get("/api/public/profile/:username", async (req, res) => {
-  const { username } = req.params;
-  try {
-    const userRes = await pgQuery(
-      "SELECT name, phone, is_verified, profile_picture FROM users WHERE username = $1",
-      [username.toLowerCase()]
-    );
-    if (userRes.rows.length === 0)
-      return res.status(404).json({ message: "المستخدم غير موجود" });
-
-    const user = userRes.rows[0];
-    const propsRes = await pgQuery(
-      `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`,
-      [username.toLowerCase(), user.phone]
-    );
-
-    res.json({
-      name: user.name,
-      is_verified: user.is_verified,
-      profile_picture: user.profile_picture,
-      properties: propsRes.rows,
     });
   } catch (error) {
     res.status(500).json({ message: "خطأ سيرفر" });
@@ -4321,7 +4302,6 @@ app.get("/update-db-users-date", async (req, res) => {
     res.status(500).send("❌ خطأ: " + e.message);
   }
 });
-
 app.get("/api/public/profile/:username", async (req, res) => {
   const { username } = req.params;
   try {
@@ -4329,13 +4309,17 @@ app.get("/api/public/profile/:username", async (req, res) => {
       "SELECT name, phone, is_verified, profile_picture, created_at FROM users WHERE username = $1",
       [username.toLowerCase()]
     );
+
     if (userRes.rows.length === 0)
       return res.status(404).json({ message: "المستخدم غير موجود" });
 
     const user = userRes.rows[0];
 
     const propsRes = await pgQuery(
-      `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`,
+      `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" 
+       FROM properties 
+       WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 
+       ORDER BY id DESC`,
       [username.toLowerCase(), user.phone]
     );
 
@@ -4344,10 +4328,11 @@ app.get("/api/public/profile/:username", async (req, res) => {
       phone: user.phone,
       is_verified: user.is_verified,
       profile_picture: user.profile_picture,
-      created_at: user.created_at || new Date().toISOString(),
+      created_at: user.created_at,
       properties: propsRes.rows,
     });
   } catch (error) {
+    console.error("Profile Error:", error);
     res.status(500).json({ message: "خطأ سيرفر" });
   }
 });
