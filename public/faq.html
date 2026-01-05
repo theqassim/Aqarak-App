@@ -15,15 +15,22 @@
         --neon-primary: #00ff88;
         --neon-secondary: #00d4ff;
         --text-gray: #aaa;
+        --card-bg: rgba(30, 30, 30, 0.4);
+        --border-color: rgba(255, 255, 255, 0.1);
       }
 
       body {
         background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
         min-height: 100vh;
         font-family: "Cairo", sans-serif;
         color: white;
         margin: 0;
-        padding-top: 70px;
+        padding-top: 80px;
         overflow-x: hidden;
       }
 
@@ -35,74 +42,145 @@
         z-index: 1000;
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         padding: 10px 0;
+        transition: transform 0.4s ease-in-out;
       }
+
+      .header-hidden {
+        transform: translateY(-100%);
+      }
+
       .header-content {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 15px;
+        padding: 0 20px;
         max-width: 1200px;
         margin: 0 auto;
       }
 
+      .nav-link {
+        color: white;
+        text-decoration: none;
+        padding: 8px 20px;
+        border: 1px solid var(--neon-secondary);
+        border-radius: 50px;
+        transition: 0.3s;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .nav-link:hover {
+        background: var(--neon-secondary);
+        color: black;
+      }
+
+      @keyframes fadeInUpHero {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease-out;
+      }
+      .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
       .faq-hero {
         text-align: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
+        animation: fadeInUpHero 1s ease-out forwards;
       }
       .faq-title {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 900;
-        margin-bottom: 10px;
-        background: linear-gradient(to right, #fff, var(--neon-secondary));
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #fff 30%, var(--neon-primary) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
       .faq-subtitle {
         color: var(--text-gray);
-        font-size: 1rem;
+        font-size: 1.1rem;
         line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto;
       }
 
       .faq-container {
         max-width: 800px;
-        margin: 0 auto 60px;
-        padding: 0 15px;
+        margin: 0 auto 80px;
+        padding: 0 20px;
       }
+
       .faq-item {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        margin-bottom: 15px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        margin-bottom: 20px;
         overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
       }
+
+      .faq-item:hover {
+        border-color: var(--neon-primary);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.05);
+      }
+
+      .faq-item.active {
+        background: rgba(40, 40, 40, 0.6);
+        border-color: var(--neon-secondary);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+      }
+
       .faq-question {
-        padding: 15px;
+        padding: 20px;
         cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-weight: bold;
-        font-size: 1rem;
+        font-size: 1.05rem;
         color: white;
+        transition: color 0.3s;
       }
+
+      .faq-item.active .faq-question {
+        color: var(--neon-secondary);
+      }
+
       .faq-answer {
         max-height: 0;
         overflow: hidden;
-        transition: 0.3s;
-        padding: 0 15px;
+        transition: all 0.4s ease;
+        padding: 0 20px;
         color: #ccc;
-        font-size: 0.9rem;
-        line-height: 1.6;
+        font-size: 0.95rem;
+        line-height: 1.8;
+        opacity: 0;
       }
+
       .faq-item.active .faq-answer {
-        padding-bottom: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        margin-top: 5px;
+        padding-bottom: 20px;
+        opacity: 1;
       }
-      .faq-item.active {
-        border-color: var(--neon-secondary);
+
+      .faq-item i {
+        transition: transform 0.4s;
       }
       .faq-item.active i {
         transform: rotate(180deg);
@@ -110,53 +188,119 @@
       }
 
       .ask-section {
-        padding: 40px 15px;
-        background: #151515;
+        padding: 60px 20px;
         text-align: center;
-        border-top: 1px solid #333;
+        position: relative;
       }
+
       .ask-box {
-        max-width: 500px;
+        max-width: 550px;
         margin: 0 auto;
-        background: #222;
-        padding: 25px;
-        border-radius: 15px;
-        border: 1px solid #333;
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(15px);
+        padding: 40px;
+        border-radius: 25px;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s;
       }
+      .ask-box:hover {
+        transform: scale(1.01);
+        border-color: var(--neon-secondary);
+      }
+
+      .ask-title {
+        color: white;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+      }
+      .ask-desc {
+        color: #888;
+        margin-bottom: 30px;
+        font-size: 0.9rem;
+      }
+
+      .input-group {
+        position: relative;
+        margin-bottom: 20px;
+        text-align: right;
+      }
+
+      .input-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--neon-primary);
+        font-size: 1.1rem;
+      }
+
+      .input-group textarea + .input-icon {
+        top: 20px;
+        transform: none;
+      }
+
       .ask-input {
         width: 100%;
-        padding: 12px;
-        margin-bottom: 10px;
-        background: #111;
-        border: 1px solid #444;
-        border-radius: 8px;
+        padding: 15px 50px 15px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
         color: white;
         font-family: "Cairo";
+        font-size: 1rem;
+        transition: 0.3s;
         box-sizing: border-box;
       }
+
+      .ask-input:focus {
+        outline: none;
+        border-color: var(--neon-primary);
+        background: rgba(0, 255, 136, 0.05);
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+      }
+
       .ask-btn {
-        background: var(--neon-primary);
+        background: linear-gradient(45deg, var(--neon-primary), #00b862);
         color: black;
         font-weight: bold;
-        padding: 12px;
+        padding: 15px 30px;
         width: 100%;
         border: none;
         border-radius: 50px;
         cursor: pointer;
+        font-size: 1.1rem;
+        transition: 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .ask-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+      }
+
+      .ask-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
       }
 
       @media (max-width: 600px) {
         .faq-title {
-          font-size: 1.8rem;
+          font-size: 2rem;
         }
-        .header-content {
-          padding: 0 10px;
+        .ask-box {
+          padding: 25px;
         }
       }
     </style>
   </head>
   <body>
-    <header class="main-header">
+    <header class="main-header" id="site-header">
       <div class="header-content">
         <a
           href="home"
@@ -171,24 +315,16 @@
             src="logo.png"
             alt="Logo"
             style="
-              width: 35px;
+              width: 40px;
               border-radius: 50%;
               border: 2px solid var(--neon-primary);
             "
           />
-          <span style="color: white; font-weight: bold">عقارك</span>
+          <span style="color: white; font-weight: bold; font-size: 1.2rem"
+            >عقارك</span
+          >
         </a>
-        <a
-          href="home"
-          style="
-            color: white;
-            text-decoration: none;
-            border: 1px solid var(--neon-secondary);
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-          "
-        >
+        <a href="home" class="nav-link">
           الرئيسية <i class="fas fa-home"></i>
         </a>
       </div>
@@ -196,33 +332,100 @@
 
     <section class="faq-hero">
       <h1 class="faq-title">الأسئلة الشائعة</h1>
-      <p class="faq-subtitle">كل المعلومات اللي تهمك عن استخدام المنصة.</p>
+      <p class="faq-subtitle">
+        جمعنا لك كل الإجابات اللي ممكن تحتاجها عشان تستخدم المنصة باحترافية
+        وسهولة.
+      </p>
     </section>
 
     <div class="faq-container" id="faq-list">
-      <p style="text-align: center; color: #777">جاري التحميل...</p>
+      <p style="text-align: center; color: #777; padding: 20px">
+        <i class="fas fa-spinner fa-spin"></i> جاري تحميل الأسئلة...
+      </p>
     </div>
 
-    <section class="ask-section">
+    <section class="ask-section reveal">
       <div class="ask-box">
-        <h3 style="margin-bottom: 15px; color: white">عندك سؤال مش موجود؟</h3>
-        <input
-          type="text"
-          id="ask-name"
-          class="ask-input"
-          placeholder="اسمك (اختياري)"
-        />
-        <textarea
-          id="ask-text"
-          class="ask-input"
-          rows="3"
-          placeholder="اكتب سؤالك هنا..."
-        ></textarea>
-        <button class="ask-btn" onclick="submitQuestion()">إرسال السؤال</button>
+        <h3 class="ask-title">ملقتش إجابة لسؤالك؟</h3>
+        <p class="ask-desc">
+          اكتب سؤالك وهيرد عليك فريق الدعم أو القانونيين في أسرع وقت.
+        </p>
+
+        <div class="input-group">
+          <input
+            type="text"
+            id="ask-name"
+            class="ask-input"
+            placeholder="اسمك (اختياري)"
+          />
+          <i class="fas fa-user input-icon"></i>
+        </div>
+
+        <div class="input-group">
+          <textarea
+            id="ask-text"
+            class="ask-input"
+            rows="4"
+            placeholder="اكتب استفسارك بالتفصيل هنا..."
+          ></textarea>
+          <i class="fas fa-comment-alt input-icon"></i>
+        </div>
+
+        <button class="ask-btn" onclick="submitQuestion()">
+          <span>إرسال السؤال</span>
+          <i class="fas fa-paper-plane"></i>
+        </button>
       </div>
     </section>
 
+    <footer
+      style="
+        text-align: center;
+        padding: 30px;
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      "
+    >
+      <p>جميع الحقوق محفوظة © 2025 - عقارك</p>
+    </footer>
+
     <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const revealElements = document.querySelectorAll(".reveal");
+
+        const revealOnScroll = () => {
+          const windowHeight = window.innerHeight;
+          const elementVisible = 100;
+
+          revealElements.forEach((el) => {
+            const elementTop = el.getBoundingClientRect().top;
+            if (elementTop < windowHeight - elementVisible) {
+              el.classList.add("active");
+            }
+          });
+        };
+
+        window.addEventListener("scroll", revealOnScroll);
+        revealOnScroll();
+        loadFAQs();
+      });
+
+      let lastScrollTop = 0;
+      const header = document.getElementById("site-header");
+
+      window.addEventListener("scroll", function () {
+        let scrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+          header.classList.add("header-hidden");
+        } else {
+          header.classList.remove("header-hidden");
+        }
+        lastScrollTop = scrollTop;
+      });
+
       async function loadFAQs() {
         try {
           const res = await fetch("/api/public/faqs");
@@ -231,26 +434,40 @@
 
           if (faqs.length === 0) {
             container.innerHTML =
-              '<p style="text-align:center; color:#777;">لا توجد أسئلة منشورة حالياً.</p>';
+              '<div class="faq-item"><div class="faq-question" style="justify-content:center; cursor:default;">لا توجد أسئلة منشورة حالياً.</div></div>';
             return;
           }
 
           container.innerHTML = faqs
             .map(
-              (faq) => `
-                    <div class="faq-item" onclick="this.classList.toggle('active'); const ans = this.querySelector('.faq-answer'); ans.style.maxHeight = this.classList.contains('active') ? ans.scrollHeight + 'px' : null;">
+              (faq, index) => `
+                    <div class="faq-item reveal" style="transition-delay: ${
+                      index * 0.1
+                    }s" onclick="toggleFaq(this)">
                         <div class="faq-question">
                             ${faq.question}
-                            <i class="fas fa-chevron-down" style="transition:0.3s"></i>
+                            <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="faq-answer">${faq.answer}</div>
                     </div>
                 `
             )
             .join("");
+
+          setTimeout(() => window.dispatchEvent(new Event("scroll")), 100);
         } catch (e) {
           document.getElementById("faq-list").innerHTML =
-            '<p style="text-align:center; color:red;">فشل التحميل</p>';
+            '<p style="text-align:center; color:#ff4444;"><i class="fas fa-exclamation-circle"></i> فشل تحميل الأسئلة</p>';
+        }
+      }
+
+      function toggleFaq(element) {
+        element.classList.toggle("active");
+        const ans = element.querySelector(".faq-answer");
+        if (element.classList.contains("active")) {
+          ans.style.maxHeight = ans.scrollHeight + "px";
+        } else {
+          ans.style.maxHeight = null;
         }
       }
 
@@ -258,10 +475,14 @@
         const question = document.getElementById("ask-text").value;
         const name = document.getElementById("ask-name").value;
         const btn = document.querySelector(".ask-btn");
+        const btnText = btn.querySelector("span");
+        const btnIcon = btn.querySelector("i");
 
-        if (!question) return alert("اكتب السؤال الأول");
+        if (!question) return alert("من فضلك اكتب سؤالك الأول");
 
-        btn.innerHTML = "جاري الإرسال...";
+        const originalText = btnText.innerText;
+        btnText.innerText = "جاري الإرسال...";
+        btnIcon.className = "fas fa-spinner fa-spin";
         btn.disabled = true;
 
         try {
@@ -271,18 +492,19 @@
             body: JSON.stringify({ question, name }),
           });
           if (res.ok) {
-            alert("تم استلام سؤالك وهنجاوب عليه قريب!");
+            alert("تم استلام سؤالك بنجاح! هنجاوب عليه قريب جداً.");
             document.getElementById("ask-text").value = "";
+          } else {
+            alert("حصلت مشكلة بسيطة، حاول تاني!");
           }
         } catch (e) {
-          alert("خطأ في الاتصال");
+          alert("خطأ في الاتصال بالسيرفر");
         }
 
-        btn.innerHTML = "إرسال السؤال";
+        btnText.innerText = originalText;
+        btnIcon.className = "fas fa-paper-plane";
         btn.disabled = false;
       }
-
-      loadFAQs();
     </script>
   </body>
 </html>
