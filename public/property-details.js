@@ -342,11 +342,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     let ratingStats = { average: 0, count: 0 };
     try {
       const rRes = await fetch(`/api/reviews/stats/${property.sellerPhone}`);
-      if (rRes.ok) {
+      const contentType = rRes.headers.get("content-type");
+      if (rRes.ok && contentType && contentType.includes("application/json")) {
         ratingStats = await rRes.json();
+      } else {
+        console.warn("Rating API returned non-JSON response");
       }
     } catch (e) {
-      console.error("Error fetching rating stats", e);
+      console.error("Error loading ratings, defaulting to 0.");
     }
 
     const starsHTML = `
@@ -391,11 +394,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const statsRes = await fetch(
           `/api/public/profile/${property.publisherUsername}`
         );
-        if (statsRes.ok) {
+        if (
+          statsRes.ok &&
+          statsRes.headers.get("content-type")?.includes("application/json")
+        ) {
           const statsData = await statsRes.json();
           const count = statsData.properties ? statsData.properties.length : 0;
           publisherStatsBadge = `
-                    <span style="font-size: 0.75rem; color: #aaa; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">
+                    <span style="font-size: 0.75rem; color: #aaa; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; margin-top:4px; display:inline-block;">
                         <i class="fas fa-building"></i> ${count} عقار
                     </span>
                 `;
@@ -415,7 +421,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                 <a href="${profileLink}" style="text-decoration: none; position: relative;">
-                    <img src="${profileImgSrc}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary); box-shadow: 0 0 10px rgba(0,255,136,0.2);" alt="Publisher">
+                    <img src="${profileImgSrc}" onerror="this.src='logo.png'" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary); box-shadow: 0 0 10px rgba(0,255,136,0.2);" alt="Publisher">
                     ${
                       property.publisherUsername
                         ? '<div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #00ff88; border-radius: 50%; border: 2px solid #1a1a1a;"></div>'
@@ -426,7 +432,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div style="flex: 1;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <p style="color: #888; font-size: 0.75rem; margin: 0;">الناشر</p>
-                        ${reportBtnHTML} </div>
+                        ${reportBtnHTML}
+                    </div>
                     
                     <a href="${profileLink}" style="display: block; color: #fff; text-decoration: none; font-weight: bold; font-size: 1.1rem; margin: 2px 0;">
                         ${

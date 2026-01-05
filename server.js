@@ -565,6 +565,17 @@ async function createTables() {
             "level" TEXT, "floors_count" INTEGER, "finishing_type" TEXT
         )`,
 
+    `CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        reviewer_id INTEGER,
+        reviewer_name TEXT,
+        reviewed_phone TEXT,
+        rating INTEGER,
+        comment TEXT,
+        created_at TEXT,
+        UNIQUE(reviewer_id, reviewed_phone)
+    )`,
+
     `CREATE TABLE IF NOT EXISTS seller_submissions (
             id SERIAL PRIMARY KEY, "sellerName" TEXT NOT NULL, "sellerPhone" TEXT NOT NULL, 
             "propertyTitle" TEXT NOT NULL, "propertyType" TEXT NOT NULL, "propertyPrice" TEXT NOT NULL, 
@@ -666,7 +677,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/property-details", async (req, res) => {
+app.get("/property", async (req, res) => {
   const propertyId = req.query.id;
 
   if (!propertyId) {
@@ -707,7 +718,7 @@ app.get("/property-details", async (req, res) => {
       )
       .replace(
         /{{URL}}/g,
-        `https://aqarakeg.com/property-details?id=${propertyId}`
+        `https://aqarakeg.com/property?id=${propertyId}`
       );
 
     res.send(htmlContent);
@@ -4198,6 +4209,64 @@ app.delete("/api/admin/faqs/:id", async (req, res) => {
   }
 });
 
+app.post("/api/reviews", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token)
+    return res.status(401).json({ message: "لازم تسجل دخول عشان تقيم!" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { reviewedPhone, rating, comment } = req.body;
+
+    if (decoded.phone === reviewedPhone) {
+      return res.status(400).json({ message: "مينفعش تقيم نفسك يا ناصح 😉" });
+    }
+
+    const check = await pgQuery(
+      `SELECT id FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
+      [decoded.id, reviewedPhone]
+    );
+
+    if (check.rows.length > 0) {
+      return res.status(400).json({ message: "أنت قيمت المستخدم ده قبل كده!" });
+    }
+
+    await pgQuery(
+      `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        decoded.id,
+        decoded.name,
+        reviewedPhone,
+        parseInt(rating),
+        comment,
+        new Date().toISOString(),
+      ]
+    );
+
+    res.json({ success: true, message: "تم إضافة تقييمك بنجاح ⭐" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "حدث خطأ في السيرفر" });
+  }
+});
+
+app.get("/api/reviews/stats/:phone", async (req, res) => {
+  try {
+    const result = await pgQuery(
+      `SELECT AVG(rating) as average, COUNT(*) as count FROM reviews WHERE reviewed_phone = $1`,
+      [req.params.phone]
+    );
+    const stats = result.rows[0];
+    res.json({
+      average: parseFloat(stats.average || 0).toFixed(1),
+      count: parseInt(stats.count || 0),
+    });
+  } catch (e) {
+    res.json({ average: 0, count: 0 });
+  }
+});
+
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
 });
@@ -4318,64 +4387,6 @@ app.get("/admin-faq", requireAdmin, (req, res) =>
 
 app.get("*", (req, res) => {
   res.redirect("/");
-});
-
-app.post("/api/reviews", async (req, res) => {
-  const token = req.cookies.auth_token;
-  if (!token)
-    return res.status(401).json({ message: "لازم تسجل دخول عشان تقيم!" });
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const { reviewedPhone, rating, comment } = req.body;
-
-    if (decoded.phone === reviewedPhone) {
-      return res.status(400).json({ message: "مينفعش تقيم نفسك يا ناصح 😉" });
-    }
-
-    const check = await pgQuery(
-      `SELECT id FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
-      [decoded.id, reviewedPhone]
-    );
-
-    if (check.rows.length > 0) {
-      return res.status(400).json({ message: "أنت قيمت المستخدم ده قبل كده!" });
-    }
-
-    await pgQuery(
-      `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-      [
-        decoded.id,
-        decoded.name,
-        reviewedPhone,
-        parseInt(rating),
-        comment,
-        new Date().toISOString(),
-      ]
-    );
-
-    res.json({ success: true, message: "تم إضافة تقييمك بنجاح ⭐" });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "حدث خطأ في السيرفر" });
-  }
-});
-
-app.get("/api/reviews/stats/:phone", async (req, res) => {
-  try {
-    const result = await pgQuery(
-      `SELECT AVG(rating) as average, COUNT(*) as count FROM reviews WHERE reviewed_phone = $1`,
-      [req.params.phone]
-    );
-    const stats = result.rows[0];
-    res.json({
-      average: parseFloat(stats.average || 0).toFixed(1),
-      count: parseInt(stats.count || 0),
-    });
-  } catch (e) {
-    res.json({ average: 0, count: 0 });
-  }
 });
 
 app.listen(PORT, () => {
