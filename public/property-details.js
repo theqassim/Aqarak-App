@@ -338,15 +338,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     let publisherHTML = "";
     let publisherStatsBadge = "";
     let profileImgSrc = property.profile_picture || "logo.png";
-    let reportBtnHTML = "";
-
-    if (isAuthenticated && currentUserPhone !== property.sellerPhone) {
-      reportBtnHTML = `
-        <button onclick="document.getElementById('report-modal').style.display='flex'" style="background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; margin-right: auto;">
-            <i class="fas fa-flag"></i> إبلاغ
-        </button>
-    `;
-    }
 
     let ratingStats = { average: 0, count: 0 };
     try {
@@ -359,21 +350,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const starsHTML = `
-        <div style="display:flex; align-items:center; margin-top:5px; gap: 8px;">
-            <span class="rating-stars" style="color: gold; font-size: 0.9rem;">
-                <i class="fas fa-star"></i> ${ratingStats.average || 0} (${
-      ratingStats.count || 0
-    })
-            </span>
-            ${
-              isAuthenticated && currentUserPhone !== property.sellerPhone
-                ? `<button onclick="openRateModal('${property.sellerPhone}', '${property.sellerName}')" class="btn-rate" style="background: transparent; border: 1px solid #ccc; color: #ccc; border-radius: 5px; cursor: pointer; padding: 0 5px; font-size: 0.7rem;">
-                    <i class="far fa-star"></i> قيم
-                </button>`
-                : ""
-            }
+        <div style="display:flex; align-items:center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; border: 1px solid #444;">
+            <i class="fas fa-star" style="color: #FFD700; font-size: 0.9rem;"></i>
+            <span style="color: #fff; font-weight: bold; font-size: 0.9rem;">${
+              ratingStats.average || "0.0"
+            }</span>
+            <span style="color: #888; font-size: 0.8rem;">(${
+              ratingStats.count || 0
+            })</span>
         </div>
     `;
+
+    const rateButtonHTML =
+      isAuthenticated && currentUserPhone !== property.sellerPhone
+        ? `
+        <button onclick="openRateModal('${property.sellerPhone}', '${property.sellerName}')" 
+            style="background: transparent; border: 1px solid var(--neon-primary); color: var(--neon-primary); 
+            padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 5px;">
+            <i class="far fa-edit"></i> تقييم
+        </button>
+    `
+        : "";
+
+    let reportBtnHTML = "";
+    if (isAuthenticated && currentUserPhone !== property.sellerPhone) {
+      reportBtnHTML = `
+            <button onclick="document.getElementById('report-modal').style.display='flex'" 
+                style="background: transparent; border: none; color: #ff4444; font-size: 0.9rem; cursor: pointer; opacity: 0.7; transition: 0.3s;" title="إبلاغ">
+                <i class="fas fa-flag"></i>
+            </button>
+        `;
+    }
+
+    const profileLink = property.publisherUsername
+      ? `profile?u=${property.publisherUsername}`
+      : "#";
 
     if (property.publisherUsername) {
       try {
@@ -383,65 +394,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (statsRes.ok) {
           const statsData = await statsRes.json();
           const count = statsData.properties ? statsData.properties.length : 0;
-
           publisherStatsBadge = `
-                    <a href="profile?u=${property.publisherUsername}" style="
-                        background: rgba(0, 255, 136, 0.1); 
-                        color: #00ff88; padding: 2px 8px; border-radius: 12px; 
-                        font-size: 0.7rem; margin-top: 5px; display: inline-block; border: 1px solid #00ff88;
-                        text-decoration: none; cursor: pointer; transition: 0.3s;">
+                    <span style="font-size: 0.75rem; color: #aaa; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">
                         <i class="fas fa-building"></i> ${count} عقار
-                    </a>
+                    </span>
                 `;
         }
-      } catch (e) {
-        console.error("Error fetching publisher stats", e);
-      }
-
-      publisherHTML = `
-            <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
-                <a href="profile?u=${
-                  property.publisherUsername
-                }" style="text-decoration: none;">
-                    <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
-                </a>
-                <div style="flex: 1;">
-                    <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
-                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
-                        <a href="profile?u=${
-                          property.publisherUsername
-                        }" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem;">
-                            ${
-                              property.sellerName || "مستخدم عقارك"
-                            } ${verifiedBadge}
-                        </a>
-                        ${publisherStatsBadge}
-                    </div>
-                    ${starsHTML}
-                </div>
-                ${reportBtnHTML}
-            </div>
-        `;
-    } else {
-      publisherHTML = `
-            <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <p style="color: #ccc; display:flex; align-items:center; margin:0;">
-                            <i class="fas fa-user-circle" style="margin-left:5px;"></i> تم النشر بواسطة: 
-                            <span style="color: #00ff88; font-weight: bold; display:flex; align-items:center; margin-right:5px;">
-                                ${
-                                  property.sellerName || "عقارك"
-                                } ${verifiedBadge}
-                            </span>
-                        </p>
-                        ${starsHTML}
-                    </div>
-                    ${reportBtnHTML} 
-                </div>
-            </div>
-        `;
+      } catch (e) {}
     }
+
+    publisherHTML = `
+        <div class="publisher-card" style="
+            margin-top: 20px; 
+            padding: 16px; 
+            border-radius: 16px; 
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%); 
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        ">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <a href="${profileLink}" style="text-decoration: none; position: relative;">
+                    <img src="${profileImgSrc}" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary); box-shadow: 0 0 10px rgba(0,255,136,0.2);" alt="Publisher">
+                    ${
+                      property.publisherUsername
+                        ? '<div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #00ff88; border-radius: 50%; border: 2px solid #1a1a1a;"></div>'
+                        : ""
+                    }
+                </a>
+                
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <p style="color: #888; font-size: 0.75rem; margin: 0;">الناشر</p>
+                        ${reportBtnHTML} </div>
+                    
+                    <a href="${profileLink}" style="display: block; color: #fff; text-decoration: none; font-weight: bold; font-size: 1.1rem; margin: 2px 0;">
+                        ${
+                          property.sellerName || "مستخدم عقارك"
+                        } ${verifiedBadge}
+                    </a>
+                    
+                    ${publisherStatsBadge}
+                </div>
+            </div>
+
+            <div style="height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 12px;"></div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                ${starsHTML}
+                ${rateButtonHTML}
+            </div>
+        </div>
+    `;
     let actionSectionHTML = "";
     let makeOfferButtonHTML = "";
 
