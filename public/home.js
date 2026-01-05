@@ -46,9 +46,17 @@ function setupSearchLogic() {
 
     const titleEl = document.querySelector(".section-title");
     if (titleEl) {
-      titleEl.innerHTML = query
-        ? `نتائج البحث عن: "<span style="color:white">${query}</span>"`
-        : "أحدث العقارات";
+      titleEl.innerHTML = "";
+      if (query) {
+        titleEl.appendChild(document.createTextNode('نتائج البحث عن: "'));
+        const span = document.createElement("span");
+        span.style.color = "white";
+        span.textContent = query;
+        titleEl.appendChild(span);
+        titleEl.appendChild(document.createTextNode('"'));
+      } else {
+        titleEl.textContent = "أحدث العقارات";
+      }
     }
 
     fetchLatestProperties(true);
@@ -524,12 +532,13 @@ function appendMessage(text, sender) {
             <div class="ai-avatar"><img src="logo.png" alt="AI"></div>
             <div class="ai-text">${text}</div>
         `;
+    div.querySelector(".ai-text").innerHTML = text;
   } else {
-    div.innerHTML = `
-            <div class="ai-text">${text}</div>
-        `;
+    const textDiv = document.createElement("div");
+    textDiv.className = "ai-text";
+    textDiv.textContent = text;
+    div.appendChild(textDiv);
   }
-
   consoleDiv.appendChild(div);
   consoleDiv.scrollTop = consoleDiv.scrollHeight;
 }

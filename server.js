@@ -3035,9 +3035,51 @@ app.post("/api/payment/charge", async (req, res) => {
   }
 });
 
+function validateHMAC(queryParams, secret) {
+  if (!secret || !queryParams.hmac) return false;
+  const hmac = queryParams.hmac;
+  const keys = [
+    "amount_cents",
+    "created_at",
+    "currency",
+    "error_occured",
+    "has_parent_transaction",
+    "id",
+    "integration_id",
+    "is_3d_secure",
+    "is_auth",
+    "is_capture",
+    "is_refunded",
+    "is_standalone_payment",
+    "is_voided",
+    "order",
+    "owner",
+    "pending",
+    "source_data.pan",
+    "source_data.sub_type",
+    "source_data.type",
+    "success",
+  ];
+  let concatenated = "";
+  keys.sort().forEach((key) => {
+    concatenated += queryParams[key] || "";
+  });
+  const calculated = crypto
+    .createHmac("sha512", secret)
+    .update(concatenated)
+    .digest("hex");
+  return calculated === hmac;
+}
+
 app.get("/api/payment/callback", async (req, res) => {
   try {
-    const { success, id, order, hmac } = req.query;
+    const { success, order } = req.query;
+
+    const isValid = validateHMAC(req.query, process.env.PAYMOB_HMAC);
+    if (!isValid) {
+      console.error("⛔ Fraud Attempt: HMAC Mismatch");
+      return res.redirect("/user-dashboard?payment=error");
+    }
 
     if (success === "true") {
       const orderRes = await pgQuery(

@@ -25,14 +25,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.disabled = true;
 
       const phone = document.getElementById("login-phone").value;
-      if (phone.length < 11) {
-        showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+      const egyptPhoneRegex = /^01[0-2,5]{1}[0-9]{8}$/;
+      
+      if (!egyptPhoneRegex.test(phone)) {
+        showWarning("رقم الهاتف غير صحيح. تأكد أنه يبدأ بـ 010, 011, 012, أو 015 ومكون من 11 رقم.");
+        if(typeof btn !== 'undefined') { btn.innerHTML = originalText; btn.disabled = false; }
+        if(typeof submitBtn !== 'undefined') { submitBtn.innerHTML = originalText; submitBtn.disabled = false; }
         return;
       }
       const password = document.getElementById("login-password").value;
-
       try {
         const response = await fetch("/api/login", {
           method: "POST",
@@ -335,10 +336,6 @@ window.openForgotModal = () => {
 window.closeForgotModal = () => {
   modal.style.display = "none";
 };
-window.onclick = (event) => {
-  if (event.target == modal) closeForgotModal();
-};
-
 window.sendForgotOTP = async () => {
   const phone = document.getElementById("forgot-phone").value;
   if (!phone) return alert("أدخل الرقم");
@@ -409,12 +406,6 @@ window.closeWarningModal = function () {
   document.getElementById("warningModal").style.display = "none";
 };
 
-window.onclick = (event) => {
-  const modal = document.getElementById("forgotModal");
-  const warnModal = document.getElementById("warningModal");
-  if (event.target == modal) closeForgotModal();
-  if (event.target == warnModal) closeWarningModal();
-};
 
 let pendingPhoneNumber = "";
 
@@ -443,12 +434,16 @@ function confirmCreateAccount() {
   }, 1500);
 }
 
-window.onclick = (event) => {
+window.addEventListener("click", (event) => {
   const notFoundModal = document.getElementById("notFoundModal");
-  if (event.target == notFoundModal) closeNotFoundModal();
-
   const forgotModal = document.getElementById("forgotModal");
   const warnModal = document.getElementById("warningModal");
-  if (event.target == forgotModal) closeForgotModal();
-  if (event.target == warnModal) closeWarningModal();
-};
+  const complaintModal = document.getElementById("complaint-modal");
+
+  if (notFoundModal && event.target === notFoundModal) closeNotFoundModal();
+  if (forgotModal && event.target === forgotModal) closeForgotModal();
+  if (warnModal && event.target === warnModal) closeWarningModal();
+  if (complaintModal && event.target === complaintModal) {
+    complaintModal.style.display = "none";
+  }
+});
