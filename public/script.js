@@ -71,14 +71,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           btn.disabled = false;
         }
       }
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("mode") === "register") {
-        switchTab("register");
-      }
     });
   }
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("mode") === "register") {
+  setTimeout(() => {
+      switchTab("register");
+  }, 100);
+}
 
-  const registerForm = document.getElementById("register-form");
+const registerForm = document.getElementById("register-form");
   let isOtpSent = false;
   let isUsernameValid = false;
   let typingTimer;
