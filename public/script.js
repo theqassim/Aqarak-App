@@ -27,6 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const phone = document.getElementById("login-phone").value;
       if (phone.length < 11) {
         showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
         return;
       }
       const password = document.getElementById("login-password").value;
@@ -37,13 +39,21 @@ document.addEventListener("DOMContentLoaded", async () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone, password }),
         });
+
+        if (response.status === 404) {
+          showNotFoundModal(phone);
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
           localStorage.setItem("username", data.username);
           window.location.href = data.role === "admin" ? "admin-home" : "/home";
         } else {
-          if (response.status === 404 || data.errorType === "phone") {
+          if (data.errorType === "phone") {
             showNotFoundModal(phone);
           } else if (data.errorType === "password" || response.status === 401) {
             document.getElementById("login-pass-error").textContent =
@@ -53,10 +63,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
       } catch (error) {
+        console.error(error);
         alert("خطأ في الاتصال بالسيرفر");
       } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        if (btn.disabled && btn.innerHTML.includes("spinner")) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
       }
     });
   }
@@ -68,52 +81,50 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const usernameInput = document.getElementById("reg-username");
 
-    usernameInput.addEventListener("keyup", () => {
-      clearTimeout(typingTimer);
-      const val = usernameInput.value;
-      const iconCheck = document.getElementById("icon-check");
-      const iconError = document.getElementById("icon-error");
-      const msg = document.getElementById("username-msg");
+  usernameInput.addEventListener("keyup", () => {
+    clearTimeout(typingTimer);
+    const val = usernameInput.value;
+    const iconCheck = document.getElementById("icon-check");
+    const iconError = document.getElementById("icon-error");
+    const msg = document.getElementById("username-msg");
 
-      iconCheck.style.display = "none";
-      iconError.style.display = "none";
-      msg.textContent = "";
-      isUsernameValid = false;
+    iconCheck.style.display = "none";
+    iconError.style.display = "none";
+    msg.textContent = "";
+    isUsernameValid = false;
 
-      if (val.length < 3) return;
+    if (val.length < 3) return;
 
-      const hasLetters = /[a-z]/.test(val);
-      if (!hasLetters) {
-        iconError.style.display = "block";
-        msg.textContent =
-          "يجب أن يحتوي الاسم على حروف (لا يمكن أن يكون أرقاماً فقط)";
-        return;
-      }
+    const hasLetters = /[a-z]/.test(val);
+    if (!hasLetters) {
+      iconError.style.display = "block";
+      msg.textContent =
+        "يجب أن يحتوي الاسم على حروف (لا يمكن أن يكون أرقاماً فقط)";
+      return;
+    }
 
-      typingTimer = setTimeout(async () => {
-        try {
-          const res = await fetch("/api/check-username", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: val }),
-          });
-          const data = await res.json();
+    typingTimer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/check-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: val }),
+        });
+        const data = await res.json();
 
-          if (data.available) {
-            iconCheck.style.display = "block";
-            isUsernameValid = true;
-          } else {
-            iconError.style.display = "block";
-            msg.textContent =
-              data.message === "taken"
-                ? "الاسم مستخدم بالفعل"
-                : "الاسم غير متاح";
-          }
-        } catch (e) {
-          console.error(e);
+        if (data.available) {
+          iconCheck.style.display = "block";
+          isUsernameValid = true;
+        } else {
+          iconError.style.display = "block";
+          msg.textContent =
+            data.message === "taken" ? "الاسم مستخدم بالفعل" : "الاسم غير متاح";
         }
-      }, 500);
-    });
+      } catch (e) {
+        console.error(e);
+      }
+    }, 500);
+  });
 
   if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
