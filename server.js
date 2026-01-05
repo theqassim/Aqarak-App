@@ -1156,8 +1156,8 @@ app.post(
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
       await pgQuery(
-        `INSERT INTO users (name, username, phone, password, role, profile_picture) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [name, username, phone, hashedPassword, "user", profilePicUrl]
+        `INSERT INTO users (name, username, phone, password, role, profile_picture, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [name, username, phone, hashedPassword, "user", profilePicUrl, new Date().toISOString()]
       );
 
       delete otpStore[phone];
@@ -4307,6 +4307,48 @@ app.post("/api/reviews/summarize", async (req, res) => {
   } catch (error) {
     console.error("AI Summary Error:", error);
     res.json({ summary: "لم نتمكن من تلخيص التقييمات حالياً." });
+  }
+});
+
+app.get("/update-db-users-date", async (req, res) => {
+  try {
+    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TEXT`);
+    await pgQuery(`UPDATE users SET created_at = $1 WHERE created_at IS NULL`, [
+      new Date().toISOString(),
+    ]);
+    res.send("✅ تم تحديث جدول المستخدمين بنجاح.");
+  } catch (e) {
+    res.status(500).send("❌ خطأ: " + e.message);
+  }
+});
+
+app.get("/api/public/profile/:username", async (req, res) => {
+  const { username } = req.params;
+  try {
+    const userRes = await pgQuery(
+      "SELECT name, phone, is_verified, profile_picture, created_at FROM users WHERE username = $1",
+      [username.toLowerCase()]
+    );
+    if (userRes.rows.length === 0)
+      return res.status(404).json({ message: "المستخدم غير موجود" });
+
+    const user = userRes.rows[0];
+
+    const propsRes = await pgQuery(
+      `SELECT id, title, price, rooms, bathrooms, area, "imageUrl", type, "isFeatured" FROM properties WHERE "publisherUsername" = $1 OR "sellerPhone" = $2 ORDER BY id DESC`,
+      [username.toLowerCase(), user.phone]
+    );
+
+    res.json({
+      name: user.name,
+      phone: user.phone,
+      is_verified: user.is_verified,
+      profile_picture: user.profile_picture,
+      created_at: user.created_at || new Date().toISOString(),
+      properties: propsRes.rows,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "خطأ سيرفر" });
   }
 });
 

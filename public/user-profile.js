@@ -1,15 +1,16 @@
 document.addEventListener("DOMContentLoaded", async () => {
   let lastScrollY = window.scrollY;
   const header = document.getElementById("main-header");
-
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > lastScrollY && window.scrollY > 100) {
-      header.classList.add("header-hidden");
-    } else {
-      header.classList.remove("header-hidden");
-    }
-    lastScrollY = window.scrollY;
-  });
+  if (header) {
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+        header.style.transform = "translateY(-100%)";
+      } else {
+        header.style.transform = "translateY(0)";
+      }
+      lastScrollY = window.scrollY;
+    });
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get("u");
@@ -28,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const avatarImg =
       data.profile_picture && !data.profile_picture.includes("logo.png")
         ? data.profile_picture
-        : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+        : "logo.png";
 
     document.getElementById(
       "avatar-container"
@@ -39,8 +40,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       "prop-count-badge"
     ).innerText = `${data.properties.length} عقار`;
 
+    const joinDate = new Date(data.created_at);
+    const dateStr = joinDate.getFullYear();
+    document.getElementById("join-date-text").innerText = `عضو منذ ${dateStr}`;
+
     if (data.phone) {
       fetchReviews(data.phone);
+    } else {
+      document.getElementById("reviews-list").innerHTML =
+        '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات.</p>';
     }
 
     renderProperties(data.properties);
@@ -51,6 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error(error);
     document.getElementById("user-name").innerText = "مستخدم غير موجود";
+    document.getElementById("loading-props").style.display = "none";
   }
 });
 
@@ -60,7 +69,7 @@ function renderProperties(properties) {
 
   if (properties.length === 0) {
     grid.innerHTML =
-      '<p style="grid-column:1/-1; text-align:center; color:#777;">لا توجد عقارات حالياً.</p>';
+      '<p style="grid-column:1/-1; text-align:center; color:#777; padding:20px;">لا توجد عقارات حالياً.</p>';
     return;
   }
 
@@ -103,8 +112,9 @@ async function fetchReviews(phone) {
 
   try {
     const res = await fetch(`/api/reviews/${phone}`);
-    const reviews = await res.json();
+    if (!res.ok) throw new Error("Failed to fetch reviews");
 
+    const reviews = await res.json();
     loading.style.display = "none";
 
     if (reviews.length > 0) {
@@ -147,32 +157,27 @@ async function fetchReviews(phone) {
       )
       .join("");
 
-    aiContainer.style.display = "block";
-    const aiText = document.getElementById("ai-summary-text");
-    aiText.innerHTML =
-      '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
+    if (reviews.length >= 1) {
+      aiContainer.style.display = "block";
+      const aiText = document.getElementById("ai-summary-text");
+      aiText.innerHTML =
+        '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
 
-    const aiRes = await fetch("/api/reviews/summarize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reviews }),
-    });
-    const aiData = await aiRes.json();
-
-    aiText.innerHTML = "";
-    let i = 0;
-    const txt = aiData.summary;
-    const typeWriter = () => {
-      if (i < txt.length) {
-        aiText.innerHTML += txt.charAt(i);
-        i++;
-        setTimeout(typeWriter, 20);
+      try {
+        const aiRes = await fetch("/api/reviews/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reviews }),
+        });
+        const aiData = await aiRes.json();
+        aiText.innerHTML = aiData.summary;
+      } catch (e) {
+        aiContainer.style.display = "none";
       }
-    };
-    typeWriter();
+    }
   } catch (e) {
     loading.style.display = "none";
-    console.error(e);
+    console.error("Review Error:", e);
   }
 }
 
