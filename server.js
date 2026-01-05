@@ -24,8 +24,8 @@ const app = express();
 app.set("trust proxy", 1);
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 10 * 60 * 1000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -33,7 +33,7 @@ const limiter = rateLimit({
   },
 });
 
-app.use(limiter);
+app.use("/api", limiter);
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
