@@ -4184,10 +4184,6 @@ app.get("/admin-services", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-services.html"));
 });
 
-app.get("*", (req, res) => {
-  res.redirect("/");
-});
-
 app.get("/authentication", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -4246,6 +4242,10 @@ app.get("/sell", (req, res) => {
 
 app.get("/profile", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "user-profile.html"));
+});
+
+app.get("*", (req, res) => {
+  res.redirect("/");
 });
 
 app.listen(PORT, () => {
