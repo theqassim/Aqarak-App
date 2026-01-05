@@ -1,476 +1,678 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
     <title>عقارك - لوحة تحكم الأدمن</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <script src="admin-auth.js"></script>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-<script type="application/ld+json">
-     {
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
 
-  "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
 
-  "@type": "RealEstateAgent",
+        "name": "منصة عقارك - Aqarak",
 
-  "name": "منصة عقارك - Aqarak",
+        "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
 
-  "alternateName": ["Aqarak EG", "شركة عقارك", "Aqarak Real Estate"],
+        "url": "https://aqarakeg.com",
 
-  "url": "https://aqarakeg.com",
+        "logo": "https://aqarakeg.com/logo.jpg",
 
-  "logo": "https://aqarakeg.com/logo.jpg",
+        "image": "https://aqarakeg.com/logo.jpg",
 
-  "image": "https://aqarakeg.com/logo.jpg",
+        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
 
-  "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+        "address": {
+          "@type": "PostalAddress",
 
-  "address": {
+          "addressLocality": "Cairo",
 
-    "@type": "PostalAddress",
+          "addressCountry": "EG"
+        },
 
-    "addressLocality": "Cairo",
+        "priceRange": "$",
 
-    "addressCountry": "EG"
+        "contactPoint": {
+          "@type": "ContactPoint",
 
-  },
+          "telephone": "+201008102237",
 
-  "priceRange": "$",
+          "contactType": "customer service",
 
-  "contactPoint": {
+          "areaServed": "EG",
 
-    "@type": "ContactPoint",
+          "availableLanguage": ["Arabic"]
+        },
 
-    "telephone": "+201008102237",
+        "sameAs": [
+          "https://www.facebook.com/share/1ADgNDLXc6/",
 
-    "contactType": "customer service",
+          "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
 
-    "areaServed": "EG",
-
-    "availableLanguage": ["Arabic"]
-
-  },
-
-  "sameAs": [
-
-    "https://www.facebook.com/share/1ADgNDLXc6/",
-
-    "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
-
-    "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
-
-  ]
-
-}
+          "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
+        ]
+      }
     </script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0; padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-        :root {
-            --glass-bg: rgba(20, 20, 20, 0.98);
-            --neon-primary: #00ff88;
-            --neon-secondary: #00d4ff;
-            --neon-danger: #ff4444;
-            --neon-gold: #ffd700;
-            --neon-purple: #e91e63;
-            --card-bg: #1a1a1a;
-        }
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.98);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --neon-danger: #ff4444;
+        --neon-gold: #ffd700;
+        --neon-purple: #e91e63;
+        --card-bg: #1a1a1a;
+      }
 
-        body.internal-page {
-            background-color: #0f0f0f;
-            background-image: radial-gradient(circle at 50% 0%, #1a2c25 0%, #0f0f0f 70%);
-            min-height: 100vh;
-            font-family: 'Cairo', sans-serif;
-            color: white;
-            overflow-x: hidden;
-            
-            padding-top: 100px !important; 
-        }
+      body.internal-page {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1a2c25 0%,
+          #0f0f0f 70%
+        );
+        min-height: 100vh;
+        font-family: "Cairo", sans-serif;
+        color: white;
+        overflow-x: hidden;
 
-        .main-header {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            z-index: 9999;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
-        }
+        padding-top: 100px !important;
+      }
 
-        .header-container {
-            display: flex; justify-content: space-between; align-items: center;
-            max-width: 1250px; margin: 0 auto; width: 100%;
-        }
+      .main-header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 9999;
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
+      }
 
-        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .logo { height: 45px; border-radius: 50%; border: 2px solid var(--neon-secondary); }
-        .logo-text { color: white; font-weight: bold; font-size: 1.1rem; }
-
-        .nav-button {
-            text-decoration: none; color: white; border: 1px solid var(--neon-secondary);
-            padding: 6px 15px; border-radius: 50px; font-size: 0.85rem; transition: 0.3s;
-            display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
-        }
-        .nav-button:hover { background: var(--neon-secondary); color: black; }
-        
-        .logout-btn { border-color: var(--neon-danger); color: var(--neon-danger); }
-        .logout-btn:hover { background: var(--neon-danger); color: white; }
-
-        .main-content { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 20px 15px;
-        }
-
-        .page-title { 
-            text-align: center; 
-            margin-bottom: 40px; 
-            font-size: 2rem; 
-            color: var(--neon-secondary); 
-            text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-        }
-
-        .admin-dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
-        }
-
-        .dashboard-card {
-            background: var(--card-bg);
-            border: 1px solid #333;
-            border-radius: 16px;
-            padding: 30px 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-
-        .dashboard-card:hover { 
-            transform: translateY(-5px); 
-            border-color: var(--card-color, var(--neon-secondary)); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-        }
-        
-        .dashboard-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--card-color, var(--neon-secondary));
-        }
-
-        .icon-large { font-size: 2.5rem; margin-bottom: 15px; display: block; color: var(--card-color); }
-        .card-title { font-size: 1.3rem; margin-bottom: 8px; color: white; font-weight: bold; }
-        
-        .dashboard-card p { color: #aaa; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; }
-        .count-number { color: var(--card-color); font-weight: bold; font-size: 1.2rem; }
-
-        .btn-neon-auth {
-            display: inline-block; width: 100%; padding: 12px 0; border-radius: 50px;
-            border: 1px solid var(--card-color, var(--neon-secondary));
-            color: var(--card-color, var(--neon-secondary)); background: transparent;
-            font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.3s;
-            margin-top: auto;
-        }
-        .btn-neon-auth:hover { background: var(--card-color, var(--neon-secondary)); color: black; }
-
-        @media (max-width: 768px) {
-            body.internal-page {
-                padding-top: 130px !important; 
-            }
-            .page-title { font-size: 1.6rem; margin-bottom: 25px; }
-            .logo-text { display: none; }
-            .logo { height: 40px; }
-        }
-.payment-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    text-align: right;
-    margin-bottom: 15px;
-}
-
-.control-group {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.control-label { font-size: 0.9rem; color: #ccc; }
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-input:checked + .slider { background-color: var(--neon-primary); }
-input:checked + .slider:before { transform: translateX(26px); }
-
-.price-input {
-    background: #000;
-    border: 1px solid #555;
-    color: var(--neon-gold);
-    padding: 5px 10px;
-    border-radius: 5px;
-    width: 80px;
-    text-align: center;
-    font-weight: bold;
-    outline: none;
-}
-.price-input:focus { border-color: var(--neon-gold); }
-
-#payment-status-text {
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-right: 10px;
-}
-.status-active { color: var(--neon-primary); }
-.status-inactive { color: var(--neon-danger); }
-#secret-logs-container {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background: rgba(0, 0, 0, 0.85) !important; 
-}
-
-.logs-wrapper {
-    background: rgba(30, 30, 30, 0.6);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-    margin-top: 20px;
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
-}
-
-.logs-header, .log-row {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 2fr; 
-    padding: 15px;
-    align-items: center;
-    text-align: center;
-}
-
-.logs-header {
-    background: rgba(0, 255, 136, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-weight: bold;
-    color: #00ff88;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-}
-
-.log-row {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: background 0.3s ease;
-    color: #eee;
-    font-size: 0.95rem;
-}
-
-.log-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.cell-phone { font-family: 'Courier New', monospace; letter-spacing: 1px; color: #fff; }
-.cell-points { color: #FFD700; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.1rem; }
-.cell-money { color: #00ff88; font-weight: bold; text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); font-size: 1.1rem; }
-.cell-date { color: #aaa; font-size: 0.85rem; }
-.cell-desc { color: #888; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-@media (max-width: 768px) {
-    .logs-header { display: none; }
-
-    .log-row {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        margin: 15px;
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .log-cell {
+      .header-container {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        max-width: 1250px;
+        margin: 0 auto;
         width: 100%;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-    }
-    
-    .log-cell:last-child { border-bottom: none; }
+      }
 
-    .log-cell::before {
-        content: attr(data-label);
-        color: #888;
-        font-size: 0.9rem;
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+      }
+      .logo {
+        height: 45px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-secondary);
+      }
+      .logo-text {
+        color: white;
         font-weight: bold;
-    }
-    
-    .cell-desc { white-space: normal; }
-}
-    </style>
-</head>
-<body class="internal-page">
+        font-size: 1.1rem;
+      }
 
+      .nav-button {
+        text-decoration: none;
+        color: white;
+        border: 1px solid var(--neon-secondary);
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .nav-button:hover {
+        background: var(--neon-secondary);
+        color: black;
+      }
+
+      .logout-btn {
+        border-color: var(--neon-danger);
+        color: var(--neon-danger);
+      }
+      .logout-btn:hover {
+        background: var(--neon-danger);
+        color: white;
+      }
+
+      .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+      }
+
+      .page-title {
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 2rem;
+        color: var(--neon-secondary);
+        text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+      }
+
+      .admin-dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-bottom: 50px;
+      }
+
+      .dashboard-card {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 30px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--card-color, var(--neon-secondary));
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .dashboard-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--card-color, var(--neon-secondary));
+      }
+
+      .icon-large {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        display: block;
+        color: var(--card-color);
+      }
+      .card-title {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+        color: white;
+        font-weight: bold;
+      }
+
+      .dashboard-card p {
+        color: #aaa;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      .count-number {
+        color: var(--card-color);
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+
+      .btn-neon-auth {
+        display: inline-block;
+        width: 100%;
+        padding: 12px 0;
+        border-radius: 50px;
+        border: 1px solid var(--card-color, var(--neon-secondary));
+        color: var(--card-color, var(--neon-secondary));
+        background: transparent;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.3s;
+        margin-top: auto;
+      }
+      .btn-neon-auth:hover {
+        background: var(--card-color, var(--neon-secondary));
+        color: black;
+      }
+
+      @media (max-width: 768px) {
+        body.internal-page {
+          padding-top: 130px !important;
+        }
+        .page-title {
+          font-size: 1.6rem;
+          margin-bottom: 25px;
+        }
+        .logo-text {
+          display: none;
+        }
+        .logo {
+          height: 40px;
+        }
+      }
+      .payment-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+        text-align: right;
+        margin-bottom: 15px;
+      }
+
+      .control-group {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .control-label {
+        font-size: 0.9rem;
+        color: #ccc;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: var(--neon-primary);
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      .price-input {
+        background: #000;
+        border: 1px solid #555;
+        color: var(--neon-gold);
+        padding: 5px 10px;
+        border-radius: 5px;
+        width: 80px;
+        text-align: center;
+        font-weight: bold;
+        outline: none;
+      }
+      .price-input:focus {
+        border-color: var(--neon-gold);
+      }
+
+      #payment-status-text {
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+      .status-active {
+        color: var(--neon-primary);
+      }
+      .status-inactive {
+        color: var(--neon-danger);
+      }
+      #secret-logs-container {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.85) !important;
+      }
+
+      .logs-wrapper {
+        background: rgba(30, 30, 30, 0.6);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        margin-top: 20px;
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
+      }
+
+      .logs-header,
+      .log-row {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr 2fr;
+        padding: 15px;
+        align-items: center;
+        text-align: center;
+      }
+
+      .logs-header {
+        background: rgba(0, 255, 136, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: bold;
+        color: #00ff88;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+      }
+
+      .log-row {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.3s ease;
+        color: #eee;
+        font-size: 0.95rem;
+      }
+
+      .log-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .cell-phone {
+        font-family: "Courier New", monospace;
+        letter-spacing: 1px;
+        color: #fff;
+      }
+      .cell-points {
+        color: #ffd700;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        font-size: 1.1rem;
+      }
+      .cell-money {
+        color: #00ff88;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        font-size: 1.1rem;
+      }
+      .cell-date {
+        color: #aaa;
+        font-size: 0.85rem;
+      }
+      .cell-desc {
+        color: #888;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 768px) {
+        .logs-header {
+          display: none;
+        }
+
+        .log-row {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          margin: 15px;
+          border-radius: 12px;
+          padding: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .log-cell {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          padding-bottom: 8px;
+          border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .log-cell:last-child {
+          border-bottom: none;
+        }
+
+        .log-cell::before {
+          content: attr(data-label);
+          color: #888;
+          font-size: 0.9rem;
+          font-weight: bold;
+        }
+
+        .cell-desc {
+          white-space: normal;
+        }
+      }
+    </style>
+  </head>
+  <body class="internal-page">
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="logo.jpg" alt="شعار عقارك" class="logo">
-                <span class="logo-text">لوحة التحكم (Admin)</span>
-            </div>
-            <nav class="main-nav" style="display:flex; gap:10px;">
-                <a href="home" class="nav-button">عرض الموقع <i class="fas fa-globe"></i></a> 
-                <button class="nav-button logout-btn" onclick="logoutAdmin()">خروج <i class="fas fa-sign-out-alt"></i></button>
-            </nav>
+      <div class="header-container">
+        <div class="logo-container">
+          <img src="logo.jpg" alt="شعار عقارك" class="logo" />
+          <span class="logo-text">لوحة التحكم (Admin)</span>
         </div>
+        <nav class="main-nav" style="display: flex; gap: 10px">
+          <a href="home" class="nav-button"
+            >عرض الموقع <i class="fas fa-globe"></i
+          ></a>
+          <button class="nav-button logout-btn" onclick="logoutAdmin()">
+            خروج <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </nav>
+      </div>
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">إدارة الموقع والعقارات</h1>
-        
-        <div class="admin-dashboard-grid">
-            
-            <div class="dashboard-card" id="seller-submissions-box" style="--card-color: var(--neon-gold);">
-                <i class="fas fa-file-invoice icon-large"></i>
-                <h2 class="card-title">طلبات النشر</h2>
-                <p>يوجد عدد <span class="count-number">0</span> طلبات جديدة</p>
-                <a href="admin-submissions" class="btn-neon-auth">مراجعة الطلبات</a>
-            </div>
+      <h1 class="page-title">إدارة الموقع والعقارات</h1>
 
-            <div class="dashboard-card" id="property-requests-box" style="--card-color: var(--neon-secondary);">
-                <i class="fas fa-user-tag icon-large"></i>
-                <h2 class="card-title">طلبات التخصيص</h2>
-                <p>يوجد عدد <span class="count-number">0</span> طلبات عقار</p>
-                <a href="admin-requests" class="btn-neon-auth">مراجعة الطلبات</a>
-            </div>
+      <div class="admin-dashboard-grid">
+        <div
+          class="dashboard-card"
+          id="seller-submissions-box"
+          style="--card-color: var(--neon-gold)"
+        >
+          <i class="fas fa-file-invoice icon-large"></i>
+          <h2 class="card-title">طلبات النشر</h2>
+          <p>يوجد عدد <span class="count-number">0</span> طلبات جديدة</p>
+          <a href="admin-submissions" class="btn-neon-auth">مراجعة الطلبات</a>
+        </div>
 
-            <div class="dashboard-card" id="complaints-box" style="--card-color: var(--neon-danger);">
-                <i class="fas fa-exclamation-triangle icon-large"></i>
-                <h2 class="card-title">الشكاوي</h2>
-                <p>يوجد عدد <span class="count-number" id="complaints-count">0</span> شكوى جديدة</p>
-                <a href="admin-complaints.html" class="btn-neon-auth">عرض الشكاوي</a>
-            </div>
+        <div
+          class="dashboard-card"
+          id="property-requests-box"
+          style="--card-color: var(--neon-secondary)"
+        >
+          <i class="fas fa-user-tag icon-large"></i>
+          <h2 class="card-title">طلبات التخصيص</h2>
+          <p>يوجد عدد <span class="count-number">0</span> طلبات عقار</p>
+          <a href="admin-requests" class="btn-neon-auth">مراجعة الطلبات</a>
+        </div>
 
-            <div class="dashboard-card" style="--card-color: var(--neon-purple);">
-                <i class="fas fa-users-cog icon-large"></i>
-                <h2 class="card-title">المستخدمين</h2>
-                <p>إدارة الحسابات، الحظر، والإحصائيات.</p>
-                <a href="admin-user-stats" class="btn-neon-auth">الإحصائيات والحظر</a>
-            </div>
+        <div
+          class="dashboard-card"
+          id="complaints-box"
+          style="--card-color: var(--neon-danger)"
+        >
+          <i class="fas fa-exclamation-triangle icon-large"></i>
+          <h2 class="card-title">الشكاوي</h2>
+          <p>
+            يوجد عدد
+            <span class="count-number" id="complaints-count">0</span> شكوى جديدة
+          </p>
+          <a href="admin-complaints.html" class="btn-neon-auth">عرض الشكاوي</a>
+        </div>
 
-            <div class="dashboard-card" style="--card-color: var(--neon-primary);">
-                <i class="fas fa-plus-circle icon-large"></i>
-                <h2 class="card-title">نشر عقار</h2>
-                <p>إضافة عقار جديد مباشرة للموقع.</p>
-                <a href="admin-add-property" class="btn-neon-auth">نشر جديد</a>
-            </div>
-            
-            <div class="dashboard-card" style="--card-color: #ffffff;">
-                <i class="fas fa-edit icon-large"></i>
-                <h2 class="card-title">تعديل العقارات</h2>
-                <p>البحث وتعديل العقارات المنشورة بالكود.</p>
-                <a href="admin-edit-property" class="btn-neon-auth">بحث وتعديل</a>
-            </div>
+        <div class="dashboard-card" style="--card-color: var(--neon-purple)">
+          <i class="fas fa-users-cog icon-large"></i>
+          <h2 class="card-title">المستخدمين</h2>
+          <p>إدارة الحسابات، الحظر، والإحصائيات.</p>
+          <a href="admin-user-stats" class="btn-neon-auth">الإحصائيات والحظر</a>
+        </div>
 
-            <div class="dashboard-card" id="payment-settings-box" style="--card-color: #ff9f43;">
-    <i class="fas fa-coins icon-large"></i>
-    <h2 class="card-title">إعدادات الدفع</h2>
-    
-    <div class="payment-controls">
-        <div class="control-group">
-            <label class="control-label">نظام الدفع:</label>
-            <div style="display:flex; align-items:center;">
-                <span id="payment-status-text" class="status-inactive">مجاني</span>
+        <div class="dashboard-card" style="--card-color: var(--neon-primary)">
+          <i class="fas fa-plus-circle icon-large"></i>
+          <h2 class="card-title">نشر عقار</h2>
+          <p>إضافة عقار جديد مباشرة للموقع.</p>
+          <a href="admin-add-property" class="btn-neon-auth">نشر جديد</a>
+        </div>
+
+        <div class="dashboard-card" style="--card-color: #ffffff">
+          <i class="fas fa-edit icon-large"></i>
+          <h2 class="card-title">تعديل العقارات</h2>
+          <p>البحث وتعديل العقارات المنشورة بالكود.</p>
+          <a href="admin-edit-property" class="btn-neon-auth">بحث وتعديل</a>
+        </div>
+
+        <div
+          class="dashboard-card"
+          id="payment-settings-box"
+          style="--card-color: #ff9f43"
+        >
+          <i class="fas fa-coins icon-large"></i>
+          <h2 class="card-title">إعدادات الدفع</h2>
+
+          <div class="payment-controls">
+            <div class="control-group">
+              <label class="control-label">نظام الدفع:</label>
+              <div style="display: flex; align-items: center">
+                <span id="payment-status-text" class="status-inactive"
+                  >مجاني</span
+                >
                 <label class="switch">
-                    <input type="checkbox" id="payment-toggle" onchange="togglePaymentStatus()">
-                    <span class="slider"></span>
+                  <input
+                    type="checkbox"
+                    id="payment-toggle"
+                    onchange="togglePaymentStatus()"
+                  />
+                  <span class="slider"></span>
                 </label>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <label class="control-label">سعر النقطة (ج.م):</label>
-            <input type="number" id="point-price" class="price-input" step="0.1" value="1.0">
-        </div>
-    </div>
-
-    <button onclick="savePaymentSettings()" class="btn-neon-auth">حفظ التعديلات</button>
-</div>
-         
-          <div class="dashboard-card" style="--card-color: #00e676;">
-    <i class="fas fa-bolt icon-large"></i>
-    <h2 class="card-title">شحن رصيد سريع</h2>
-    <p>إضافة نقط لمستخدم يدوياً.</p>
-    
-    <div class="payment-controls">
-        <input type="text" id="charge-phone" placeholder="رقم هاتف المستخدم" 
-               style="width:100%; padding:8px; border-radius:5px; border:1px solid #444; background:#000; color:white; margin-bottom:10px; text-align:center;">
-        
-        <input type="number" id="charge-amount" placeholder="عدد النقاط" 
-               style="width:100%; padding:8px; border-radius:5px; border:1px solid #444; background:#000; color:white; text-align:center;">
-    </div>
-
-    <button onclick="manualCharge()" class="btn-neon-auth">تنفيذ الشحن ⚡</button>
-</div>
-
-<div class="dashboard-card" style="--card-color: #00d4ff;">
-                <i class="fas fa-paper-plane icon-large" style="color: #00d4ff;"></i>
-                <h2 class="card-title">إرسال إشعار</h2>
-                <p class="card-desc">إرسال تنبيهات للمستخدمين أو للكل.</p>
-                <button onclick="openNotifModal()" class="btn-neon-auth">إرسال الآن</button>
+              </div>
             </div>
 
-            <div class="dashboard-card" style="--card-color: #ff00ff;"> <i class="fas fa-handshake icon-large"></i>
-    <h2 class="card-title">إدارة الخدمات</h2>
-    <p class="card-desc">إضافة شركاء نجاح وخدمات جديدة.</p>
-    <a href="admin-services" class="btn-neon-auth">إضافة خدمة</a>
-</div>
-
-            <div class="dashboard-card" style="--card-color: #00ff88;">
-                <i class="fas fa-user-check icon-large" style="color: #00ff88;"></i>
-                <h2 class="card-title">توثيق المستخدمين</h2>
-                <p class="card-desc">البحث عن المستخدمين وتفعيل علامة التوثيق.</p>
-                <a href="admin-users" class="btn-neon-auth">إدارة المستخدمين</a>
+            <div class="control-group">
+              <label class="control-label">سعر النقطة (ج.م):</label>
+              <input
+                type="number"
+                id="point-price"
+                class="price-input"
+                step="0.1"
+                value="1.0"
+              />
             </div>
+          </div>
 
+          <button onclick="savePaymentSettings()" class="btn-neon-auth">
+            حفظ التعديلات
+          </button>
         </div>
+
+        <div class="dashboard-card" style="--card-color: #00e676">
+          <i class="fas fa-bolt icon-large"></i>
+          <h2 class="card-title">شحن رصيد سريع</h2>
+          <p>إضافة نقط لمستخدم يدوياً.</p>
+
+          <div class="payment-controls">
+            <input
+              type="text"
+              id="charge-phone"
+              placeholder="رقم هاتف المستخدم"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #444;
+                background: #000;
+                color: white;
+                margin-bottom: 10px;
+                text-align: center;
+              "
+            />
+
+            <input
+              type="number"
+              id="charge-amount"
+              placeholder="عدد النقاط"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #444;
+                background: #000;
+                color: white;
+                text-align: center;
+              "
+            />
+          </div>
+
+          <button onclick="manualCharge()" class="btn-neon-auth">
+            تنفيذ الشحن ⚡
+          </button>
+        </div>
+
+        <div class="dashboard-card" style="--card-color: #00d4ff">
+          <i class="fas fa-paper-plane icon-large" style="color: #00d4ff"></i>
+          <h2 class="card-title">إرسال إشعار</h2>
+          <p class="card-desc">إرسال تنبيهات للمستخدمين أو للكل.</p>
+          <button onclick="openNotifModal()" class="btn-neon-auth">
+            إرسال الآن
+          </button>
+        </div>
+
+        <div class="dashboard-card" style="--card-color: #ff00ff">
+          <i class="fas fa-handshake icon-large"></i>
+          <h2 class="card-title">إدارة الخدمات</h2>
+          <p class="card-desc">إضافة شركاء نجاح وخدمات جديدة.</p>
+          <a href="admin-services" class="btn-neon-auth">إضافة خدمة</a>
+        </div>
+
+        <div class="dashboard-card" style="--card-color: #00ff88">
+          <i class="fas fa-user-check icon-large" style="color: #00ff88"></i>
+          <h2 class="card-title">توثيق المستخدمين</h2>
+          <p class="card-desc">البحث عن المستخدمين وتفعيل علامة التوثيق.</p>
+          <a href="admin-users" class="btn-neon-auth">إدارة المستخدمين</a>
+        </div>
+
+        <div class="dashboard-card" style="--card-color: #ff00ff">
+          <i class="fas fa-question-circle icon-large"></i>
+          <h2 class="card-title">الأسئلة الشائعة</h2>
+          <p>إدارة الأسئلة، الرد عليها، ونشرها.</p>
+          <a href="admin-faq" class="btn-neon-auth">إدارة الأسئلة</a>
+        </div>
+      </div>
     </main>
 
     <script src="logout.js"></script>
@@ -478,189 +680,408 @@ input:checked + .slider:before { transform: translateX(26px); }
     <script src="app.js"></script>
     <script src="reload.js"></script>
     <script src="global-alert.js"></script>
-    <div id="notif-modal" class="modal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
-        <div class="modal-content" style="background: #1c2630; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; border: 1px solid #00d4ff; text-align: center;">
-            <span onclick="document.getElementById('notif-modal').style.display='none'" style="position: absolute; top: 15px; left: 15px; color: #aaa; cursor: pointer; font-size: 1.5rem;">&times;</span>
-            
-            <h3 style="color: #00d4ff; margin-bottom: 20px;"><i class="fas fa-bell"></i> إرسال إشعار جديد</h3>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center;">
-                <label style="cursor: pointer; color: white;">
-                    <input type="radio" name="targetType" value="single" checked onchange="toggleNotifTarget()"> مستخدم محدد
-                </label>
-                <label style="cursor: pointer; color: white;">
-                    <input type="radio" name="targetType" value="all" onchange="toggleNotifTarget()"> إرسال للجميع (Broadcast)
-                </label>
-            </div>
+    <div
+      id="notif-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        z-index: 20000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="modal-content"
+        style="
+          background: #1c2630;
+          padding: 25px;
+          border-radius: 15px;
+          width: 90%;
+          max-width: 500px;
+          border: 1px solid #00d4ff;
+          text-align: center;
+        "
+      >
+        <span
+          onclick="document.getElementById('notif-modal').style.display='none'"
+          style="
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 1.5rem;
+          "
+          >&times;</span
+        >
 
-            <div class="input-group" id="target-phone-group">
-                <input type="tel" id="notif-phone" class="neon-input-white" placeholder="رقم هاتف المستخدم (01xxxxxxxxx)" style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;">
-            </div>
+        <h3 style="color: #00d4ff; margin-bottom: 20px">
+          <i class="fas fa-bell"></i> إرسال إشعار جديد
+        </h3>
 
-            <div class="input-group" style="margin-top: 10px;">
-                <input type="text" id="notif-title" class="neon-input-white" placeholder="عنوان الإشعار" style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;">
-            </div>
-
-            <div class="input-group" style="margin-top: 10px;">
-                <textarea id="notif-message" rows="3" placeholder="نص الرسالة..." style="width: 100%; padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;"></textarea>
-            </div>
-
-            <button onclick="sendAdminNotification()" class="btn-neon-auth" style="margin-top: 20px; background: #00d4ff; color: black; font-weight: bold;">🚀 إرسال</button>
+        <div
+          style="
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+          "
+        >
+          <label style="cursor: pointer; color: white">
+            <input
+              type="radio"
+              name="targetType"
+              value="single"
+              checked
+              onchange="toggleNotifTarget()"
+            />
+            مستخدم محدد
+          </label>
+          <label style="cursor: pointer; color: white">
+            <input
+              type="radio"
+              name="targetType"
+              value="all"
+              onchange="toggleNotifTarget()"
+            />
+            إرسال للجميع (Broadcast)
+          </label>
         </div>
+
+        <div class="input-group" id="target-phone-group">
+          <input
+            type="tel"
+            id="notif-phone"
+            class="neon-input-white"
+            placeholder="رقم هاتف المستخدم (01xxxxxxxxx)"
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 8px;
+              background: #222;
+              border: 1px solid #444;
+              color: white;
+            "
+          />
+        </div>
+
+        <div class="input-group" style="margin-top: 10px">
+          <input
+            type="text"
+            id="notif-title"
+            class="neon-input-white"
+            placeholder="عنوان الإشعار"
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 8px;
+              background: #222;
+              border: 1px solid #444;
+              color: white;
+            "
+          />
+        </div>
+
+        <div class="input-group" style="margin-top: 10px">
+          <textarea
+            id="notif-message"
+            rows="3"
+            placeholder="نص الرسالة..."
+            style="
+              width: 100%;
+              padding: 10px;
+              border-radius: 8px;
+              background: #222;
+              border: 1px solid #444;
+              color: white;
+            "
+          ></textarea>
+        </div>
+
+        <button
+          onclick="sendAdminNotification()"
+          class="btn-neon-auth"
+          style="
+            margin-top: 20px;
+            background: #00d4ff;
+            color: black;
+            font-weight: bold;
+          "
+        >
+          🚀 إرسال
+        </button>
+      </div>
     </div>
 
     <script>
-        function openNotifModal() {
-            document.getElementById('notif-modal').style.display = 'flex';
+      function openNotifModal() {
+        document.getElementById("notif-modal").style.display = "flex";
+      }
+
+      function toggleNotifTarget() {
+        const isBroadcast =
+          document.querySelector('input[name="targetType"]:checked').value ===
+          "all";
+        document.getElementById("target-phone-group").style.display =
+          isBroadcast ? "none" : "block";
+      }
+
+      async function sendAdminNotification() {
+        const isBroadcast =
+          document.querySelector('input[name="targetType"]:checked').value ===
+          "all";
+        const phone = document.getElementById("notif-phone").value;
+        const title = document.getElementById("notif-title").value;
+        const message = document.getElementById("notif-message").value;
+        const btn = document.querySelector(
+          'button[onclick="sendAdminNotification()"]'
+        );
+
+        if (!title || !message) return alert("يرجى كتابة العنوان والرسالة");
+        if (!isBroadcast && !phone) return alert("يرجى كتابة رقم الهاتف");
+
+        btn.innerHTML = "جاري الإرسال...";
+        btn.disabled = true;
+
+        try {
+          const res = await fetch("/api/admin/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              targetPhone: phone,
+              title: title,
+              message: message,
+              isBroadcast: isBroadcast,
+            }),
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            alert("✅ " + data.message);
+            document.getElementById("notif-modal").style.display = "none";
+            document.getElementById("notif-title").value = "";
+            document.getElementById("notif-message").value = "";
+          } else {
+            alert("❌ فشل: " + data.message);
+          }
+        } catch (e) {
+          alert("خطأ في الاتصال");
+        } finally {
+          btn.innerHTML = "🚀 إرسال";
+          btn.disabled = false;
         }
-
-        function toggleNotifTarget() {
-            const isBroadcast = document.querySelector('input[name="targetType"]:checked').value === 'all';
-            document.getElementById('target-phone-group').style.display = isBroadcast ? 'none' : 'block';
-        }
-
-        async function sendAdminNotification() {
-            const isBroadcast = document.querySelector('input[name="targetType"]:checked').value === 'all';
-            const phone = document.getElementById('notif-phone').value;
-            const title = document.getElementById('notif-title').value;
-            const message = document.getElementById('notif-message').value;
-            const btn = document.querySelector('button[onclick="sendAdminNotification()"]');
-
-            if (!title || !message) return alert('يرجى كتابة العنوان والرسالة');
-            if (!isBroadcast && !phone) return alert('يرجى كتابة رقم الهاتف');
-
-            btn.innerHTML = 'جاري الإرسال...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/admin/send-notification', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        targetPhone: phone,
-                        title: title,
-                        message: message,
-                        isBroadcast: isBroadcast
-                    })
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    document.getElementById('notif-modal').style.display = 'none';
-                    document.getElementById('notif-title').value = '';
-                    document.getElementById('notif-message').value = '';
-                } else {
-                    alert('❌ فشل: ' + data.message);
-                }
-            } catch (e) {
-                alert('خطأ في الاتصال');
-            } finally {
-                btn.innerHTML = '🚀 إرسال';
-                btn.disabled = false;
-            }
-        }
+      }
     </script>
-    <div id="secret-modal" class="modal" style="display: none; position: fixed; z-index: 99999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center;">
-    <div class="modal-content" style="background:#111; padding:20px; border:1px solid #00ff88; width:90%; max-width:400px; text-align:center;">
-        <h3 style="color:#00ff88; margin-bottom:15px;">🔐 المنطقة السرية</h3>
-        <input type="password" id="secret-pass" placeholder="كلمة السر" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:white;">
-        <button onclick="checkSecretAccess()" class="btn-neon-auth">دخول</button>
-        <button onclick="document.getElementById('secret-modal').style.display='none'" style="margin-top:10px; background:none; border:none; color:#aaa; cursor:pointer;">إغلاق</button>
+    <div
+      id="secret-modal"
+      class="modal"
+      style="
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        justify-content: center;
+        align-items: center;
+      "
+    >
+      <div
+        class="modal-content"
+        style="
+          background: #111;
+          padding: 20px;
+          border: 1px solid #00ff88;
+          width: 90%;
+          max-width: 400px;
+          text-align: center;
+        "
+      >
+        <h3 style="color: #00ff88; margin-bottom: 15px">🔐 المنطقة السرية</h3>
+        <input
+          type="password"
+          id="secret-pass"
+          placeholder="كلمة السر"
+          style="
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #222;
+            border: 1px solid #444;
+            color: white;
+          "
+        />
+        <button onclick="checkSecretAccess()" class="btn-neon-auth">
+          دخول
+        </button>
+        <button
+          onclick="document.getElementById('secret-modal').style.display='none'"
+          style="
+            margin-top: 10px;
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+          "
+        >
+          إغلاق
+        </button>
+      </div>
     </div>
-</div>
 
-<div id="secret-logs-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:99999; padding:20px; overflow-y:auto;">
-    <div style="max-width:900px; margin:40px auto; position:relative;">
-        
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <h2 style="color:#00ff88; font-size:1.8rem; text-shadow:0 0 15px rgba(0,255,136,0.4);">
-                <i class="fas fa-history"></i> سجلات الشحن
-            </h2>
-            <button onclick="document.getElementById('secret-logs-container').style.display='none'" 
-                    style="color:white; background:rgba(255,255,255,0.1); border:none; width:40px; height:40px; border-radius:50%; font-size:1.2rem; cursor:pointer; transition:0.3s;">
-                &times;
-            </button>
+    <div
+      id="secret-logs-container"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 99999;
+        padding: 20px;
+        overflow-y: auto;
+      "
+    >
+      <div style="max-width: 900px; margin: 40px auto; position: relative">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+          "
+        >
+          <h2
+            style="
+              color: #00ff88;
+              font-size: 1.8rem;
+              text-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+            "
+          >
+            <i class="fas fa-history"></i> سجلات الشحن
+          </h2>
+          <button
+            onclick="document.getElementById('secret-logs-container').style.display='none'"
+            style="
+              color: white;
+              background: rgba(255, 255, 255, 0.1);
+              border: none;
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              font-size: 1.2rem;
+              cursor: pointer;
+              transition: 0.3s;
+            "
+          >
+            &times;
+          </button>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-            <button onclick="clearSecretLogs()" 
-                    style="background:rgba(255, 68, 68, 0.2); color:#ff4444; border:1px solid #ff4444; padding:8px 20px; border-radius:30px; cursor:pointer; font-weight:bold; transition:0.3s;">
-                <i class="fas fa-trash"></i> مسح السجل
-            </button>
+        <div
+          style="display: flex; justify-content: flex-end; margin-bottom: 15px"
+        >
+          <button
+            onclick="clearSecretLogs()"
+            style="
+              background: rgba(255, 68, 68, 0.2);
+              color: #ff4444;
+              border: 1px solid #ff4444;
+              padding: 8px 20px;
+              border-radius: 30px;
+              cursor: pointer;
+              font-weight: bold;
+              transition: 0.3s;
+            "
+          >
+            <i class="fas fa-trash"></i> مسح السجل
+          </button>
         </div>
 
         <div class="logs-wrapper">
-            <div class="logs-header">
-                <div>رقم الهاتف</div>
-                <div>النقاط</div>
-                <div>المبلغ (ج.م)</div>
-                <div>التاريخ</div>
-                <div>الوصف</div>
-            </div>
-            
-            <div id="logs-table-body">
-                <p style="text-align:center; padding:20px; color:#aaa;">جاري التحميل...</p>
-            </div>
-        </div>
+          <div class="logs-header">
+            <div>رقم الهاتف</div>
+            <div>النقاط</div>
+            <div>المبلغ (ج.م)</div>
+            <div>التاريخ</div>
+            <div>الوصف</div>
+          </div>
 
+          <div id="logs-table-body">
+            <p style="text-align: center; padding: 20px; color: #aaa">
+              جاري التحميل...
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
-</div>
-<script>
-    let logoClicks = 0;
-    document.querySelector('.logo').addEventListener('click', (e) => {
+    <script>
+      let logoClicks = 0;
+      document.querySelector(".logo").addEventListener("click", (e) => {
         e.preventDefault();
         logoClicks++;
         if (logoClicks === 5) {
-            document.getElementById('secret-modal').style.display = 'flex';
-            logoClicks = 0;
+          document.getElementById("secret-modal").style.display = "flex";
+          logoClicks = 0;
         }
-    });
+      });
 
-    async function checkSecretAccess() {
-        const pass = document.getElementById('secret-pass').value;
+      async function checkSecretAccess() {
+        const pass = document.getElementById("secret-pass").value;
         if (pass === "Qassim&Ammar") {
-            document.getElementById('secret-modal').style.display = 'none';
-            document.getElementById('secret-pass').value = '';
-            await loadSecretLogs();
+          document.getElementById("secret-modal").style.display = "none";
+          document.getElementById("secret-pass").value = "";
+          await loadSecretLogs();
         } else {
-            alert("❌ كلمة السر خاطئة!");
+          alert("❌ كلمة السر خاطئة!");
         }
-    }
+      }
 
-    async function loadSecretLogs() {
-    const wrapper = document.getElementById('secret-logs-container');
-    const tableBody = document.getElementById('logs-table-body');
-    
-    wrapper.style.display = 'block';
-    tableBody.innerHTML = '<div style="padding:40px; text-align:center; color:white;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري جلب البيانات...</div>';
+      async function loadSecretLogs() {
+        const wrapper = document.getElementById("secret-logs-container");
+        const tableBody = document.getElementById("logs-table-body");
 
-    try {
-        const res = await fetch('/api/admin/secret-logs');
-        const logs = await res.json();
-        
-        const currentPriceInput = document.getElementById('point-price');
-        const currentPointPrice = currentPriceInput ? parseFloat(currentPriceInput.value) : 1;
+        wrapper.style.display = "block";
+        tableBody.innerHTML =
+          '<div style="padding:40px; text-align:center; color:white;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>جاري جلب البيانات...</div>';
 
-        if (!logs || logs.length === 0) {
-            tableBody.innerHTML = '<div style="padding:40px; text-align:center; color:#777;">📭 لا توجد سجلات شحن محفوظة.</div>';
+        try {
+          const res = await fetch("/api/admin/secret-logs");
+          const logs = await res.json();
+
+          const currentPriceInput = document.getElementById("point-price");
+          const currentPointPrice = currentPriceInput
+            ? parseFloat(currentPriceInput.value)
+            : 1;
+
+          if (!logs || logs.length === 0) {
+            tableBody.innerHTML =
+              '<div style="padding:40px; text-align:center; color:#777;">📭 لا توجد سجلات شحن محفوظة.</div>';
             return;
-        }
+          }
 
-        let html = '';
-        
-        logs.forEach(log => {
+          let html = "";
+
+          logs.forEach((log) => {
             const points = parseFloat(log.amount);
-            
+
             let moneyValue = log.money_amount;
             if (!moneyValue || moneyValue == 0) {
-                 moneyValue = points * currentPointPrice;
+              moneyValue = points * currentPointPrice;
             }
-            
+
             const money = parseFloat(moneyValue).toFixed(1);
-            const date = new Date(log.date).toLocaleDateString('ar-EG');
-            
+            const date = new Date(log.date).toLocaleDateString("ar-EG");
+
             html += `
                 <div class="log-row">
                     <div class="log-cell cell-phone" data-label="الهاتف">${log.user_phone}</div>
@@ -670,21 +1091,21 @@ input:checked + .slider:before { transform: translateX(26px); }
                     <div class="log-cell cell-desc" data-label="الوصف" title="${log.description}">${log.description}</div>
                 </div>
             `;
-        });
+          });
 
-        tableBody.innerHTML = html;
+          tableBody.innerHTML = html;
+        } catch (e) {
+          console.error(e);
+          tableBody.innerHTML =
+            '<div style="padding:20px; text-align:center; color:#ff4444;">❌ حدث خطأ في جلب البيانات</div>';
+        }
+      }
 
-    } catch (e) { 
-        console.error(e);
-        tableBody.innerHTML = '<div style="padding:20px; text-align:center; color:#ff4444;">❌ حدث خطأ في جلب البيانات</div>'; 
-    }
-}
-
-    async function clearSecretLogs() {
-        if(!confirm("هل أنت متأكد من مسح كل السجلات؟")) return;
-        await fetch('/api/admin/secret-logs', { method: 'DELETE' });
+      async function clearSecretLogs() {
+        if (!confirm("هل أنت متأكد من مسح كل السجلات؟")) return;
+        await fetch("/api/admin/secret-logs", { method: "DELETE" });
         loadSecretLogs();
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>
