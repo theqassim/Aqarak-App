@@ -444,7 +444,7 @@ async function updateNavigation() {
     } else {
       nav.innerHTML = `
                 <a href="about" class="nav-button">من نحن</a> <a href="index" class="nav-button">تسجيل دخول</a>
-                <a href="index" class="sell-btn">انشاء حساب</a>
+                <a href="index?mode=register" class="sell-btn">انشاء حساب</a>
             `;
     }
   } catch (error) {

@@ -71,6 +71,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           btn.disabled = false;
         }
       }
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("mode") === "register") {
+        switchTab("register");
+      }
     });
   }
 
