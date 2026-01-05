@@ -4320,6 +4320,64 @@ app.get("*", (req, res) => {
   res.redirect("/");
 });
 
+app.post("/api/reviews", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token)
+    return res.status(401).json({ message: "لازم تسجل دخول عشان تقيم!" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { reviewedPhone, rating, comment } = req.body;
+
+    if (decoded.phone === reviewedPhone) {
+      return res.status(400).json({ message: "مينفعش تقيم نفسك يا ناصح 😉" });
+    }
+
+    const check = await pgQuery(
+      `SELECT id FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
+      [decoded.id, reviewedPhone]
+    );
+
+    if (check.rows.length > 0) {
+      return res.status(400).json({ message: "أنت قيمت المستخدم ده قبل كده!" });
+    }
+
+    await pgQuery(
+      `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        decoded.id,
+        decoded.name,
+        reviewedPhone,
+        parseInt(rating),
+        comment,
+        new Date().toISOString(),
+      ]
+    );
+
+    res.json({ success: true, message: "تم إضافة تقييمك بنجاح ⭐" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "حدث خطأ في السيرفر" });
+  }
+});
+
+app.get("/api/reviews/stats/:phone", async (req, res) => {
+  try {
+    const result = await pgQuery(
+      `SELECT AVG(rating) as average, COUNT(*) as count FROM reviews WHERE reviewed_phone = $1`,
+      [req.params.phone]
+    );
+    const stats = result.rows[0];
+    res.json({
+      average: parseFloat(stats.average || 0).toFixed(1),
+      count: parseInt(stats.count || 0),
+    });
+  } catch (e) {
+    res.json({ average: 0, count: 0 });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

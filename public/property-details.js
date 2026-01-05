@@ -7,6 +7,19 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const style = document.createElement("style");
 style.innerHTML = `
+/* CSS التقييمات */
+    .rating-stars { color: #FFD700; font-size: 0.9rem; margin-right: 5px; }
+    .btn-rate { 
+        background: transparent; border: 1px solid #FFD700; color: #FFD700; 
+        padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; 
+        cursor: pointer; margin-right: 5px; transition:0.3s; 
+    }
+    .btn-rate:hover { background: #FFD700; color: #000; }
+    
+    /* مودال التقييم */
+    .star-rating-input { direction: rtl; display: flex; justify-content: center; gap: 10px; font-size: 2rem; margin: 15px 0; }
+    .star-rating-input i { cursor: pointer; color: #444; transition: 0.3s; }
+    .star-rating-input i.active { color: #FFD700; }
     /* تصميم مودال الحالة */
     .status-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -326,6 +339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let publisherStatsBadge = "";
     let profileImgSrc = property.profile_picture || "logo.png";
     let reportBtnHTML = "";
+
     if (isAuthenticated && currentUserPhone !== property.sellerPhone) {
       reportBtnHTML = `
         <button onclick="document.getElementById('report-modal').style.display='flex'" style="background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; margin-right: auto;">
@@ -333,6 +347,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         </button>
     `;
     }
+
+    let ratingStats = { average: 0, count: 0 };
+    try {
+      const rRes = await fetch(`/api/reviews/stats/${property.sellerPhone}`);
+      if (rRes.ok) {
+        ratingStats = await rRes.json();
+      }
+    } catch (e) {
+      console.error("Error fetching rating stats", e);
+    }
+
+    const starsHTML = `
+        <div style="display:flex; align-items:center; margin-top:5px; gap: 8px;">
+            <span class="rating-stars" style="color: gold; font-size: 0.9rem;">
+                <i class="fas fa-star"></i> ${ratingStats.average || 0} (${
+      ratingStats.count || 0
+    })
+            </span>
+            ${
+              isAuthenticated && currentUserPhone !== property.sellerPhone
+                ? `<button onclick="openRateModal('${property.sellerPhone}', '${property.sellerName}')" class="btn-rate" style="background: transparent; border: 1px solid #ccc; color: #ccc; border-radius: 5px; cursor: pointer; padding: 0 5px; font-size: 0.7rem;">
+                    <i class="far fa-star"></i> قيم
+                </button>`
+                : ""
+            }
+        </div>
+    `;
+
     if (property.publisherUsername) {
       try {
         const statsRes = await fetch(
@@ -343,50 +385,63 @@ document.addEventListener("DOMContentLoaded", async () => {
           const count = statsData.properties ? statsData.properties.length : 0;
 
           publisherStatsBadge = `
-                        <a href="profile?u=${property.publisherUsername}" style="
-                            background: rgba(0, 255, 136, 0.1); 
-                            color: #00ff88; padding: 2px 8px; border-radius: 12px; 
-                            font-size: 0.8rem; margin-right: 10px; border: 1px solid #00ff88;
-                            text-decoration: none; cursor: pointer; transition: 0.3s;">
-                            <i class="fas fa-building"></i> ${count} عقار منشور
-                        </a>
-                    `;
+                    <a href="profile?u=${property.publisherUsername}" style="
+                        background: rgba(0, 255, 136, 0.1); 
+                        color: #00ff88; padding: 2px 8px; border-radius: 12px; 
+                        font-size: 0.7rem; margin-top: 5px; display: inline-block; border: 1px solid #00ff88;
+                        text-decoration: none; cursor: pointer; transition: 0.3s;">
+                        <i class="fas fa-building"></i> ${count} عقار
+                    </a>
+                `;
         }
       } catch (e) {
         console.error("Error fetching publisher stats", e);
       }
 
       publisherHTML = `
-    <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
-        <a href="profile?u=${
-          property.publisherUsername || "#"
-        }" style="text-decoration: none;">
-            <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
-        </a>
-        <div style="flex: 1;">
-            <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
-            <a href="profile?u=${
-              property.publisherUsername || "#"
-            }" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
-                ${property.sellerName || "مستخدم عقارك"} ${verifiedBadge}
-            </a>
-        </div>
-        ${reportBtnHTML}
-    </div>
-`;
+            <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
+                <a href="profile?u=${
+                  property.publisherUsername
+                }" style="text-decoration: none;">
+                    <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
+                </a>
+                <div style="flex: 1;">
+                    <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
+                        <a href="profile?u=${
+                          property.publisherUsername
+                        }" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem;">
+                            ${
+                              property.sellerName || "مستخدم عقارك"
+                            } ${verifiedBadge}
+                        </a>
+                        ${publisherStatsBadge}
+                    </div>
+                    ${starsHTML}
+                </div>
+                ${reportBtnHTML}
+            </div>
+        `;
     } else {
       publisherHTML = `
-                <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
-                    <p style="color: #ccc; display:flex; align-items:center;">
-                        <i class="fas fa-user-circle" style="margin-left:5px;"></i> تم النشر بواسطة: 
-                        <span style="color: #00ff88; font-weight: bold; display:flex; align-items:center; margin-right:5px;">
-                             ${property.sellerName || "عقارك"} ${verifiedBadge}
-                        </span>
-                    </p>
+            <div class="publisher-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <p style="color: #ccc; display:flex; align-items:center; margin:0;">
+                            <i class="fas fa-user-circle" style="margin-left:5px;"></i> تم النشر بواسطة: 
+                            <span style="color: #00ff88; font-weight: bold; display:flex; align-items:center; margin-right:5px;">
+                                ${
+                                  property.sellerName || "عقارك"
+                                } ${verifiedBadge}
+                            </span>
+                        </p>
+                        ${starsHTML}
+                    </div>
+                    ${reportBtnHTML} 
                 </div>
-            `;
+            </div>
+        `;
     }
-
     let actionSectionHTML = "";
     let makeOfferButtonHTML = "";
 
@@ -1194,5 +1249,96 @@ window.submitUserReport = async () => {
     btn.innerHTML = "تأكيد الإبلاغ";
     btn.disabled = false;
     document.getElementById("report-modal").style.display = "none";
+  }
+};
+
+const reviewStyle = document.createElement("style");
+reviewStyle.innerHTML = `
+    .rating-stars { color: #FFD700; font-size: 0.9rem; margin-right: 5px; direction: ltr; display: inline-block; }
+    .btn-rate { 
+        background: transparent; border: 1px solid #FFD700; color: #FFD700; 
+        padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; 
+        cursor: pointer; margin-right: 5px; transition:0.3s; 
+    }
+    .btn-rate:hover { background: #FFD700; color: #000; }
+    .star-rating-input { direction: rtl; display: flex; justify-content: center; gap: 10px; font-size: 2rem; margin: 15px 0; }
+    .star-rating-input i { cursor: pointer; color: #444; transition: 0.3s; }
+    .star-rating-input i.active { color: #FFD700; }
+`;
+document.head.appendChild(reviewStyle);
+
+let selectedRating = 0;
+window.openRateModal = (phone, name) => {
+  const old = document.getElementById("rate-modal");
+  if (old) old.remove();
+
+  const html = `
+        <div id="rate-modal" class="modal-overlay" style="display:flex; z-index:10002;">
+            <div class="modal-content">
+                <span class="close-modal" onclick="document.getElementById('rate-modal').remove()">&times;</span>
+                <h3 style="text-align:center; color:#FFD700; margin-bottom:10px;">تقييم ${name}</h3>
+                <div class="star-rating-input">
+                    <i class="far fa-star" onclick="setRate(1)" id="s1"></i>
+                    <i class="far fa-star" onclick="setRate(2)" id="s2"></i>
+                    <i class="far fa-star" onclick="setRate(3)" id="s3"></i>
+                    <i class="far fa-star" onclick="setRate(4)" id="s4"></i>
+                    <i class="far fa-star" onclick="setRate(5)" id="s5"></i>
+                </div>
+                <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تجربتك (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
+                <button onclick="submitRate('${phone}')" class="btn-offer-submit" style="background:#FFD700; color:black;">إرسال التقييم</button>
+            </div>
+        </div>
+    `;
+  document.body.insertAdjacentHTML("beforeend", html);
+  selectedRating = 0;
+};
+
+window.setRate = (n) => {
+  selectedRating = n;
+  for (let i = 1; i <= 5; i++) {
+    const star = document.getElementById("s" + i);
+    if (i <= n) {
+      star.classList.remove("far");
+      star.classList.add("fas");
+      star.classList.add("active");
+    } else {
+      star.classList.remove("fas");
+      star.classList.add("far");
+      star.classList.remove("active");
+    }
+  }
+};
+
+window.submitRate = async (phone) => {
+  if (selectedRating === 0) return alert("يرجى اختيار عدد النجوم");
+
+  const comment = document.getElementById("rate-comment").value;
+  const btn = document.querySelector("#rate-modal button");
+  btn.innerHTML = "جاري الإرسال...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reviewedPhone: phone,
+        rating: selectedRating,
+        comment,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(data.message);
+      document.getElementById("rate-modal").remove();
+      location.reload();
+    } else {
+      alert("❌ " + data.message);
+      btn.innerHTML = "إرسال التقييم";
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert("خطأ في الاتصال");
+    btn.disabled = false;
   }
 };
