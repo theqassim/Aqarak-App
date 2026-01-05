@@ -4337,6 +4337,28 @@ app.get("/api/public/profile/:username", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/reviews/:id", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.status(401).json({ message: "غير مصرح" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ message: "هذا الإجراء للأدمن فقط" });
+    }
+
+    const reviewId = req.params.id;
+
+    await pgQuery("DELETE FROM reviews WHERE id = $1", [reviewId]);
+
+    res.json({ success: true, message: "تم حذف التقييم بنجاح 🗑️" });
+  } catch (error) {
+    console.error("Delete Review Error:", error);
+    res.status(500).json({ message: "خطأ في السيرفر" });
+  }
+});
+
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
 });

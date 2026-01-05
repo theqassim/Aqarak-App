@@ -124,9 +124,19 @@ async function fetchReviews(phone) {
   try {
     const res = await fetch(`/api/reviews/${phone}`);
     if (!res.ok) throw new Error("Failed to fetch reviews");
-
     const reviews = await res.json();
     loading.style.display = "none";
+
+    let isAdmin = false;
+    try {
+      const authRes = await fetch("/api/auth/me");
+      const authData = await authRes.json();
+      if (authData.isAuthenticated && authData.role === "admin") {
+        isAdmin = true;
+      }
+    } catch (e) {
+      console.log("Not logged in");
+    }
 
     if (reviews.length > 0) {
       const avg = reviews.reduce((a, b) => a + b.rating, 0) / reviews.length;
@@ -142,9 +152,13 @@ async function fetchReviews(phone) {
     }
 
     listContainer.innerHTML = reviews
-      .map(
-        (r) => `
-            <div class="review-item">
+      .map((r) => {
+        const deleteBtn = isAdmin
+          ? `<button onclick="deleteReview(${r.id})" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم"><i class="fas fa-trash"></i></button>`
+          : "";
+
+        return `
+            <div class="review-item" style="position: relative;">
                 <div style="flex-shrink:0;">
                    <div style="width:40px; height:40px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-weight:bold;">
                         ${
@@ -152,10 +166,13 @@ async function fetchReviews(phone) {
                         }<i class="fas fa-star" style="font-size:0.7rem; margin-right:2px;"></i>
                    </div>
                 </div>
-                <div>
-                    <h4 style="margin:0 0 5px 0; color:white;">${
-                      r.reviewer_name || "مستخدم"
-                    }</h4>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="margin:0 0 5px 0; color:white;">${
+                          r.reviewer_name || "مستخدم"
+                        }</h4>
+                        ${deleteBtn}
+                    </div>
                     <p style="margin:0; color:#ccc; line-height:1.5;">${
                       r.comment
                     }</p>
@@ -164,8 +181,8 @@ async function fetchReviews(phone) {
                     ).toLocaleDateString("ar-EG")}</span>
                 </div>
             </div>
-        `
-      )
+        `;
+      })
       .join("");
 
     if (reviews.length >= 1) {
@@ -173,7 +190,6 @@ async function fetchReviews(phone) {
       const aiText = document.getElementById("ai-summary-text");
       aiText.innerHTML =
         '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
-
       try {
         const aiRes = await fetch("/api/reviews/summarize", {
           method: "POST",
@@ -192,6 +208,25 @@ async function fetchReviews(phone) {
   }
 }
 
+window.deleteReview = async (reviewId) => {
+  if (!confirm("هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع.")) return;
+
+  try {
+    const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("✅ " + data.message);
+      location.reload();
+    } else {
+      alert("❌ خطأ: " + data.message);
+    }
+  } catch (e) {
+    alert("حدث خطأ أثناء الاتصال بالسيرفر");
+  }
+};
 window.switchTab = (tabName) => {
   const propsSec = document.getElementById("properties-section");
   const reviewsSec = document.getElementById("reviews-section");
