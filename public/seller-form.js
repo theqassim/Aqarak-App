@@ -723,7 +723,7 @@ async function fetchUserData() {
         data.name || "مستخدم عقارك";
       document.getElementById("seller-phone").value = data.phone || "";
     } else {
-      window.location.href = "index";
+      window.location.href = "authentication";
     }
   } catch (e) {}
 }

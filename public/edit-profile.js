@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           data.profile_picture;
       }
     } else {
-      window.location.href = "index.html";
+      window.location.href = "authentication";
     }
   } catch (e) {
     console.error(e);
@@ -82,7 +82,7 @@ async function confirmDeleteAccount() {
 
     if (data.success) {
       alert("تم حذف الحساب بنجاح. إلى اللقاء 👋");
-      window.location.href = "index.html";
+      window.location.href = "authentication";
     } else {
       alert("خطأ: " + data.message);
       btn.innerHTML = "تأكيد الحذف";

@@ -193,7 +193,7 @@ window.loadUserData = async function () {
         if (adminCard) adminCard.style.display = "block";
       }
     } else {
-      window.location.href = "index.html";
+      window.location.href = "authentication";
     }
   } catch (e) {
     console.error("Load User Data Error:", e);
@@ -249,7 +249,7 @@ async function toggleFavorites() {
 
       const html = `
                 <div class="fav-card" id="fav-item-${prop.id}">
-                    <a href="property-details?id=${
+                    <a href="property?id=${
                       prop.id
                     }" class="fav-img-link">
                         <img src="${
@@ -267,7 +267,7 @@ async function toggleFavorites() {
                             </div>
                         </div>
                         <div class="fav-actions">
-                            <a href="property-details?id=${
+                            <a href="property?id=${
                               prop.id
                             }" class="btn-fav-view">
                                 <i class="fas fa-eye"></i> التفاصيل

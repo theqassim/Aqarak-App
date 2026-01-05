@@ -4188,6 +4188,66 @@ app.get("*", (req, res) => {
   res.redirect("/");
 });
 
+app.get("/authentication", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get(["/", "/home"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "home.html"));
+});
+
+app.get("/about-us", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "about.html"));
+});
+
+app.get("/contact-us", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "contact.html"));
+});
+
+app.get("/terms", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "terms.html"));
+});
+
+app.get("/services", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "service.html"));
+});
+
+app.get("/properties", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "all-properties.html"));
+});
+
+app.get("/property", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "property-details.html"));
+});
+
+app.get("/request", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "request-property.html"));
+});
+
+app.get("/watch", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "video-player.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "user-dashboard.html"));
+});
+
+app.get("/my-properties", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "my-ads.html"));
+});
+
+app.get("/settings", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "edit-profile.html"));
+});
+
+app.get("/sell", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "seller-dashboard.html"));
+});
+
+app.get("/profile", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "user-profile.html"));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

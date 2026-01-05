@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const response = await fetch("/api/user/my-properties");
 
     if (response.status === 401) {
-      window.location.href = "index";
+      window.location.href = "authentication";
       return;
     }
 
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <div class="empty-ads">
                             <i class="fas fa-box-open fa-3x" style="margin-bottom:15px; color:#444;"></i>
                             <p>لم تقم بنشر أي عقارات حتى الآن.</p>
-                            <a href="seller-dashboard" class="nav-button" style="margin-top:20px; display:inline-block; background:transparent;">اعرض عقارك الآن</a>
+                            <a href="sell" class="nav-button" style="margin-top:20px; display:inline-block; background:transparent;">اعرض عقارك الآن</a>
                         </div>
                     `;
       return;

@@ -139,7 +139,7 @@ window.toggleFavorite = async (propertyId) => {
     });
     if (response.status === 401) {
       alert("يجب تسجيل الدخول لإضافة العقار للمفضلة.");
-      window.location.href = "login";
+      window.location.href = "authentication";
       return;
     }
     if (response.ok || response.status === 409) {
@@ -203,7 +203,7 @@ async function loadSimilarProperties(currentProperty) {
         ? Number(prop.price.replace(/[^0-9.]/g, "")).toLocaleString()
         : "N/A";
       const card = `
-                <div class="property-card neon-glow" onclick="window.location.href='property-details.html?id=${
+                <div class="property-card neon-glow" onclick="window.location.href='property?id=${
                   prop.id
                 }'" style="position:relative; cursor:pointer;">
                     ${
@@ -343,7 +343,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const count = statsData.properties ? statsData.properties.length : 0;
 
           publisherStatsBadge = `
-                        <a href="user-profile.html?u=${property.publisherUsername}" style="
+                        <a href="profile?u=${property.publisherUsername}" style="
                             background: rgba(0, 255, 136, 0.1); 
                             color: #00ff88; padding: 2px 8px; border-radius: 12px; 
                             font-size: 0.8rem; margin-right: 10px; border: 1px solid #00ff88;
@@ -358,14 +358,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       publisherHTML = `
     <div class="publisher-info" style="margin-top: 20px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px;">
-        <a href="user-profile?u=${
+        <a href="profile?u=${
           property.publisherUsername || "#"
         }" style="text-decoration: none;">
             <img src="${profileImgSrc}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-primary);" alt="Publisher">
         </a>
         <div style="flex: 1;">
             <p style="color: #ccc; font-size: 0.8rem; margin: 0;">تم النشر بواسطة</p>
-            <a href="user-profile?u=${
+            <a href="profile?u=${
               property.publisherUsername || "#"
             }" style="color: var(--neon-primary); text-decoration: none; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
                 ${property.sellerName || "مستخدم عقارك"} ${verifiedBadge}
@@ -493,8 +493,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i> يجب تسجيل الدخول للتواصل مع المالك.
                     </p>
                     <div class="guest-btns-wrapper">
-                        <a href="index" class="btn-login-action">تسجيل دخول</a>
-                        <a href="index" class="btn-register-action">إنشاء حساب</a>
+                        <a href="authentication" class="btn-login-action">تسجيل دخول</a>
+                        <a href="authentication?mode=register" class="btn-register-action">إنشاء حساب</a>
                     </div>
                 </div>
             `;
@@ -508,7 +508,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       videoSectionHTML = `<div style="width: 100%; display: flex; justify-content: center; margin-bottom: 20px;"><button onclick="goToCinemaMode()" class="video-btn-modern"><div class="icon-pulse">▶</div><span>مشاهدة فيديو العقار</span><span class="badge" style="background:white; color:red; padding:2px 6px; border-radius:50%; font-size:0.8rem; margin-right:5px;">${videoList.length}</span></button></div>`;
       window.goToCinemaMode = () => {
         localStorage.setItem("activePropertyVideos", JSON.stringify(videoList));
-        window.location.href = "video-player";
+        window.location.href = "watch";
       };
     }
 

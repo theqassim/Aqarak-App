@@ -315,7 +315,7 @@ function renderAdvGrid(properties) {
       : "";
 
     const html = `
-            <div class="adv-card" onclick="window.location.href='property-details?id=${
+            <div class="adv-card" onclick="window.location.href='property?id=${
               prop.id
             }'" style="cursor: pointer;">
                 <div class="adv-card-img-box">
@@ -349,7 +349,7 @@ function renderAdvGrid(properties) {
                             : ""
                         }
                     </div>
-                    <a href="property-details?id=${
+                    <a href="property?id=${
                       prop.id
                     }" class="adv-details-btn">
                         عرض التفاصيل <i class="fas fa-arrow-left"></i>

@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchButton.addEventListener("click", () => {
       const keyword = searchInput.value;
       if (keyword) {
-        window.location.href = `all-properties?keyword=${encodeURIComponent(
+        window.location.href = `properties?keyword=${encodeURIComponent(
           keyword
         )}`;
       }

@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const price = Number(prop.price).toLocaleString("ar-EG");
 
       const card = `
-                        <div class="property-card" onclick="window.location.href='property-details?id=${
+                        <div class="property-card" onclick="window.location.href='property?id=${
                           prop.id
                         }'">
                             <div class="card-img-wrapper">

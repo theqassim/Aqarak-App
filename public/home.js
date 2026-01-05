@@ -171,7 +171,7 @@ async function fetchLatestProperties(isFirstLoad = false) {
         : "";
 
       const html = `
-                <div class="adv-card ${featuredClass}" onclick="window.location.href='property-details?id=${prop.id}'" style="cursor: pointer;">
+                <div class="adv-card ${featuredClass}" onclick="window.location.href='property?id=${prop.id}'" style="cursor: pointer;">
                     <div class="adv-card-img-box">
                         <img src="${bgImage}" alt="${prop.title}" class="adv-card-img" loading="lazy">
                         <span class="adv-type-badge ${typeClass}">${typeText}</span>
@@ -183,7 +183,7 @@ async function fetchLatestProperties(isFirstLoad = false) {
                         
                         <div class="adv-features">${featuresHtml}</div>
                         
-                        <a href="property-details?id=${prop.id}" class="adv-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        <a href="property?id=${prop.id}" class="adv-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
                     </div>
                 </div>
             `;
@@ -441,24 +441,25 @@ async function updateNavigation() {
                     </div>
                 </div>
 
-                <a href="all-properties" class="nav-button">جميع العقارات</a>
-                <a href="all-properties.html?type=buy" class="nav-button">شراء</a>
-                <a href="all-properties.html?type=rent" class="nav-button">ايجار</a>
-                <a href="about" class="nav-button">من نحن</a> <a href="user-dashboard" class="nav-button">حسابي</a> 
-                <a href="seller-dashboard" class="sell-btn">اعرض عقارك!</a>
+                <a href="properties" class="nav-button">جميع العقارات</a>
+                <a href="properties?type=buy" class="nav-button">شراء</a>
+                <a href="properties?type=rent" class="nav-button">ايجار</a>
+                <a href="about-us" class="nav-button">من نحن</a> 
+                <a href="dashboard" class="nav-button">حسابي</a> 
+                <a href="sell" class="sell-btn">اعرض عقارك!</a>
             `;
 
       checkNotifications();
     } else {
       nav.innerHTML = `
-                <a href="about" class="nav-button">من نحن</a> <a href="index" class="nav-button">تسجيل دخول</a>
-                <a href="index?mode=register" class="sell-btn">انشاء حساب</a>
+                <a href="about-us" class="nav-button">من نحن</a> <a href="authentication" class="nav-button">تسجيل دخول</a>
+                <a href="authentication?mode=register" class="sell-btn">انشاء حساب</a>
             `;
     }
   } catch (error) {
     nav.innerHTML = `
-            <a href="about" class="nav-button">من نحن</a>
-            <a href="index" class="nav-button">تسجيل دخول</a>
+            <a href="about-us" class="nav-button">من نحن</a>
+            <a href="authentication" class="nav-button">تسجيل دخول</a>
         `;
   }
 }
