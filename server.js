@@ -4133,6 +4133,71 @@ const requireAdmin = (req, res, next) => {
   }
 };
 
+app.get("/api/public/faqs", async (req, res) => {
+  try {
+    const result = await pgQuery(
+      "SELECT * FROM faqs WHERE status = 'published' ORDER BY id ASC"
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json([]);
+  }
+});
+
+app.post("/api/public/ask", async (req, res) => {
+  const { question, name } = req.body;
+  if (!question) return res.status(400).json({ message: "السؤال مطلوب" });
+
+  try {
+    await pgQuery(
+      "INSERT INTO faqs (question, asked_by, status, created_at) VALUES ($1, $2, 'pending', $3)",
+      [question, name || "مجهول", new Date().toISOString()]
+    );
+    sendDiscordNotification(
+      "❓ سؤال جديد من مستخدم",
+      [{ name: "السؤال", value: question }],
+      16776960
+    );
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ message: "خطأ سيرفر" });
+  }
+});
+
+app.get("/api/admin/faqs", async (req, res) => {
+  try {
+    const result = await pgQuery(
+      "SELECT * FROM faqs ORDER BY status ASC, id DESC"
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json([]);
+  }
+});
+
+app.post("/api/admin/faqs/publish", async (req, res) => {
+  const { id, answer } = req.body;
+  try {
+    await pgQuery(
+      "UPDATE faqs SET answer = $1, status = 'published' WHERE id = $2",
+      [answer, id]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ message: "Error" });
+  }
+});
+
+app.delete("/api/admin/faqs/:id", async (req, res) => {
+  try {
+    await pgQuery("DELETE FROM faqs WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ message: "Error" });
+  }
+});
+
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
 });
@@ -4243,6 +4308,13 @@ app.get("/sell", (req, res) => {
 app.get("/profile", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "user-profile.html"));
 });
+
+app.get("/faq", (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "faq.html"))
+);
+app.get("/admin-faq", requireAdmin, (req, res) =>
+  res.sendFile(path.join(__dirname, "protected_pages", "admin-faq.html"))
+);
 
 app.get("*", (req, res) => {
   res.redirect("/");

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إدارة الأسئلة - الأدمن</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      :root {
+        --glass-bg: rgba(20, 20, 20, 0.98);
+        --neon-primary: #00ff88;
+        --neon-secondary: #00d4ff;
+        --neon-pink: #e91e63;
+        --card-bg: #1a1a1a;
+        --gold: #ffd700;
+      }
+      body.internal-page {
+        background-color: #0f0f0f;
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #2c1a25 0%,
+          #0f0f0f 70%
+        );
+        min-height: 100vh;
+        font-family: "Cairo", sans-serif;
+        color: white;
+        padding-top: 100px !important;
+      }
+      .main-header {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 9999;
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px;
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1250px;
+        margin: 0 auto;
+      }
+      .logo {
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-secondary);
+      }
+      .nav-button {
+        text-decoration: none;
+        color: white;
+        border: 1px solid var(--neon-secondary);
+        padding: 6px 20px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+      }
+      .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .faq-card {
+        background: var(--card-bg);
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: 0.3s;
+      }
+      .faq-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-secondary);
+      }
+
+      .status-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: bold;
+      }
+      .status-pending {
+        background: rgba(255, 165, 0, 0.2);
+        color: orange;
+        border: 1px solid orange;
+      }
+      .status-published {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--neon-primary);
+        border: 1px solid var(--neon-primary);
+      }
+
+      .faq-q {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        margin-top: 15px;
+        color: white;
+      }
+      .faq-asker {
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .faq-a {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        border-radius: 8px;
+        color: #ccc;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        min-height: 50px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: auto;
+      }
+      .action-btn {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        font-family: "Cairo", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+      .btn-reply {
+        background: var(--neon-secondary);
+        color: black;
+      }
+      .btn-delete {
+        background: transparent;
+        border: 1px solid #ff4444;
+        color: #ff4444;
+      }
+      .btn-delete:hover {
+        background: #ff4444;
+        color: white;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: #222;
+        border: 1px solid var(--neon-secondary);
+        width: 90%;
+        max-width: 500px;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+      }
+      .modal textarea {
+        width: 100%;
+        background: #111;
+        border: 1px solid #444;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-family: "Cairo";
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body class="internal-page">
+    <header class="main-header">
+      <div class="header-container">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <img src="logo.jpg" alt="Logo" class="logo" />
+          <span style="color: white; font-weight: bold"
+            >إدارة الأسئلة (FAQ Admin)</span
+          >
+        </div>
+        <a href="admin-home" class="nav-button">
+          عودة <i class="fas fa-arrow-left"></i>
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <h2 style="color: var(--neon-secondary); margin-bottom: 20px">
+        الأسئلة الواردة والمنشورة
+      </h2>
+      <div id="faq-grid" class="faq-grid">
+        <p style="color: #aaa">جاري التحميل...</p>
+      </div>
+    </main>
+
+    <div id="reply-modal" class="modal">
+      <div class="modal-content">
+        <h3 style="color: var(--neon-secondary); margin-bottom: 10px">
+          كتابة الإجابة
+        </h3>
+        <p
+          id="modal-q-text"
+          style="color: #ccc; font-size: 0.9rem; margin-bottom: 10px"
+        ></p>
+        <textarea
+          id="reply-text"
+          rows="5"
+          placeholder="اكتب الإجابة التي ستظهر للمستخدم..."
+        ></textarea>
+        <div style="display: flex; gap: 10px">
+          <button onclick="submitPublish()" class="action-btn btn-reply">
+            نشر الإجابة
+          </button>
+          <button
+            onclick="closeModal()"
+            class="action-btn"
+            style="background: #444; color: white"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentFaqId = null;
+
+      async function loadAdminFaqs() {
+        const container = document.getElementById("faq-grid");
+        try {
+          const res = await fetch("/api/admin/faqs");
+          const faqs = await res.json();
+
+          if (faqs.length === 0) {
+            container.innerHTML = "<p>لا توجد أسئلة.</p>";
+            return;
+          }
+
+          container.innerHTML = faqs
+            .map((faq) => {
+              const isPending = faq.status === "pending";
+              const badge = isPending
+                ? `<span class="status-badge status-pending">قيد المراجعة</span>`
+                : `<span class="status-badge status-published">منشور</span>`;
+
+              const btnText = isPending ? "رد ونشر" : "تعديل الرد";
+
+              return `
+                        <div class="faq-card">
+                            ${badge}
+                            <div class="faq-q">${faq.question}</div>
+                            <div class="faq-asker"><i class="fas fa-user"></i> ${
+                              faq.asked_by
+                            }</div>
+                            <div class="faq-a">${
+                              faq.answer || "<em>لم تتم الإجابة بعد</em>"
+                            }</div>
+                            
+                            <div class="actions">
+                                <button onclick="openReplyModal(${
+                                  faq.id
+                                }, '${escapeHtml(faq.question)}', '${escapeHtml(
+                faq.answer || ""
+              )}')" class="action-btn btn-reply">
+                                    <i class="fas fa-pen"></i> ${btnText}
+                                </button>
+                                <button onclick="deleteFaq(${
+                                  faq.id
+                                })" class="action-btn btn-delete">
+                                    <i class="fas fa-trash"></i> حذف
+                                </button>
+                            </div>
+                        </div>
+                    `;
+            })
+            .join("");
+        } catch (e) {
+          container.innerHTML = "خطأ في التحميل";
+        }
+      }
+
+      function openReplyModal(id, question, currentAnswer) {
+        currentFaqId = id;
+        document.getElementById("modal-q-text").textContent = question;
+        document.getElementById("reply-text").value = currentAnswer;
+        document.getElementById("reply-modal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("reply-modal").style.display = "none";
+      }
+
+      async function submitPublish() {
+        const answer = document.getElementById("reply-text").value;
+        if (!answer) return alert("اكتب الإجابة!");
+
+        try {
+          const res = await fetch("/api/admin/faqs/publish", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: currentFaqId, answer }),
+          });
+          if (res.ok) {
+            closeModal();
+            loadAdminFaqs();
+          } else {
+            alert("خطأ");
+          }
+        } catch (e) {
+          alert("خطأ");
+        }
+      }
+
+      async function deleteFaq(id) {
+        if (!confirm("حذف هذا السؤال نهائياً؟")) return;
+        try {
+          await fetch(`/api/admin/faqs/${id}`, { method: "DELETE" });
+          loadAdminFaqs();
+        } catch (e) {
+          alert("خطأ");
+        }
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      document.addEventListener("DOMContentLoaded", loadAdminFaqs);
+    </script>
+  </body>
+</html>
