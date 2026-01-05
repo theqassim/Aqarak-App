@@ -43,9 +43,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           localStorage.setItem("username", data.username);
           window.location.href = data.role === "admin" ? "admin-home" : "/home";
         } else {
-          if (data.errorType === "phone" || response.status === 404) {
-            document.getElementById("login-phone-error").textContent =
-              data.message;
+          if (response.status === 404 || data.errorType === "phone") {
+            showNotFoundModal(phone);
           } else if (data.errorType === "password" || response.status === 401) {
             document.getElementById("login-pass-error").textContent =
               data.message;
@@ -68,10 +67,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   let typingTimer;
 
   const usernameInput = document.getElementById("reg-username");
-  if (usernameInput) {
-    usernameInput.addEventListener("input", (e) => {
-      e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "");
-    });
 
     usernameInput.addEventListener("keyup", () => {
       clearTimeout(typingTimer);
@@ -119,7 +114,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }, 500);
     });
-  }
 
   if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
@@ -402,5 +396,42 @@ window.onclick = (event) => {
   const modal = document.getElementById("forgotModal");
   const warnModal = document.getElementById("warningModal");
   if (event.target == modal) closeForgotModal();
+  if (event.target == warnModal) closeWarningModal();
+};
+
+let pendingPhoneNumber = "";
+
+function showNotFoundModal(phone) {
+  pendingPhoneNumber = phone;
+  document.getElementById("modal-phone-display").textContent = phone;
+  document.getElementById("notFoundModal").style.display = "flex";
+}
+
+function closeNotFoundModal() {
+  document.getElementById("notFoundModal").style.display = "none";
+}
+
+function confirmCreateAccount() {
+  closeNotFoundModal();
+  switchTab("register");
+
+  const regPhoneInput = document.getElementById("reg-phone");
+  regPhoneInput.value = pendingPhoneNumber;
+
+  document.getElementById("reg-name").focus();
+
+  regPhoneInput.style.borderColor = "var(--neon-primary)";
+  setTimeout(() => {
+    regPhoneInput.style.borderColor = "#444";
+  }, 1500);
+}
+
+window.onclick = (event) => {
+  const notFoundModal = document.getElementById("notFoundModal");
+  if (event.target == notFoundModal) closeNotFoundModal();
+
+  const forgotModal = document.getElementById("forgotModal");
+  const warnModal = document.getElementById("warningModal");
+  if (event.target == forgotModal) closeForgotModal();
   if (event.target == warnModal) closeWarningModal();
 };
