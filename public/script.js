@@ -155,6 +155,12 @@ const registerForm = document.getElementById("register-form");
           showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
           return;
         }
+        
+        const egyptPhoneRegex = /^01[0-2,5]{1}[0-9]{8}$/;
+        if (!egyptPhoneRegex.test(phone)) {
+          showWarning("رقم الهاتف غير صحيح. يجب أن يبدأ بـ 010, 011, 012, أو 015.");
+          return;
+        }
 
         if (username.length < 3) {
           showWarning("اسم المستخدم قصير جداً (يجب أن يكون 3 حروف على الأقل)");
