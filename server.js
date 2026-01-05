@@ -716,10 +716,7 @@ app.get("/property", async (req, res) => {
         /{{IMAGE}}/g,
         property.imageUrl || "https://aqarakeg.com/logo.png"
       )
-      .replace(
-        /{{URL}}/g,
-        `https://aqarakeg.com/property?id=${propertyId}`
-      );
+      .replace(/{{URL}}/g, `https://aqarakeg.com/property?id=${propertyId}`);
 
     res.send(htmlContent);
   } catch (error) {
@@ -4264,6 +4261,52 @@ app.get("/api/reviews/stats/:phone", async (req, res) => {
     });
   } catch (e) {
     res.json({ average: 0, count: 0 });
+  }
+});
+
+app.get("/api/reviews/:phone", async (req, res) => {
+  try {
+    const result = await pgQuery(
+      `SELECT r.*, u.profile_picture as reviewer_pic 
+             FROM reviews r
+             LEFT JOIN users u ON r.reviewer_id = u.id
+             WHERE r.reviewed_phone = $1 
+             ORDER BY r.created_at DESC`,
+      [req.params.phone]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json([]);
+  }
+});
+
+app.post("/api/reviews/summarize", async (req, res) => {
+  const { reviews } = req.body;
+  if (!reviews || reviews.length === 0)
+    return res.json({ summary: "لا توجد تقييمات كافية للتلخيص." });
+
+  const textComments = reviews
+    .map((r) => `- ${r.comment} (التقييم: ${r.rating}/5)`)
+    .join("\n");
+
+  const prompt = `
+    أنت مساعد ذكي لمنصة عقارية. دي مجموعة تقييمات لمكتب عقاري/سمسار:
+    ${textComments}
+    
+    المطلوب:
+    اكتب ملخص قصير جداً (لا يزيد عن سطرين) باللهجة المصرية يوضح سمعة هذا الشخص، وأبرز مميزاته وعيوبه بناءً على كلام الناس.
+    ابدأ الملخص بـ "خلاصة رأي الناس:" واكتب بإيجابية وموضوعية.
+    `;
+
+  try {
+    const result = await modelChat.generateContent(prompt);
+    const response = await result.response;
+    const summary = response.text().replace(/\*/g, "").trim();
+    res.json({ summary });
+  } catch (error) {
+    console.error("AI Summary Error:", error);
+    res.json({ summary: "لم نتمكن من تلخيص التقييمات حالياً." });
   }
 });
 
