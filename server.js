@@ -578,7 +578,8 @@ async function createTables() {
     owner_phone TEXT,
     contact_date TIMESTAMP DEFAULT NOW(),
     reminder_sent BOOLEAN DEFAULT FALSE
-)``CREATE TABLE IF NOT EXISTS properties (
+)`,
+    `CREATE TABLE IF NOT EXISTS properties (
             id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, 
             rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, 
             "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, 
@@ -4416,6 +4417,66 @@ app.delete("/api/admin/reviews/:id", async (req, res) => {
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
+
+app.post("/api/log-contact", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.json({ success: false });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { ownerPhone } = req.body;
+
+    await pgQuery(
+      `INSERT INTO contact_logs (user_phone, owner_phone) VALUES ($1, $2)`,
+      [decoded.phone, ownerPhone]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({});
+  }
+});
+
+setInterval(async () => {
+  try {
+    console.log("⏰ checking for review reminders...");
+
+    const result = await pgQuery(`
+            SELECT * FROM contact_logs 
+            WHERE reminder_sent = FALSE 
+            AND contact_date < NOW() - INTERVAL '24 hours'
+            LIMIT 50
+        `);
+
+    for (const log of result.rows) {
+      const lastReminderCheck = await pgQuery(
+        `
+                SELECT 1 FROM contact_logs 
+                WHERE user_phone = $1 
+                AND reminder_sent = TRUE 
+                AND contact_date > NOW() - INTERVAL '30 days'
+            `,
+        [log.user_phone]
+      );
+
+      if (lastReminderCheck.rows.length === 0) {
+        const msg = `👋 أهلاً يا هندسة،\n\nأمس تواصلت مع المالك بخصوص عقار. يهمنا نعرف تجربتك! ⭐\n\nلو التعامل تم، يا ريت تقيمه عشان تفيد غيرك:\n${APP_URL}/profile?u=${log.owner_phone}&tab=reviews\n\n(رأيك بيفرق جداً في مجتمع عقارك)`;
+
+        const sent = await sendWhatsAppMessage(log.user_phone, msg);
+
+        if (sent) {
+          console.log(`✅ Reminder sent to ${log.user_phone}`);
+        }
+      }
+
+      await pgQuery(
+        "UPDATE contact_logs SET reminder_sent = TRUE WHERE id = $1",
+        [log.id]
+      );
+    }
+  } catch (e) {
+    console.error("Reminder Cron Error:", e);
+  }
+}, 60 * 60 * 1000);
 
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
