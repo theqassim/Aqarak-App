@@ -1055,6 +1055,52 @@
         margin-top: 5px;
       }
     }
+    .specs-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+      padding: 0;
+      list-style: none;
+      margin: 20px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px 0;
+    }
+
+    .specs-list li {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      min-height: 90px;
+      transition: 0.3s;
+    }
+
+    .specs-list li:hover {
+      border-color: var(--neon-primary);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .specs-list li span {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 5px;
+      font-weight: normal;
+    }
+
+    .specs-list li i {
+      margin-top: 8px;
+      color: var(--neon-primary);
+      font-size: 1.1rem;
+    }
   </style>
   <body class="internal-page">
     <header class="smart-header" id="main-header">
