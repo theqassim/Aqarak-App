@@ -4308,17 +4308,17 @@ app.get("/api/reviews/:phone", async (req, res) => {
   try {
     const sql = `
         SELECT 
-            c.id,
+            r.stars as rating,
+            r.updated_at as created_at,
             c.comment, 
-            c.created_at, 
-            COALESCE(r.stars, 0) as rating, 
+            c.id as comment_id,
             u.name as reviewer_name, 
             u.profile_picture as reviewer_pic
-        FROM user_comments c
-        LEFT JOIN users u ON c.reviewer_phone = u.phone
-        LEFT JOIN user_ratings r ON (c.reviewer_phone = r.reviewer_phone AND c.reviewed_phone = r.reviewed_phone)
-        WHERE c.reviewed_phone = $1
-        ORDER BY c.created_at DESC
+        FROM user_ratings r
+        LEFT JOIN user_comments c ON (r.reviewer_phone = c.reviewer_phone AND r.reviewed_phone = c.reviewed_phone)
+        LEFT JOIN users u ON r.reviewer_phone = u.phone
+        WHERE r.reviewed_phone = $1
+        ORDER BY r.updated_at DESC
     `;
 
     const result = await pgQuery(sql, [req.params.phone]);
@@ -4329,6 +4329,38 @@ app.get("/api/reviews/:phone", async (req, res) => {
   }
 });
 
+app.get("/api/reviews/my-rating/:targetPhone", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.json({ found: false });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const reviewerPhone = decoded.phone;
+    const targetPhone = req.params.targetPhone;
+
+    const ratingRes = await pgQuery(
+      `SELECT stars FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
+      [reviewerPhone, targetPhone]
+    );
+
+    const commentRes = await pgQuery(
+      `SELECT comment FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2 ORDER BY id DESC LIMIT 1`,
+      [reviewerPhone, targetPhone]
+    );
+
+    if (ratingRes.rows.length > 0) {
+      res.json({
+        found: true,
+        rating: ratingRes.rows[0].stars,
+        comment: commentRes.rows.length > 0 ? commentRes.rows[0].comment : "",
+      });
+    } else {
+      res.json({ found: false });
+    }
+  } catch (e) {
+    res.json({ found: false });
+  }
+});
 app.post("/api/reviews/summarize", async (req, res) => {
   const { reviews } = req.body;
   if (!reviews || reviews.length === 0)

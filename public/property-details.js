@@ -1283,7 +1283,8 @@ reviewStyle.innerHTML = `
 document.head.appendChild(reviewStyle);
 
 let selectedRating = 0;
-window.openRateModal = (phone, name) => {
+
+window.openRateModal = async (phone, name) => {
   const old = document.getElementById("rate-modal");
   if (old) old.remove();
 
@@ -1292,22 +1293,51 @@ window.openRateModal = (phone, name) => {
             <div class="modal-content">
                 <span class="close-modal" onclick="document.getElementById('rate-modal').remove()">&times;</span>
                 <h3 style="text-align:center; color:#FFD700; margin-bottom:10px;">تقييم ${name}</h3>
-                <div class="star-rating-input">
-                    <i class="far fa-star" onclick="setRate(1)" id="s1"></i>
-                    <i class="far fa-star" onclick="setRate(2)" id="s2"></i>
-                    <i class="far fa-star" onclick="setRate(3)" id="s3"></i>
-                    <i class="far fa-star" onclick="setRate(4)" id="s4"></i>
-                    <i class="far fa-star" onclick="setRate(5)" id="s5"></i>
+                
+                <div id="loading-rate" style="text-align:center; color:#aaa; font-size:0.9rem;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري جلب تقييمك السابق...
                 </div>
-                <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تجربتك (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
-                <button onclick="submitRate('${phone}')" class="btn-offer-submit" style="background:#FFD700; color:black;">إرسال التقييم</button>
+
+                <div id="rate-form-content" style="display:none;">
+                    <div class="star-rating-input">
+                        <i class="far fa-star" onclick="setRate(1)" id="s1"></i>
+                        <i class="far fa-star" onclick="setRate(2)" id="s2"></i>
+                        <i class="far fa-star" onclick="setRate(3)" id="s3"></i>
+                        <i class="far fa-star" onclick="setRate(4)" id="s4"></i>
+                        <i class="far fa-star" onclick="setRate(5)" id="s5"></i>
+                    </div>
+                    <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تجربتك (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
+                    <button onclick="submitRate('${phone}')" class="btn-offer-submit" style="background:#FFD700; color:black;">إرسال التقييم</button>
+                </div>
             </div>
         </div>
     `;
   document.body.insertAdjacentHTML("beforeend", html);
-  selectedRating = 0;
-};
 
+  selectedRating = 0;
+
+  try {
+    const res = await fetch(`/api/reviews/my-rating/${phone}`);
+    const data = await res.json();
+
+    const loader = document.getElementById("loading-rate");
+    const content = document.getElementById("rate-form-content");
+
+    if (loader) loader.style.display = "none";
+    if (content) content.style.display = "block";
+
+    if (data.found) {
+      window.setRate(data.rating);
+      if (data.comment) {
+        document.getElementById("rate-comment").value = data.comment;
+      }
+    }
+  } catch (e) {
+    console.error("Error fetching my rating", e);
+    document.getElementById("loading-rate").style.display = "none";
+    document.getElementById("rate-form-content").style.display = "block";
+  }
+};
 window.setRate = (n) => {
   selectedRating = n;
   for (let i = 1; i <= 5; i++) {
