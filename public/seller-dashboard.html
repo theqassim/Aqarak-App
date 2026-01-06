@@ -518,6 +518,70 @@
           transform: translateX(0);
         }
       }
+      .smart-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px 0;
+        transition: transform 0.4s ease-in-out;
+      }
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+      }
+      .nav-home-btn {
+        color: white;
+        text-decoration: none;
+        border: 1px solid var(--neon-primary);
+        padding: 8px 20px;
+        border-radius: 50px;
+        transition: 0.3s;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-home-btn:hover {
+        background: var(--neon-primary);
+        color: black;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow-x: hidden;
+        }
+
+        .smart-header {
+          padding: 10px 0 !important;
+          height: auto !important;
+          min-height: 60px;
+        }
+
+        .header-content {
+          padding: 0 15px !important;
+        }
+
+        .seller-form-container {
+          margin-top: 85px !important;
+          margin-bottom: 20px !important;
+          padding: 20px 15px !important;
+        }
+
+        h2 {
+          font-size: 1.3rem;
+        }
+      }
     </style>
   </head>
   <body class="internal-page">
