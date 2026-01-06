@@ -543,31 +543,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       const favIcon = isFav ? "fas fa-heart" : "far fa-heart";
 
       actionSectionHTML = `
-                <div class="action-buttons-group">
-                    <button onclick="window.handleWhatsappClick('${whatsappLink}', '${property.sellerPhone}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
-                        <i class="fab fa-whatsapp"></i> تواصل مع المالك
-                    </button>
-                    <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--neon-secondary); color:#fff; flex:1;">
-                        <i class="fas fa-share-alt"></i> مشاركة
-                    </button>
-                    <button id="favoriteBtn" data-id="${property.id}" class="favorite-button btn-neon-auth ${favClass}" style="flex:1;">
-                        <i id="favIcon" class="${favIcon}"></i>
-                    </button>
-                </div>
-                ${ownerControlsHTML}
-            `;
+            <div class="action-buttons-grid">
+                <button onclick="window.handleWhatsappClick('${whatsappLink}', '${property.sellerPhone}')" class="action-btn btn-whatsapp-modern">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>واتساب</span>
+                </button>
+
+                <a href="tel:${property.sellerPhone}" class="action-btn btn-call-modern">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>اتصال</span>
+                </a>
+
+                <button onclick="window.shareProperty('${property.title}')" class="action-btn btn-icon-only" title="مشاركة">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+
+                <button id="favoriteBtn" data-id="${property.id}" onclick="window.toggleFavorite(${property.id})" class="action-btn btn-icon-only ${favClass}" title="مفضلة">
+                    <i id="favIcon" class="${favIcon}"></i>
+                </button>
+            </div>
+            ${ownerControlsHTML}
+        `;
     } else {
       actionSectionHTML = `
-                <div class="guest-action-box">
-                    <p style="color:#ccc; margin-bottom:15px; font-size:0.95rem;">
-                        <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i> يجب تسجيل الدخول للتواصل مع المالك.
-                    </p>
-                    <div class="guest-btns-wrapper">
-                        <a href="authentication" class="btn-login-action">تسجيل دخول</a>
-                        <a href="authentication?mode=register" class="btn-register-action">إنشاء حساب</a>
-                    </div>
+            <div class="guest-action-box">
+                <p style="color:#ccc; margin-bottom:15px; font-size:0.95rem;">
+                    <i class="fas fa-lock" style="color:#00ff88; margin-left:5px;"></i> يجب تسجيل الدخول للتواصل مع المالك.
+                </p>
+                <div class="guest-btns-wrapper">
+                    <a href="authentication" class="btn-login-action">تسجيل دخول</a>
+                    <a href="authentication?mode=register" class="btn-register-action">إنشاء حساب</a>
                 </div>
-            `;
+            </div>
+        `;
     }
 
     let videoSectionHTML = "";

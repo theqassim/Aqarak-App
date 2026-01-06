@@ -946,6 +946,115 @@
         height: 280px;
       }
     }
+    .header-hidden {
+      transform: translateY(-100%);
+    }
+
+    .action-buttons-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 0.8fr 0.8fr;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 12px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Cairo", sans-serif;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      color: white;
+    }
+
+    .action-btn i {
+      font-size: 1.2rem;
+    }
+
+    .action-btn span {
+      margin-right: 8px;
+    }
+
+    .btn-whatsapp-modern {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+    }
+    .btn-whatsapp-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    }
+
+    .btn-call-modern {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--neon-secondary);
+      color: var(--neon-secondary);
+    }
+    .btn-call-modern:hover {
+      background: var(--neon-secondary);
+      color: #000;
+      box-shadow: 0 0 15px var(--neon-secondary);
+    }
+
+    .btn-icon-only {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1.2rem;
+    }
+    .btn-icon-only:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .action-btn.is-favorite {
+      color: #ff4444;
+      border-color: #ff4444;
+      background: rgba(255, 68, 68, 0.15);
+    }
+    .action-btn.is-favorite i {
+      animation: heartBeat 0.3s ease-in-out;
+    }
+
+    @keyframes heartBeat {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .action-buttons-grid {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        padding: 10px;
+      }
+      .btn-whatsapp-modern {
+        grid-column: span 2;
+      }
+      .btn-call-modern {
+        grid-column: span 2;
+      }
+      .btn-icon-only {
+        grid-column: span 2;
+        margin-top: 5px;
+      }
+    }
   </style>
   <body class="internal-page">
     <header class="smart-header" id="main-header">
@@ -1132,5 +1241,24 @@
     <script src="reload.js"></script>
     <script src="ban-check.js"></script>
     <script src="global-alert.js"></script>
+    <script>
+      let lastScrollTop = 0;
+      const header = document.getElementById("main-header");
+
+      window.addEventListener(
+        "scroll",
+        function () {
+          let scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
+          if (scrollTop > lastScrollTop && scrollTop > 100) {
+            header.classList.add("header-hidden");
+          } else {
+            header.classList.remove("header-hidden");
+          }
+          lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        },
+        false
+      );
+    </script>
   </body>
 </html>
