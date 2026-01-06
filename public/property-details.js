@@ -1,10 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabaseUrl = "https://scncapmhnshjpocenqpm.supabase.co";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbmNhcG1obnNoanBvY2VucXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3OTQyNTcsImV4cCI6MjA3OTM3MDI1N30.HHyZ73siXlTCVrp9I8qxAm4aMfx3R9r1sYvNWzBh9dI";
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 const style = document.createElement("style");
 style.innerHTML = `
 /* CSS التقييمات */
@@ -20,6 +13,7 @@ style.innerHTML = `
     .star-rating-input { direction: rtl; display: flex; justify-content: center; gap: 10px; font-size: 2rem; margin: 15px 0; }
     .star-rating-input i { cursor: pointer; color: #444; transition: 0.3s; }
     .star-rating-input i.active { color: #FFD700; }
+    
     /* تصميم مودال الحالة */
     .status-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -41,26 +35,8 @@ style.innerHTML = `
         width: 100%; padding: 15px; border-radius: 50px; border: none;
         font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
     }
-    
-    /* 🔥 تصميم علامة التوثيق الذهبية (Facebook Style) 🔥 */
-    .fb-gold-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;  /* حجم الدائرة */
-        height: 18px;
-        background-color: #FFD700; /* اللون الذهبي */
-        color: #fff; /* لون علامة الصح أبيض */
-        border-radius: 50%;
-        font-size: 10px; /* حجم علامة الصح */
-        margin: 0 5px;
-        border: 1.5px solid #fff; /* حدود بيضاء لتفصيلها عن الخلفية */
-        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); /* توهج خفيف */
-        vertical-align: middle;
-        transform: translateY(-1px); /* ضبط المحاذاة مع النص */
-    }
 
-    /* باقي الستايلات (فيديو، مودال تعديل، إلخ) */
+    /* باقي الستايلات */
     .video-btn-modern {
         background: linear-gradient(135deg, #ff0000, #c0392b);
         color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -186,10 +162,6 @@ window.shareProperty = async (title) => {
   } catch (err) {
     console.error("Error sharing:", err);
   }
-};
-
-window.handleWhatsappClick = async (link) => {
-  window.open(link, "_blank");
 };
 
 async function loadSimilarProperties(currentProperty) {
@@ -1280,21 +1252,6 @@ window.submitUserReport = async () => {
     document.getElementById("report-modal").style.display = "none";
   }
 };
-
-const reviewStyle = document.createElement("style");
-reviewStyle.innerHTML = `
-    .rating-stars { color: #FFD700; font-size: 0.9rem; margin-right: 5px; direction: ltr; display: inline-block; }
-    .btn-rate { 
-        background: transparent; border: 1px solid #FFD700; color: #FFD700; 
-        padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; 
-        cursor: pointer; margin-right: 5px; transition:0.3s; 
-    }
-    .btn-rate:hover { background: #FFD700; color: #000; }
-    .star-rating-input { direction: rtl; display: flex; justify-content: center; gap: 10px; font-size: 2rem; margin: 15px 0; }
-    .star-rating-input i { cursor: pointer; color: #444; transition: 0.3s; }
-    .star-rating-input i.active { color: #FFD700; }
-`;
-document.head.appendChild(reviewStyle);
 
 let selectedRating = 0;
 

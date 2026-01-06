@@ -37,7 +37,7 @@
         "url": "https://aqarakeg.com",
         "logo": "https://aqarakeg.com/logo.jpg",
         "image": "https://aqarakeg.com/logo.jpg",
-        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة. نحن شركة متخصصة في توفير حلول عقارية ذكية وسريعة.",
+        "description": "منصة عقارك هي الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر بأقل عمولة.",
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Cairo",
@@ -53,7 +53,7 @@
         },
         "sameAs": [
           "https://www.facebook.com/share/1ADgNDLXc6/",
-          "https://www.instagram.com/aqarak.eg?igsh=eDN2d2tuNmxhazY5",
+          "https://www.instagram.com/aqarak.eg",
           "https://whatsapp.com/channel/0029Vb6YH08CxoAoe7aaSP38"
         ]
       }
@@ -607,12 +607,6 @@
           grid-template-columns: 1fr;
           gap: 20px;
         }
-        .details-info-frame {
-          order: 1;
-        }
-        .image-gallery-frame {
-          order: 2;
-        }
       }
 
       @media (max-width: 768px) {
@@ -630,13 +624,15 @@
         }
 
         .main-image-container {
-          height: 280px;
+          height: auto;
+          aspect-ratio: 4/3;
+          min-height: 250px;
         }
 
         .gallery-nav-btn {
-          width: 35px !important;
-          height: 35px !important;
-          font-size: 0.9rem !important;
+          width: 45px !important;
+          height: 45px !important;
+          font-size: 1.1rem !important;
         }
         .prev-btn {
           left: 10px !important;
@@ -655,24 +651,25 @@
         }
 
         .action-buttons-grid {
-          grid-template-columns: 1fr 1fr 1fr 1fr;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
           padding: 10px;
+          grid-template-columns: unset;
         }
-        .btn-whatsapp-modern {
-          grid-column: span 2;
-        }
+        .btn-whatsapp-modern,
         .btn-call-modern {
-          grid-column: span 2;
+          flex: 1 1 45%;
         }
         .btn-icon-only {
-          grid-column: span 2;
-          margin-top: 5px;
+          flex: 1 1 auto;
+          min-width: 45px;
         }
 
         .lightbox-btn {
-          width: 40px;
-          height: 40px;
-          font-size: 1.2rem !important;
+          width: 45px;
+          height: 45px;
+          font-size: 1.3rem !important;
         }
       }
     </style>
