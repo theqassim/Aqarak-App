@@ -4217,71 +4217,71 @@ app.post("/api/reviews", async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const { reviewedPhone, rating, comment } = req.body;
+
+    const reviewerId = decoded.id;
+    const reviewerName = decoded.name;
     const reviewerPhone = decoded.phone;
 
     if (reviewerPhone === reviewedPhone) {
       return res.status(400).json({ message: "لا يمكن تقييم نفسك" });
     }
 
-    if (rating) {
-      const currentRatingRes = await pgQuery(
-        `SELECT stars FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
-        [reviewerPhone, reviewedPhone]
-      );
+    const checkRes = await pgQuery(
+      `SELECT * FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
+      [reviewerId, reviewedPhone]
+    );
 
-      if (currentRatingRes.rows.length > 0) {
-        const oldStars = currentRatingRes.rows[0].stars;
-        if (rating < oldStars) {
-          return res.status(400).json({
-            message: `لا يمكن تقليل التقييم! تقييمك الحالي ${oldStars} نجوم، يمكنك زيادته فقط.`,
-          });
-        }
-        await pgQuery(
-          `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
-          [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
-        );
-      } else {
-        await pgQuery(
-          `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) VALUES ($1, $2, $3, $4)`,
-          [reviewerPhone, reviewedPhone, rating, new Date().toISOString()]
-        );
+    if (checkRes.rows.length > 0) {
+      const oldReview = checkRes.rows[0];
+
+      let newRating = oldReview.rating;
+      if (rating) {
+        newRating = rating;
       }
-    }
 
-    if (comment && comment.trim() !== "") {
-      const commentsCountRes = await pgQuery(
-        `SELECT COUNT(*) FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
-        [reviewerPhone, reviewedPhone]
-      );
-
-      const currentCount = parseInt(commentsCountRes.rows[0].count);
-
-      if (currentCount >= 5) {
-        return res
-          .status(400)
-          .json({ message: "لقد وصلت للحد الأقصى (5 تعليقات) لهذا المستخدم." });
+      let newComment = oldReview.comment;
+      if (comment !== undefined) {
+        newComment = comment;
       }
 
       await pgQuery(
-        `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
-        [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
+        `UPDATE reviews SET rating = $1, comment = $2, created_at = $3 WHERE id = $4`,
+        [newRating, newComment, new Date().toISOString(), oldReview.id]
       );
+
+      res.json({ success: true, message: "تم تحديث تقييمك بنجاح ✅" });
+    } else {
+      if (!rating)
+        return res.status(400).json({ message: "يرجى اختيار عدد النجوم" });
+
+      await pgQuery(
+        `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          reviewerId,
+          reviewerName,
+          reviewedPhone,
+          rating,
+          comment || "",
+          new Date().toISOString(),
+        ]
+      );
+
+      await sendDiscordNotification(
+        "⭐ تقييم جديد",
+        [
+          { name: "المُقيِّم", value: `${reviewerName} (${reviewerPhone})` },
+          { name: "المُقيَّم", value: reviewedPhone },
+          { name: "النجوم", value: `${rating} ⭐` },
+          { name: "التعليق", value: comment || "بدون تعليق" },
+        ],
+        16776960
+      );
+
+      res.json({ success: true, message: "تم نشر التقييم بنجاح ✅" });
     }
-
-    await sendDiscordNotification(
-      "⭐ تقييم جديد",
-      [
-        { name: "المُقيِّم", value: `${decoded.name} (${reviewerPhone})` },
-        { name: "المُقيَّم", value: reviewedPhone },
-        { name: "النجوم", value: rating ? `${rating} ⭐` : "بدون تغيير" },
-        { name: "التعليق", value: comment || "بدون تعليق" },
-      ],
-      16776960
-    );
-
-    res.json({ success: true, message: "تم حفظ التقييم بنجاح ✅" });
   } catch (e) {
-    console.error(e);
+    console.error("Review Error:", e);
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
