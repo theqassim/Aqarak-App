@@ -2,17 +2,19 @@ window.openShareModal = () => {
   const userName = document.getElementById("user-name")
     ? document.getElementById("user-name").innerText
     : "";
+
+  const fullUrl = window.location.href;
+
   const shareText = userName
     ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
     : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
-  const cleanUrl = window.location.href.split("&")[0];
 
   if (navigator.share) {
     navigator
       .share({
         title: document.title,
         text: shareText,
-        url: cleanUrl,
+        url: fullUrl,
       })
       .catch((error) => console.log("Error sharing", error));
   } else {
@@ -21,17 +23,25 @@ window.openShareModal = () => {
   }
 };
 
+window.closeShareModal = (e) => {
+  if (e.target.id === "share-modal-overlay") {
+    document.getElementById("share-modal-overlay").style.display = "none";
+  }
+};
+
 window.shareTo = (platform) => {
   const userName = document.getElementById("user-name")
     ? document.getElementById("user-name").innerText
     : "";
+
+  const fullUrl = window.location.href;
+
   const shareText = userName
     ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
     : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
-  const cleanUrl = window.location.href.split("&")[0];
 
-  const urlEncoded = encodeURIComponent(cleanUrl);
-  const textEncoded = encodeURIComponent(shareText + "\n" + cleanUrl);
+  const urlEncoded = encodeURIComponent(fullUrl);
+  const textEncoded = encodeURIComponent(shareText + "\n" + fullUrl);
 
   let shareUrl = "";
 
@@ -40,7 +50,7 @@ window.shareTo = (platform) => {
   } else if (platform === "facebook") {
     shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`;
   } else if (platform === "copy") {
-    navigator.clipboard.writeText(cleanUrl).then(() => {
+    navigator.clipboard.writeText(fullUrl).then(() => {
       alert("تم نسخ الرابط بنجاح! ✅");
       document.getElementById("share-modal-overlay").style.display = "none";
     });
@@ -49,12 +59,6 @@ window.shareTo = (platform) => {
 
   if (shareUrl) {
     window.open(shareUrl, "_blank");
-  }
-};
-
-window.closeShareModal = (e) => {
-  if (e.target.id === "share-modal-overlay") {
-    document.getElementById("share-modal-overlay").style.display = "none";
   }
 };
 
