@@ -55,12 +55,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("reviews-list").innerHTML =
         '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات (بيانات المستخدم غير مكتملة).</p>';
     }
-    if (data.phone) {
-      fetchReviews(data.phone);
-    } else {
-      document.getElementById("reviews-list").innerHTML =
-        '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات.</p>';
-    }
 
     renderProperties(data.properties);
 
@@ -228,6 +222,7 @@ window.deleteReview = async (reviewId) => {
     alert("حدث خطأ أثناء الاتصال بالسيرفر");
   }
 };
+
 window.switchTab = (tabName) => {
   const propsSec = document.getElementById("properties-section");
   const reviewsSec = document.getElementById("reviews-section");
