@@ -869,29 +869,112 @@
         gap: 15px;
       }
     }
+    .smart-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 15px 0;
+      transition: transform 0.4s ease-in-out;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+    }
+    .nav-home-btn {
+      color: white;
+      text-decoration: none;
+      border: 1px solid var(--neon-primary);
+      padding: 8px 20px;
+      border-radius: 50px;
+      transition: 0.3s;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-home-btn:hover {
+      background: var(--neon-primary);
+      color: black;
+    }
+
+    .property-detail-container {
+      max-width: 1200px;
+      margin: 100px auto 30px;
+      padding: 0 20px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden;
+      }
+
+      .smart-header {
+        padding: 10px 0 !important;
+        height: auto !important;
+        min-height: 60px;
+      }
+
+      .header-content {
+        padding: 0 15px !important;
+      }
+
+      .property-detail-container {
+        margin-top: 0 !important;
+        padding-top: 85px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+
+      .details-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        display: flex;
+        flex-direction: column;
+      }
+      .main-image-container {
+        height: 280px;
+      }
+    }
   </style>
   <body class="internal-page">
-    <header class="main-header">
-      <div class="header-container">
-        <div class="logo-container">
-          <a
-            href="home"
+    <header class="smart-header" id="main-header">
+      <div class="header-content">
+        <a
+          href="home"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+          "
+        >
+          <img
+            src="logo.png"
+            alt="Logo"
             style="
-              display: flex;
-              align-items: center;
-              text-decoration: none;
-              gap: 10px;
+              width: 40px;
+              border-radius: 50%;
+              border: 2px solid var(--neon-primary);
             "
+          />
+          <span style="color: white; font-weight: bold; font-size: 1.2rem"
+            >عقارك</span
           >
-            <img src="logo.jpg" alt="شعار عقارك" class="logo" />
-            <span style="color: white; font-weight: bold">عقارك</span>
-          </a>
-        </div>
-        <nav class="main-nav">
-          <a href="home" class="nav-button"
-            >الرئيسية <i class="fas fa-home"></i
-          ></a>
-        </nav>
+        </a>
+        <a href="home" class="nav-home-btn"
+          ><i class="fas fa-home"></i> الرئيسية</a
+        >
       </div>
     </header>
 
