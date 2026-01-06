@@ -1,20 +1,39 @@
+/**
+ * دالة مساعدة لتجهيز بيانات المشاركة
+ * تقوم بجمع المعلومات من الصفحة وتنسيق الرسالة
+ */
+function getShareData() {
+  const name = document.getElementById("user-name")?.innerText || "مستخدم";
+  const propCount =
+    document.getElementById("prop-count-badge")?.innerText || "0 عقار";
+  const rating = document.getElementById("rating-badge")?.innerText || "0.0";
+  const joinDate = document.getElementById("join-date-text")?.innerText || "";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get("u");
+  const cleanUrl = `${window.location.origin}/profile?u=${username}`;
+
+  const shareText = `تصفح الملف الشخصي المميز لـ "${name}" على منصة عقارك. 🏠✨
+فرص عقارية حقيقية وتعامل موثوق يستحق وقتك! 👌
+
+📊 إحصائيات الحساب:
+• ${propCount} معروضة للبيع/الإيجار
+• تقييم عام: ${rating} ⭐
+• ${joinDate}
+`;
+
+  return { title: `ملف ${name} على عقارك`, text: shareText, url: cleanUrl };
+}
+
 window.openShareModal = () => {
-  const userName = document.getElementById("user-name")
-    ? document.getElementById("user-name").innerText
-    : "";
-
-  const fullUrl = window.location.href;
-
-  const shareText = userName
-    ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
-    : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
+  const data = getShareData();
 
   if (navigator.share) {
     navigator
       .share({
-        title: document.title,
-        text: shareText,
-        url: fullUrl,
+        title: data.title,
+        text: data.text,
+        url: data.url,
       })
       .catch((error) => console.log("Error sharing", error));
   } else {
@@ -30,28 +49,19 @@ window.closeShareModal = (e) => {
 };
 
 window.shareTo = (platform) => {
-  const userName = document.getElementById("user-name")
-    ? document.getElementById("user-name").innerText
-    : "";
-
-  const fullUrl = window.location.href;
-
-  const shareText = userName
-    ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
-    : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
-
-  const urlEncoded = encodeURIComponent(fullUrl);
-  const textEncoded = encodeURIComponent(shareText + "\n" + fullUrl);
-
+  const data = getShareData();
   let shareUrl = "";
 
   if (platform === "whatsapp") {
-    shareUrl = `https://wa.me/?text=${textEncoded}`;
+    const fullMessage = `${data.text}\n🔗 رابط الملف: ${data.url}`;
+    shareUrl = `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
   } else if (platform === "facebook") {
-    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`;
+    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      data.url
+    )}`;
   } else if (platform === "copy") {
-    navigator.clipboard.writeText(fullUrl).then(() => {
-      alert("تم نسخ الرابط بنجاح! ✅");
+    navigator.clipboard.writeText(data.url).then(() => {
+      alert("تم نسخ رابط الملف الشخصي بنجاح! ✅");
       document.getElementById("share-modal-overlay").style.display = "none";
     });
     return;
