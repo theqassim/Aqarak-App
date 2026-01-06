@@ -12,12 +12,13 @@
     <meta property="og:title" content="{{OG_TITLE}}" />
     <meta property="og:description" content="{{OG_DESCRIPTION}}" />
     <meta property="og:image" content="{{OG_IMAGE}}" />
+    <meta property="og:image:width" content="300" />
+    <meta property="og:image:height" content="300" />
 
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="{{OG_URL}}" />
-    <meta property="twitter:title" content="{{OG_TITLE}}" />
-    <meta property="twitter:description" content="{{OG_DESCRIPTION}}" />
-    <meta property="twitter:image" content="{{OG_IMAGE}}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{OG_TITLE}}" />
+    <meta name="twitter:description" content="{{OG_DESCRIPTION}}" />
+    <meta name="twitter:image" content="{{OG_IMAGE}}" />
 
     <link rel="stylesheet" href="styles.css" />
     <link
@@ -170,23 +171,33 @@
         color: var(--neon-primary);
       }
 
-      .share-profile-btn {
-        background: linear-gradient(45deg, #00d4ff, #0051ff);
+      .action-buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 25px;
+      }
+
+      .share-btn-stylish {
+        background: rgba(255, 255, 255, 0.05);
         color: white;
-        border: none;
-        padding: 8px 20px;
+        border: 1px solid var(--neon-secondary);
+        padding: 10px 25px;
         border-radius: 50px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         display: flex;
         align-items: center;
-        gap: 8px;
-        transition: 0.3s;
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        gap: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
       }
-      .share-profile-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+
+      .share-btn-stylish:hover {
+        background: var(--neon-secondary);
+        color: black;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+        transform: translateY(-2px);
       }
 
       .share-modal-overlay {
@@ -405,8 +416,11 @@
           <i class="fas fa-calendar-alt"></i>
           <span id="join-date-text">...</span>
         </div>
-        <button class="share-profile-btn" onclick="openShareModal()">
-          <i class="fas fa-share-alt"></i> مشاركة
+      </div>
+
+      <div class="action-buttons-container">
+        <button class="share-btn-stylish" onclick="openShareModal()">
+          <i class="fas fa-share-nodes"></i> مشاركة الحساب
         </button>
       </div>
     </section>
@@ -472,20 +486,18 @@
     >
       <div class="share-modal">
         <h3 style="color: white; margin-top: 0">مشاركة الملف الشخصي</h3>
-        <p style="color: #aaa; font-size: 0.9rem">انشر البروفايل مع أصدقائك</p>
-
         <div class="share-options">
           <div class="share-option" onclick="shareTo('whatsapp')">
-            <i class="fab fa-whatsapp" style="color: #25d366"></i>
-            <span>واتساب</span>
+            <i class="fab fa-whatsapp" style="color: #25d366"></i
+            ><span>واتساب</span>
           </div>
           <div class="share-option" onclick="shareTo('facebook')">
-            <i class="fab fa-facebook" style="color: #1877f2"></i>
-            <span>فيسبوك</span>
+            <i class="fab fa-facebook" style="color: #1877f2"></i
+            ><span>فيسبوك</span>
           </div>
           <div class="share-option" onclick="shareTo('copy')">
-            <i class="fas fa-link" style="color: white"></i>
-            <span>نسخ</span>
+            <i class="fas fa-link" style="color: white"></i
+            ><span>نسخ الرابط</span>
           </div>
         </div>
         <button

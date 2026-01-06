@@ -1,15 +1,10 @@
 window.openShareModal = () => {
   if (navigator.share) {
-    const title = document.title;
-    const name = document.getElementById("user-name").innerText;
-    const text = `تصفح بروفايل وعقارات ${name} المميزة على موقع عقارك!`;
-    const url = window.location.href;
-
     navigator
       .share({
-        title: title,
-        text: text,
-        url: url,
+        title: document.title,
+        text: "",
+        url: window.location.href.split("&")[0],
       })
       .catch((error) => console.log("Error sharing", error));
   } else {
@@ -25,18 +20,17 @@ window.closeShareModal = (e) => {
 };
 
 window.shareTo = (platform) => {
-  const url = encodeURIComponent(window.location.href);
-  const name = document.getElementById("user-name").innerText;
-  const text = encodeURIComponent(`تصفح بروفايل ${name} على عقارك!`);
+  const cleanUrl = window.location.href.split("&")[0];
+  const urlEncoded = encodeURIComponent(cleanUrl);
 
   let shareUrl = "";
 
   if (platform === "whatsapp") {
-    shareUrl = `https://wa.me/?text=${text}%20${url}`;
+    shareUrl = `https://wa.me/?text=${urlEncoded}`;
   } else if (platform === "facebook") {
-    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`;
   } else if (platform === "copy") {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    navigator.clipboard.writeText(cleanUrl).then(() => {
       alert("تم نسخ الرابط بنجاح! ✅");
       document.getElementById("share-modal-overlay").style.display = "none";
     });
