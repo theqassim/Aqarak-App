@@ -153,9 +153,10 @@ async function fetchReviews(phone) {
 
     listContainer.innerHTML = reviews
       .map((r) => {
-        const deleteBtn = isAdmin
-          ? `<button onclick="deleteReview(${r.id})" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم"><i class="fas fa-trash"></i></button>`
-          : "";
+        const deleteBtn =
+          isAdmin && r.comment_id
+            ? `<button onclick="deleteReview(${r.comment_id})" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم"><i class="fas fa-trash"></i></button>`
+            : "";
 
         return `
             <div class="review-item" style="position: relative;">
@@ -174,7 +175,7 @@ async function fetchReviews(phone) {
                         ${deleteBtn}
                     </div>
                     <p style="margin:0; color:#ccc; line-height:1.5;">${
-                      r.comment
+                      r.comment || ""
                     }</p>
                     <span style="font-size:0.75rem; color:#666;">${new Date(
                       r.created_at
