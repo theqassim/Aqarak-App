@@ -796,6 +796,95 @@
       border-color: #ffd700;
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
     }
+    /* ====================================================
+   🔥 كود مخصص للموبايل فقط (يفصل التصميم عن اللابتوب)
+   ==================================================== */
+
+    @media only screen and (max-width: 768px) {
+      /* 1. ضبط الحاوية الرئيسية */
+      .property-detail-container {
+        width: 100% !important;
+        padding: 85px 10px 20px !important; /* مساحة للهيدر */
+        margin: 0 !important;
+        box-sizing: border-box !important;
+      }
+
+      /* 2. تحويل العرض لعمودي + وضع الصور في الأعلى */
+      .details-layout {
+        display: flex !important;
+        flex-direction: column-reverse !important; /* الصور أولاً ثم التفاصيل */
+        gap: 15px !important;
+      }
+
+      /* 3. تنسيق صناديق المحتوى لتملأ الشاشة */
+      .details-info-frame,
+      .image-gallery-frame {
+        width: 100% !important;
+        padding: 15px !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        box-sizing: border-box !important; /* يمنع الخروج عن الشاشة */
+        background: #1a1a1a !important; /* تأكيد لون الخلفية */
+      }
+
+      /* 4. إزالة الهوامش الزائدة من الصور */
+      .main-image-container {
+        height: 250px !important; /* ارتفاع مناسب للموبايل */
+        margin-bottom: 10px !important;
+      }
+
+      /* 5. تنسيق شبكة المواصفات (الغرف، المساحة...) */
+      .specs-list {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important; /* 3 عناصر في الصف */
+        gap: 8px !important;
+        padding: 10px 0 !important;
+      }
+
+      .specs-list li {
+        min-height: 80px !important;
+        font-size: 0.8rem !important;
+        padding: 8px !important;
+      }
+
+      .specs-list li i {
+        font-size: 1rem !important;
+        margin-bottom: 5px !important;
+      }
+
+      /* 6. تصغير العناوين لتناسب الشاشة */
+      .page-title {
+        font-size: 1.3rem !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+      }
+
+      .detail-price {
+        font-size: 1.5rem !important;
+        text-align: center !important;
+        display: block !important;
+      }
+
+      /* 7. تنسيق أزرار الاتصال (واتساب واتصال) */
+      .action-buttons-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* زرين في كل صف */
+        gap: 10px !important;
+        padding: 10px !important;
+      }
+
+      /* أزرار المشاركة والمفضلة تكون صغيرة */
+      .action-buttons-grid .btn-icon-only {
+        grid-column: span 1 !important;
+      }
+
+      /* 8. إخفاء أي سكرول جانبي مزعج */
+      body,
+      html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+      }
+    }
   </style>
   <body class="internal-page">
     <header class="smart-header" id="main-header">
