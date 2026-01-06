@@ -1,10 +1,18 @@
 window.openShareModal = () => {
+  const userName = document.getElementById("user-name")
+    ? document.getElementById("user-name").innerText
+    : "";
+  const shareText = userName
+    ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
+    : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
+  const cleanUrl = window.location.href.split("&")[0];
+
   if (navigator.share) {
     navigator
       .share({
         title: document.title,
-        text: "",
-        url: window.location.href.split("&")[0],
+        text: shareText,
+        url: cleanUrl,
       })
       .catch((error) => console.log("Error sharing", error));
   } else {
@@ -13,20 +21,22 @@ window.openShareModal = () => {
   }
 };
 
-window.closeShareModal = (e) => {
-  if (e.target.id === "share-modal-overlay") {
-    document.getElementById("share-modal-overlay").style.display = "none";
-  }
-};
-
 window.shareTo = (platform) => {
+  const userName = document.getElementById("user-name")
+    ? document.getElementById("user-name").innerText
+    : "";
+  const shareText = userName
+    ? `شاهد الملف الشخصي لـ ${userName} على منصة عقارك 🏠`
+    : "شاهد هذا الملف الشخصي على منصة عقارك 🏠";
   const cleanUrl = window.location.href.split("&")[0];
+
   const urlEncoded = encodeURIComponent(cleanUrl);
+  const textEncoded = encodeURIComponent(shareText + "\n" + cleanUrl);
 
   let shareUrl = "";
 
   if (platform === "whatsapp") {
-    shareUrl = `https://wa.me/?text=${urlEncoded}`;
+    shareUrl = `https://wa.me/?text=${textEncoded}`;
   } else if (platform === "facebook") {
     shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${urlEncoded}`;
   } else if (platform === "copy") {
@@ -39,6 +49,12 @@ window.shareTo = (platform) => {
 
   if (shareUrl) {
     window.open(shareUrl, "_blank");
+  }
+};
+
+window.closeShareModal = (e) => {
+  if (e.target.id === "share-modal-overlay") {
+    document.getElementById("share-modal-overlay").style.display = "none";
   }
 };
 
