@@ -64,7 +64,7 @@
     </script>
     <style>
       :root {
-        --glass-bg: rgba(20, 20, 20, 0.98);
+        --glass-bg: rgba(20, 20, 20, 0.95);
         --neon-primary: #00ff88;
         --neon-gold: #ffd700;
         --card-bg: #1a1a1a;
@@ -80,7 +80,8 @@
         min-height: 100vh;
         font-family: "Cairo", sans-serif;
         color: white;
-        margin: 0;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow-x: hidden;
       }
 
@@ -90,12 +91,17 @@
         left: 0;
         width: 100%;
         z-index: 1000;
-        background: rgba(20, 20, 20, 0.95);
+        background: var(--glass-bg);
         backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 15px 0;
-        transition: transform 0.4s ease-in-out;
+        padding: 12px 0;
+        transition: transform 0.3s ease-in-out;
       }
+      .smart-header.scroll-down {
+        transform: translateY(-100%);
+      }
+
       .header-content {
         max-width: 1200px;
         margin: 0 auto;
@@ -104,6 +110,7 @@
         align-items: center;
         padding: 0 20px;
       }
+
       .nav-home-btn {
         color: white;
         text-decoration: none;
@@ -122,15 +129,15 @@
       }
 
       .main-content {
-        max-width: 700px;
-        margin: 100px auto 20px;
-        padding: 0 15px;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 100px 20px 30px 20px;
       }
 
       .page-title {
         text-align: center;
         color: var(--neon-primary);
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         font-size: 1.8rem;
       }
 
@@ -148,39 +155,39 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: 0.3s;
+        transition: all 0.3s ease;
         cursor: pointer;
         text-decoration: none;
         color: white;
         position: relative;
-        overflow: hidden;
       }
 
       .ad-item:hover {
         border-color: var(--neon-primary);
-        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1);
-        transform: translateX(-5px);
+        box-shadow: 0 5px 20px rgba(0, 255, 136, 0.1);
+        transform: translateY(-3px);
       }
 
       .ad-info h3 {
         font-size: 1.1rem;
         font-weight: bold;
-        margin: 0 0 8px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        margin: 0 0 10px 0;
+        color: white;
       }
+
       .ad-price {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: var(--neon-gold);
         font-weight: bold;
+        display: block;
+        margin-bottom: 8px;
       }
 
       .status-badge {
-        font-size: 0.75rem;
-        padding: 3px 8px;
+        font-size: 0.8rem;
+        padding: 4px 10px;
         border-radius: 6px;
-        font-weight: normal;
+        display: inline-block;
       }
       .status-active {
         border: 1px solid var(--neon-primary);
@@ -196,7 +203,7 @@
       .arrow-icon {
         color: #555;
         font-size: 1.2rem;
-        transition: 0.3s;
+        padding-right: 15px;
       }
       .ad-item:hover .arrow-icon {
         color: var(--neon-primary);
@@ -209,85 +216,69 @@
         border: 2px dashed #333;
         padding: 40px;
         border-radius: 15px;
+        background: rgba(255, 255, 255, 0.02);
       }
 
       @media (max-width: 768px) {
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow-x: hidden;
-        }
-
         .smart-header {
-          padding: 10px 0 !important;
-          height: auto !important;
-          min-height: 60px;
+          padding: 10px 0;
         }
-
-        .header-content {
-          padding: 0 15px !important;
-        }
-
         .main-content {
-          margin-top: 0 !important;
-          padding-top: 90px !important;
-          padding-left: 15px !important;
-          padding-right: 15px !important;
+          padding-top: 85px;
+          padding-left: 15px;
+          padding-right: 15px;
         }
 
         .page-title {
           font-size: 1.5rem;
-          margin-bottom: 20px;
         }
 
         .ad-item {
-          padding: 15px;
           flex-direction: column;
           align-items: flex-start;
-          gap: 10px;
+          gap: 15px;
         }
 
         .arrow-icon {
-          align-self: flex-end;
-          margin-top: -20px;
+          position: absolute;
+          left: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          padding: 0;
         }
       }
     </style>
   </head>
   <body class="internal-page">
-    <header class="main-header">
-      <div class="header-container">
-        <div class="logo-container">
-          <a
-            href="home"
+    <header class="smart-header" id="main-header">
+      <div class="header-content">
+        <a
+          href="home"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+          "
+        >
+          <img
+            src="logo.png"
+            alt="Logo"
             style="
-              display: flex;
-              align-items: center;
-              text-decoration: none;
-              gap: 10px;
+              width: 40px;
+              border-radius: 50%;
+              border: 2px solid var(--neon-primary);
             "
+          />
+          <span style="color: white; font-weight: bold; font-size: 1.2rem"
+            >إعلاناتي</span
           >
-            <img
-              src="logo.jpg"
-              alt="شعار عقارك"
-              class="logo"
-              style="
-                height: 40px;
-                border-radius: 50%;
-                border: 2px solid var(--neon-primary);
-              "
-            />
-            <span style="color: white; font-weight: bold; font-size: 1.2rem"
-              >إعلاناتي</span
-            >
-          </a>
-        </div>
-        <nav class="main-nav">
-          <a href="dashboard" class="nav-button">العودة للقائمة</a>
-        </nav>
+        </a>
+        <a href="dashboard" class="nav-home-btn"
+          ><i class="fas fa-arrow-right"></i> القائمة</a
+        >
       </div>
     </header>
-
     <main class="main-content">
       <h1 class="page-title">عقارات قمت بنشرها</h1>
 

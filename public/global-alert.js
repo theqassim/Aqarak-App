@@ -144,3 +144,14 @@
 
   console.log("✨ Luxury Alert System Activated");
 })();
+let lastScrollY = window.scrollY;
+const header = document.querySelector(".smart-header");
+
+window.addEventListener("scroll", () => {
+  if (window.scrollY > lastScrollY && window.scrollY > 50) {
+    header.classList.add("scroll-down");
+  } else {
+    header.classList.remove("scroll-down");
+  }
+  lastScrollY = window.scrollY;
+});
