@@ -673,19 +673,18 @@
         font-size: 1.3rem !important;
       }
     }
-    /* إصلاح مودال باقات التميز */
     .glass-modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.85); /* خلفية معتمة */
-      backdrop-filter: blur(8px); /* تأثير الزجاج */
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
       z-index: 10001;
-      display: none; /* مخفي افتراضياً */
-      justify-content: center; /* توسيط أفقي */
-      align-items: center; /* توسيط عمودي */
+      display: none;
+      justify-content: center;
+      align-items: center;
     }
 
     .glass-card {
@@ -698,18 +697,17 @@
       padding: 30px;
       border-radius: 20px;
       width: 90%;
-      max-width: 500px; /* أقصى عرض عشان ميكونش عريض جداً */
+      max-width: 500px;
       position: relative;
       text-align: center;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       color: white;
     }
 
-    /* تنسيق إضافي لزر الإغلاق */
     .glass-card .close-modal {
       position: absolute;
       top: 15px;
-      left: 15px; /* عشان الـ RTL */
+      left: 15px;
       right: auto;
       font-size: 1.5rem;
       color: #aaa;
@@ -720,7 +718,6 @@
       color: #ff4444;
     }
 
-    /* تحسين شكل زر التفعيل */
     .btn-gold-3d {
       background: linear-gradient(45deg, #ffd700, #ffa500);
       border: none;
@@ -738,43 +735,36 @@
     .btn-gold-3d:hover {
       transform: translateY(-2px);
     }
-    /* === تحسينات الموبايل (Responsive Fixes) === */
 
-    /* 1. ضبط المودال ليتناسب مع شاشة الموبايل */
     @media (max-width: 768px) {
       .glass-card {
-        width: 95% !important; /* يأخذ عرض الشاشة بالكامل تقريباً */
-        padding: 20px 15px !important; /* تقليل الحواف الداخلية */
+        width: 95% !important;
+        padding: 20px 15px !important;
         margin: 0 auto;
       }
 
-      /* تكبير زر الإغلاق ليسهل لمسه */
       .glass-card .close-modal {
         font-size: 2rem;
         padding: 10px;
       }
 
-      /* جعل خيارات الباقة تحت بعضها إذا كانت المساحة ضيقة */
       .plan-radio-label > div {
-        flex-wrap: wrap; /* يسمح للنص بالنزول لسطر جديد */
+        flex-wrap: wrap;
       }
 
       .plan-radio-label strong {
-        font-size: 0.95rem; /* تصغير الخط قليلاً */
+        font-size: 0.95rem;
       }
     }
 
-    /* 2. ضبط عام للصفحة لمنع الاهتزاز الأفقي */
     html,
     body {
-      overflow-x: hidden; /* يمنع ظهور شريط التمرير الأفقي المزعج */
+      overflow-x: hidden;
       width: 100%;
     }
 
-    /* 3. تنسيق خيارات الباقات (Radio Buttons) */
-    /* نضع هذا لضمان شكل جميل حتى لو لم نكن على الموبايل */
     .plan-radio-input {
-      display: none; /* إخفاء الدائرة التقليدية */
+      display: none;
     }
 
     .plan-radio-label {
@@ -790,53 +780,44 @@
       transition: 0.3s;
     }
 
-    /* عند اختيار باقة، يتغير لونها */
     .plan-radio-input:checked + .plan-radio-label {
-      background: rgba(255, 215, 0, 0.15); /* خلفية ذهبية خفيفة */
+      background: rgba(255, 215, 0, 0.15);
       border-color: #ffd700;
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
     }
-    /* ====================================================
-   🔥 كود مخصص للموبايل فقط (يفصل التصميم عن اللابتوب)
-   ==================================================== */
 
     @media only screen and (max-width: 768px) {
-      /* 1. ضبط الحاوية الرئيسية */
       .property-detail-container {
         width: 100% !important;
-        padding: 85px 10px 20px !important; /* مساحة للهيدر */
+        padding: 85px 10px 20px !important;
         margin: 0 !important;
         box-sizing: border-box !important;
       }
 
-      /* 2. تحويل العرض لعمودي + وضع الصور في الأعلى */
       .details-layout {
         display: flex !important;
-        flex-direction: column-reverse !important; /* الصور أولاً ثم التفاصيل */
+        flex-direction: column-reverse !important;
         gap: 15px !important;
       }
 
-      /* 3. تنسيق صناديق المحتوى لتملأ الشاشة */
       .details-info-frame,
       .image-gallery-frame {
         width: 100% !important;
         padding: 15px !important;
         margin: 0 !important;
         border-radius: 12px !important;
-        box-sizing: border-box !important; /* يمنع الخروج عن الشاشة */
-        background: #1a1a1a !important; /* تأكيد لون الخلفية */
+        box-sizing: border-box !important;
+        background: #1a1a1a !important;
       }
 
-      /* 4. إزالة الهوامش الزائدة من الصور */
       .main-image-container {
-        height: 250px !important; /* ارتفاع مناسب للموبايل */
+        height: 250px !important;
         margin-bottom: 10px !important;
       }
 
-      /* 5. تنسيق شبكة المواصفات (الغرف، المساحة...) */
       .specs-list {
         display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important; /* 3 عناصر في الصف */
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 8px !important;
         padding: 10px 0 !important;
       }
@@ -852,7 +833,6 @@
         margin-bottom: 5px !important;
       }
 
-      /* 6. تصغير العناوين لتناسب الشاشة */
       .page-title {
         font-size: 1.3rem !important;
         line-height: 1.3 !important;
@@ -865,20 +845,17 @@
         display: block !important;
       }
 
-      /* 7. تنسيق أزرار الاتصال (واتساب واتصال) */
       .action-buttons-grid {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important; /* زرين في كل صف */
+        grid-template-columns: 1fr 1fr !important;
         gap: 10px !important;
         padding: 10px !important;
       }
 
-      /* أزرار المشاركة والمفضلة تكون صغيرة */
       .action-buttons-grid .btn-icon-only {
         grid-column: span 1 !important;
       }
 
-      /* 8. إخفاء أي سكرول جانبي مزعج */
       body,
       html {
         overflow-x: hidden !important;
