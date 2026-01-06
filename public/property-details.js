@@ -591,6 +591,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     let specsHTML = `<li><span>المساحة:</span> ${property.area} م² <i class="fas fa-ruler-combined"></i></li>`;
+    if (property.governorate) {
+      specsHTML += `<li><span>المحافظة:</span> ${property.governorate} <i class="fas fa-map-marker-alt"></i></li>`;
+    }
+    if (property.city) {
+      specsHTML += `<li><span>المدينة:</span> ${property.city} <i class="fas fa-city"></i></li>`;
+    }
     if (property.rooms && parseInt(property.rooms) > 0)
       specsHTML += `<li><span>الغرف:</span> ${property.rooms} <i class="fas fa-bed"></i></li>`;
     if (property.bathrooms && parseInt(property.bathrooms) > 0)
