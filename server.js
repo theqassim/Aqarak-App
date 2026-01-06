@@ -4217,71 +4217,73 @@ app.post("/api/reviews", async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const { reviewedPhone, rating, comment } = req.body;
-
-    const reviewerId = decoded.id;
-    const reviewerName = decoded.name;
     const reviewerPhone = decoded.phone;
 
     if (reviewerPhone === reviewedPhone) {
       return res.status(400).json({ message: "لا يمكن تقييم نفسك" });
     }
 
-    const checkRes = await pgQuery(
-      `SELECT * FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
-      [reviewerId, reviewedPhone]
+    if (rating) {
+      const currentRatingRes = await pgQuery(
+        `SELECT stars FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
+        [reviewerPhone, reviewedPhone]
+      );
+
+      if (currentRatingRes.rows.length > 0) {
+        const oldStars = currentRatingRes.rows[0].stars;
+        if (rating < oldStars) {
+          return res.status(400).json({
+            message: `لا يمكن تقليل التقييم! تقييمك الحالي ${oldStars} نجوم، يمكنك زيادته فقط.`,
+          });
+        }
+        if (rating > oldStars) {
+          await pgQuery(
+            `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
+            [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
+          );
+        }
+      } else {
+        await pgQuery(
+          `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) VALUES ($1, $2, $3, $4)`,
+          [reviewerPhone, reviewedPhone, rating, new Date().toISOString()]
+        );
+      }
+    }
+
+    if (comment && comment.trim() !== "") {
+      const commentsCountRes = await pgQuery(
+        `SELECT COUNT(*) FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
+        [reviewerPhone, reviewedPhone]
+      );
+
+      const currentCount = parseInt(commentsCountRes.rows[0].count);
+
+      if (currentCount >= 5) {
+        return res
+          .status(400)
+          .json({ message: "لقد وصلت للحد الأقصى (5 تعليقات) لهذا المستخدم." });
+      }
+
+      await pgQuery(
+        `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
+        [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
+      );
+    }
+
+    await sendDiscordNotification(
+      "⭐ تقييم/تعليق جديد",
+      [
+        { name: "المُقيِّم", value: `${decoded.name} (${reviewerPhone})` },
+        { name: "المُقيَّم", value: reviewedPhone },
+        { name: "النجوم المرسلة", value: rating ? `${rating} ⭐` : "لم تتغير" },
+        { name: "التعليق الجديد", value: comment || "بدون تعليق" },
+      ],
+      16776960
     );
 
-    if (checkRes.rows.length > 0) {
-      const oldReview = checkRes.rows[0];
-
-      let newRating = oldReview.rating;
-      if (rating) {
-        newRating = rating;
-      }
-
-      let newComment = oldReview.comment;
-      if (comment !== undefined) {
-        newComment = comment;
-      }
-
-      await pgQuery(
-        `UPDATE reviews SET rating = $1, comment = $2, created_at = $3 WHERE id = $4`,
-        [newRating, newComment, new Date().toISOString(), oldReview.id]
-      );
-
-      res.json({ success: true, message: "تم تحديث تقييمك بنجاح ✅" });
-    } else {
-      if (!rating)
-        return res.status(400).json({ message: "يرجى اختيار عدد النجوم" });
-
-      await pgQuery(
-        `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          reviewerId,
-          reviewerName,
-          reviewedPhone,
-          rating,
-          comment || "",
-          new Date().toISOString(),
-        ]
-      );
-
-      await sendDiscordNotification(
-        "⭐ تقييم جديد",
-        [
-          { name: "المُقيِّم", value: `${reviewerName} (${reviewerPhone})` },
-          { name: "المُقيَّم", value: reviewedPhone },
-          { name: "النجوم", value: `${rating} ⭐` },
-          { name: "التعليق", value: comment || "بدون تعليق" },
-        ],
-        16776960
-      );
-
-      res.json({ success: true, message: "تم نشر التقييم بنجاح ✅" });
-    }
+    res.json({ success: true, message: "تم حفظ التقييم بنجاح ✅" });
   } catch (e) {
-    console.error("Review Error:", e);
+    console.error(e);
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
@@ -4289,7 +4291,7 @@ app.post("/api/reviews", async (req, res) => {
 app.get("/api/reviews/stats/:phone", async (req, res) => {
   try {
     const result = await pgQuery(
-      `SELECT AVG(rating) as average, COUNT(*) as count FROM reviews WHERE reviewed_phone = $1`,
+      `SELECT AVG(stars) as average, COUNT(*) as count FROM user_ratings WHERE reviewed_phone = $1`,
       [req.params.phone]
     );
     const stats = result.rows[0];
@@ -4304,17 +4306,25 @@ app.get("/api/reviews/stats/:phone", async (req, res) => {
 
 app.get("/api/reviews/:phone", async (req, res) => {
   try {
-    const result = await pgQuery(
-      `SELECT r.*, u.profile_picture as reviewer_pic 
-             FROM reviews r
-             LEFT JOIN users u ON r.reviewer_id = u.id
-             WHERE r.reviewed_phone = $1 
-             ORDER BY r.created_at DESC`,
-      [req.params.phone]
-    );
+    const sql = `
+        SELECT 
+            c.id,
+            c.comment, 
+            c.created_at, 
+            COALESCE(r.stars, 0) as rating, 
+            u.name as reviewer_name, 
+            u.profile_picture as reviewer_pic
+        FROM user_comments c
+        LEFT JOIN users u ON c.reviewer_phone = u.phone
+        LEFT JOIN user_ratings r ON (c.reviewer_phone = r.reviewer_phone AND c.reviewed_phone = r.reviewed_phone)
+        WHERE c.reviewed_phone = $1
+        ORDER BY c.created_at DESC
+    `;
+
+    const result = await pgQuery(sql, [req.params.phone]);
     res.json(result.rows);
   } catch (e) {
-    console.error(e);
+    console.error("Fetch Reviews Error:", e);
     res.status(500).json([]);
   }
 });
@@ -4400,17 +4410,14 @@ app.delete("/api/admin/reviews/:id", async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-
     if (decoded.role !== "admin") {
       return res.status(403).json({ message: "هذا الإجراء للأدمن فقط" });
     }
 
-    const reviewId = req.params.id;
-
     await pgQuery("DELETE FROM user_comments WHERE id = $1", [req.params.id]);
     res.json({
       success: true,
-      message: "تم حذف التعليق الكتابي، وتقييم النجوم محفوظ.",
+      message: "تم حذف التعليق الكتابي بنجاح.",
     });
   } catch (error) {
     console.error("Delete Review Error:", error);
