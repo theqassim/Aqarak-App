@@ -115,6 +115,8 @@ async function fetchReviews(phone) {
   const loading = document.getElementById("loading-reviews");
   const aiContainer = document.getElementById("ai-summary-container");
 
+  window.currentProfilePhone = phone;
+
   try {
     const res = await fetch(`/api/reviews/${phone}`);
     if (!res.ok) throw new Error("Failed to fetch reviews");
@@ -147,10 +149,9 @@ async function fetchReviews(phone) {
 
     listContainer.innerHTML = reviews
       .map((r) => {
-        const deleteBtn =
-          isAdmin && r.comment_id
-            ? `<button onclick="deleteReview(${r.comment_id})" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم"><i class="fas fa-trash"></i></button>`
-            : "";
+        const deleteBtn = isAdmin
+          ? `<button onclick="deleteFullReview('${r.reviewer_phone}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم بالكامل"><i class="fas fa-trash"></i></button>`
+          : "";
 
         return `
             <div class="review-item" style="position: relative;">
@@ -203,13 +204,19 @@ async function fetchReviews(phone) {
   }
 }
 
-window.deleteReview = async (reviewId) => {
-  if (!confirm("هل أنت متأكد من حذف هذا التقييم؟ لا يمكن التراجع.")) return;
+window.deleteFullReview = async (reviewerPhone) => {
+  if (!confirm("هل أنت متأكد؟ سيتم حذف النجوم والتعليق لهذا المستخدم نهائياً."))
+    return;
+
+  const reviewedPhone = window.currentProfilePhone;
 
   try {
-    const res = await fetch(`/api/admin/reviews/${reviewId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      `/api/admin/reviews/full/${reviewerPhone}/${reviewedPhone}`,
+      {
+        method: "DELETE",
+      }
+    );
     const data = await res.json();
 
     if (res.ok) {
@@ -220,23 +227,5 @@ window.deleteReview = async (reviewId) => {
     }
   } catch (e) {
     alert("حدث خطأ أثناء الاتصال بالسيرفر");
-  }
-};
-
-window.switchTab = (tabName) => {
-  const propsSec = document.getElementById("properties-section");
-  const reviewsSec = document.getElementById("reviews-section");
-  const btns = document.querySelectorAll(".tab-btn");
-
-  btns.forEach((b) => b.classList.remove("active"));
-
-  if (tabName === "properties") {
-    propsSec.classList.remove("hidden-section");
-    reviewsSec.classList.add("hidden-section");
-    btns[0].classList.add("active");
-  } else {
-    propsSec.classList.add("hidden-section");
-    reviewsSec.classList.remove("hidden-section");
-    btns[1].classList.add("active");
   }
 };

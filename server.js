@@ -4308,6 +4308,7 @@ app.get("/api/reviews/:phone", async (req, res) => {
   try {
     const sql = `
         SELECT 
+            r.reviewer_phone, -- هام جداً للحذف
             r.stars as rating,
             r.updated_at as created_at,
             c.comment, 
@@ -4320,12 +4321,43 @@ app.get("/api/reviews/:phone", async (req, res) => {
         WHERE r.reviewed_phone = $1
         ORDER BY r.updated_at DESC
     `;
-
     const result = await pgQuery(sql, [req.params.phone]);
     res.json(result.rows);
   } catch (e) {
     console.error("Fetch Reviews Error:", e);
     res.status(500).json([]);
+  }
+});
+
+app.delete("/api/admin/reviews/full/:reviewer/:reviewed", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.status(401).json({ message: "غير مصرح" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ message: "هذا الإجراء للأدمن فقط" });
+    }
+
+    const { reviewer, reviewed } = req.params;
+
+    await pgQuery(
+      "DELETE FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2",
+      [reviewer, reviewed]
+    );
+
+    await pgQuery(
+      "DELETE FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2",
+      [reviewer, reviewed]
+    );
+
+    res.json({
+      success: true,
+      message: "تم حذف التقييم والنجوم بالكامل.",
+    });
+  } catch (error) {
+    console.error("Delete Full Review Error:", error);
+    res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
 
