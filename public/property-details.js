@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (loadingMessage) loadingMessage.style.display = "none";
 
-    const ownerPhone = property.sellerPhone || "01008102237";
+    const ownerPhone = property.sellerPhone;
     const formattedOwnerPhone = ownerPhone.replace(/\D/g, "").startsWith("0")
       ? "2" + ownerPhone
       : ownerPhone;
@@ -544,7 +544,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       actionSectionHTML = `
                 <div class="action-buttons-group">
-                    <button onclick="window.handleWhatsappClick('${whatsappLink}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
+                    <button onclick="window.handleWhatsappClick('${whatsappLink}', '${property.sellerPhone}')" class="whatsapp-btn btn-neon-auth" style="flex:2; background-color: #25d366; color: white; border: none; box-shadow: 0 0 8px #25d366;">
                         <i class="fab fa-whatsapp"></i> تواصل مع المالك
                     </button>
                     <button onclick="window.shareProperty('${property.title}')" class="btn-neon-auth" style="background:var(--neon-secondary); color:#fff; flex:1;">
@@ -1356,4 +1356,16 @@ window.submitRate = async (phone) => {
     alert("خطأ في الاتصال");
     btn.disabled = false;
   }
+};
+
+window.handleWhatsappClick = async (link, ownerPhone) => {
+  if (ownerPhone) {
+    fetch("/api/log-contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerPhone }),
+    }).catch((e) => console.log(e));
+  }
+
+  window.open(link, "_blank");
 };

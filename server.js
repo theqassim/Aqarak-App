@@ -556,7 +556,29 @@ async function createTables() {
             is_banned BOOLEAN DEFAULT FALSE
         )`,
 
-    `CREATE TABLE IF NOT EXISTS properties (
+    `CREATE TABLE IF NOT EXISTS user_ratings (
+    reviewer_phone TEXT,
+    reviewed_phone TEXT,
+    stars INTEGER CHECK (stars >= 1 AND stars <= 5),
+    updated_at TEXT,
+    PRIMARY KEY (reviewer_phone, reviewed_phone)
+)`,
+
+    `CREATE TABLE IF NOT EXISTS user_comments (
+    id SERIAL PRIMARY KEY,
+    reviewer_phone TEXT,
+    reviewed_phone TEXT,
+    comment TEXT,
+    created_at TEXT
+)`,
+
+    `CREATE TABLE IF NOT EXISTS contact_logs (
+    id SERIAL PRIMARY KEY,
+    user_phone TEXT,
+    owner_phone TEXT,
+    contact_date TIMESTAMP DEFAULT NOW(),
+    reminder_sent BOOLEAN DEFAULT FALSE
+)``CREATE TABLE IF NOT EXISTS properties (
             id SERIAL PRIMARY KEY, title TEXT NOT NULL, price TEXT NOT NULL, "numericPrice" NUMERIC, 
             rooms INTEGER, bathrooms INTEGER, area INTEGER, description TEXT, 
             "imageUrl" TEXT, "imageUrls" TEXT, type TEXT NOT NULL, "hiddenCode" TEXT UNIQUE, 
@@ -4189,43 +4211,77 @@ app.delete("/api/admin/faqs/:id", async (req, res) => {
 
 app.post("/api/reviews", async (req, res) => {
   const token = req.cookies.auth_token;
-  if (!token)
-    return res.status(401).json({ message: "لازم تسجل دخول عشان تقيم!" });
+  if (!token) return res.status(401).json({ message: "يجب تسجيل الدخول" });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const { reviewedPhone, rating, comment } = req.body;
+    const reviewerPhone = decoded.phone;
 
-    if (decoded.phone === reviewedPhone) {
-      return res.status(400).json({ message: "مينفعش تقيم نفسك يا ناصح 😉" });
+    if (reviewerPhone === reviewedPhone) {
+      return res.status(400).json({ message: "لا يمكن تقييم نفسك" });
     }
 
-    const check = await pgQuery(
-      `SELECT id FROM reviews WHERE reviewer_id = $1 AND reviewed_phone = $2`,
-      [decoded.id, reviewedPhone]
-    );
+    if (rating) {
+      const currentRatingRes = await pgQuery(
+        `SELECT stars FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
+        [reviewerPhone, reviewedPhone]
+      );
 
-    if (check.rows.length > 0) {
-      return res.status(400).json({ message: "أنت قيمت المستخدم ده قبل كده!" });
+      if (currentRatingRes.rows.length > 0) {
+        const oldStars = currentRatingRes.rows[0].stars;
+        if (rating < oldStars) {
+          return res.status(400).json({
+            message: `لا يمكن تقليل التقييم! تقييمك الحالي ${oldStars} نجوم، يمكنك زيادته فقط.`,
+          });
+        }
+        await pgQuery(
+          `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
+          [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
+        );
+      } else {
+        await pgQuery(
+          `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) VALUES ($1, $2, $3, $4)`,
+          [reviewerPhone, reviewedPhone, rating, new Date().toISOString()]
+        );
+      }
     }
 
-    await pgQuery(
-      `INSERT INTO reviews (reviewer_id, reviewer_name, reviewed_phone, rating, comment, created_at) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
+    if (comment && comment.trim() !== "") {
+      const commentsCountRes = await pgQuery(
+        `SELECT COUNT(*) FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
+        [reviewerPhone, reviewedPhone]
+      );
+
+      const currentCount = parseInt(commentsCountRes.rows[0].count);
+
+      if (currentCount >= 5) {
+        return res
+          .status(400)
+          .json({ message: "لقد وصلت للحد الأقصى (5 تعليقات) لهذا المستخدم." });
+      }
+
+      await pgQuery(
+        `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
+        [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
+      );
+    }
+
+    await sendDiscordNotification(
+      "⭐ تقييم جديد",
       [
-        decoded.id,
-        decoded.name,
-        reviewedPhone,
-        parseInt(rating),
-        comment,
-        new Date().toISOString(),
-      ]
+        { name: "المُقيِّم", value: `${decoded.name} (${reviewerPhone})` },
+        { name: "المُقيَّم", value: reviewedPhone },
+        { name: "النجوم", value: rating ? `${rating} ⭐` : "بدون تغيير" },
+        { name: "التعليق", value: comment || "بدون تعليق" },
+      ],
+      16776960
     );
 
-    res.json({ success: true, message: "تم إضافة تقييمك بنجاح ⭐" });
+    res.json({ success: true, message: "تم حفظ التقييم بنجاح ✅" });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ message: "حدث خطأ في السيرفر" });
+    res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
 
@@ -4350,9 +4406,11 @@ app.delete("/api/admin/reviews/:id", async (req, res) => {
 
     const reviewId = req.params.id;
 
-    await pgQuery("DELETE FROM reviews WHERE id = $1", [reviewId]);
-
-    res.json({ success: true, message: "تم حذف التقييم بنجاح 🗑️" });
+    await pgQuery("DELETE FROM user_comments WHERE id = $1", [req.params.id]);
+    res.json({
+      success: true,
+      message: "تم حذف التعليق الكتابي، وتقييم النجوم محفوظ.",
+    });
   } catch (error) {
     console.error("Delete Review Error:", error);
     res.status(500).json({ message: "خطأ في السيرفر" });
