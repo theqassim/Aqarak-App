@@ -307,41 +307,54 @@
       }
 
       @media (max-width: 768px) {
-        .profile-hero {
-          padding-top: 75px !important;
-          padding-bottom: 5px;
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow-x: hidden;
         }
-        .profile-avatar-wrapper {
-          width: 100px;
-          height: 100px;
-          margin-top: 0;
-          margin-bottom: 10px;
-        }
-        .user-name-title {
-          font-size: 1.5rem;
-          margin-bottom: 10px;
-        }
-        .user-stats-bar {
-          gap: 8px;
-        }
-        .stat-pill {
-          padding: 6px 12px;
-          font-size: 0.8rem;
-        }
-        .share-pill-btn {
-          padding: 6px 15px;
-          font-size: 0.8rem;
-        }
-      }
 
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
+        .smart-header {
+          padding: 10px 0 !important;
+          height: auto !important;
+          min-height: 60px;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+
+        .header-content {
+          padding: 0 15px !important;
+        }
+
+        .profile-hero {
+          padding-top: 85px !important;
+          padding-bottom: 20px !important;
+          margin-top: 0 !important;
+
+          background-position: top center !important;
+          background-size: cover !important;
+        }
+
+        .profile-avatar-wrapper {
+          width: 100px !important;
+          height: 100px !important;
+          margin-top: 0 !important;
+          margin-bottom: 10px !important;
+        }
+
+        .user-name-title {
+          font-size: 1.4rem !important;
+          margin-top: 5px !important;
+          margin-bottom: 10px !important;
+          line-height: 1.2 !important;
+        }
+
+        .user-stats-bar {
+          gap: 5px !important;
+        }
+
+        .stat-pill,
+        .share-pill-btn {
+          font-size: 0.75rem !important;
+          padding: 5px 10px !important;
+          height: 35px !important;
         }
       }
     </style>
