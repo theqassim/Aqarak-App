@@ -4658,38 +4658,35 @@ app.get("/sell", (req, res) => {
 
 app.get("/profile", async (req, res) => {
   const username = req.query.u;
-
   const filePath = path.join(__dirname, "public", "user-profile.html");
-  let html = await fs.readFile(filePath, "utf8");
 
   try {
+    let html = await fs.readFile(filePath, "utf8");
+
     if (!username) throw new Error("No user specified");
 
     const sql = `
-      SELECT 
-        u.name, 
-        u.profile_picture, 
-        u.created_at,
-        (SELECT COUNT(*) FROM properties WHERE user_phone = u.phone) as prop_count,
-        (SELECT COUNT(*) FROM user_ratings WHERE reviewed_phone = u.phone) as rating_count
-      FROM users u 
-      WHERE u.username = $1
+      SELECT name, profile_picture, created_at,
+      (SELECT COUNT(*) FROM properties WHERE "sellerPhone" = users.phone) as prop_count,
+      (SELECT COUNT(*) FROM user_ratings WHERE reviewed_phone = users.phone) as rating_count
+      FROM users WHERE username = $1
     `;
 
-    const result = await pgQuery(sql, [username]);
+    const result = await pgQuery(sql, [username.toLowerCase()]);
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
       const joinYear = new Date(user.created_at).getFullYear();
 
       const title = `عقارك | حساب ${user.name}`;
+      const description = `تصفح ${user.prop_count} عقار و ${user.rating_count} تقييم للمستخدم ${user.name}. عضو في عقارك منذ ${joinYear}.`;
 
-      const description = `شوف حساب ${user.name} على منصة عقارك. عضو مميز معانا من سنة ${joinYear}، وعارض ${user.prop_count} عقار لقطة. ادخل شوف العروض وتواصل معاه فوراً!`;
-
-      const image =
-        user.profile_picture && !user.profile_picture.includes("logo")
-          ? user.profile_picture
-          : "https://www.aqarakeg.com/logo.png";
+      let image = user.profile_picture;
+      if (!image || image.includes("logo.png")) {
+        image = "https://www.aqarakeg.com/logo.png";
+      } else if (!image.startsWith("http")) {
+        image = `https://www.aqarakeg.com${image}`;
+      }
 
       const url = `https://www.aqarakeg.com/profile?u=${username}`;
 
@@ -4698,23 +4695,15 @@ app.get("/profile", async (req, res) => {
         .replace(/{{OG_DESCRIPTION}}/g, description)
         .replace(/{{OG_IMAGE}}/g, image)
         .replace(/{{OG_URL}}/g, url);
+
+      res.send(html);
     } else {
       throw new Error("User not found");
     }
   } catch (e) {
-    html = html
-      .replace(/{{OG_TITLE}}/g, "عقارك | أفضل منصة عقارية")
-      .replace(
-        /{{OG_DESCRIPTION}}/g,
-        "بيع واشتري عقارك بأمان وسهولة مع منصة عقارك."
-      )
-      .replace(/{{OG_IMAGE}}/g, "https://www.aqarakeg.com/logo.png")
-      .replace(/{{OG_URL}}/g, "https://www.aqarakeg.com");
+    res.sendFile(filePath);
   }
-
-  res.send(html);
 });
-
 app.get("/faq", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "faq.html"))
 );
