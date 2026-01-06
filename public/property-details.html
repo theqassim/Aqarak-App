@@ -738,6 +738,64 @@
     .btn-gold-3d:hover {
       transform: translateY(-2px);
     }
+    /* === تحسينات الموبايل (Responsive Fixes) === */
+
+    /* 1. ضبط المودال ليتناسب مع شاشة الموبايل */
+    @media (max-width: 768px) {
+      .glass-card {
+        width: 95% !important; /* يأخذ عرض الشاشة بالكامل تقريباً */
+        padding: 20px 15px !important; /* تقليل الحواف الداخلية */
+        margin: 0 auto;
+      }
+
+      /* تكبير زر الإغلاق ليسهل لمسه */
+      .glass-card .close-modal {
+        font-size: 2rem;
+        padding: 10px;
+      }
+
+      /* جعل خيارات الباقة تحت بعضها إذا كانت المساحة ضيقة */
+      .plan-radio-label > div {
+        flex-wrap: wrap; /* يسمح للنص بالنزول لسطر جديد */
+      }
+
+      .plan-radio-label strong {
+        font-size: 0.95rem; /* تصغير الخط قليلاً */
+      }
+    }
+
+    /* 2. ضبط عام للصفحة لمنع الاهتزاز الأفقي */
+    html,
+    body {
+      overflow-x: hidden; /* يمنع ظهور شريط التمرير الأفقي المزعج */
+      width: 100%;
+    }
+
+    /* 3. تنسيق خيارات الباقات (Radio Buttons) */
+    /* نضع هذا لضمان شكل جميل حتى لو لم نكن على الموبايل */
+    .plan-radio-input {
+      display: none; /* إخفاء الدائرة التقليدية */
+    }
+
+    .plan-radio-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    /* عند اختيار باقة، يتغير لونها */
+    .plan-radio-input:checked + .plan-radio-label {
+      background: rgba(255, 215, 0, 0.15); /* خلفية ذهبية خفيفة */
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
   </style>
   <body class="internal-page">
     <header class="smart-header" id="main-header">
