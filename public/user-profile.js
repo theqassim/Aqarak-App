@@ -1,3 +1,105 @@
+window.openShareModal = () => {
+  if (navigator.share) {
+    const title = document.title;
+    const name = document.getElementById("user-name").innerText;
+    const text = `تصفح بروفايل وعقارات ${name} المميزة على موقع عقارك!`;
+    const url = window.location.href;
+
+    navigator
+      .share({
+        title: title,
+        text: text,
+        url: url,
+      })
+      .catch((error) => console.log("Error sharing", error));
+  } else {
+    const modal = document.getElementById("share-modal-overlay");
+    if (modal) modal.style.display = "flex";
+  }
+};
+
+window.closeShareModal = (e) => {
+  if (e.target.id === "share-modal-overlay") {
+    document.getElementById("share-modal-overlay").style.display = "none";
+  }
+};
+
+window.shareTo = (platform) => {
+  const url = encodeURIComponent(window.location.href);
+  const name = document.getElementById("user-name").innerText;
+  const text = encodeURIComponent(`تصفح بروفايل ${name} على عقارك!`);
+
+  let shareUrl = "";
+
+  if (platform === "whatsapp") {
+    shareUrl = `https://wa.me/?text=${text}%20${url}`;
+  } else if (platform === "facebook") {
+    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+  } else if (platform === "copy") {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert("تم نسخ الرابط بنجاح! ✅");
+      document.getElementById("share-modal-overlay").style.display = "none";
+    });
+    return;
+  }
+
+  if (shareUrl) {
+    window.open(shareUrl, "_blank");
+  }
+};
+
+window.switchTab = (tabName) => {
+  const propsSec = document.getElementById("properties-section");
+  const reviewsSec = document.getElementById("reviews-section");
+  const btns = document.querySelectorAll(".tab-btn");
+
+  if (!propsSec || !reviewsSec) return;
+
+  btns.forEach((b) => b.classList.remove("active"));
+
+  if (tabName === "properties") {
+    propsSec.classList.remove("hidden-section");
+    reviewsSec.classList.add("hidden-section");
+    if (btns[0]) btns[0].classList.add("active");
+  } else {
+    propsSec.classList.add("hidden-section");
+    reviewsSec.classList.remove("hidden-section");
+    if (btns[1]) btns[1].classList.add("active");
+  }
+};
+
+window.deleteFullReview = async (reviewerPhone) => {
+  if (!confirm("هل أنت متأكد؟ سيتم حذف النجوم والتعليق لهذا المستخدم نهائياً."))
+    return;
+
+  const reviewedPhone = window.currentProfilePhone;
+
+  if (!reviewedPhone) {
+    alert("حدث خطأ: رقم المستخدم غير معروف. يرجى تحديث الصفحة.");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `/api/admin/reviews/full/${reviewerPhone}/${reviewedPhone}`,
+      {
+        method: "DELETE",
+      }
+    );
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("✅ " + data.message);
+      location.reload();
+    } else {
+      alert("❌ خطأ: " + data.message);
+    }
+  } catch (e) {
+    alert("حدث خطأ أثناء الاتصال بالسيرفر");
+    console.error(e);
+  }
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   let lastScrollY = window.scrollY;
   const header = document.getElementById("main-header");
@@ -31,14 +133,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? data.profile_picture
         : "logo.png";
 
-    document.getElementById(
-      "avatar-container"
-    ).innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
+    const avatarContainer = document.getElementById("avatar-container");
+    if (avatarContainer) {
+      avatarContainer.innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
+    }
+
     document.getElementById("user-name").innerHTML = data.name;
     document.title = `${data.name} | عقارك`;
-    document.getElementById(
-      "prop-count-badge"
-    ).innerText = `${data.properties.length} عقار`;
+
+    const countBadge = document.getElementById("prop-count-badge");
+    if (countBadge) countBadge.innerText = `${data.properties.length} عقار`;
 
     let joinYear = "2025";
     if (data.created_at) {
@@ -47,30 +151,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         joinYear = joinDate.getFullYear();
       }
     }
-    document.getElementById("join-date-text").innerText = `عضو منذ ${joinYear}`;
+    const joinText = document.getElementById("join-date-text");
+    if (joinText) joinText.innerText = `عضو منذ ${joinYear}`;
 
     if (data.phone) {
       fetchReviews(data.phone);
     } else {
-      document.getElementById("reviews-list").innerHTML =
-        '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات (بيانات المستخدم غير مكتملة).</p>';
+      const reviewList = document.getElementById("reviews-list");
+      if (reviewList)
+        reviewList.innerHTML =
+          '<p style="text-align:center; color:#777;">لا يمكن تحميل التقييمات.</p>';
     }
 
     renderProperties(data.properties);
 
     if (requestedTab === "reviews") {
-      switchTab("reviews");
+      window.switchTab("reviews");
     }
   } catch (error) {
     console.error(error);
-    document.getElementById("user-name").innerText = "مستخدم غير موجود";
-    document.getElementById("loading-props").style.display = "none";
+    const nameEl = document.getElementById("user-name");
+    if (nameEl) nameEl.innerText = "مستخدم غير موجود";
+    const loadingProps = document.getElementById("loading-props");
+    if (loadingProps) loadingProps.style.display = "none";
   }
 });
 
 function renderProperties(properties) {
   const grid = document.getElementById("properties-grid");
-  document.getElementById("loading-props").style.display = "none";
+  const loading = document.getElementById("loading-props");
+  if (loading) loading.style.display = "none";
+  if (!grid) return;
 
   if (properties.length === 0) {
     grid.innerHTML =
@@ -121,7 +232,7 @@ async function fetchReviews(phone) {
     const res = await fetch(`/api/reviews/${phone}`);
     if (!res.ok) throw new Error("Failed to fetch reviews");
     const reviews = await res.json();
-    loading.style.display = "none";
+    if (loading) loading.style.display = "none";
 
     let isAdmin = false;
     try {
@@ -136,56 +247,59 @@ async function fetchReviews(phone) {
 
     if (reviews.length > 0) {
       const avg = reviews.reduce((a, b) => a + b.rating, 0) / reviews.length;
-      document.getElementById("rating-badge").innerText = `${avg.toFixed(1)} (${
-        reviews.length
-      })`;
+      const badge = document.getElementById("rating-badge");
+      if (badge) badge.innerText = `${avg.toFixed(1)} (${reviews.length})`;
     }
 
     if (reviews.length === 0) {
-      listContainer.innerHTML =
-        '<p style="text-align:center; color:#777; padding:20px;">لا توجد تقييمات مكتوبة بعد.</p>';
+      if (listContainer)
+        listContainer.innerHTML =
+          '<p style="text-align:center; color:#777; padding:20px;">لا توجد تقييمات مكتوبة بعد.</p>';
       return;
     }
 
-    listContainer.innerHTML = reviews
-      .map((r) => {
-        const deleteBtn = isAdmin
-          ? `<button onclick="deleteFullReview('${r.reviewer_phone}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم بالكامل"><i class="fas fa-trash"></i></button>`
-          : "";
+    if (listContainer) {
+      listContainer.innerHTML = reviews
+        .map((r) => {
+          const deleteBtn = isAdmin
+            ? `<button onclick="window.deleteFullReview('${r.reviewer_phone}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم بالكامل"><i class="fas fa-trash"></i></button>`
+            : "";
 
-        return `
-            <div class="review-item" style="position: relative;">
-                <div style="flex-shrink:0;">
-                   <div style="width:40px; height:40px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-weight:bold;">
-                        ${
-                          r.rating
-                        }<i class="fas fa-star" style="font-size:0.7rem; margin-right:2px;"></i>
-                   </div>
-                </div>
-                <div style="flex:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h4 style="margin:0 0 5px 0; color:white;">${
-                          r.reviewer_name || "مستخدم"
-                        }</h4>
-                        ${deleteBtn}
+          return `
+                <div class="review-item" style="position: relative;">
+                    <div style="flex-shrink:0;">
+                    <div style="width:40px; height:40px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-weight:bold;">
+                            ${
+                              r.rating
+                            }<i class="fas fa-star" style="font-size:0.7rem; margin-right:2px;"></i>
                     </div>
-                    <p style="margin:0; color:#ccc; line-height:1.5;">${
-                      r.comment || ""
-                    }</p>
-                    <span style="font-size:0.75rem; color:#666;">${new Date(
-                      r.created_at
-                    ).toLocaleDateString("ar-EG")}</span>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="margin:0 0 5px 0; color:white;">${
+                              r.reviewer_name || "مستخدم"
+                            }</h4>
+                            ${deleteBtn}
+                        </div>
+                        <p style="margin:0; color:#ccc; line-height:1.5;">${
+                          r.comment || ""
+                        }</p>
+                        <span style="font-size:0.75rem; color:#666;">${new Date(
+                          r.created_at
+                        ).toLocaleDateString("ar-EG")}</span>
+                    </div>
                 </div>
-            </div>
-        `;
-      })
-      .join("");
+            `;
+        })
+        .join("");
+    }
 
-    if (reviews.length >= 1) {
+    if (reviews.length >= 1 && aiContainer) {
       aiContainer.style.display = "block";
       const aiText = document.getElementById("ai-summary-text");
-      aiText.innerHTML =
-        '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
+      if (aiText)
+        aiText.innerHTML =
+          '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
       try {
         const aiRes = await fetch("/api/reviews/summarize", {
           method: "POST",
@@ -193,39 +307,13 @@ async function fetchReviews(phone) {
           body: JSON.stringify({ reviews }),
         });
         const aiData = await aiRes.json();
-        aiText.innerHTML = aiData.summary;
+        if (aiText) aiText.innerHTML = aiData.summary;
       } catch (e) {
         aiContainer.style.display = "none";
       }
     }
   } catch (e) {
-    loading.style.display = "none";
+    if (loading) loading.style.display = "none";
     console.error("Review Error:", e);
   }
 }
-
-window.deleteFullReview = async (reviewerPhone) => {
-  if (!confirm("هل أنت متأكد؟ سيتم حذف النجوم والتعليق لهذا المستخدم نهائياً."))
-    return;
-
-  const reviewedPhone = window.currentProfilePhone;
-
-  try {
-    const res = await fetch(
-      `/api/admin/reviews/full/${reviewerPhone}/${reviewedPhone}`,
-      {
-        method: "DELETE",
-      }
-    );
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("✅ " + data.message);
-      location.reload();
-    } else {
-      alert("❌ خطأ: " + data.message);
-    }
-  } catch (e) {
-    alert("حدث خطأ أثناء الاتصال بالسيرفر");
-  }
-};
