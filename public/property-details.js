@@ -299,8 +299,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formattedOwnerPhone = ownerPhone.replace(/\D/g, "").startsWith("0")
       ? "2" + ownerPhone
       : ownerPhone;
+    const currentUrl = window.location.href;
     const whatsappLink = `https://wa.me/${formattedOwnerPhone}?text=${encodeURIComponent(
-      `أنا مهتم بالعقار: ${property.title} (كود: ${property.hiddenCode})`
+      `السلام عليكم، أنا مهتم بهذا العقار على موقع عقارك:\n${currentUrl}`
     )}`;
 
     const verifiedBadge = property.is_verified
@@ -635,25 +636,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${
                           property.nearby_services
                             ? `
-<div class="ai-insight-box neon-glow">
-    <div class="ai-header">
-        <i class="fas fa-robot ai-icon"></i>
+<div class="ai-insight-box neon-glow" style="background: linear-gradient(145deg, #0a0a0a, #1a1a1a); border: 1px solid #333; border-right: 4px solid #00ff88; padding: 20px; border-radius: 12px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -20px; left: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(0,255,136,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+    <div class="ai-header" style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+        <div style="width: 40px; height: 40px; background: rgba(0,255,136,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #00ff88;">
+            <i class="fas fa-brain" style="color: #00ff88; font-size: 1.2rem;"></i>
+        </div>
         <div>
-            <h4>تحليل موقع العقار</h4>
-            <span class="ai-subtitle">تم البحث بواسطة فريق عقارك 🛡️</span>
+            <h4 style="margin: 0; color: white; font-size: 1.1rem;">تحليل عقارك الذكي</h4>
+            <span style="font-size: 0.75rem; color: #888;">AI Location Analysis</span>
         </div>
     </div>
     <div class="ai-content">
-        <p>
-            <i class="fas fa-map-marker-alt" style="color:var(--neon-primary); margin-left:5px;"></i>
+        <p style="color: #ccc; font-size: 0.95rem; line-height: 1.7;">
             يتميز هذا العقار بموقع استراتيجي، حيث يحيط به الخدمات التالية:
         </p>
-        <div class="services-tags">
+        <div class="services-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
             ${property.nearby_services
               .split(",")
               .map(
                 (service) => `
-                <span class="service-tag"><i class="fas fa-check-circle"></i> ${service.trim()}</span>
+                <span class="service-tag" style="background: rgba(255,255,255,0.05); border: 1px solid #444; padding: 6px 14px; border-radius: 50px; font-size: 0.85rem; color: white; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-check-circle" style="color: #00ff88; font-size: 0.8rem;"></i> ${service.trim()}
+                </span>
             `
               )
               .join("")}
@@ -766,12 +771,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (imageUrls.length > 1) {
       document.getElementById("prev-image").onclick = () => {
-        currentImageIndex =
-          (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
         update();
       };
       document.getElementById("next-image").onclick = () => {
-        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+        currentImageIndex =
+          (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
         update();
       };
     } else {

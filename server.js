@@ -4360,7 +4360,9 @@ app.get("/api/reviews/:phone", async (req, res) => {
             r.stars as rating,
             u.name as reviewer_name, 
             u.username as reviewer_username,
-            u.profile_picture as reviewer_pic
+            u.profile_picture as reviewer_pic,
+            u.is_verified,
+            u.role
         FROM user_comments c
         LEFT JOIN user_ratings r ON (c.reviewer_phone = r.reviewer_phone AND c.reviewed_phone = r.reviewed_phone)
         LEFT JOIN users u ON c.reviewer_phone = u.phone
@@ -4368,7 +4370,20 @@ app.get("/api/reviews/:phone", async (req, res) => {
         ORDER BY c.created_at DESC
     `;
     const result = await pgQuery(sql, [req.params.phone]);
-    res.json(result.rows);
+
+    const finalRows = result.rows.map((row) => {
+      if (
+        row.reviewer_phone === process.env.ADMIN_PHONE ||
+        row.role === "admin"
+      ) {
+        row.reviewer_name = "موقع عقارك";
+        row.is_admin = true;
+        row.is_verified = true;
+      }
+      return row;
+    });
+
+    res.json(finalRows);
   } catch (e) {
     console.error("Fetch Reviews Error:", e);
     res.status(500).json([]);
@@ -4605,40 +4620,68 @@ setInterval(async () => {
   }
 }, 10 * 60 * 1000);
 
-app.delete("/api/reviews/mine/:reviewedPhone", async (req, res) => {
+app.delete("/api/reviews/delete/:id", async (req, res) => {
   const token = req.cookies.auth_token;
   if (!token) return res.status(401).json({ message: "غير مصرح" });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const reviewerPhone = decoded.phone;
-    const reviewedPhone = req.params.reviewedPhone;
+    const commentId = req.params.id;
 
-    await pgQuery(
-      "DELETE FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2",
-      [reviewerPhone, reviewedPhone]
+    const checkRes = await pgQuery(
+      "SELECT reviewer_phone FROM user_comments WHERE id = $1",
+      [commentId]
     );
-    await pgQuery(
-      "DELETE FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2",
-      [reviewerPhone, reviewedPhone]
-    );
+    if (checkRes.rows.length === 0)
+      return res.status(404).json({ message: "التقييم غير موجود" });
 
-    const countRes = await pgQuery(
-      "SELECT COUNT(*) FROM user_comments WHERE reviewed_phone = $1",
-      [reviewedPhone]
-    );
-
-    if (parseInt(countRes.rows[0].count) < 5) {
-      await pgQuery(
-        "UPDATE users SET ai_summary_cache = NULL WHERE phone = $1",
-        [reviewedPhone]
-      );
+    if (
+      checkRes.rows[0].reviewer_phone !== decoded.phone &&
+      decoded.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "لا تملك صلاحية حذف هذا التقييم" });
     }
 
-    res.json({ success: true, message: "تم حذف تقييمك بنجاح" });
+    await pgQuery("DELETE FROM user_comments WHERE id = $1", [commentId]);
+
+    res.json({ success: true, message: "تم حذف التقييم بنجاح" });
   } catch (error) {
-    console.error("Delete Mine Error:", error);
+    console.error("Delete Review Error:", error);
     res.status(500).json({ message: "خطأ في السيرفر" });
+  }
+});
+
+app.put("/api/reviews/edit/:id", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.status(401).json({ message: "غير مصرح" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { comment } = req.body;
+
+    const checkRes = await pgQuery(
+      "SELECT reviewer_phone FROM user_comments WHERE id = $1",
+      [req.params.id]
+    );
+    if (checkRes.rows.length === 0)
+      return res.status(404).json({ message: "غير موجود" });
+
+    if (
+      checkRes.rows[0].reviewer_phone !== decoded.phone &&
+      decoded.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "غير مسموح" });
+    }
+
+    await pgQuery("UPDATE user_comments SET comment = $1 WHERE id = $2", [
+      comment,
+      req.params.id,
+    ]);
+    res.json({ success: true, message: "تم تعديل التقييم" });
+  } catch (e) {
+    res.status(500).json({ message: "خطأ" });
   }
 });
 
