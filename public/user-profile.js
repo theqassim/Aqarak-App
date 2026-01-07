@@ -109,7 +109,7 @@ function renderProperties(properties) {
           : '<span style="position:absolute; top:10px; right:10px; background:#00d4ff; color:black; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem;">للإيجار</span>';
 
       return `
-        <div class="property-card" onclick="window.location.href='property-details.html?id=${
+        <div class="property-card" onclick="window.location.href='property?id=${
           prop.id
         }'" style="position:relative; cursor:pointer;">
             ${typeBadge}
@@ -167,15 +167,19 @@ async function fetchReviews(phone) {
 
     if (loading) loading.style.display = "none";
 
-    let avg = 0;
-    if (currentReviews.length > 0) {
-      avg =
-        currentReviews.reduce((a, b) => a + (Number(b.rating) || 0), 0) /
-        currentReviews.length;
-    }
+    try {
+      const statsRes = await fetch(`/api/reviews/stats/${phone}`);
+      const stats = await statsRes.json();
 
-    const badge = document.getElementById("rating-badge");
-    if (badge) badge.innerText = `${avg.toFixed(1)} (${currentReviews.length})`;
+      const badge = document.getElementById("rating-badge");
+      if (badge) {
+        badge.innerText = `${Number(stats.average || 0).toFixed(1)} (${
+          stats.count || 0
+        })`;
+      }
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+    }
 
     const aiContainer = document.getElementById("ai-summary-container");
     if (aiContainer) {
@@ -262,29 +266,44 @@ function renderReviewsPage() {
           ? `<button onclick="openReplyModal(${r.comment_id})" class="reply-btn-action" style="margin-top:10px;"><i class="fas fa-reply"></i> رد على التقييم</button>`
           : "";
 
-      const replyBox = r.owner_reply
-        ? `
-           <div class="owner-reply-container" style="margin-top:15px; margin-right:20px; padding:15px; background:rgba(30,30,30,0.8); border-right:3px solid #00ff88; border-radius:8px;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                     <img src="${ownerPic}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:1px solid #555;">
+      let replyBox = "";
+      if (r.owner_reply) {
+        const isReplyAdmin =
+          profilePhone === "01008102237" || userRole === "admin";
+
+        const replyName = isReplyAdmin ? "موقع عقارك" : ownerName;
+        const replyBadge = isReplyAdmin
+          ? `<span style="background: linear-gradient(45deg, #ffd700, #ffaa00); color:black; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; margin-right:5px;">إدارة الموقع</span>`
+          : `<span style="background:rgba(0,255,136,0.1); color:#00ff88; font-size:0.65rem; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid rgba(0,255,136,0.3);">صاحب الحساب</span>`;
+
+        const replyImg = isReplyAdmin ? "logo.png" : ownerPic;
+        const replyVerify = isReplyAdmin
+          ? `<i class="fas fa-check-circle" style="color:#00ff88; margin-right:4px;"></i>`
+          : ownerVerified;
+        const borderColor = isReplyAdmin ? "#ffd700" : "#00ff88";
+
+        replyBox = `
+           <div class="owner-reply-container" style="margin-top:15px; margin-right:20px; padding:15px; background:rgba(20,20,20,0.6); border-right:3px solid ${borderColor}; border-radius:12px; border: 1px solid #333;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                     <img src="${replyImg}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:1px solid ${borderColor};">
                      <div>
-                        <div style="font-size:0.9rem; font-weight:bold; color:white;">
-                            ${ownerName} ${ownerVerified}
-                            <span style="background:rgba(0,255,136,0.1); color:#00ff88; font-size:0.65rem; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid rgba(0,255,136,0.3);">صاحب الحساب</span>
+                        <div style="font-size:0.95rem; font-weight:bold; color:white;">
+                            ${replyName} ${replyVerify} ${replyBadge}
                         </div>
                         <div style="font-size:0.7rem; color:#888;">${
                           r.reply_date
                             ? new Date(r.reply_date).toLocaleDateString("ar-EG")
-                            : "الرد"
+                            : "رد رسمي"
                         }</div>
                      </div>
                 </div>
-                <div style="color:#ddd; font-size:0.9rem; line-height:1.5;">${
-                  r.owner_reply
-                }</div>
+                <div style="color:#eee; font-size:0.95rem; line-height:1.6; padding: 0 5px;">
+                    <i class="fas fa-quote-right" style="color: ${borderColor}; opacity:0.3; font-size:0.8rem; margin-left:5px;"></i>
+                    ${r.owner_reply}
+                </div>
            </div>
-          `
-        : "";
+          `;
+      }
 
       return `
         <div class="modern-review-card" style="background:#151515; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #333;">

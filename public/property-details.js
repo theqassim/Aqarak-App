@@ -277,6 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const property = await response.json();
 
     window.currentProperty = property;
+    document.title = `${property.title} | عقارك`;
 
     imageUrls = [];
     if (property.imageUrls) {
@@ -331,8 +332,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }&tab=reviews" style="text-decoration:none;">
         <div style="display:flex; align-items:center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; border: 1px solid #444; cursor: pointer; transition: 0.3s;" onmouseover="this.style.borderColor='#FFD700'" onmouseout="this.style.borderColor='#444'">
             <i class="fas fa-star" style="color: #FFD700; font-size: 0.9rem;"></i>
-            <span style="color: #fff; font-weight: bold; font-size: 0.9rem;">${
-              ratingStats.average || "0.0"
+            <span style="color: #fff; font-weight: bold; font-size: 1rem;">${
+              Number(ratingStats.average || 0).toFixed(1)
             }</span>
             <span style="color: #888; font-size: 0.8rem;">(${
               ratingStats.count || 0
