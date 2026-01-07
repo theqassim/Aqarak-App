@@ -1,7 +1,3 @@
-/**
- * دالة مساعدة لتجهيز بيانات المشاركة
- * تقوم بجمع المعلومات من الصفحة وتنسيق الرسالة
- */
 function getShareData() {
   const name = document.getElementById("user-name")?.innerText || "مستخدم";
   const propCount =
@@ -138,6 +134,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  if (data.ai_summary) {
+    updateAiUI(data.ai_summary);
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get("u");
   const requestedTab = urlParams.get("tab");
@@ -214,16 +214,22 @@ function renderProperties(properties) {
   }
 
   grid.innerHTML = properties
-    .map(
-      (prop) => `
+    .map((prop) => {
+      const typeBadge =
+        prop.type === "buy" || prop.type === "بيع"
+          ? '<span style="position:absolute; top:10px; right:10px; background:#00ff88; color:black; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem;">للبيع</span>'
+          : '<span style="position:absolute; top:10px; right:10px; background:#00d4ff; color:black; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem;">للإيجار</span>';
+
+      return `
         <div class="property-card" onclick="window.location.href='property?id=${
           prop.id
-        }'">
+        }'" style="position:relative;">
+            ${typeBadge}
             <img src="${
               prop.imageUrl || "logo.png"
             }" class="card-img" onerror="this.src='logo.png'">
             <div class="card-info">
-                <h3 style="color:white; margin:0 0 5px 0; font-size:1.1rem;">${
+                <h3 style="color:white; margin:0 0 5px 0; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${
                   prop.title
                 }</h3>
                 <div style="color:#FFD700; font-weight:bold; font-size:1.2rem;">${Number(
@@ -240,9 +246,34 @@ function renderProperties(properties) {
                 </div>
             </div>
         </div>
-    `
-    )
+    `;
+    })
     .join("");
+}
+window.openReplyModal = (commentId) => {
+  const reply = prompt("اكتب ردك على هذا التعليق:");
+  if (reply) {
+    submitReply(commentId, reply);
+  }
+};
+
+async function submitReply(commentId, replyText) {
+  try {
+    const res = await fetch("/api/reviews/reply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commentId, replyText }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("تم الرد بنجاح ✅");
+      location.reload();
+    } else {
+      alert("خطأ: " + data.message);
+    }
+  } catch (e) {
+    alert("خطأ في الاتصال");
+  }
 }
 
 async function fetchReviews(phone) {
@@ -251,93 +282,121 @@ async function fetchReviews(phone) {
   const aiContainer = document.getElementById("ai-summary-container");
 
   window.currentProfilePhone = phone;
+  let currentUserPhone = null;
+
+  try {
+    const authRes = await fetch("/api/auth/me");
+    const authData = await authRes.json();
+    if (authData.isAuthenticated) currentUserPhone = authData.phone;
+  } catch (e) {}
 
   try {
     const res = await fetch(`/api/reviews/${phone}`);
-    if (!res.ok) throw new Error("Failed to fetch reviews");
+    if (!res.ok) throw new Error("Failed");
     const reviews = await res.json();
+
     if (loading) loading.style.display = "none";
 
-    let isAdmin = false;
-    try {
-      const authRes = await fetch("/api/auth/me");
-      const authData = await authRes.json();
-      if (authData.isAuthenticated && authData.role === "admin") {
-        isAdmin = true;
-      }
-    } catch (e) {
-      console.log("Not logged in");
-    }
-
-    if (reviews.length > 0) {
-      const avg = reviews.reduce((a, b) => a + b.rating, 0) / reviews.length;
-      const badge = document.getElementById("rating-badge");
-      if (badge) badge.innerText = `${avg.toFixed(1)} (${reviews.length})`;
+    const aiTextElement = document.getElementById("ai-summary-text");
+    if (reviews.length >= 5 && aiContainer) {
     }
 
     if (reviews.length === 0) {
       if (listContainer)
         listContainer.innerHTML =
-          '<p style="text-align:center; color:#777; padding:20px;">لا توجد تقييمات مكتوبة بعد.</p>';
+          '<div style="text-align:center; padding:40px; color:#666;"><i class="far fa-comments" style="font-size:2rem; margin-bottom:10px;"></i><p>لا توجد تقييمات مكتوبة بعد. كن أول من يقيم!</p></div>';
       return;
     }
+
+    const avg =
+      reviews.reduce((a, b) => a + (b.rating || 0), 0) / (reviews.length || 1);
+    const badge = document.getElementById("rating-badge");
+    if (badge) badge.innerText = `${avg.toFixed(1)} (${reviews.length})`;
 
     if (listContainer) {
       listContainer.innerHTML = reviews
         .map((r) => {
-          const deleteBtn = isAdmin
-            ? `<button onclick="window.deleteFullReview('${r.reviewer_phone}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; margin-right:auto; font-size:0.9rem;" title="حذف التقييم بالكامل"><i class="fas fa-trash"></i></button>`
+          const reviewerImg = r.reviewer_pic || "logo.png";
+          const reviewerLink = r.reviewer_username
+            ? `profile?u=${r.reviewer_username}`
+            : "#";
+
+          const deleteBtn =
+            currentUserPhone === "01008102237" || window.isAdmin
+              ? `<button onclick="deleteReview(${r.comment_id})" style="color:#ff4444; background:none; border:none; cursor:pointer; float:left;"><i class="fas fa-trash"></i></button>`
+              : "";
+
+          const replyBtn =
+            currentUserPhone === phone && !r.owner_reply
+              ? `<button onclick="openReplyModal(${r.comment_id})" class="reply-btn-action"><i class="fas fa-reply"></i> رد</button>`
+              : "";
+
+          const replyBox = r.owner_reply
+            ? `<div class="owner-reply-box"><div class="owner-reply-text">${r.owner_reply}</div></div>`
             : "";
 
           return `
-                <div class="review-item" style="position: relative;">
-                    <div style="flex-shrink:0;">
-                    <div style="width:40px; height:40px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-weight:bold;">
-                            ${
-                              r.rating
-                            }<i class="fas fa-star" style="font-size:0.7rem; margin-right:2px;"></i>
-                    </div>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <h4 style="margin:0 0 5px 0; color:white;">${
-                              r.reviewer_name || "مستخدم"
-                            }</h4>
-                            ${deleteBtn}
+            <div class="modern-review-card">
+                <div class="review-header">
+                    <a href="${reviewerLink}" class="reviewer-info">
+                        <img src="${reviewerImg}" class="reviewer-img" onerror="this.src='logo.png'">
+                        <div class="reviewer-details">
+                            <h4>${r.reviewer_name || "مستخدم عقارك"}</h4>
+                            <span>${new Date(r.created_at).toLocaleDateString(
+                              "ar-EG"
+                            )}</span>
                         </div>
-                        <p style="margin:0; color:#ccc; line-height:1.5;">${
-                          r.comment || ""
-                        }</p>
-                        <span style="font-size:0.75rem; color:#666;">${new Date(
-                          r.created_at
-                        ).toLocaleDateString("ar-EG")}</span>
+                    </a>
+                    <div class="review-stars">
+                        ${r.rating} <i class="fas fa-star"></i>
                     </div>
                 </div>
-            `;
+                
+                <div class="review-body">
+                    ${r.comment}
+                    ${deleteBtn}
+                </div>
+
+                ${replyBox}
+                ${replyBtn}
+            </div>
+          `;
         })
         .join("");
-    }
-
-    if (reviews.length >= 1 && aiContainer) {
-      aiContainer.style.display = "block";
-      const aiText = document.getElementById("ai-summary-text");
-      if (aiText)
-        aiText.innerHTML =
-          '<i class="fas fa-pulse fa-spinner"></i> جاري تحليل آراء الناس...';
-      try {
-        const aiRes = await fetch("/api/reviews/summarize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reviews }),
-        });
-        const aiData = await aiRes.json();
-        if (aiText) aiText.innerHTML = aiData.summary;
-      } catch (e) {
-        aiContainer.style.display = "none";
-      }
     }
   } catch (e) {
     if (loading) loading.style.display = "none";
     console.error("Review Error:", e);
+  }
+}
+
+window.deleteReview = async (commentId) => {
+  if (!confirm("حذف هذا التعليق فقط؟")) return;
+  try {
+    const res = await fetch(`/api/admin/reviews/${commentId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      alert("تم الحذف");
+      location.reload();
+    }
+  } catch (e) {
+    alert("Error");
+  }
+};
+
+function updateAiUI(summary) {
+  const container = document.getElementById("ai-summary-container");
+  const text = document.getElementById("ai-summary-text");
+  if (container && text && summary) {
+    container.style.display = "block";
+    container.className = "ai-summary-modern";
+    container.innerHTML = `
+            <div class="ai-brain-icon"><i class="fas fa-brain"></i></div>
+            <div>
+                <h4 style="color:var(--neon-secondary); margin:0 0 5px 0;">تحليل العقار AI</h4>
+                <p style="color:#eee; margin:0; line-height:1.5;">${summary}</p>
+            </div>
+        `;
   }
 }

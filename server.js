@@ -2318,29 +2318,59 @@ app.get("/api/admin/counts", async (req, res) => {
   }
 });
 
-app.get("/update-db-details", async (req, res) => {
+app.get("/update-db-v3", async (req, res) => {
   try {
     await pgQuery(
-      `ALTER TABLE properties ADD COLUMN IF NOT EXISTS "level" TEXT`
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_summary_cache TEXT`
+    );
+
+    await pgQuery(
+      `ALTER TABLE user_comments ADD COLUMN IF NOT EXISTS owner_reply TEXT`
     );
     await pgQuery(
-      `ALTER TABLE properties ADD COLUMN IF NOT EXISTS "floors_count" INTEGER`
+      `ALTER TABLE user_comments ADD COLUMN IF NOT EXISTS reply_date TEXT`
     );
+
     await pgQuery(
-      `ALTER TABLE properties ADD COLUMN IF NOT EXISTS "finishing_type" TEXT`
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_rating_reminder TIMESTAMP`
     );
-    await pgQuery(
-      `ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyLevel" TEXT`
+
+    res.send(
+      "✅ تم تحديث قاعدة البيانات (V3) بنجاح: تم إضافة كاش الذكاء الاصطناعي، ونظام الردود، وتتبع التذكيرات."
     );
-    await pgQuery(
-      `ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFloors" INTEGER`
-    );
-    await pgQuery(
-      `ALTER TABLE seller_submissions ADD COLUMN IF NOT EXISTS "propertyFinishing" TEXT`
-    );
-    res.send("✅ تم تحديث قاعدة البيانات وإضافة الأعمدة الناقصة بنجاح.");
   } catch (error) {
-    res.send("❌ حدث خطأ: " + error.message);
+    res.status(500).send("❌ حدث خطأ: " + error.message);
+  }
+});
+
+app.post("/api/reviews/reply", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.status(401).json({ message: "غير مصرح" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { commentId, replyText } = req.body;
+
+    const commentRes = await pgQuery(
+      "SELECT reviewed_phone FROM user_comments WHERE id = $1",
+      [commentId]
+    );
+    if (commentRes.rows.length === 0)
+      return res.status(404).json({ message: "التعليق غير موجود" });
+
+    if (commentRes.rows[0].reviewed_phone !== decoded.phone) {
+      return res.status(403).json({ message: "هذا التعليق ليس على حسابك" });
+    }
+
+    await pgQuery(
+      "UPDATE user_comments SET owner_reply = $1, reply_date = $2 WHERE id = $3",
+      [replyText, new Date().toISOString(), commentId]
+    );
+
+    res.json({ success: true, message: "تم نشر الرد بنجاح ✅" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
 
@@ -4230,18 +4260,10 @@ app.post("/api/reviews", async (req, res) => {
       );
 
       if (currentRatingRes.rows.length > 0) {
-        const oldStars = currentRatingRes.rows[0].stars;
-        if (rating < oldStars) {
-          return res.status(400).json({
-            message: `لا يمكن تقليل التقييم! تقييمك الحالي ${oldStars} نجوم، يمكنك زيادته فقط.`,
-          });
-        }
-        if (rating > oldStars) {
-          await pgQuery(
-            `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
-            [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
-          );
-        }
+        await pgQuery(
+          `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
+          [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
+        );
       } else {
         await pgQuery(
           `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) VALUES ($1, $2, $3, $4)`,
@@ -4256,9 +4278,7 @@ app.post("/api/reviews", async (req, res) => {
         [reviewerPhone, reviewedPhone]
       );
 
-      const currentCount = parseInt(commentsCountRes.rows[0].count);
-
-      if (currentCount >= 5) {
+      if (parseInt(commentsCountRes.rows[0].count) >= 5) {
         return res
           .status(400)
           .json({ message: "لقد وصلت للحد الأقصى (5 تعليقات) لهذا المستخدم." });
@@ -4270,13 +4290,43 @@ app.post("/api/reviews", async (req, res) => {
       );
     }
 
+    const totalReviewsRes = await pgQuery(
+      `SELECT comment FROM user_comments WHERE reviewed_phone = $1 ORDER BY id DESC LIMIT 20`,
+      [reviewedPhone]
+    );
+
+    if (totalReviewsRes.rows.length >= 5) {
+      const textComments = totalReviewsRes.rows
+        .map((r) => `- ${r.comment}`)
+        .join("\n");
+      const prompt = `
+        أنت محلل سمعة محترف لمنصة عقارية. دي آراء الناس عن مستخدم (سمسار أو مالك):
+        ${textComments}
+        
+        المطلوب:
+        اكتب "ملخص السمعة" في سطرين فقط باللهجة المصرية المحترمة.
+        ركز على نقاط القوة (مثل: المصداقية، السرعة) والعيوب إن وجدت.
+        ابدأ بـ "خلاصة سمعة أ/ (الاسم):" ومتكتبش أي مقدمات تانية.
+        `;
+
+      modelChat
+        .generateContent(prompt)
+        .then(async (result) => {
+          const response = await result.response;
+          const summary = response.text().replace(/\*/g, "").trim();
+          await pgQuery(
+            "UPDATE users SET ai_summary_cache = $1 WHERE phone = $2",
+            [summary, reviewedPhone]
+          );
+        })
+        .catch((err) => console.error("AI Update Error:", err));
+    }
+
     await sendDiscordNotification(
-      "⭐ تقييم/تعليق جديد",
+      "⭐ تقييم جديد",
       [
-        { name: "المُقيِّم", value: `${decoded.name} (${reviewerPhone})` },
+        { name: "المُقيِّم", value: reviewerPhone },
         { name: "المُقيَّم", value: reviewedPhone },
-        { name: "النجوم المرسلة", value: rating ? `${rating} ⭐` : "لم تتغير" },
-        { name: "التعليق الجديد", value: comment || "بدون تعليق" },
       ],
       16776960
     );
@@ -4287,7 +4337,6 @@ app.post("/api/reviews", async (req, res) => {
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
-
 app.get("/api/reviews/stats/:phone", async (req, res) => {
   try {
     const result = await pgQuery(
@@ -4308,18 +4357,21 @@ app.get("/api/reviews/:phone", async (req, res) => {
   try {
     const sql = `
         SELECT 
-            r.reviewer_phone, -- هام جداً للحذف
-            r.stars as rating,
-            r.updated_at as created_at,
-            c.comment, 
             c.id as comment_id,
+            c.comment, 
+            c.created_at,
+            c.owner_reply,
+            c.reply_date,
+            r.reviewer_phone,
+            r.stars as rating,
             u.name as reviewer_name, 
+            u.username as reviewer_username,
             u.profile_picture as reviewer_pic
-        FROM user_ratings r
-        LEFT JOIN user_comments c ON (r.reviewer_phone = c.reviewer_phone AND r.reviewed_phone = c.reviewed_phone)
-        LEFT JOIN users u ON r.reviewer_phone = u.phone
-        WHERE r.reviewed_phone = $1
-        ORDER BY r.updated_at DESC
+        FROM user_comments c
+        LEFT JOIN user_ratings r ON (c.reviewer_phone = r.reviewer_phone AND c.reviewed_phone = r.reviewed_phone)
+        LEFT JOIN users u ON c.reviewer_phone = u.phone
+        WHERE c.reviewed_phone = $1
+        ORDER BY c.created_at DESC
     `;
     const result = await pgQuery(sql, [req.params.phone]);
     res.json(result.rows);
@@ -4437,7 +4489,7 @@ app.get("/api/public/profile/:username", async (req, res) => {
   const { username } = req.params;
   try {
     const userRes = await pgQuery(
-      "SELECT name, phone, is_verified, profile_picture, created_at FROM users WHERE username = $1",
+      "SELECT name, phone, is_verified, profile_picture, created_at, ai_summary_cache FROM users WHERE username = $1",
       [username.toLowerCase()]
     );
 
@@ -4460,6 +4512,7 @@ app.get("/api/public/profile/:username", async (req, res) => {
       is_verified: user.is_verified,
       profile_picture: user.profile_picture,
       created_at: user.created_at,
+      ai_summary: user.ai_summary_cache,
       properties: propsRes.rows,
     });
   } catch (error) {
@@ -4467,7 +4520,6 @@ app.get("/api/public/profile/:username", async (req, res) => {
     res.status(500).json({ message: "خطأ سيرفر" });
   }
 });
-
 app.delete("/api/admin/reviews/:id", async (req, res) => {
   const token = req.cookies.auth_token;
   if (!token) return res.status(401).json({ message: "غير مصرح" });
@@ -4509,33 +4561,42 @@ app.post("/api/log-contact", async (req, res) => {
 
 setInterval(async () => {
   try {
-    console.log("⏰ checking for review reminders...");
-
     const result = await pgQuery(`
             SELECT * FROM contact_logs 
             WHERE reminder_sent = FALSE 
-            AND contact_date < NOW() - INTERVAL '24 hours'
-            LIMIT 50
+            AND contact_date < NOW() - INTERVAL '2 hours'
+            AND contact_date > NOW() - INTERVAL '24 hours' 
+            LIMIT 20
         `);
 
     for (const log of result.rows) {
-      const lastReminderCheck = await pgQuery(
-        `
-                SELECT 1 FROM contact_logs 
-                WHERE user_phone = $1 
-                AND reminder_sent = TRUE 
-                AND contact_date > NOW() - INTERVAL '30 days'
-            `,
+      const userCheck = await pgQuery(
+        `SELECT last_rating_reminder FROM users WHERE phone = $1`,
         [log.user_phone]
       );
 
-      if (lastReminderCheck.rows.length === 0) {
-        const msg = `👋 أهلاً يا هندسة،\n\nأمس تواصلت مع المالك بخصوص عقار. يهمنا نعرف تجربتك! ⭐\n\nلو التعامل تم، يا ريت تقيمه عشان تفيد غيرك:\n${APP_URL}/profile?u=${log.owner_phone}&tab=reviews\n\n(رأيك بيفرق جداً في مجتمع عقارك)`;
+      const lastReminder = userCheck.rows[0]?.last_rating_reminder;
+      let shouldSend = true;
+
+      if (lastReminder) {
+        const daysSinceLast =
+          (new Date() - new Date(lastReminder)) / (1000 * 60 * 60 * 24);
+        if (daysSinceLast < 30) {
+          shouldSend = false;
+        }
+      }
+
+      if (shouldSend) {
+        const msg = `👋 أهلاً يا هندسة،\n\nمن ساعتين تواصلت مع المالك بخصوص عقار. يهمنا نعرف تجربتك! ⭐\n\nلو التعامل تم، يا ريت تقيمه عشان تفيد غيرك:\n${APP_URL}/profile?u=${log.owner_phone}&tab=reviews\n\n(رأيك بيفرق جداً في مجتمع عقارك)`;
 
         const sent = await sendWhatsAppMessage(log.user_phone, msg);
 
         if (sent) {
-          console.log(`✅ Reminder sent to ${log.user_phone}`);
+          console.log(`✅ Monthly Reminder sent to ${log.user_phone}`);
+          await pgQuery(
+            `UPDATE users SET last_rating_reminder = NOW() WHERE phone = $1`,
+            [log.user_phone]
+          );
         }
       }
 
@@ -4547,8 +4608,7 @@ setInterval(async () => {
   } catch (e) {
     console.error("Reminder Cron Error:", e);
   }
-}, 60 * 60 * 1000);
-
+}, 10 * 60 * 1000);
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
 });
