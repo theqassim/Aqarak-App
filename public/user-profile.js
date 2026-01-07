@@ -134,10 +134,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  if (data.ai_summary) {
-    updateAiUI(data.ai_summary);
-  }
-
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get("u");
   const requestedTab = urlParams.get("tab");
@@ -148,6 +144,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(`/api/public/profile/${username}`);
     if (!res.ok) throw new Error("User not found");
     const data = await res.json();
+
+    if (data.ai_summary) {
+      updateAiUI(data.ai_summary);
+    }
 
     const verifiedIcon = data.is_verified
       ? `<div class="verified-badge"><i class="fas fa-check"></i></div>`
