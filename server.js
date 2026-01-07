@@ -2318,26 +2318,25 @@ app.get("/api/admin/counts", async (req, res) => {
   }
 });
 
-app.get("/update-db-v3", async (req, res) => {
+app.get("/update-db-v4", async (req, res) => {
   try {
+    await pgQuery(
+      `ALTER TABLE user_ratings ALTER COLUMN stars TYPE NUMERIC(3,1)`
+    );
     await pgQuery(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_summary_cache TEXT`
     );
-
     await pgQuery(
       `ALTER TABLE user_comments ADD COLUMN IF NOT EXISTS owner_reply TEXT`
     );
     await pgQuery(
       `ALTER TABLE user_comments ADD COLUMN IF NOT EXISTS reply_date TEXT`
     );
-
     await pgQuery(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_rating_reminder TIMESTAMP`
     );
 
-    res.send(
-      "✅ تم تحديث قاعدة البيانات (V3) بنجاح: تم إضافة كاش الذكاء الاصطناعي، ونظام الردود، وتتبع التذكيرات."
-    );
+    res.send("✅ تم تحديث قاعدة البيانات (V4): تفعيل الكسور في التقييمات.");
   } catch (error) {
     res.status(500).send("❌ حدث خطأ: " + error.message);
   }
@@ -4254,22 +4253,13 @@ app.post("/api/reviews", async (req, res) => {
     }
 
     if (rating) {
-      const currentRatingRes = await pgQuery(
-        `SELECT stars FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
-        [reviewerPhone, reviewedPhone]
+      await pgQuery(
+        `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) 
+         VALUES ($1, $2, $3, $4) 
+         ON CONFLICT (reviewer_phone, reviewed_phone) 
+         DO UPDATE SET stars = $3, updated_at = $4`,
+        [reviewerPhone, reviewedPhone, rating, new Date().toISOString()]
       );
-
-      if (currentRatingRes.rows.length > 0) {
-        await pgQuery(
-          `UPDATE user_ratings SET stars = $1, updated_at = $2 WHERE reviewer_phone = $3 AND reviewed_phone = $4`,
-          [rating, new Date().toISOString(), reviewerPhone, reviewedPhone]
-        );
-      } else {
-        await pgQuery(
-          `INSERT INTO user_ratings (reviewer_phone, reviewed_phone, stars, updated_at) VALUES ($1, $2, $3, $4)`,
-          [reviewerPhone, reviewedPhone, rating, new Date().toISOString()]
-        );
-      }
     }
 
     if (comment && comment.trim() !== "") {
@@ -4277,18 +4267,21 @@ app.post("/api/reviews", async (req, res) => {
         `SELECT COUNT(*) FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
         [reviewerPhone, reviewedPhone]
       );
-
-      if (parseInt(commentsCountRes.rows[0].count) >= 5) {
-        return res
-          .status(400)
-          .json({ message: "لقد وصلت للحد الأقصى (5 تعليقات) لهذا المستخدم." });
+      if (parseInt(commentsCountRes.rows[0].count) < 5) {
+        await pgQuery(
+          `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
+          [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
+        );
       }
-
-      await pgQuery(
-        `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
-        [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
-      );
     }
+
+    await createNotification(
+      reviewedPhone,
+      "⭐ تقييم جديد!",
+      `في حد قيمك ${
+        rating ? rating + " نجوم" : ""
+      } وكتب رأيه فيك. ادخل شوف التقييم.`
+    );
 
     const totalReviewsRes = await pgQuery(
       `SELECT comment FROM user_comments WHERE reviewed_phone = $1 ORDER BY id DESC LIMIT 20`,
@@ -4300,13 +4293,14 @@ app.post("/api/reviews", async (req, res) => {
         .map((r) => `- ${r.comment}`)
         .join("\n");
       const prompt = `
-        أنت محلل سمعة محترف لمنصة عقارية. دي آراء الناس عن مستخدم (سمسار أو مالك):
+        أنت خبير علاقات عامة. دي آراء عملاء عن (سمسار/مالك عقارات):
         ${textComments}
         
         المطلوب:
-        اكتب "ملخص السمعة" في سطرين فقط باللهجة المصرية المحترمة.
-        ركز على نقاط القوة (مثل: المصداقية، السرعة) والعيوب إن وجدت.
-        ابدأ بـ "خلاصة سمعة أ/ (الاسم):" ومتكتبش أي مقدمات تانية.
+        اكتب "كبسولة سمعة" (سطرين بالكتير) باللهجة المصرية الشيك.
+        عايز الخلاصة: هل هو "ثقة وأمين" ولا "مماطل"؟ وايه أبرز ميزة؟
+        بدون مقدمات زي "بناء على الآراء..". ادخل في الموضوع علطول.
+        مثال: "شخص محترم جداً في المواعيد وأمين في الوصف، بس بيأخر الرد على الواتساب شوية."
         `;
 
       modelChat
@@ -4319,7 +4313,7 @@ app.post("/api/reviews", async (req, res) => {
             [summary, reviewedPhone]
           );
         })
-        .catch((err) => console.error("AI Update Error:", err));
+        .catch(console.error);
     }
 
     await sendDiscordNotification(
@@ -4331,7 +4325,7 @@ app.post("/api/reviews", async (req, res) => {
       16776960
     );
 
-    res.json({ success: true, message: "تم حفظ التقييم بنجاح ✅" });
+    res.json({ success: true, message: "تم حفظ التقييم وإبلاغ المستخدم ✅" });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "خطأ في السيرفر" });
@@ -4562,13 +4556,14 @@ app.post("/api/log-contact", async (req, res) => {
 setInterval(async () => {
   try {
     const result = await pgQuery(`
-            SELECT * FROM contact_logs 
-            WHERE reminder_sent = FALSE 
-            AND contact_date < NOW() - INTERVAL '2 hours'
-            AND contact_date > NOW() - INTERVAL '24 hours' 
+            SELECT c.*, u.username as owner_username 
+            FROM contact_logs c
+            LEFT JOIN users u ON c.owner_phone = u.phone
+            WHERE c.reminder_sent = FALSE 
+            AND c.contact_date < NOW() - INTERVAL '2 hours'
+            AND c.contact_date > NOW() - INTERVAL '24 hours' 
             LIMIT 20
         `);
-
     for (const log of result.rows) {
       const userCheck = await pgQuery(
         `SELECT last_rating_reminder FROM users WHERE phone = $1`,
@@ -4609,6 +4604,44 @@ setInterval(async () => {
     console.error("Reminder Cron Error:", e);
   }
 }, 10 * 60 * 1000);
+
+app.delete("/api/reviews/mine/:reviewedPhone", async (req, res) => {
+  const token = req.cookies.auth_token;
+  if (!token) return res.status(401).json({ message: "غير مصرح" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const reviewerPhone = decoded.phone;
+    const reviewedPhone = req.params.reviewedPhone;
+
+    await pgQuery(
+      "DELETE FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2",
+      [reviewerPhone, reviewedPhone]
+    );
+    await pgQuery(
+      "DELETE FROM user_ratings WHERE reviewer_phone = $1 AND reviewed_phone = $2",
+      [reviewerPhone, reviewedPhone]
+    );
+
+    const countRes = await pgQuery(
+      "SELECT COUNT(*) FROM user_comments WHERE reviewed_phone = $1",
+      [reviewedPhone]
+    );
+
+    if (parseInt(countRes.rows[0].count) < 5) {
+      await pgQuery(
+        "UPDATE users SET ai_summary_cache = NULL WHERE phone = $1",
+        [reviewedPhone]
+      );
+    }
+
+    res.json({ success: true, message: "تم حذف تقييمك بنجاح" });
+  } catch (error) {
+    console.error("Delete Mine Error:", error);
+    res.status(500).json({ message: "خطأ في السيرفر" });
+  }
+});
+
 app.get("/admin-home", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "protected_pages", "admin-home.html"));
 });
