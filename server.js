@@ -2354,25 +2354,30 @@ app.post("/api/reviews/reply", async (req, res) => {
       "SELECT reviewed_phone FROM user_comments WHERE id = $1",
       [commentId]
     );
-    if (commentRes.rows.length === 0)
-      return res.status(404).json({ message: "التعليق غير موجود" });
 
-    if (commentRes.rows[0].reviewed_phone !== decoded.phone) {
-      return res.status(403).json({ message: "هذا التعليق ليس على حسابك" });
+    if (commentRes.rows.length === 0) {
+      return res.status(404).json({ message: "التعليق غير موجود" });
+    }
+
+    const reviewedPhone = commentRes.rows[0].reviewed_phone;
+
+    if (decoded.phone !== reviewedPhone && decoded.role !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "غير مسموح لك بالرد على هذا التقييم" });
     }
 
     await pgQuery(
-      "UPDATE user_comments SET owner_reply = $1, reply_date = $2 WHERE id = $3",
-      [replyText, new Date().toISOString(), commentId]
+      "UPDATE user_comments SET owner_reply = $1, reply_date = NOW() WHERE id = $2",
+      [replyText, commentId]
     );
 
-    res.json({ success: true, message: "تم نشر الرد بنجاح ✅" });
+    res.json({ success: true, message: "تم إضافة الرد بنجاح" });
   } catch (error) {
-    console.error(error);
+    console.error("Reply Error:", error);
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
-
 app.get("/emergency-fix-columns", async (req, res) => {
   try {
     await pgQuery(

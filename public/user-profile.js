@@ -4,6 +4,7 @@ const REVIEWS_PER_PAGE = 5;
 let profilePhone = "";
 let myPhone = "";
 let userRole = "";
+let profileData = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
   let lastScrollY = window.scrollY;
@@ -39,42 +40,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const res = await fetch(`/api/public/profile/${username}`);
     if (!res.ok) throw new Error("User not found");
-    const data = await res.json();
+    profileData = await res.json();
 
-    profilePhone = data.phone;
-    window.currentProfilePhone = data.phone;
+    profilePhone = profileData.phone;
+    window.currentProfilePhone = profileData.phone;
 
-    if (data.ai_summary) updateAiUI(data.ai_summary);
+    const aiContainer = document.getElementById("ai-summary-container");
+    if (aiContainer) aiContainer.style.display = "none";
 
-    const verifiedIcon = data.is_verified
+    const verifiedIcon = profileData.is_verified
       ? `<div class="verified-badge"><i class="fas fa-check"></i></div>`
       : "";
 
     const avatarImg =
-      data.profile_picture && !data.profile_picture.includes("logo.png")
-        ? data.profile_picture
+      profileData.profile_picture &&
+      !profileData.profile_picture.includes("logo.png")
+        ? profileData.profile_picture
         : "logo.png";
+
     const avatarContainer = document.getElementById("avatar-container");
     if (avatarContainer)
       avatarContainer.innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
 
-    document.getElementById("user-name").innerText = data.name;
-    document.title = `${data.name} | عقارك`;
+    document.getElementById("user-name").innerText = profileData.name;
+    document.title = `${profileData.name} | عقارك`;
 
     const countBadge = document.getElementById("prop-count-badge");
-    if (countBadge) countBadge.innerText = `${data.properties.length} عقار`;
+    if (countBadge)
+      countBadge.innerText = `${
+        profileData.properties ? profileData.properties.length : 0
+      } عقار`;
 
     let joinYear = "2025";
-    if (data.created_at) joinYear = new Date(data.created_at).getFullYear();
+    if (profileData.created_at)
+      joinYear = new Date(profileData.created_at).getFullYear();
     const joinText = document.getElementById("join-date-text");
     if (joinText) joinText.innerText = `عضو منذ ${joinYear}`;
 
-    if (data.phone) fetchReviews(data.phone);
-    else
-      document.getElementById("reviews-list").innerHTML =
-        '<p style="text-align:center;">لا يمكن تحميل التقييمات.</p>';
+    if (profileData.phone) fetchReviews(profileData.phone);
 
-    renderProperties(data.properties);
+    renderProperties(profileData.properties || []);
 
     if (requestedTab === "reviews") window.switchTab("reviews");
   } catch (error) {
@@ -116,7 +121,7 @@ function renderProperties(properties) {
                   prop.title
                 }</h3>
                 <div style="color:#FFD700; font-weight:bold; font-size:1.2rem;">${Number(
-                  prop.price
+                  prop.price || 0
                 ).toLocaleString()} ج.م</div>
                 <div style="color:#aaa; font-size:0.9rem; margin-top:10px; display:flex; gap:10px;">
                     <span><i class="fas fa-bed"></i> ${prop.rooms || 0}</span>
@@ -124,7 +129,7 @@ function renderProperties(properties) {
                       prop.bathrooms || 0
                     }</span>
                     <span><i class="fas fa-ruler-combined"></i> ${
-                      prop.area
+                      prop.area || 0
                     } م²</span>
                 </div>
             </div>
@@ -162,11 +167,25 @@ async function fetchReviews(phone) {
 
     if (loading) loading.style.display = "none";
 
-    const avg =
-      currentReviews.reduce((a, b) => a + (b.rating || 0), 0) /
-      (currentReviews.length || 1);
+    let avg = 0;
+    if (currentReviews.length > 0) {
+      avg =
+        currentReviews.reduce((a, b) => a + (Number(b.rating) || 0), 0) /
+        currentReviews.length;
+    }
+
     const badge = document.getElementById("rating-badge");
     if (badge) badge.innerText = `${avg.toFixed(1)} (${currentReviews.length})`;
+
+    const aiContainer = document.getElementById("ai-summary-container");
+    if (aiContainer) {
+      if (currentReviews.length >= 5 && profileData.ai_summary) {
+        updateAiUI(profileData.ai_summary);
+        aiContainer.style.display = "block";
+      } else {
+        aiContainer.style.display = "none";
+      }
+    }
 
     renderReviewsPage();
   } catch (e) {
@@ -181,7 +200,7 @@ function renderReviewsPage() {
 
   if (currentReviews.length === 0) {
     listContainer.innerHTML =
-      '<div style="text-align:center; padding:40px; color:#666;"><i class="far fa-comments" style="font-size:2rem; margin-bottom:10px;"></i><p>لا توجد تقييمات مكتوبة بعد. كن أول من يقيم!</p></div>';
+      '<div style="text-align:center; padding:40px; color:#666;"><i class="far fa-comments" style="font-size:2rem; margin-bottom:10px;"></i><p>لا توجد تقييمات مكتوبة بعد.</p></div>';
     return;
   }
 
@@ -190,6 +209,16 @@ function renderReviewsPage() {
   const pageReviews = currentReviews.slice(start, end);
 
   let html = `<div class="reviews-page">`;
+
+  const ownerName = profileData.name || "المالك";
+  const ownerPic =
+    profileData.profile_picture &&
+    !profileData.profile_picture.includes("logo.png")
+      ? profileData.profile_picture
+      : "logo.png";
+  const ownerVerified = profileData.is_verified
+    ? `<i class="fas fa-check-circle" style="color:#00ff88; margin-right:4px;" title="موثق"></i>`
+    : "";
 
   html += pageReviews
     .map((r) => {
@@ -216,29 +245,45 @@ function renderReviewsPage() {
         `;
       }
 
-      let badge = "";
-      let nameStyle = "";
+      let reviewerBadge = "";
+      let reviewerNameStyle = "";
       if (r.is_admin || r.role === "admin") {
-        badge = `<span style="background: linear-gradient(45deg, #ffd700, #ffaa00); color:black; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; margin-right:5px;">إدارة الموقع</span>`;
-        nameStyle = "color: #ffd700;";
+        reviewerBadge = `<span style="background: linear-gradient(45deg, #ffd700, #ffaa00); color:black; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; margin-right:5px;">إدارة الموقع</span>`;
+        reviewerNameStyle = "color: #ffd700;";
         r.reviewer_name = "موقع عقارك";
       }
-
-      let verifiedIcon = r.is_verified
+      let reviewerVerified = r.is_verified
         ? `<i class="fas fa-check-circle" style="color:#00ff88; margin-right:4px;"></i>`
         : "";
 
       const canReply = myPhone === profilePhone || isAdminUser;
       const replyBtn =
         canReply && !r.owner_reply
-          ? `<button onclick="openReplyModal(${r.comment_id})" class="reply-btn-action" style="margin-top:10px;"><i class="fas fa-reply"></i> رد</button>`
+          ? `<button onclick="openReplyModal(${r.comment_id})" class="reply-btn-action" style="margin-top:10px;"><i class="fas fa-reply"></i> رد على التقييم</button>`
           : "";
 
       const replyBox = r.owner_reply
-        ? `<div class="owner-reply-box" style="margin-top:10px; padding:10px; background:rgba(0,255,136,0.05); border-right:2px solid #00ff88;">
-            <strong style="color:#00ff88; font-size:0.8rem;">رد المالك:</strong>
-            <div style="color:#ccc; font-size:0.9rem;">${r.owner_reply}</div>
-           </div>`
+        ? `
+           <div class="owner-reply-container" style="margin-top:15px; margin-right:20px; padding:15px; background:rgba(30,30,30,0.8); border-right:3px solid #00ff88; border-radius:8px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                     <img src="${ownerPic}" style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:1px solid #555;">
+                     <div>
+                        <div style="font-size:0.9rem; font-weight:bold; color:white;">
+                            ${ownerName} ${ownerVerified}
+                            <span style="background:rgba(0,255,136,0.1); color:#00ff88; font-size:0.65rem; padding:2px 6px; border-radius:4px; margin-right:5px; border:1px solid rgba(0,255,136,0.3);">صاحب الحساب</span>
+                        </div>
+                        <div style="font-size:0.7rem; color:#888;">${
+                          r.reply_date
+                            ? new Date(r.reply_date).toLocaleDateString("ar-EG")
+                            : "الرد"
+                        }</div>
+                     </div>
+                </div>
+                <div style="color:#ddd; font-size:0.9rem; line-height:1.5;">${
+                  r.owner_reply
+                }</div>
+           </div>
+          `
         : "";
 
       return `
@@ -251,9 +296,9 @@ function renderReviewsPage() {
                       r.reviewer_pic || "logo.png"
                     }" class="reviewer-img" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
                     <div class="reviewer-details">
-                        <h4 style="margin:0; font-size:0.95rem; color:white; ${nameStyle}">${
+                        <h4 style="margin:0; font-size:0.95rem; color:white; ${reviewerNameStyle}">${
         r.reviewer_name || "مستخدم"
-      } ${verifiedIcon} ${badge}</h4>
+      } ${reviewerVerified} ${reviewerBadge}</h4>
                         <span style="font-size:0.75rem; color:#888;">${new Date(
                           r.created_at
                         ).toLocaleDateString("ar-EG")}</span>
@@ -306,10 +351,8 @@ window.editReview = async (id, oldText) => {
         body: JSON.stringify({ comment: newText }),
       });
       if (res.ok) {
-        alert("تم التعديل بنجاح");
+        alert("تم التعديل");
         location.reload();
-      } else {
-        alert("فشل التعديل");
       }
     } catch (e) {
       alert("حدث خطأ");
@@ -323,42 +366,17 @@ window.deleteReview = async (commentId) => {
     const res = await fetch(`/api/reviews/delete/${commentId}`, {
       method: "DELETE",
     });
-    const data = await res.json();
     if (res.ok) {
       alert("تم الحذف");
       location.reload();
-    } else {
-      alert(data.message || "فشل الحذف");
     }
   } catch (e) {
     alert("Error");
   }
 };
 
-window.deleteFullReview = async (reviewerPhone) => {
-  if (!confirm("هل أنت متأكد؟ سيتم حذف النجوم والتعليق لهذا المستخدم نهائياً."))
-    return;
-  if (!window.currentProfilePhone) return alert("خطأ في البيانات");
-
-  try {
-    const res = await fetch(
-      `/api/admin/reviews/full/${reviewerPhone}/${window.currentProfilePhone}`,
-      { method: "DELETE" }
-    );
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ " + data.message);
-      location.reload();
-    } else {
-      alert("❌ خطأ: " + data.message);
-    }
-  } catch (e) {
-    alert("خطأ في الاتصال");
-  }
-};
-
 window.openReplyModal = (commentId) => {
-  const reply = prompt("اكتب ردك على هذا التعليق:");
+  const reply = prompt("اكتب ردك:");
   if (reply) submitReply(commentId, reply);
 };
 
@@ -369,11 +387,12 @@ async function submitReply(commentId, replyText) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ commentId, replyText }),
     });
+    const data = await res.json();
     if (res.ok) {
-      alert("تم الرد بنجاح ✅");
+      alert("تم الرد بنجاح");
       location.reload();
     } else {
-      alert("فشل الرد");
+      alert(data.message || "فشل الرد");
     }
   } catch (e) {
     alert("خطأ في الاتصال");
@@ -382,50 +401,30 @@ async function submitReply(commentId, replyText) {
 
 function getShareData() {
   const name = document.getElementById("user-name")?.innerText || "مستخدم";
-  const propCount =
-    document.getElementById("prop-count-badge")?.innerText || "0 عقار";
-  const rating = document.getElementById("rating-badge")?.innerText || "0.0";
   const urlParams = new URLSearchParams(window.location.search);
   const cleanUrl = `${window.location.origin}/profile?u=${urlParams.get("u")}`;
-
   return {
-    title: `ملف ${name} على عقارك`,
-    text: `تصفح الملف الشخصي المميز لـ "${name}" على منصة عقارك.\nإحصائيات:\n• ${propCount}\n• تقييم: ${rating} ⭐`,
+    title: `ملف ${name}`,
+    text: `تصفح ملف ${name} على عقارك`,
     url: cleanUrl,
   };
 }
-
-window.openShareModal = () => {
-  const data = getShareData();
-  if (navigator.share) {
-    navigator.share(data).catch((err) => console.log("Error sharing", err));
-  } else {
-    const modal = document.getElementById("share-modal-overlay");
-    if (modal) modal.style.display = "flex";
-  }
-};
-
+window.openShareModal = () =>
+  (document.getElementById("share-modal-overlay").style.display = "flex");
 window.closeShareModal = (e) => {
   if (e.target.id === "share-modal-overlay")
     document.getElementById("share-modal-overlay").style.display = "none";
 };
-
 window.shareTo = (platform) => {
   const data = getShareData();
   let shareUrl = "";
   if (platform === "whatsapp")
     shareUrl = `https://wa.me/?text=${encodeURIComponent(
-      data.text + "\n" + data.url
-    )}`;
-  else if (platform === "facebook")
-    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      data.url
+      data.text + " " + data.url
     )}`;
   else if (platform === "copy") {
-    navigator.clipboard.writeText(data.url).then(() => {
-      alert("تم نسخ الرابط!");
-      document.getElementById("share-modal-overlay").style.display = "none";
-    });
+    navigator.clipboard.writeText(data.url);
+    alert("تم النسخ");
     return;
   }
   if (shareUrl) window.open(shareUrl, "_blank");
@@ -434,7 +433,6 @@ window.shareTo = (platform) => {
 function updateAiUI(summary) {
   const container = document.getElementById("ai-summary-container");
   if (container && summary) {
-    container.style.display = "block";
     container.innerHTML = `
         <div class="ai-brain-icon"><i class="fas fa-brain"></i></div>
         <div>
