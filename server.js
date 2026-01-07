@@ -2367,9 +2367,10 @@ app.post("/api/reviews/reply", async (req, res) => {
         .json({ message: "غير مسموح لك بالرد على هذا التقييم" });
     }
 
+    const isReplyAdmin = decoded.role === "admin";
     await pgQuery(
-      "UPDATE user_comments SET owner_reply = $1, reply_date = NOW() WHERE id = $2",
-      [replyText, commentId]
+      "UPDATE user_comments SET owner_reply = $1, reply_date = NOW(), is_reply_admin = $2 WHERE id = $3",
+      [replyText, isReplyAdmin, commentId]
     );
 
     res.json({ success: true, message: "تم إضافة الرد بنجاح" });
@@ -4361,6 +4362,7 @@ app.get("/api/reviews/:phone", async (req, res) => {
             c.created_at,
             c.owner_reply,
             c.reply_date,
+            c.is_reply_admin,
             r.reviewer_phone,
             r.stars as rating,
             u.name as reviewer_name, 

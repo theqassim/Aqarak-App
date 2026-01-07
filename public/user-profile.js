@@ -268,8 +268,7 @@ function renderReviewsPage() {
 
       let replyBox = "";
       if (r.owner_reply) {
-        const isReplyAdmin =
-          profilePhone === "01008102237" || userRole === "admin";
+        const isReplyAdmin = r.is_reply_admin === true;
 
         const replyName = isReplyAdmin ? "موقع عقارك" : ownerName;
         const replyBadge = isReplyAdmin
