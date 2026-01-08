@@ -375,14 +375,21 @@ async function checkNotifications() {
       desktopList.innerHTML = data.notifications
         .map(
           (n) => `
-            <div class="menu-notif-item ${
-              n.is_read ? "" : "unread"
-            }" onclick="handleNotifClick('${
-            n.link || ""
-          }')" style="cursor:pointer;">
-                <div style="padding: 10px;">
-                    <strong style="color:white;">${n.title}</strong>
-                    <p style="color:#bbb; font-size:0.9rem;">${n.message}</p>
+            <div id="desktop-notif-${n.id}" class="desktop-notif-item ${
+            n.is_read ? "" : "unread"
+          }" onclick="handleNotifClick('${n.link || ""}')">
+                <button class="desktop-delete-btn" onclick="deleteNotification(event, '${
+                  n.id
+                }')" title="حذف">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div style="padding-right: 5px;">
+                    <strong style="color:white; display:block; margin-bottom:5px;">${
+                      n.title
+                    }</strong>
+                    <p style="color:#bbb; font-size:0.9rem; margin:0;">${
+                      n.message
+                    }</p>
                 </div>
             </div>
         `
@@ -468,18 +475,27 @@ async function deleteNotificationDirect(id, element) {
 }
 
 window.deleteNotification = async (e, id) => {
-  e.stopPropagation();
-  if (!confirm("حذف هذا الإشعار؟")) return;
+  if (e) e.stopPropagation();
   try {
     const res = await fetch(`/api/user/notification/${id}`, {
       method: "DELETE",
     });
     if (res.ok) {
-      const el = document.getElementById(`notif-${id}`);
-      if (el) el.remove();
+      const elMob = document.getElementById(`notif-${id}`);
+      if (elMob) {
+        elMob.style.height = "0";
+        elMob.style.opacity = "0";
+        setTimeout(() => elMob.remove(), 300);
+      }
+
+      const elDesk = document.getElementById(`desktop-notif-${id}`);
+      if (elDesk) {
+        elDesk.style.opacity = "0";
+        setTimeout(() => elDesk.remove(), 200);
+      }
     }
   } catch (e) {
-    alert("خطأ في الحذف");
+    console.error("خطأ في الحذف", e);
   }
 };
 

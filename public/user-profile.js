@@ -170,7 +170,6 @@ async function fetchReviews(phone) {
     try {
       const statsRes = await fetch(`/api/reviews/stats/${phone}`);
       const stats = await statsRes.json();
-
       const badge = document.getElementById("rating-badge");
       if (badge) {
         badge.innerText = `${Number(stats.average || 0).toFixed(1)} (${
@@ -178,7 +177,7 @@ async function fetchReviews(phone) {
         })`;
       }
     } catch (err) {
-      console.error("Error fetching stats:", err);
+      console.error(err);
     }
 
     const aiContainer = document.getElementById("ai-summary-container");
@@ -191,13 +190,20 @@ async function fetchReviews(phone) {
       }
     }
 
+    if (myPhone && profilePhone && myPhone !== profilePhone) {
+      const rateBtn = document.getElementById("rate-user-btn");
+      if (rateBtn) {
+        rateBtn.style.display = "block";
+        rateBtn.onclick = () => openRateModal();
+      }
+    }
+
     renderReviewsPage();
   } catch (e) {
     if (loading) loading.style.display = "none";
     console.error("Review Error:", e);
   }
 }
-
 function renderReviewsPage() {
   const listContainer = document.getElementById("reviews-list");
   if (!listContainer) return;
@@ -359,131 +365,157 @@ window.changePage = (dir) => {
     .scrollIntoView({ behavior: "smooth" });
 };
 
-window.editReview = async (id, oldText) => {
-  const newText = prompt("تعديل التقييم:", oldText);
-  if (newText && newText !== oldText) {
-    try {
-      const res = await fetch(`/api/reviews/edit/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment: newText }),
-      });
-      if (res.ok) {
-        alert("تم التعديل");
-        location.reload();
-      }
-    } catch (e) {
-      alert("حدث خطأ");
+const styles = document.createElement("style");
+styles.innerHTML = `
+    /* Common Overlay */
+    .fancy-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 10005;
+        display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(8px); animation: fadeInOverlay 0.3s ease;
     }
-  }
+    
+    /* Common Card */
+    .fancy-card {
+        background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+        width: 90%; max-width: 450px;
+        border-radius: 20px; padding: 30px;
+        position: relative; animation: slideUpFancy 0.4s ease;
+        text-align: center; border: 1px solid #333;
+    }
+
+    /* Delete Specifics (Red) */
+    .card-delete { border-color: #ff4444; box-shadow: 0 0 30px rgba(255, 68, 68, 0.15); }
+    .icon-trash-anim { font-size: 3.5rem; color: #ff4444; margin-bottom: 15px; display: inline-block; animation: shakeTrash 0.5s ease-in-out infinite alternate; }
+    
+    /* Edit Specifics (Cyan) */
+    .card-edit { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.15); }
+    .icon-edit-anim { font-size: 3.5rem; color: #00d4ff; margin-bottom: 15px; display: inline-block; animation: writePen 1s ease-in-out infinite; }
+
+    /* Reply Specifics (Gold) */
+    .card-reply { border-color: #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.15); }
+    
+    /* Animations */
+    @keyframes slideUpFancy { from {transform: translateY(50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+    @keyframes fadeInOverlay { from {opacity: 0;} to {opacity: 1;} }
+    @keyframes shakeTrash { 0% {transform: rotate(-10deg);} 100% {transform: rotate(10deg);} }
+    @keyframes writePen { 0% {transform: translateX(0) rotate(0);} 50% {transform: translateX(5px) rotate(-10deg);} 100% {transform: translateX(0) rotate(0);} }
+    
+    /* Elements */
+    .fancy-title { font-family: 'Cairo', sans-serif; font-size: 1.5rem; margin-bottom: 15px; color: white; font-weight: bold; }
+    .fancy-text { color: #ccc; margin-bottom: 25px; line-height: 1.6; font-size: 1rem; }
+    
+    .fancy-textarea {
+        width: 100%; background: rgba(255,255,255,0.05);
+        border: 1px solid #444; color: white; padding: 15px;
+        border-radius: 12px; font-size: 1rem; line-height: 1.6;
+        min-height: 100px; outline: none; transition: 0.3s;
+        font-family: 'Cairo', sans-serif; margin-bottom: 20px;
+    }
+    .fancy-textarea:focus { background: rgba(0,0,0,0.4); border-color: inherit; }
+    
+    .fancy-actions { display: flex; gap: 10px; justify-content: center; }
+    
+    .btn-fancy { padding: 12px 25px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; border: none; display: flex; align-items: center; gap: 8px; justify-content: center; }
+    
+    .btn-del { background: #ff4444; color: white; flex: 2; }
+    .btn-del:hover { background: #cc0000; box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4); }
+    
+    .btn-edit { background: #00d4ff; color: black; flex: 2; }
+    .btn-edit:hover { background: #00aadd; box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4); }
+
+    .btn-reply { background: #FFD700; color: black; flex: 2; }
+    .btn-reply:hover { background: #e6c200; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4); }
+    
+    .btn-cancel { background: transparent; border: 1px solid #555; color: #aaa; flex: 1; }
+    .btn-cancel:hover { border-color: white; color: white; }
+`;
+document.head.appendChild(styles);
+
+window.deleteReview = (commentId) => {
+  const html = `
+        <div id="fancy-modal" class="fancy-overlay">
+            <div class="fancy-card card-delete">
+                <i class="fas fa-trash-alt icon-trash-anim"></i>
+                <div class="fancy-title" style="color:#ff4444">حذف التقييم</div>
+                <div class="fancy-text">هل أنت متأكد من حذف هذا التقييم نهائياً؟<br>لا يمكن التراجع عن هذا الإجراء.</div>
+                <div class="fancy-actions">
+                    <button onclick="performDelete('${commentId}')" class="btn-fancy btn-del">نعم، احذف</button>
+                    <button onclick="document.getElementById('fancy-modal').remove()" class="btn-fancy btn-cancel">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    `;
+  document.body.insertAdjacentHTML("beforeend", html);
 };
 
-window.deleteReview = async (commentId) => {
-  if (!confirm("هل أنت متأكد من حذف هذا التعليق؟")) return;
+window.performDelete = async (id) => {
   try {
-    const res = await fetch(`/api/reviews/delete/${commentId}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      alert("تم الحذف");
-      location.reload();
-    }
+    const res = await fetch(`/api/reviews/delete/${id}`, { method: "DELETE" });
+    if (res.ok) location.reload();
+    else alert("حدث خطأ أثناء الحذف");
   } catch (e) {
     alert("Error");
   }
 };
 
-const replyStyle = document.createElement("style");
-replyStyle.innerHTML = `
-    .fancy-reply-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9); z-index: 10005;
-        display: flex; justify-content: center; align-items: center;
-        backdrop-filter: blur(8px);
-    }
-    .fancy-reply-card {
-        background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-        border: 1px solid #FFD700;
-        width: 90%; max-width: 500px;
-        border-radius: 20px; padding: 30px;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
-        position: relative; animation: slideUpFancy 0.4s ease;
-    }
-    @keyframes slideUpFancy { from {transform: translateY(50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
-    
-    .fancy-title {
-        color: #FFD700; font-family: 'Cairo', sans-serif;
-        text-align: center; font-size: 1.5rem; margin-bottom: 20px;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-    }
-    .fancy-textarea {
-        width: 100%; background: rgba(255,255,255,0.05);
-        border: 1px solid #333; color: white; padding: 15px;
-        border-radius: 12px; font-size: 1rem; line-height: 1.6;
-        min-height: 120px; outline: none; transition: 0.3s;
-        font-family: 'Cairo', sans-serif;
-    }
-    .fancy-textarea:focus {
-        border-color: #FFD700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
-        background: rgba(0,0,0,0.4);
-    }
-    .fancy-actions {
-        display: flex; gap: 15px; margin-top: 25px;
-    }
-    .btn-fancy-send {
-        flex: 2; background: linear-gradient(45deg, #FFD700, #DAA520);
-        color: black; border: none; padding: 12px; border-radius: 50px;
-        font-weight: bold; font-size: 1.1rem; cursor: pointer;
-        transition: 0.3s; box-shadow: 0 5px 15px rgba(218, 165, 32, 0.3);
-    }
-    .btn-fancy-send:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(218, 165, 32, 0.5); }
-    .btn-fancy-cancel {
-        flex: 1; background: transparent; border: 1px solid #444;
-        color: #aaa; padding: 12px; border-radius: 50px; cursor: pointer;
-        transition: 0.3s;
-    }
-    .btn-fancy-cancel:hover { border-color: #ff4444; color: #ff4444; }
-`;
-document.head.appendChild(replyStyle);
+window.editReview = (id, oldText) => {
+  const html = `
+        <div id="fancy-modal" class="fancy-overlay">
+            <div class="fancy-card card-edit">
+                <i class="fas fa-pen icon-edit-anim"></i>
+                <div class="fancy-title" style="color:#00d4ff">تعديل التقييم</div>
+                <textarea id="edit-text-area" class="fancy-textarea" style="border-color:#00d4ff">${oldText}</textarea>
+                <div class="fancy-actions">
+                    <button onclick="performEdit('${id}')" class="btn-fancy btn-edit">حفظ التعديلات</button>
+                    <button onclick="document.getElementById('fancy-modal').remove()" class="btn-fancy btn-cancel">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    `;
+  document.body.insertAdjacentHTML("beforeend", html);
+};
+
+window.performEdit = async (id) => {
+  const newText = document.getElementById("edit-text-area").value;
+  if (!newText.trim()) return;
+  try {
+    const res = await fetch(`/api/reviews/edit/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comment: newText }),
+    });
+    if (res.ok) location.reload();
+  } catch (e) {
+    alert("حدث خطأ");
+  }
+};
 
 window.openReplyModal = (commentId) => {
-  const old = document.getElementById("fancy-reply-modal");
-  if (old) old.remove();
-
   const html = `
-    <div id="fancy-reply-modal" class="fancy-reply-overlay">
-        <div class="fancy-reply-card">
-            <div class="fancy-title"><i class="fas fa-pen-fancy"></i> كتابة رد رسمي</div>
-            <p style="color:#888; text-align:center; font-size:0.9rem; margin-bottom:15px;">
-                سيظهر ردك بصفة رسمية أسفل تقييم العميل.
-            </p>
-            <textarea id="fancy-reply-text" class="fancy-textarea" placeholder="اكتب ردك هنا باحترافية..."></textarea>
+    <div id="fancy-reply-modal" class="fancy-overlay">
+        <div class="fancy-card card-reply">
+            <div class="fancy-title" style="color:#FFD700"><i class="fas fa-pen-fancy"></i> رد رسمي</div>
+            <p class="fancy-text">سيظهر ردك بصفة رسمية أسفل تقييم العميل.</p>
+            <textarea id="fancy-reply-text" class="fancy-textarea" style="border-color:#FFD700" placeholder="اكتب ردك هنا..."></textarea>
             <div class="fancy-actions">
-                <button onclick="confirmFancyReply(${commentId})" class="btn-fancy-send">
-                    <i class="fas fa-paper-plane"></i> نشر الرد
-                </button>
-                <button onclick="document.getElementById('fancy-reply-modal').remove()" class="btn-fancy-cancel">
-                    إلغاء
-                </button>
+                <button onclick="confirmFancyReply(${commentId})" class="btn-fancy btn-reply">نشر الرد</button>
+                <button onclick="document.getElementById('fancy-reply-modal').remove()" class="btn-fancy btn-cancel">إلغاء</button>
             </div>
         </div>
     </div>
   `;
   document.body.insertAdjacentHTML("beforeend", html);
-  setTimeout(() => document.getElementById("fancy-reply-text").focus(), 100);
 };
 
 window.confirmFancyReply = (commentId) => {
   const text = document.getElementById("fancy-reply-text").value;
-  if (!text.trim()) return alert("اكتب رداً أولاً");
-
-  const btn = document.querySelector(".btn-fancy-send");
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
+  if (!text.trim()) return;
+  const btn = document.querySelector(".btn-reply");
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> نشر...';
   btn.disabled = true;
-
   submitReply(commentId, text);
 };
-
 async function submitReply(commentId, replyText) {
   try {
     const res = await fetch("/api/reviews/reply", {
