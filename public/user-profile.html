@@ -898,7 +898,49 @@
       <div class="profile-avatar-wrapper" id="avatar-container"></div>
       <h1 class="user-name-title" id="user-name">...</h1>
 
+      <div
+        id="user-bio-container"
+        style="
+          display: none;
+          max-width: 600px;
+          margin: 15px auto;
+          color: #ccc;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 10px 20px;
+          border-radius: 12px;
+          border: 1px solid #333;
+        "
+      >
+        <i
+          class="fas fa-quote-right"
+          style="color: var(--neon-primary); margin-left: 5px"
+        ></i>
+        <span id="user-bio-text"></span>
+      </div>
+
       <div class="user-stats-bar">
+        <a
+          href="settings"
+          id="edit-profile-btn"
+          style="
+            display: none;
+            text-decoration: none;
+            background: #333;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #555;
+            font-size: 0.9rem;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+          "
+        >
+          <i class="fas fa-user-edit"></i> تعديل ملفي
+        </a>
+
         <div class="stat-pill">
           <i class="fas fa-building"></i>
           <span id="prop-count-badge">0 عقار</span>
@@ -1036,44 +1078,5 @@
 
     <script src="user-profile.js"></script>
     <script src="global-alert.js"></script>
-    <div id="rate-modal" class="modal-overlay" onclick="closeRateModal(event)">
-      <div class="modal-box">
-        <h3 style="color: white; margin-top: 0">تقييم المستخدم</h3>
-        <div class="star-rating-input" id="star-container">
-          <i class="far fa-star" data-val="1" onclick="setRating(1)"></i>
-          <i class="far fa-star" data-val="2" onclick="setRating(2)"></i>
-          <i class="far fa-star" data-val="3" onclick="setRating(3)"></i>
-          <i class="far fa-star" data-val="4" onclick="setRating(4)"></i>
-          <i class="far fa-star" data-val="5" onclick="setRating(5)"></i>
-        </div>
-        <textarea
-          id="rate-comment"
-          placeholder="اكتب رأيك هنا (اختياري)..."
-          style="
-            width: 100%;
-            height: 80px;
-            background: #111;
-            border: 1px solid #333;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-          "
-        ></textarea>
-        <button
-          onclick="submitRating()"
-          style="
-            background: var(--neon-primary);
-            border: none;
-            padding: 10px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-          "
-        >
-          إرسال التقييم
-        </button>
-      </div>
-    </div>
   </body>
 </html>

@@ -1294,30 +1294,53 @@ window.openRateModal = async (phone, name) => {
   if (old) old.remove();
 
   const html = `
-        <div id="rate-modal" class="modal-overlay" style="display:flex; z-index:10002;">
-            <div class="modal-content">
-                <span class="close-modal" onclick="document.getElementById('rate-modal').remove()">&times;</span>
-                <h3 style="text-align:center; color:#FFD700; margin-bottom:10px;">تقييم ${name}</h3>
+        <div id="rate-modal" class="modal-overlay" style="display:flex; z-index:10002; backdrop-filter: blur(10px); background: rgba(0,0,0,0.85);">
+            <div class="modal-content" style="background: linear-gradient(145deg, #1a1a1a, #0d0d0d); border: 1px solid #FFD700; border-radius: 20px; padding: 30px; width: 90%; max-width: 450px; box-shadow: 0 0 40px rgba(255, 215, 0, 0.15); text-align: center; position: relative;">
                 
-                <div id="loading-rate" style="text-align:center; color:#aaa; font-size:0.9rem;">
+                <span class="close-modal" onclick="document.getElementById('rate-modal').remove()" style="position: absolute; top: 15px; left: 15px; color: #666; cursor: pointer; font-size: 1.5rem; transition: 0.3s;">&times;</span>
+                
+                <div style="width: 60px; height: 60px; background: rgba(255, 215, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; border: 1px solid #FFD700;">
+                    <i class="fas fa-star" style="color: #FFD700; font-size: 1.8rem;"></i>
+                </div>
+
+                <h3 style="color: white; margin-bottom: 5px; font-family: 'Cairo', sans-serif;">تقييم التجربة</h3>
+                <p style="color: #888; font-size: 0.9rem; margin-bottom: 25px;">كيف كانت تجربتك مع ${name}؟</p>
+                
+                <div id="loading-rate" style="color:#aaa; font-size:0.9rem; padding:10px;">
                     <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
                 </div>
 
                 <div id="rate-form-content" style="display:none;">
-                    <div class="star-rating-input">
-                        <i class="far fa-star" onclick="setRate(1)" id="s1"></i>
-                        <i class="far fa-star" onclick="setRate(2)" id="s2"></i>
-                        <i class="far fa-star" onclick="setRate(3)" id="s3"></i>
-                        <i class="far fa-star" onclick="setRate(4)" id="s4"></i>
-                        <i class="far fa-star" onclick="setRate(5)" id="s5"></i>
+                    <div class="star-rating-input" style="display:flex; justify-content:center; flex-direction: row-reverse; gap:8px; font-size:2.2rem; margin-bottom:25px;">
+                        <i class="far fa-star" onclick="setRate(5)" id="s5" style="cursor:pointer; transition:0.2s;" title="ممتاز"></i>
+                        <i class="far fa-star" onclick="setRate(4)" id="s4" style="cursor:pointer; transition:0.2s;" title="جيد جداً"></i>
+                        <i class="far fa-star" onclick="setRate(3)" id="s3" style="cursor:pointer; transition:0.2s;" title="جيد"></i>
+                        <i class="far fa-star" onclick="setRate(2)" id="s2" style="cursor:pointer; transition:0.2s;" title="مقبول"></i>
+                        <i class="far fa-star" onclick="setRate(1)" id="s1" style="cursor:pointer; transition:0.2s;" title="سيء"></i>
                     </div>
-                    <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تقييماً جديداً (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
-                    <button onclick="submitRate('${phone}')" class="btn-offer-submit" style="background:#FFD700; color:black;">إرسال التقييم</button>
+
+                    <textarea id="rate-comment" rows="3" placeholder="اكتب تعليقك هنا (اختياري)..." 
+                        style="width:100%; margin-bottom:20px; background: rgba(255,255,255,0.05); color:white; border: 1px solid #333; padding: 15px; border-radius: 12px; font-family: 'Cairo', sans-serif; resize: none; outline: none; transition: 0.3s;"></textarea>
+                    
+                    <button onclick="submitRate('${phone}')" style="width:100%; background: linear-gradient(45deg, #FFD700, #FFA500); color:black; border:none; padding: 14px; border-radius: 50px; font-weight:bold; font-size: 1rem; cursor:pointer; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3); transition: transform 0.2s;">
+                        إرسال التقييم
+                    </button>
                 </div>
             </div>
         </div>
     `;
   document.body.insertAdjacentHTML("beforeend", html);
+
+  const textarea = document.getElementById("rate-comment");
+  if (textarea) {
+    textarea.onfocus = () => (textarea.style.borderColor = "#FFD700");
+    textarea.onblur = () => (textarea.style.borderColor = "#333");
+  }
+  const closeBtn = document.querySelector(".close-modal");
+  if (closeBtn) {
+    closeBtn.onmouseover = () => (closeBtn.style.color = "#ff4444");
+    closeBtn.onmouseout = () => (closeBtn.style.color = "#666");
+  }
 
   selectedRating = 0;
 
@@ -1333,9 +1356,11 @@ window.openRateModal = async (phone, name) => {
 
     if (data.found) {
       window.setRate(data.rating);
+      if (data.comment)
+        document.getElementById("rate-comment").value = data.comment;
     }
   } catch (e) {
-    console.error("Error fetching my rating", e);
+    console.error(e);
     document.getElementById("loading-rate").style.display = "none";
     document.getElementById("rate-form-content").style.display = "block";
   }

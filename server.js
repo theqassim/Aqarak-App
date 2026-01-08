@@ -1321,7 +1321,7 @@ app.get("/api/auth/me", async (req, res) => {
     }
 
     const userRes = await pgQuery(
-      "SELECT role, phone, username, name, is_banned, wallet_balance, is_verified, profile_picture FROM users WHERE id = $1",
+      "SELECT role, phone, username, name, is_banned, wallet_balance, is_verified, profile_picture, bio FROM users WHERE id = $1",
       [decoded.id]
     );
 
@@ -3338,6 +3338,8 @@ app.post(
       let updateValues = [];
       let paramCounter = 1;
 
+      const { bio } = req.body;
+
       if (req.file) {
         let finalPath = req.file.path;
         if (!finalPath.startsWith("http")) {
@@ -3346,6 +3348,12 @@ app.post(
 
         updateQuery += `profile_picture = $${paramCounter}, `;
         updateValues.push(finalPath);
+        paramCounter++;
+      }
+
+      if (typeof bio !== "undefined") {
+        updateQuery += `bio = $${paramCounter}, `;
+        updateValues.push(bio);
         paramCounter++;
       }
 
@@ -4502,21 +4510,19 @@ app.post("/api/reviews/summarize", async (req, res) => {
   }
 });
 
-app.get("/update-db-notifications", async (req, res) => {
+app.get("/update-db-bio", async (req, res) => {
   try {
-    await pgQuery(
-      `ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS link TEXT`
-    );
-    res.send("✅ تم تحديث جدول الإشعارات لإضافة الروابط.");
-  } catch (e) {
-    res.status(500).send("❌ خطأ: " + e.message);
+    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`);
+    res.send("✅ تم تحديث قاعدة البيانات وإضافة خانة النبذة الشخصية (Bio).");
+  } catch (error) {
+    res.status(500).send("❌ خطأ: " + error.message);
   }
 });
 app.get("/api/public/profile/:username", async (req, res) => {
   const { username } = req.params;
   try {
     const userRes = await pgQuery(
-      "SELECT name, phone, is_verified, profile_picture, created_at, ai_summary_cache FROM users WHERE username = $1",
+      "SELECT name, phone, is_verified, profile_picture, created_at, ai_summary_cache, bio FROM users WHERE username = $1",
       [username.toLowerCase()]
     );
 

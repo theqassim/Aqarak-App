@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("display-name").value = data.name;
       document.getElementById("display-phone").value = data.phone;
       document.getElementById("edit-username").value = data.username;
+      if (data.bio) document.getElementById("edit-bio").value = data.bio;
       if (data.profile_picture && !data.profile_picture.includes("logo.png")) {
         document.getElementById("current-profile-img").src =
           data.profile_picture;
@@ -41,6 +42,7 @@ document
       "newUsername",
       document.getElementById("edit-username").value
     );
+    formData.append("bio", document.getElementById("edit-bio").value);
     const fileInput = document.getElementById("profile-upload");
     if (fileInput.files[0]) formData.append("profileImage", fileInput.files[0]);
 
