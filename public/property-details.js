@@ -1,6 +1,34 @@
 const style = document.createElement("style");
 style.innerHTML = `
 /* CSS التقييمات */
+    /* مودال الرفض (اليد) */
+    .refusal-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, rgba(50,0,0,0.95), rgba(0,0,0,0.98));
+        z-index: 20000; display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(10px); animation: fadeInRed 0.5s ease;
+    }
+    .refusal-content {
+        text-align: center; color: white; position: relative;
+    }
+    .hand-icon-anim {
+        font-size: 8rem; color: #ff4444;
+        filter: drop-shadow(0 0 20px rgba(255,0,0,0.6));
+        animation: giantHandEntry 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+    }
+    @keyframes giantHandEntry {
+        0% { transform: scale(0) translateY(100px); opacity: 0; }
+        50% { transform: scale(3) rotate(-10deg); opacity: 1; }
+        70% { transform: scale(1) rotate(0deg); }
+        100% { transform: scale(1) translateY(-20px); }
+    }
+    @keyframes fadeInRed { from {opacity: 0;} to {opacity: 1;} }
+    
+    .refusal-text {
+        font-size: 1.5rem; font-weight: bold; margin-top: 20px;
+        opacity: 0; animation: textFadeIn 0.5s ease 1s forwards;
+    }
+    @keyframes textFadeIn { to {opacity: 1;} }
     .rating-stars { color: #FFD700; font-size: 0.9rem; margin-right: 5px; }
     .btn-rate { 
         background: transparent; border: 1px solid #FFD700; color: #FFD700; 
@@ -1272,7 +1300,7 @@ window.openRateModal = async (phone, name) => {
                 <h3 style="text-align:center; color:#FFD700; margin-bottom:10px;">تقييم ${name}</h3>
                 
                 <div id="loading-rate" style="text-align:center; color:#aaa; font-size:0.9rem;">
-                    <i class="fas fa-spinner fa-spin"></i> جاري جلب تقييمك السابق...
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
                 </div>
 
                 <div id="rate-form-content" style="display:none;">
@@ -1283,7 +1311,7 @@ window.openRateModal = async (phone, name) => {
                         <i class="far fa-star" onclick="setRate(4)" id="s4"></i>
                         <i class="far fa-star" onclick="setRate(5)" id="s5"></i>
                     </div>
-                    <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تجربتك (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
+                    <textarea id="rate-comment" class="neon-input-white" rows="3" placeholder="اكتب تقييماً جديداً (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444;"></textarea>
                     <button onclick="submitRate('${phone}')" class="btn-offer-submit" style="background:#FFD700; color:black;">إرسال التقييم</button>
                 </div>
             </div>
@@ -1305,29 +1333,11 @@ window.openRateModal = async (phone, name) => {
 
     if (data.found) {
       window.setRate(data.rating);
-      if (data.comment) {
-        document.getElementById("rate-comment").value = data.comment;
-      }
     }
   } catch (e) {
     console.error("Error fetching my rating", e);
     document.getElementById("loading-rate").style.display = "none";
     document.getElementById("rate-form-content").style.display = "block";
-  }
-};
-window.setRate = (n) => {
-  selectedRating = n;
-  for (let i = 1; i <= 5; i++) {
-    const star = document.getElementById("s" + i);
-    if (i <= n) {
-      star.classList.remove("far");
-      star.classList.add("fas");
-      star.classList.add("active");
-    } else {
-      star.classList.remove("fas");
-      star.classList.add("far");
-      star.classList.remove("active");
-    }
   }
 };
 
@@ -1350,6 +1360,25 @@ window.submitRate = async (phone) => {
       }),
     });
     const data = await res.json();
+
+    if (res.status === 403 && data.errorType === "LIMIT_EXCEEDED") {
+      document.getElementById("rate-modal").remove();
+      const refusalHTML = `
+            <div id="refusal-modal" class="refusal-modal-overlay" onclick="this.remove()">
+                <div class="refusal-content">
+                    <div class="hand-icon-anim"><i class="fas fa-hand-paper"></i></div>
+                    <div class="refusal-text">
+                        <h2 style="color:#ff4444; margin:0;">كفاية كده!</h2>
+                        <p style="color:#ccc; font-size:1.1rem; margin-top:10px;">مينفعش تكتب أكتر من 5 تعليقات لنفس الشخص.</p>
+                        <p style="font-size:0.9rem; color:#888;">(تم تحديث النجوم فقط)</p>
+                    </div>
+                </div>
+            </div>
+        `;
+      document.body.insertAdjacentHTML("beforeend", refusalHTML);
+      return;
+    }
+
     if (res.ok) {
       alert(data.message);
       document.getElementById("rate-modal").remove();
@@ -1362,6 +1391,21 @@ window.submitRate = async (phone) => {
   } catch (e) {
     alert("خطأ في الاتصال");
     btn.disabled = false;
+  }
+};
+window.setRate = (n) => {
+  selectedRating = n;
+  for (let i = 1; i <= 5; i++) {
+    const star = document.getElementById("s" + i);
+    if (i <= n) {
+      star.classList.remove("far");
+      star.classList.add("fas");
+      star.classList.add("active");
+    } else {
+      star.classList.remove("fas");
+      star.classList.add("far");
+      star.classList.remove("active");
+    }
   }
 };
 

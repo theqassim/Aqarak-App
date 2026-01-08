@@ -4279,12 +4279,19 @@ app.post("/api/reviews", async (req, res) => {
         `SELECT COUNT(*) FROM user_comments WHERE reviewer_phone = $1 AND reviewed_phone = $2`,
         [reviewerPhone, reviewedPhone]
       );
-      if (parseInt(commentsCountRes.rows[0].count) < 5) {
-        await pgQuery(
-          `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
-          [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
-        );
+
+      if (parseInt(commentsCountRes.rows[0].count) >= 5) {
+        return res.status(403).json({
+          errorType: "LIMIT_EXCEEDED",
+          message:
+            "لقد وصلت للحد الأقصى من التعليقات المكتوبة لهذا المستخدم (5 تعليقات).",
+        });
       }
+
+      await pgQuery(
+        `INSERT INTO user_comments (reviewer_phone, reviewed_phone, comment, created_at) VALUES ($1, $2, $3, $4)`,
+        [reviewerPhone, reviewedPhone, comment, new Date().toISOString()]
+      );
     }
 
     await createNotification(
@@ -4307,14 +4314,11 @@ app.post("/api/reviews", async (req, res) => {
       const prompt = `
         أنت خبير علاقات عامة. دي آراء عملاء عن (سمسار/مالك عقارات):
         ${textComments}
-        
-        المطلوب:
-        اكتب "كبسولة سمعة" (سطرين بالكتير) باللهجة المصرية الشيك.
+        المطلوب: اكتب "كبسولة سمعة" (سطرين بالكتير) باللهجة المصرية الشيك.
         عايز الخلاصة: هل هو "ثقة وأمين" ولا "مماطل"؟ وايه أبرز ميزة؟
         بدون مقدمات زي "بناء على الآراء..". ادخل في الموضوع علطول.
         مثال: "شخص محترم جداً في المواعيد وأمين في الوصف، بس بيأخر الرد على الواتساب شوية."
         `;
-
       modelChat
         .generateContent(prompt)
         .then(async (result) => {
@@ -4339,7 +4343,7 @@ app.post("/api/reviews", async (req, res) => {
       16776960
     );
 
-    res.json({ success: true, message: "تم حفظ التقييم وإبلاغ المستخدم ✅" });
+    res.json({ success: true, message: "تم حفظ التقييم بنجاح ✅" });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "خطأ في السيرفر" });

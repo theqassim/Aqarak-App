@@ -393,9 +393,95 @@ window.deleteReview = async (commentId) => {
   }
 };
 
+const replyStyle = document.createElement("style");
+replyStyle.innerHTML = `
+    .fancy-reply-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 10005;
+        display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(8px);
+    }
+    .fancy-reply-card {
+        background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+        border: 1px solid #FFD700;
+        width: 90%; max-width: 500px;
+        border-radius: 20px; padding: 30px;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
+        position: relative; animation: slideUpFancy 0.4s ease;
+    }
+    @keyframes slideUpFancy { from {transform: translateY(50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+    
+    .fancy-title {
+        color: #FFD700; font-family: 'Cairo', sans-serif;
+        text-align: center; font-size: 1.5rem; margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    .fancy-textarea {
+        width: 100%; background: rgba(255,255,255,0.05);
+        border: 1px solid #333; color: white; padding: 15px;
+        border-radius: 12px; font-size: 1rem; line-height: 1.6;
+        min-height: 120px; outline: none; transition: 0.3s;
+        font-family: 'Cairo', sans-serif;
+    }
+    .fancy-textarea:focus {
+        border-color: #FFD700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+        background: rgba(0,0,0,0.4);
+    }
+    .fancy-actions {
+        display: flex; gap: 15px; margin-top: 25px;
+    }
+    .btn-fancy-send {
+        flex: 2; background: linear-gradient(45deg, #FFD700, #DAA520);
+        color: black; border: none; padding: 12px; border-radius: 50px;
+        font-weight: bold; font-size: 1.1rem; cursor: pointer;
+        transition: 0.3s; box-shadow: 0 5px 15px rgba(218, 165, 32, 0.3);
+    }
+    .btn-fancy-send:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(218, 165, 32, 0.5); }
+    .btn-fancy-cancel {
+        flex: 1; background: transparent; border: 1px solid #444;
+        color: #aaa; padding: 12px; border-radius: 50px; cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-fancy-cancel:hover { border-color: #ff4444; color: #ff4444; }
+`;
+document.head.appendChild(replyStyle);
+
 window.openReplyModal = (commentId) => {
-  const reply = prompt("اكتب ردك:");
-  if (reply) submitReply(commentId, reply);
+  const old = document.getElementById("fancy-reply-modal");
+  if (old) old.remove();
+
+  const html = `
+    <div id="fancy-reply-modal" class="fancy-reply-overlay">
+        <div class="fancy-reply-card">
+            <div class="fancy-title"><i class="fas fa-pen-fancy"></i> كتابة رد رسمي</div>
+            <p style="color:#888; text-align:center; font-size:0.9rem; margin-bottom:15px;">
+                سيظهر ردك بصفة رسمية أسفل تقييم العميل.
+            </p>
+            <textarea id="fancy-reply-text" class="fancy-textarea" placeholder="اكتب ردك هنا باحترافية..."></textarea>
+            <div class="fancy-actions">
+                <button onclick="confirmFancyReply(${commentId})" class="btn-fancy-send">
+                    <i class="fas fa-paper-plane"></i> نشر الرد
+                </button>
+                <button onclick="document.getElementById('fancy-reply-modal').remove()" class="btn-fancy-cancel">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", html);
+  setTimeout(() => document.getElementById("fancy-reply-text").focus(), 100);
+};
+
+window.confirmFancyReply = (commentId) => {
+  const text = document.getElementById("fancy-reply-text").value;
+  if (!text.trim()) return alert("اكتب رداً أولاً");
+
+  const btn = document.querySelector(".btn-fancy-send");
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
+  btn.disabled = true;
+
+  submitReply(commentId, text);
 };
 
 async function submitReply(commentId, replyText) {
