@@ -194,7 +194,8 @@ async function fetchReviews(phone) {
       const rateBtn = document.getElementById("rate-user-btn");
       if (rateBtn) {
         rateBtn.style.display = "block";
-        rateBtn.onclick = () => openRateModal();
+        rateBtn.onclick = () =>
+          window.openRateModal(profilePhone, profileData.name || "المستخدم");
       }
     }
 
@@ -590,3 +591,131 @@ function updateAiUI(summary) {
     `;
   }
 }
+
+let selectedRating = 0;
+
+window.openRateModal = async (phone, name) => {
+  const old = document.getElementById("rate-modal");
+  if (old) old.remove();
+
+  const html = `
+        <div id="rate-modal" class="modal-overlay" style="display:flex; z-index:10002;">
+            <div class="modal-content" style="background:#1a1a1a; border:1px solid #FFD700;">
+                <span class="close-modal" onclick="document.getElementById('rate-modal').remove()" style="color:white; float:left; cursor:pointer; font-size:1.5rem;">&times;</span>
+                <h3 style="text-align:center; color:#FFD700; margin-bottom:10px; margin-top:0;">تقييم ${name}</h3>
+                
+                <div id="loading-rate" style="text-align:center; color:#aaa; font-size:0.9rem; padding:20px;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
+                </div>
+
+                <div id="rate-form-content" style="display:none;">
+                    <div class="star-rating-input" style="display:flex; justify-content:center; gap:10px; font-size:2rem; margin:15px 0; direction:ltr;">
+                        <i class="far fa-star" onclick="setRate(1)" id="s1" style="cursor:pointer; transition:0.2s;"></i>
+                        <i class="far fa-star" onclick="setRate(2)" id="s2" style="cursor:pointer; transition:0.2s;"></i>
+                        <i class="far fa-star" onclick="setRate(3)" id="s3" style="cursor:pointer; transition:0.2s;"></i>
+                        <i class="far fa-star" onclick="setRate(4)" id="s4" style="cursor:pointer; transition:0.2s;"></i>
+                        <i class="far fa-star" onclick="setRate(5)" id="s5" style="cursor:pointer; transition:0.2s;"></i>
+                    </div>
+                    <textarea id="rate-comment" class="fancy-textarea" rows="3" placeholder="اكتب تقييماً (اختياري)..." style="width:100%; margin-bottom:15px; background:#222; color:white; border:1px solid #444; padding:10px; border-radius:10px;"></textarea>
+                    <button onclick="submitRate('${phone}')" style="width:100%; background:#FFD700; color:black; border:none; padding:12px; border-radius:50px; font-weight:bold; cursor:pointer;">إرسال التقييم</button>
+                </div>
+            </div>
+        </div>
+    `;
+  document.body.insertAdjacentHTML("beforeend", html);
+
+  selectedRating = 0;
+
+  try {
+    const res = await fetch(`/api/reviews/my-rating/${phone}`);
+    const data = await res.json();
+
+    const loader = document.getElementById("loading-rate");
+    const content = document.getElementById("rate-form-content");
+
+    if (loader) loader.style.display = "none";
+    if (content) content.style.display = "block";
+
+    if (data.found) {
+      window.setRate(data.rating);
+      if (data.comment)
+        document.getElementById("rate-comment").value = data.comment;
+    }
+  } catch (e) {
+    console.error("Error fetching my rating", e);
+    const loader = document.getElementById("loading-rate");
+    if (loader) loader.style.display = "none";
+    const content = document.getElementById("rate-form-content");
+    if (content) content.style.display = "block";
+  }
+};
+
+window.setRate = (n) => {
+  selectedRating = n;
+  for (let i = 1; i <= 5; i++) {
+    const star = document.getElementById("s" + i);
+    if (!star) continue;
+    if (i <= n) {
+      star.classList.remove("far");
+      star.classList.add("fas");
+      star.style.color = "#FFD700";
+    } else {
+      star.classList.remove("fas");
+      star.classList.add("far");
+      star.style.color = "#444";
+    }
+  }
+};
+
+window.submitRate = async (phone) => {
+  if (selectedRating === 0) return alert("يرجى اختيار عدد النجوم");
+
+  const comment = document.getElementById("rate-comment").value;
+  const btn = document.querySelector("#rate-modal button");
+  const originalText = btn.innerHTML;
+
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reviewedPhone: phone,
+        rating: selectedRating,
+        comment,
+      }),
+    });
+    const data = await res.json();
+
+    if (res.status === 403 && data.errorType === "LIMIT_EXCEEDED") {
+      document.getElementById("rate-modal").remove();
+      const refusalHTML = `
+            <div id="refusal-modal" class="fancy-overlay" onclick="this.remove()">
+                <div class="fancy-card card-delete" style="border-color:#ff4444;">
+                    <div style="font-size:4rem; color:#ff4444; margin-bottom:15px;"><i class="fas fa-hand-paper"></i></div>
+                    <div class="fancy-title" style="color:#ff4444">كفاية كده!</div>
+                    <p class="fancy-text">مينفعش تكتب أكتر من 5 تعليقات لنفس الشخص.<br>(تم تحديث النجوم فقط)</p>
+                </div>
+            </div>
+        `;
+      document.body.insertAdjacentHTML("beforeend", refusalHTML);
+      return;
+    }
+
+    if (res.ok) {
+      alert("✅ " + data.message);
+      document.getElementById("rate-modal").remove();
+      location.reload();
+    } else {
+      alert("❌ " + data.message);
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert("خطأ في الاتصال");
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
