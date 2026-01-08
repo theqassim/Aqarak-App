@@ -1535,6 +1535,53 @@
         bottom: 80px !important;
       }
     }
+    .menu-notif-item.swipe-item {
+      position: relative;
+      overflow: hidden;
+      padding: 0 !important;
+      background: #000;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .swipe-content {
+      position: relative;
+      z-index: 2;
+      background: #1a1a1a;
+      padding: 15px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: transform 0.2s ease-out;
+    }
+
+    .swipe-action-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ff4444;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 20px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      gap: 10px;
+    }
+
+    .menu-notif-item.unread .swipe-content {
+      background: rgba(0, 255, 136, 0.05);
+      border-right: 4px solid var(--neon-primary);
+    }
+
+    .notif-delete-btn {
+      display: none !important;
+    }
   </style>
   <body>
     <header class="mobile-header-custom" id="mob-header">

@@ -1783,7 +1783,8 @@ app.post("/api/admin/publish-submission", async (req, res) => {
     await createNotification(
       sub.sellerPhone,
       "🎉 مبروك! تم قبول عقارك",
-      `تمت مراجعة عقارك "${sub.propertyTitle}" والموافقة عليه. هو الآن منشور ويظهر للجميع.`
+      `تمت مراجعة عقارك "${sub.propertyTitle}" والموافقة عليه. اضغط هنا لمشاهدته.`,
+      `/property?id=${result.rows[0].id}`
     );
 
     checkAndNotifyMatches({
@@ -2351,7 +2352,7 @@ app.post("/api/reviews/reply", async (req, res) => {
     const { commentId, replyText } = req.body;
 
     const commentRes = await pgQuery(
-      "SELECT reviewed_phone FROM user_comments WHERE id = $1",
+      "SELECT reviewer_phone, reviewed_phone FROM user_comments WHERE id = $1",
       [commentId]
     );
 
@@ -2359,9 +2360,9 @@ app.post("/api/reviews/reply", async (req, res) => {
       return res.status(404).json({ message: "التعليق غير موجود" });
     }
 
-    const reviewedPhone = commentRes.rows[0].reviewed_phone;
+    const { reviewer_phone, reviewed_phone } = commentRes.rows[0];
 
-    if (decoded.phone !== reviewedPhone && decoded.role !== "admin") {
+    if (decoded.phone !== reviewed_phone && decoded.role !== "admin") {
       return res
         .status(403)
         .json({ message: "غير مسموح لك بالرد على هذا التقييم" });
@@ -2377,10 +2378,7 @@ app.post("/api/reviews/reply", async (req, res) => {
     const notifMsg = "تم الرد على تقييمك، اضغط هنا لرؤية الرد.";
     const notifLink = `/profile?u=${decoded.username}&tab=reviews`;
 
-    await pgQuery(
-      `INSERT INTO user_notifications (user_phone, title, message, link) VALUES ($1, $2, $3, $4)`,
-      [reviewedPhone, notifTitle, notifMsg, notifLink]
-    );
+    await createNotification(reviewer_phone, notifTitle, notifMsg, notifLink);
 
     res.json({ success: true, message: "تم إضافة الرد وإشعار المستخدم" });
   } catch (error) {
@@ -3241,17 +3239,16 @@ app.get("/api/config/payment-price", async (req, res) => {
   }
 });
 
-async function createNotification(phone, title, message) {
+async function createNotification(phone, title, message, link = null) {
   try {
     await pgQuery(
-      `INSERT INTO user_notifications (user_phone, title, message) VALUES ($1, $2, $3)`,
-      [phone, title, message]
+      `INSERT INTO user_notifications (user_phone, title, message, link) VALUES ($1, $2, $3, $4)`,
+      [phone, title, message, link]
     );
   } catch (e) {
     console.error("Notification Error:", e);
   }
 }
-
 app.get("/api/user/notifications", async (req, res) => {
   const token = req.cookies.auth_token;
   if (!token) return res.json({ notifications: [], unreadCount: 0 });
@@ -4336,6 +4333,8 @@ app.post("/api/reviews", async (req, res) => {
       [
         { name: "المُقيِّم", value: reviewerPhone },
         { name: "المُقيَّم", value: reviewedPhone },
+        { name: "النجوم", value: `${rating || 0} نجوم` },
+        { name: "التعليق", value: comment || "بدون تعليق" },
       ],
       16776960
     );
@@ -4692,14 +4691,17 @@ app.put("/api/reviews/edit/:id", async (req, res) => {
     const { comment } = req.body;
 
     const checkRes = await pgQuery(
-      "SELECT reviewer_phone FROM user_comments WHERE id = $1",
+      "SELECT reviewer_phone, reviewed_phone FROM user_comments WHERE id = $1",
       [req.params.id]
     );
+
     if (checkRes.rows.length === 0)
       return res.status(404).json({ message: "غير موجود" });
 
+    const reviewData = checkRes.rows[0];
+
     if (
-      checkRes.rows[0].reviewer_phone !== decoded.phone &&
+      reviewData.reviewer_phone !== decoded.phone &&
       decoded.role !== "admin"
     ) {
       return res.status(403).json({ message: "غير مسموح" });
@@ -4709,8 +4711,20 @@ app.put("/api/reviews/edit/:id", async (req, res) => {
       comment,
       req.params.id,
     ]);
+
+    await sendDiscordNotification(
+      "✏️ تعديل تقييم",
+      [
+        { name: "المُقيِّم", value: reviewData.reviewer_phone },
+        { name: "المُقيَّم", value: reviewData.reviewed_phone },
+        { name: "التعليق الجديد", value: comment },
+      ],
+      16776960
+    );
+
     res.json({ success: true, message: "تم تعديل التقييم" });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "خطأ" });
   }
 });

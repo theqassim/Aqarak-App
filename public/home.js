@@ -306,7 +306,6 @@ async function checkNotifications() {
 
     if (data.unreadCount > 0) {
       const countText = data.unreadCount > 9 ? "+9" : data.unreadCount;
-
       if (mobBadge) {
         mobBadge.style.display = "block";
         mobBadge.textContent = countText;
@@ -315,7 +314,6 @@ async function checkNotifications() {
         mobInnerBadge.style.display = "inline-block";
         mobInnerBadge.textContent = `${data.unreadCount} جديدة`;
       }
-
       if (desktopBadge) {
         desktopBadge.style.display = "block";
         desktopBadge.textContent = countText;
@@ -331,36 +329,36 @@ async function checkNotifications() {
       listHTML = data.notifications
         .map(
           (n) => `
-        <div class="menu-notif-item ${n.is_read ? "" : "unread"}" id="notif-${
-            n.id
-          }">
-            <div style="padding-left: 20px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                    <span style="width:6px; height:6px; background:var(--neon-primary); border-radius:50%; display:${
-                      n.is_read ? "none" : "block"
-                    }"></span>
-                    <strong style="color:white; font-size:0.95rem;">${
-                      n.title
-                    }</strong>
-                </div>
-                <p style="color:#bbb; font-size:0.85rem; margin:0; line-height:1.5;">${
-                  n.message
-                }</p>
-                <div style="margin-top:8px; font-size:0.7rem; color:#666; display:flex; align-items:center; gap:5px;">
-                    <i class="far fa-clock"></i>
-                    ${new Date(n.created_at).toLocaleTimeString("ar-EG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+        <div class="menu-notif-item swipe-item ${
+          n.is_read ? "" : "unread"
+        }" id="notif-${n.id}" data-id="${n.id}" onclick="handleNotifClick('${
+            n.link || ""
+          }')">
+            <div class="swipe-action-bg"><i class="fas fa-trash-alt"></i> حذف</div>
+            <div class="swipe-content">
+                <div style="padding-left: 10px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                        <span style="width:6px; height:6px; background:var(--neon-primary); border-radius:50%; display:${
+                          n.is_read ? "none" : "block"
+                        }"></span>
+                        <strong style="color:white; font-size:0.95rem;">${
+                          n.title
+                        }</strong>
+                    </div>
+                    <p style="color:#bbb; font-size:0.85rem; margin:0; line-height:1.5;">${
+                      n.message
+                    }</p>
+                    <div style="margin-top:8px; font-size:0.7rem; color:#666; display:flex; align-items:center; gap:5px;">
+                        <i class="far fa-clock"></i>
+                        ${new Date(n.created_at).toLocaleTimeString("ar-EG", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                    </div>
                 </div>
             </div>
-            <button onclick="deleteNotification(event, ${
-              n.id
-            })" class="notif-delete-btn" title="حذف">
-                <i class="fas fa-trash-alt" style="font-size:0.8rem;"></i>
-            </button>
         </div>
-    `
+      `
         )
         .join("");
     } else {
@@ -368,12 +366,107 @@ async function checkNotifications() {
         '<p style="text-align:center; color:#555; padding:15px;">لا توجد إشعارات حالياً</p>';
     }
 
-    if (mobList) mobList.innerHTML = listHTML;
-    if (desktopList) desktopList.innerHTML = listHTML;
+    if (mobList) {
+      mobList.innerHTML = listHTML;
+      initSwipeGestures();
+    }
+
+    if (desktopList && data.notifications && data.notifications.length > 0) {
+      desktopList.innerHTML = data.notifications
+        .map(
+          (n) => `
+            <div class="menu-notif-item ${
+              n.is_read ? "" : "unread"
+            }" onclick="handleNotifClick('${
+            n.link || ""
+          }')" style="cursor:pointer;">
+                <div style="padding: 10px;">
+                    <strong style="color:white;">${n.title}</strong>
+                    <p style="color:#bbb; font-size:0.9rem;">${n.message}</p>
+                </div>
+            </div>
+        `
+        )
+        .join("");
+    } else if (desktopList) {
+      desktopList.innerHTML =
+        '<p style="text-align:center; padding:10px;">لا توجد إشعارات</p>';
+    }
   } catch (e) {
     console.error("Notif Error", e);
   }
 }
+
+window.handleNotifClick = function (link) {
+  if (link && link !== "null" && link !== "undefined" && link !== "") {
+    window.location.href = link;
+  }
+};
+
+function initSwipeGestures() {
+  const items = document.querySelectorAll(".swipe-item");
+  items.forEach((item) => {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    item.addEventListener(
+      "touchstart",
+      (e) => {
+        startX = e.touches[0].clientX;
+        isSwiping = false;
+        item.querySelector(".swipe-content").style.transition = "none";
+      },
+      { passive: true }
+    );
+
+    item.addEventListener(
+      "touchmove",
+      (e) => {
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        if (Math.abs(diff) > 10) {
+          isSwiping = true;
+          const content = item.querySelector(".swipe-content");
+          content.style.transform = `translateX(${diff}px)`;
+
+          const bg = item.querySelector(".swipe-action-bg");
+          if (bg) bg.style.opacity = Math.min(Math.abs(diff) / 80, 1);
+        }
+      },
+      { passive: true }
+    );
+
+    item.addEventListener("touchend", (e) => {
+      const content = item.querySelector(".swipe-content");
+      content.style.transition = "transform 0.3s ease";
+      const diff = currentX - startX;
+
+      if (isSwiping && Math.abs(diff) > 100) {
+        content.style.transform =
+          diff > 0 ? "translateX(100%)" : "translateX(-100%)";
+        setTimeout(() => {
+          const id = item.getAttribute("data-id");
+          deleteNotificationDirect(id, item);
+        }, 200);
+      } else {
+        content.style.transform = "translateX(0)";
+      }
+      isSwiping = false;
+    });
+  });
+}
+
+async function deleteNotificationDirect(id, element) {
+  try {
+    await fetch(`/api/user/notification/${id}`, { method: "DELETE" });
+    element.style.height = "0";
+    element.style.opacity = "0";
+    element.style.margin = "0";
+    setTimeout(() => element.remove(), 300);
+  } catch (e) {}
+}
+
 window.deleteNotification = async (e, id) => {
   e.stopPropagation();
   if (!confirm("حذف هذا الإشعار؟")) return;
