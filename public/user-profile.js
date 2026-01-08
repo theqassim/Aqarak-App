@@ -630,12 +630,12 @@ window.openRateModal = async (phone, name) => {
                 </div>
 
                 <div id="rate-form-content" style="display:none;">
-                    <div class="star-rating-input" style="display:flex; justify-content:center; flex-direction: row-reverse; gap:8px; font-size:2.2rem; margin-bottom:25px;">
-                        <i class="far fa-star" onclick="setRate(5)" id="s5" style="cursor:pointer; transition:0.2s;" title="ممتاز"></i>
-                        <i class="far fa-star" onclick="setRate(4)" id="s4" style="cursor:pointer; transition:0.2s;" title="جيد جداً"></i>
-                        <i class="far fa-star" onclick="setRate(3)" id="s3" style="cursor:pointer; transition:0.2s;" title="جيد"></i>
-                        <i class="far fa-star" onclick="setRate(2)" id="s2" style="cursor:pointer; transition:0.2s;" title="مقبول"></i>
+                    <div class="star-rating-input" style="display:flex; justify-content:center; direction: rtl; gap:8px; font-size:2.2rem; margin-bottom:25px;">
                         <i class="far fa-star" onclick="setRate(1)" id="s1" style="cursor:pointer; transition:0.2s;" title="سيء"></i>
+                        <i class="far fa-star" onclick="setRate(2)" id="s2" style="cursor:pointer; transition:0.2s;" title="مقبول"></i>
+                        <i class="far fa-star" onclick="setRate(3)" id="s3" style="cursor:pointer; transition:0.2s;" title="جيد"></i>
+                        <i class="far fa-star" onclick="setRate(4)" id="s4" style="cursor:pointer; transition:0.2s;" title="جيد جداً"></i>
+                        <i class="far fa-star" onclick="setRate(5)" id="s5" style="cursor:pointer; transition:0.2s;" title="ممتاز"></i>
                     </div>
 
                     <textarea id="rate-comment" rows="3" placeholder="اكتب تعليقك هنا (اختياري)..." 
@@ -675,8 +675,6 @@ window.openRateModal = async (phone, name) => {
 
     if (data.found) {
       window.setRate(data.rating);
-      if (data.comment)
-        document.getElementById("rate-comment").value = data.comment;
     }
   } catch (e) {
     console.error("Error fetching rating:", e);

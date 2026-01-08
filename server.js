@@ -1355,6 +1355,7 @@ app.get("/api/auth/me", async (req, res) => {
       balance: parseFloat(user.wallet_balance || 0),
       is_verified: user.is_verified,
       profile_picture: user.profile_picture,
+      bio: user.bio,
       isPaymentActive: isPaymentActive,
     });
   } catch (err) {
