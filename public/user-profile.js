@@ -183,7 +183,7 @@ async function fetchReviews(phone) {
 
     const aiContainer = document.getElementById("ai-summary-container");
     if (aiContainer) {
-      if (currentReviews.length >= 5 && profileData.ai_summary) {
+      if (profileData.ai_summary && profileData.ai_summary.trim() !== "") {
         updateAiUI(profileData.ai_summary);
         aiContainer.style.display = "block";
       } else {
@@ -427,8 +427,20 @@ function getShareData() {
     url: cleanUrl,
   };
 }
-window.openShareModal = () =>
-  (document.getElementById("share-modal-overlay").style.display = "flex");
+window.openShareModal = () => {
+  const data = getShareData();
+  if (navigator.share) {
+    navigator
+      .share({
+        title: data.title,
+        text: data.text,
+        url: data.url,
+      })
+      .catch((err) => console.log("Sharing failed", err));
+  } else {
+    document.getElementById("share-modal-overlay").style.display = "flex";
+  }
+};
 window.closeShareModal = (e) => {
   if (e.target.id === "share-modal-overlay")
     document.getElementById("share-modal-overlay").style.display = "none";

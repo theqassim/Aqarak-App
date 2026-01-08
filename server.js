@@ -2373,7 +2373,16 @@ app.post("/api/reviews/reply", async (req, res) => {
       [replyText, isReplyAdmin, commentId]
     );
 
-    res.json({ success: true, message: "تم إضافة الرد بنجاح" });
+    const notifTitle = isReplyAdmin ? "رد من الإدارة 🛡️" : "رد من المالك 🏠";
+    const notifMsg = "تم الرد على تقييمك، اضغط هنا لرؤية الرد.";
+    const notifLink = `/profile?u=${decoded.username}&tab=reviews`;
+
+    await pgQuery(
+      `INSERT INTO user_notifications (user_phone, title, message, link) VALUES ($1, $2, $3, $4)`,
+      [reviewedPhone, notifTitle, notifMsg, notifLink]
+    );
+
+    res.json({ success: true, message: "تم إضافة الرد وإشعار المستخدم" });
   } catch (error) {
     console.error("Reply Error:", error);
     res.status(500).json({ message: "خطأ في السيرفر" });
@@ -4340,7 +4349,7 @@ app.post("/api/reviews", async (req, res) => {
 app.get("/api/reviews/stats/:phone", async (req, res) => {
   try {
     const result = await pgQuery(
-      `SELECT AVG(stars) as average, COUNT(*) as count FROM user_ratings WHERE reviewed_phone = $1`,
+      `SELECT AVG(stars::numeric) as average, COUNT(*) as count FROM user_ratings WHERE reviewed_phone = $1`,
       [req.params.phone]
     );
     const stats = result.rows[0];
@@ -4490,13 +4499,12 @@ app.post("/api/reviews/summarize", async (req, res) => {
   }
 });
 
-app.get("/update-db-users-date", async (req, res) => {
+app.get("/update-db-notifications", async (req, res) => {
   try {
-    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TEXT`);
-    await pgQuery(`UPDATE users SET created_at = $1 WHERE created_at IS NULL`, [
-      new Date().toISOString(),
-    ]);
-    res.send("✅ تم تحديث جدول المستخدمين بنجاح.");
+    await pgQuery(
+      `ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS link TEXT`
+    );
+    res.send("✅ تم تحديث جدول الإشعارات لإضافة الروابط.");
   } catch (e) {
     res.status(500).send("❌ خطأ: " + e.message);
   }
@@ -4636,14 +4644,17 @@ app.delete("/api/reviews/delete/:id", async (req, res) => {
     const commentId = req.params.id;
 
     const checkRes = await pgQuery(
-      "SELECT reviewer_phone FROM user_comments WHERE id = $1",
+      "SELECT reviewer_phone, reviewed_phone FROM user_comments WHERE id = $1",
       [commentId]
     );
+
     if (checkRes.rows.length === 0)
       return res.status(404).json({ message: "التقييم غير موجود" });
 
+    const reviewData = checkRes.rows[0];
+
     if (
-      checkRes.rows[0].reviewer_phone !== decoded.phone &&
+      reviewData.reviewer_phone !== decoded.phone &&
       decoded.role !== "admin"
     ) {
       return res
@@ -4653,13 +4664,25 @@ app.delete("/api/reviews/delete/:id", async (req, res) => {
 
     await pgQuery("DELETE FROM user_comments WHERE id = $1", [commentId]);
 
-    res.json({ success: true, message: "تم حذف التقييم بنجاح" });
+    const countRes = await pgQuery(
+      "SELECT COUNT(*) FROM user_comments WHERE reviewed_phone = $1",
+      [reviewData.reviewed_phone]
+    );
+    const currentCount = parseInt(countRes.rows[0].count);
+
+    if (currentCount < 5) {
+      await pgQuery(
+        "UPDATE users SET ai_summary_cache = NULL WHERE phone = $1",
+        [reviewData.reviewed_phone]
+      );
+    }
+
+    res.json({ success: true, message: "تم حذف التقييم وتحديث البيانات" });
   } catch (error) {
     console.error("Delete Review Error:", error);
     res.status(500).json({ message: "خطأ في السيرفر" });
   }
 });
-
 app.put("/api/reviews/edit/:id", async (req, res) => {
   const token = req.cookies.auth_token;
   if (!token) return res.status(401).json({ message: "غير مصرح" });

@@ -332,9 +332,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }&tab=reviews" style="text-decoration:none;">
         <div style="display:flex; align-items:center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; border: 1px solid #444; cursor: pointer; transition: 0.3s;" onmouseover="this.style.borderColor='#FFD700'" onmouseout="this.style.borderColor='#444'">
             <i class="fas fa-star" style="color: #FFD700; font-size: 0.9rem;"></i>
-            <span style="color: #fff; font-weight: bold; font-size: 1rem;">${
-              Number(ratingStats.average || 0).toFixed(1)
-            }</span>
+            <span style="color: #fff; font-weight: bold; font-size: 1rem;">${Number(
+              ratingStats.average || 0
+            ).toFixed(1)}</span>
             <span style="color: #888; font-size: 0.8rem;">(${
               ratingStats.count || 0
             })</span>
@@ -772,12 +772,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (imageUrls.length > 1) {
       document.getElementById("prev-image").onclick = () => {
-        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
+        currentImageIndex =
+          (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
         update();
       };
       document.getElementById("next-image").onclick = () => {
-        currentImageIndex =
-          (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
+        currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
         update();
       };
     } else {
@@ -1089,12 +1089,12 @@ window.setupLightbox = (images) => {
   }
   nextBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    currentIndex = (currentIndex + 1) % images.length;
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
     update();
   });
   prevBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    currentIndex = (currentIndex + 1) % images.length;
     update();
   });
   closeBtn.addEventListener("click", close);
