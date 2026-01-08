@@ -4547,6 +4547,7 @@ app.get("/api/public/profile/:username", async (req, res) => {
       profile_picture: user.profile_picture,
       created_at: user.created_at,
       ai_summary: user.ai_summary_cache,
+      bio: user.bio,
       properties: propsRes.rows,
     });
   } catch (error) {
