@@ -1480,7 +1480,7 @@ app.post(
           sellerName,
           sellerPhone,
           propertyTitle,
-          propertyCategory,
+          propertyType,
           englishPrice,
           safeInt(propertyArea),
           safeInt(propertyRooms),
@@ -1512,7 +1512,7 @@ app.post(
           { name: "👤 المالك", value: `${sellerName} - ${sellerPhone}` },
           {
             name: "🏠 العقار",
-            value: `${propertyTitle} (${propertyCategory})`,
+            value: `${propertyTitle} (${propertyType})`,
           },
           { name: "💰 السعر", value: englishPrice },
           {
@@ -1544,7 +1544,7 @@ app.post(
             propertyDescription,
             files.length > 0 ? files[0].path : "logo.png",
             JSON.stringify(imageUrls),
-            propertyCategory,
+            propertyType,
             code,
             sellerName,
             sellerPhone,
@@ -1569,6 +1569,7 @@ app.post(
             price: englishPrice,
             level: propertyLevel,
             sellerPhone: sellerPhone,
+            type: propertyType,
           },
           code
         );
