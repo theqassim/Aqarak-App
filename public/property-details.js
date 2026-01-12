@@ -892,12 +892,19 @@ function injectEditModal(prop) {
   const oldModal = document.getElementById("edit-modal");
   if (oldModal) oldModal.remove();
 
+  const isSale =
+    prop.type === "buy" || prop.type === "بيع" || prop.type === "sale";
+  const isRent =
+    prop.type === "rent" || prop.type === "إيجار" || prop.type === "rent";
+
   const modalHTML = `
         <div id="edit-modal" class="edit-modal-overlay">
             <div class="edit-modal-content">
-                <h3 style="color:#00ff88; margin-bottom:20px; text-align:center;">تعديل بيانات العقار</h3>
+                <h3 style="color:#00ff88; margin-bottom:20px; text-align:center; text-shadow: 0 0 10px rgba(0,255,136,0.3);">
+                    <i class="fas fa-edit"></i> تعديل بيانات العقار
+                </h3>
                 
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #555;">
+                <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #444;">
                     <label style="color: #00ff88; font-weight: bold; display: block; margin-bottom: 10px;">📸 صور العقار الحالية</label>
                     <div id="edit-images-container" class="img-grid-container"></div>
                     
@@ -910,30 +917,86 @@ function injectEditModal(prop) {
 
                 <form id="edit-property-form">
                     <div class="edit-input-group">
+                        <label style="margin-bottom:10px;">نوع العرض</label>
+                        <div class="neon-toggle-wrapper" style="display:flex; gap:15px; justify-content:center; background:#111; padding:10px; border-radius:50px; border:1px solid #333;">
+                            <label class="neon-radio-label">
+                                <input type="radio" name="type" value="buy" ${
+                                  isSale ? "checked" : ""
+                                }>
+                                <span class="neon-radio-btn sale-btn"><i class="fas fa-handshake"></i> بيع</span>
+                            </label>
+                            <label class="neon-radio-label">
+                                <input type="radio" name="type" value="rent" ${
+                                  isRent ? "checked" : ""
+                                }>
+                                <span class="neon-radio-btn rent-btn"><i class="fas fa-clock"></i> إيجار</span>
+                            </label>
+                        </div>
+                        <style>
+                            .neon-radio-label { flex: 1; cursor: pointer; position: relative; }
+                            .neon-radio-label input { display: none; }
+                            .neon-radio-btn { 
+                                display: flex; align-items: center; justify-content: center; gap: 8px;
+                                width: 100%; padding: 10px; border-radius: 40px; 
+                                color: #666; font-weight: bold; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                                border: 1px solid transparent;
+                            }
+                            /* تصميم زر البيع */
+                            .neon-radio-label input:checked + .sale-btn {
+                                background: rgba(0, 255, 136, 0.15);
+                                color: #00ff88;
+                                border-color: #00ff88;
+                                box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+                                transform: scale(1.05);
+                            }
+                            /* تصميم زر الإيجار */
+                            .neon-radio-label input:checked + .rent-btn {
+                                background: rgba(0, 212, 255, 0.15);
+                                color: #00d4ff;
+                                border-color: #00d4ff;
+                                box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+                                transform: scale(1.05);
+                            }
+                        </style>
+                    </div>
+
+                    <div class="edit-input-group">
                         <label>العنوان</label>
-                        <input type="text" name="title" class="edit-input" value="${prop.title}" required>
+                        <input type="text" name="title" class="edit-input" value="${
+                          prop.title
+                        }" required>
                     </div>
                     <div class="edit-input-group">
                         <label>السعر</label>
-                        <input type="text" name="price" class="edit-input" value="${prop.price}" required>
+                        <input type="text" name="price" class="edit-input" value="${
+                          prop.price
+                        }" required>
                     </div>
                     <div class="edit-input-group" style="display:flex; gap:10px;">
                         <div style="flex:1;">
-                            <label>المساحة</label>
-                            <input type="number" name="area" class="edit-input" value="${prop.area}" required>
+                            <label>المساحة (م²)</label>
+                            <input type="number" name="area" class="edit-input" value="${
+                              prop.area
+                            }" required>
                         </div>
                         <div style="flex:1;">
                             <label>الغرف</label>
-                            <input type="number" name="rooms" class="edit-input" value="${prop.rooms}">
+                            <input type="number" name="rooms" class="edit-input" value="${
+                              prop.rooms
+                            }">
                         </div>
                         <div style="flex:1;">
                             <label>الحمامات</label>
-                            <input type="number" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
+                            <input type="number" name="bathrooms" class="edit-input" value="${
+                              prop.bathrooms
+                            }">
                         </div>
                     </div>
                     <div class="edit-input-group">
                         <label>الوصف</label>
-                        <textarea name="description" class="edit-input" rows="4">${prop.description}</textarea>
+                        <textarea name="description" class="edit-input" rows="4">${
+                          prop.description
+                        }</textarea>
                     </div>
                     <div class="edit-actions">
                         <button type="submit" class="btn-save">حفظ التعديلات</button>
@@ -959,6 +1022,11 @@ function injectEditModal(prop) {
     .getElementById("edit-property-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const selectedType = document.querySelector(
+        'input[name="type"]:checked'
+      ).value;
+
       if (window.isPaymentActive) {
         if (
           !confirm(
@@ -980,6 +1048,7 @@ function injectEditModal(prop) {
       formData.append("rooms", e.target.rooms.value);
       formData.append("bathrooms", e.target.bathrooms.value);
       formData.append("description", e.target.description.value);
+      formData.append("type", selectedType);
 
       formData.append("keptImages", JSON.stringify(currentEditImages));
       newEditFiles.forEach((file) => formData.append("newImages", file));
@@ -997,7 +1066,7 @@ function injectEditModal(prop) {
           window.showStatusModal(
             "success",
             "تم التعديل بنجاح!",
-            "تم تحديث بيانات العقار ونشره."
+            "تم تحديث بيانات العقار ونوعه ونشره."
           );
         } else {
           if (data.status === "rejected") {

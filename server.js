@@ -2464,7 +2464,9 @@ app.put(
         level,
         floors_count,
         finishing_type,
+        type,
       } = req.body;
+
       const keptImages = JSON.parse(req.body.keptImages || "[]");
       const newFiles = req.files || [];
       const newImageUrls = newFiles.map((f) => f.path);
@@ -2512,11 +2514,13 @@ app.put(
 
       const englishPrice = toEnglishDigits(price);
       const allImagesForCheck = [...keptImages, ...newImageUrls];
+
       const aiReview = await aiCheckProperty(
         title,
         description,
         englishPrice,
-        allImagesForCheck
+        allImagesForCheck,
+        type || "apartment"
       );
 
       if (aiReview.status === "rejected") {
@@ -2533,7 +2537,8 @@ app.put(
       const mainImageUrl =
         finalImageUrls.length > 0 ? finalImageUrls[0] : "logo.png";
 
-      const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, "imageUrl"=$8, "imageUrls"=$9, "level"=$10, "floors_count"=$11, "finishing_type"=$12 WHERE id=$13`;
+      const sql = `UPDATE properties SET title=$1, price=$2, "numericPrice"=$3, description=$4, area=$5, rooms=$6, bathrooms=$7, "imageUrl"=$8, "imageUrls"=$9, "level"=$10, "floors_count"=$11, "finishing_type"=$12, type=$13 WHERE id=$14`;
+
       await pgQuery(sql, [
         title,
         englishPrice,
@@ -2547,6 +2552,7 @@ app.put(
         level || "",
         safeInt(floors_count),
         finishing_type || "",
+        type,
         propId,
       ]);
 
