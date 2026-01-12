@@ -249,9 +249,7 @@ async function toggleFavorites() {
 
       const html = `
                 <div class="fav-card" id="fav-item-${prop.id}">
-                    <a href="property?id=${
-                      prop.id
-                    }" class="fav-img-link">
+                    <a href="property?id=${prop.id}" class="fav-img-link">
                         <img src="${
                           prop.imageUrl || "logo.png"
                         }" class="fav-img" loading="lazy" alt="${prop.title}">
@@ -293,37 +291,49 @@ async function toggleFavorites() {
   }
 }
 
-window.removeFavorite = async function (id) {
-  if (!confirm("هل أنت متأكد من إزالة هذا العقار من المفضلة؟")) return;
+let tempFavIdToDelete = null;
 
+window.removeFavorite = function (id) {
+  tempFavIdToDelete = id;
+  document.getElementById("delete-fav-modal").style.display = "block";
+  document.getElementById("confirm-delete-fav-btn").onclick = executeDeleteFav;
+};
+
+async function executeDeleteFav() {
+  if (!tempFavIdToDelete) return;
+  const id = tempFavIdToDelete;
+  const modal = document.getElementById("delete-fav-modal");
   const card = document.getElementById(`fav-item-${id}`);
-  if (card) card.style.opacity = "0.5";
+
+  modal.style.display = "none";
+  if (card) {
+    card.style.transition = "all 0.5s ease";
+    card.style.transform = "scale(0) rotate(10deg)";
+    card.style.opacity = "0";
+  }
 
   try {
     const res = await fetch(`/api/favorites/${id}`, { method: "DELETE" });
-
     if (res.ok) {
-      if (card) {
-        card.style.transform = "scale(0.8)";
-        setTimeout(() => {
-          card.remove();
-          const container = document.getElementById("favorites-listings");
-          if (container && container.children.length === 0) {
-            toggleFavorites();
-            setTimeout(toggleFavorites, 50);
-          }
-        }, 300);
-      }
+      setTimeout(() => {
+        if (card) card.remove();
+        const container = document.getElementById("favorites-listings");
+        if (container && container.children.length === 0) toggleFavorites();
+      }, 500);
     } else {
-      alert("فشل الحذف، حاول مرة أخرى.");
-      if (card) card.style.opacity = "1";
+      if (card) {
+        card.style.transform = "scale(1)";
+        card.style.opacity = "1";
+        alert("فشل الحذف");
+      }
     }
   } catch (e) {
-    console.error(e);
-    alert("خطأ في الاتصال");
-    if (card) card.style.opacity = "1";
+    if (card) {
+      card.style.transform = "scale(1)";
+      card.style.opacity = "1";
+    }
   }
-};
+}
 
 async function checkNotifications() {
   try {
@@ -378,12 +388,25 @@ window.toggleProfileMenu = async function () {
   }
 };
 
-window.logoutUser = async function () {
+window.openLogoutModal = function () {
+  document.getElementById("logout-modal").style.display = "block";
+};
+
+window.performLogout = async function () {
+  const btn = document.querySelector("#logout-modal .modern-action-btn");
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> وداعاً...';
   try {
     await fetch("/api/logout", { method: "POST" });
-    window.location.reload();
+    setTimeout(() => (window.location.href = "authentication"), 800);
   } catch (e) {
-    window.location.reload();
+    window.location.href = "authentication";
+  }
+};
+
+window.closeCustomModal = function (modalId) {
+  document.getElementById(modalId).style.display = "none";
+  if (modalId === "unblock-modal") {
+    document.getElementById("blocked-users-modal").style.display = "block";
   }
 };
 
@@ -667,8 +690,20 @@ function closeBlockedModal() {
   document.getElementById("blocked-users-modal").style.display = "none";
 }
 
-async function unblockUser(phone) {
-  if (!confirm("فك الحظر عن هذا المستخدم؟")) return;
+let tempPhoneToUnblock = null;
+
+window.unblockUser = function (phone) {
+  tempPhoneToUnblock = phone;
+  document.getElementById("blocked-users-modal").style.display = "none";
+  document.getElementById("unblock-modal").style.display = "block";
+  document.getElementById("confirm-unblock-btn").onclick = executeUnblock;
+};
+
+async function executeUnblock() {
+  if (!tempPhoneToUnblock) return;
+  const phone = tempPhoneToUnblock;
+  document.getElementById("unblock-modal").style.display = "none";
+  document.getElementById("blocked-users-modal").style.display = "block";
 
   try {
     const res = await fetch("/api/user/remove-report", {
@@ -679,23 +714,26 @@ async function unblockUser(phone) {
 
     if (res.ok) {
       const row = document.getElementById(`row-${phone}`);
-      if (row) row.remove();
-
+      if (row) {
+        row.style.background = "#00ff8822";
+        row.style.transition = "0.5s";
+        setTimeout(() => {
+          row.style.transform = "translateX(100%)";
+          row.style.opacity = "0";
+          setTimeout(() => row.remove(), 300);
+        }, 300);
+      }
       blockedUsersList = blockedUsersList.filter(
         (u) => u.reported_phone !== phone
       );
+      const badge = document.getElementById("blocked-cou nt-badge");
+      if (badge) badge.textContent = blockedUsersList.length;
 
       if (blockedUsersList.length === 0) {
-        closeBlockedModal();
-        const card = document.getElementById("blocked-users-card");
-        if (card) {
-          card.style.transition = "0.5s";
-          card.style.opacity = "0";
-          setTimeout(() => (card.style.display = "none"), 500);
-        }
-      } else {
-        const badge = document.getElementById("blocked-count-badge");
-        if (badge) badge.textContent = blockedUsersList.length;
+        setTimeout(() => {
+          closeBlockedModal();
+          document.getElementById("blocked-users-card").style.display = "none";
+        }, 800);
       }
     }
   } catch (e) {

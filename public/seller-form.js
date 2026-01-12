@@ -382,72 +382,76 @@ function showStatusModal(
   if (type === "review") {
     config = {
       color: "#ffc107",
-      bgIcon: "#ffc107",
-      icon: "fas fa-hourglass-half",
-      btnText: "فهمت، شكراً",
+      icon: "fas fa-clock",
+      animation: "fa-pulse",
+      bgGradient:
+        "linear-gradient(135deg, rgba(255,193,7,0.1), rgba(0,0,0,0.8))",
+      btnText: "حسناً، فهمت",
     };
   } else if (type === "success") {
     config = {
       color: "#00ff88",
-      bgIcon: "#00c853",
-      icon: "fas fa-check-double",
-      btnText: "روعة، تمام!",
+      icon: "fas fa-check-circle",
+      animation: "fa-bounce",
+      bgGradient:
+        "linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,0,0,0.8))",
+      btnText: "ممتاز، عرض العقار",
     };
   } else if (type === "error") {
     config = {
       color: "#ff4444",
-      bgIcon: "#d32f2f",
-      icon: "fas fa-exclamation-triangle",
-      btnText: "حاول مجدداً",
+      icon: "fas fa-times-circle",
+      animation: "fa-shake",
+      bgGradient:
+        "linear-gradient(135deg, rgba(255,68,68,0.1), rgba(0,0,0,0.8))",
+      btnText: "إغلاق وتصحيح",
     };
   }
 
   const modalHTML = `
-        <div class="status-modal-overlay">
-            <div class="status-modal-content" style="border-color: ${
+        <div class="status-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s;">
+            <div class="status-modal-content" style="background: #1a1a1a; width: 90%; max-width: 450px; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid ${
               config.color
-            }; box-shadow: 0 0 30px ${config.color}30;">
-                <div class="status-icon-wrapper" style="background: ${
-                  config.bgIcon
-                }; box-shadow: 0 0 20px ${config.bgIcon}60;">
-                    <i class="${config.icon} fa-beat-gradient"></i>
+            }; box-shadow: 0 0 30px ${
+    config.color
+  }40; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: ${
+                  config.bgGradient
+                }; z-index: 0;"></div>
+                <div style="position: relative; z-index: 1;">
+                    <div style="font-size: 4rem; color: ${
+                      config.color
+                    }; margin-bottom: 20px;"><i class="${config.icon} ${
+    config.animation
+  }"></i></div>
+                    <h2 style="color: white; margin-bottom: 10px; font-family: 'Cairo', sans-serif;">${title}</h2>
+                    <p style="color: #ccc; font-size: 1rem; line-height: 1.6; margin-bottom: 20px;">${subtitle}</p>
+                    ${
+                      marketingDesc
+                        ? `<div style="background: rgba(255,255,255,0.05); border-right: 3px solid #00ff88; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: right;"><strong style="color: #00ff88; font-size: 0.85rem;"><i class="fas fa-magic"></i> الوصف المحسن:</strong><p style="color: #ddd; font-size: 0.9rem; margin-top: 5px; font-style: italic;">"${marketingDesc}"</p></div>`
+                        : ""
+                    }
+                    ${
+                      note
+                        ? `<div style="background: rgba(255, 193, 7, 0.1); border: 1px dashed #ffc107; padding: 10px; border-radius: 8px; margin-bottom: 20px;"><span style="color: #ffc107; font-size: 0.9rem;">${note}</span></div>`
+                        : ""
+                    }
+                    <button onclick="${
+                      type === "error"
+                        ? "closeModal()"
+                        : "window.location.href='home'"
+                    }" style="background: ${
+    config.color
+  }; color: #000; border: none; padding: 12px 35px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px ${
+    config.color
+  }40;">${config.btnText}</button>
                 </div>
-                <h3 class="status-title">${title}</h3>
-                <p class="status-subtitle">${subtitle}</p>
-
-                ${
-                  marketingDesc
-                    ? `
-                <div class="status-note-box" style="border-right-color: #00ff88; background: rgba(0,255,136,0.05);">
-                    <strong style="color: #00ff88; display:block; margin-bottom:5px; font-size:0.85rem;">
-                        <i class="fas fa-magic"></i> وصف تسويقي ذكي (AI):
-                    </strong>
-                    <span style="color: #eee; font-size: 0.9rem; font-style: italic;">"${marketingDesc}"</span>
-                </div>`
-                    : ""
-                }
-
-                ${
-                  location
-                    ? `<p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;"><i class="fas fa-map-pin"></i> المنطقة: ${location}</p>`
-                    : ""
-                }
-
-                <button onclick="${
-                  type === "error"
-                    ? "closeModal()"
-                    : "window.location.href='home'"
-                }" 
-                    class="btn-status-action" 
-                    style="background: ${config.bgIcon};">
-                    ${config.btnText}
-                </button>
             </div>
         </div>
+        <style>@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }</style>
     `;
   document.body.insertAdjacentHTML("beforeend", modalHTML);
 }
-
 function closeModal() {
   const modal = document.querySelector(".status-modal-overlay");
   if (modal) modal.remove();
@@ -578,16 +582,19 @@ async function searchLocation() {
   const query = document.getElementById("map-search-input").value;
   const resultsBox = document.getElementById("search-suggestions");
 
-  if (!query) return;
+  if (!query) {
+    resultsBox.style.display = "none";
+    return;
+  }
 
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
     query + ", Egypt"
   )}&addressdetails=1&limit=5&accept-language=ar`;
 
   try {
+    resultsBox.style.display = "block";
     resultsBox.innerHTML =
       '<div class="suggestion-item" style="justify-content:center; color:#00ff88;"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
-    resultsBox.style.display = "block";
 
     const response = await fetch(url);
     const data = await response.json();
@@ -597,24 +604,19 @@ async function searchLocation() {
     if (data.length === 0) {
       resultsBox.innerHTML =
         '<div class="suggestion-item" style="color:#ff4444; justify-content:center;">لم يتم العثور على نتائج.</div>';
+      setTimeout(() => (resultsBox.style.display = "none"), 3000);
       return;
     }
 
     data.forEach((place) => {
       const div = document.createElement("div");
       div.className = "suggestion-item";
-
-      let displayName = place.display_name.split(",")[0];
-      const addr = place.address || {};
-      if (addr.city || addr.town || addr.suburb) {
-        displayName += `، ${addr.city || addr.town || addr.suburb}`;
-      }
-
+      let displayName = place.display_name.split(",").slice(0, 3).join("، ");
       div.innerHTML = `<i class="fas fa-map-marker-alt"></i> <span>${displayName}</span>`;
-
       div.onclick = () => {
         document.getElementById("map-search-input").value = displayName;
         handleLocationSelect(place.lat, place.lon);
+        resultsBox.style.display = "none";
       };
       resultsBox.appendChild(div);
     });
@@ -694,26 +696,32 @@ async function fetchNearbyServices(lat, lng) {
 }
 
 window.locateUser = function () {
-  const btn = document.querySelector(".locate-btn");
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  const btn = document.querySelector(".locate-fab-btn");
+  const icon = btn.querySelector("i");
+
+  icon.className = "fas fa-spinner fa-spin";
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         handleLocationSelect(pos.coords.latitude, pos.coords.longitude);
-        btn.innerHTML = originalText;
+        icon.className = "fas fa-check";
+        btn.style.color = "#00ff88";
+        setTimeout(() => {
+          icon.className = "fas fa-crosshairs";
+          btn.style.color = "black";
+        }, 2000);
       },
       () => {
-        alert("يرجى تفعيل الـ GPS");
-        btn.innerHTML = originalText;
+        alert("يرجى تفعيل الـ GPS والسماح للمتصفح بالوصول للموقع.");
+        icon.className = "fas fa-crosshairs";
       }
     );
   } else {
     alert("المتصفح لا يدعم تحديد الموقع");
-    btn.innerHTML = originalText;
+    icon.className = "fas fa-crosshairs";
   }
 };
-
 async function fetchUserData() {
   try {
     const response = await fetch("/api/auth/me");
@@ -793,7 +801,9 @@ document
       return;
     }
 
-    btn.innerHTML = '<i class="fas fa-robot fa-spin"></i> جاري الفحص الذكي...';
+    btn.innerHTML =
+      '<i class="fas fa-circle-notch fa-spin"></i> جاري المعالجة والنشر...';
+    btn.classList.add("btn-loading");
     btn.disabled = true;
 
     const formData = new FormData(e.target);
