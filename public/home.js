@@ -139,7 +139,10 @@ async function fetchLatestProperties(isFirstLoad = false) {
     properties.forEach((prop) => {
       const bgImage = prop.imageUrl || "logo.png";
       let priceText = parseInt(prop.price || 0).toLocaleString();
-      const isSale = prop.type === "بيع" || prop.type === "buy";
+      const typeLower = prop.type ? String(prop.type).trim().toLowerCase() : "";
+      const isSale =
+        typeLower === "buy" || typeLower === "بيع" || typeLower === "sale";
+
       const typeClass = isSale ? "is-sale" : "is-rent";
       const typeText = isSale ? "للبيع" : "للإيجار";
 
