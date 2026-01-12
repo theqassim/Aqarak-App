@@ -1097,26 +1097,53 @@ function renderEditImages() {
   const container = document.getElementById("edit-images-container");
   container.innerHTML = "";
 
+  // تنسيق الشبكة (Grid)
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(80px, 1fr))";
+  container.style.gap = "10px";
+
+  // عرض الصور القديمة (المحفوظة)
   currentEditImages.forEach((url, index) => {
     const div = document.createElement("div");
     div.className = "img-box";
-    div.innerHTML = `<img src="${url}"><button type="button" onclick="removeOldImage(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
+    div.style.cssText = "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #333;";
+
+    div.innerHTML = `
+        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+        <button type="button" onclick="deleteEditImage(${index}, false)" 
+            class="delete-img-btn"
+            title="حذف الصورة"
+            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #ff4444; border: 1px solid #ff4444; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10;">
+            <i class="fas fa-times" style="font-size: 10px;"></i>
+        </button>
+    `;
     container.appendChild(div);
   });
 
+  // عرض الصور الجديدة (المرفوعة حالياً)
   newEditFiles.forEach((file, index) => {
     const div = document.createElement("div");
     div.className = "img-box";
-    div.style.borderColor = "#00ff88";
+    div.style.cssText = "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px dashed #00ff88;";
+
     const img = document.createElement("img");
-    img.style.opacity = "0.7";
+    img.style.cssText = "width: 100%; height: 100%; object-fit: cover; opacity: 0.8;";
     div.appendChild(img);
+
     const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target.result;
-    };
+    reader.onload = (e) => { img.src = e.target.result; };
     reader.readAsDataURL(file);
-    div.innerHTML += `<button type="button" onclick="removeNewFile(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
+
+    const btnDiv = document.createElement("div");
+    btnDiv.innerHTML = `
+        <button type="button" onclick="deleteEditImage(${index}, true)" 
+            class="delete-img-btn"
+            title="إلغاء الرفع"
+            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #00ff88; border: 1px solid #00ff88; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10;">
+            <i class="fas fa-times" style="font-size: 10px;"></i>
+        </button>
+    `;
+    div.appendChild(btnDiv.firstElementChild);
     container.appendChild(div);
   });
 }
