@@ -1120,69 +1120,13 @@ function renderEditImages() {
     container.appendChild(div);
   });
 }
-
-function renderEditImages() {
-  const container = document.getElementById("edit-images-container");
-  container.innerHTML = "";
-
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(80px, 1fr))";
-  container.style.gap = "10px";
-
-  currentEditImages.forEach((url, index) => {
-    const div = document.createElement("div");
-    div.className = "img-box";
-    div.style.cssText =
-      "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #333;";
-
-    div.innerHTML = `
-        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
-        <button type="button" onclick="deleteEditImage(${index}, false)" 
-            class="delete-img-btn"
-            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #ff4444; border: 1px solid #ff4444; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
-            <i class="fas fa-times" style="font-size: 10px;"></i>
-        </button>
-    `;
-    container.appendChild(div);
-  });
-
-  newEditFiles.forEach((file, index) => {
-    const div = document.createElement("div");
-    div.className = "img-box";
-    div.style.cssText =
-      "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px dashed #00ff88;";
-
-    const img = document.createElement("img");
-    img.style.cssText =
-      "width: 100%; height: 100%; object-fit: cover; opacity: 0.8;";
-    div.appendChild(img);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    const btn = document.createElement("div");
-    btn.innerHTML = `
-        <button type="button" onclick="deleteEditImage(${index}, true)" 
-            class="delete-img-btn"
-            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #00ff88; border: 1px solid #00ff88; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
-            <i class="fas fa-times" style="font-size: 10px;"></i>
-        </button>
-    `;
-    div.appendChild(btn.firstElementChild);
-    container.appendChild(div);
-  });
-}
-
 window.deleteEditImage = function (index, isNew) {
   const totalImages = currentEditImages.length + newEditFiles.length;
 
   if (totalImages <= 1) {
     showWarningAnim(
-      "تنبيه هام",
-      "لا يمكن حذف الصورة الأخيرة، يجب أن يحتوي العقار على صورة واحدة على الأقل."
+      "عفواً، لا يمكن الحذف",
+      "يجب أن يحتوي العقار على <b>صورة واحدة</b> على الأقل لضمان جودة الإعلان."
     );
     return;
   }
@@ -1588,73 +1532,88 @@ window.handleWhatsappClick = async (link, ownerPhone) => {
   window.open(link, "_blank");
 };
 
-function showWarningAnim(title, msg) {
-  const oldW = document.getElementById("custom-warning-modal");
+window.showWarningAnim = (title, msg) => {
+  const oldW = document.getElementById("luxury-warning-modal");
   if (oldW) oldW.remove();
 
-  const style = document.createElement("style");
-  style.innerHTML = `
-    @keyframes modalPop {
-        0% { transform: scale(0.8); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes iconPulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-        70% { transform: scale(1.1); box-shadow: 0 0 20px 20px rgba(255, 68, 68, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
-    }
-    .warning-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(5px);
-        z-index: 10000;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .warning-box {
-        background: #111;
-        border: 1px solid #333;
-        border-radius: 20px;
-        padding: 40px 30px;
-        text-align: center;
-        width: 300px;
-        position: relative;
-        animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-    }
-    .warning-icon {
-        width: 70px; height: 70px;
-        background: rgba(255, 68, 68, 0.1);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 20px auto;
-        color: #ff4444;
-        font-size: 30px;
-        animation: iconPulse 2s infinite;
-    }
-    .warning-btn {
-        background: #fff; color: #000;
-        border: none; padding: 10px 25px;
-        border-radius: 50px;
-        font-weight: bold;
-        margin-top: 20px;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-    .warning-btn:hover { transform: scale(1.05); }
-  `;
-  document.head.appendChild(style);
+  const styleId = "luxury-warning-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+        @keyframes luxuryEntrance {
+            0% { transform: scale(0.7) translateY(50px); opacity: 0; filter: blur(10px); }
+            60% { transform: scale(1.05) translateY(-10px); opacity: 1; filter: blur(0); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+        }
+        .luxury-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .luxury-box {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+            border: 1px solid #FFD700;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+            position: relative;
+            animation: luxuryEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .luxury-icon-ring {
+            width: 80px; height: 80px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px auto;
+            animation: glowPulse 2s infinite;
+            background: rgba(255, 215, 0, 0.05);
+        }
+        .luxury-icon {
+            color: #FFD700;
+            font-size: 35px;
+        }
+        .luxury-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            border: none; padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+        }
+        .luxury-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+      `;
+    document.head.appendChild(style);
+  }
 
   const html = `
-    <div id="custom-warning-modal" class="warning-overlay">
-        <div class="warning-box">
-            <div class="warning-icon">
-                <i class="fas fa-exclamation"></i>
+    <div id="luxury-warning-modal" class="luxury-overlay" onclick="if(event.target === this) this.remove()">
+        <div class="luxury-box">
+            <div class="luxury-icon-ring">
+                <i class="fas fa-hand-paper luxury-icon"></i>
             </div>
-            <h3 style="color: #fff; margin: 0 0 10px 0;">${title}</h3>
-            <p style="color: #888; font-size: 0.95rem; margin: 0;">${msg}</p>
-            <button class="warning-btn" onclick="document.getElementById('custom-warning-modal').remove()">حسناً</button>
+            <h3 style="color: #fff; margin: 0 0 10px 0; font-family: 'Cairo', sans-serif;">${title}</h3>
+            <p style="color: #aaa; font-size: 0.95rem; margin: 0; line-height: 1.6;">${msg}</p>
+            <button class="luxury-btn" onclick="document.getElementById('luxury-warning-modal').remove()">حسناً، فهمت</button>
         </div>
     </div>
   `;
   document.body.insertAdjacentHTML("beforeend", html);
-}
+};
