@@ -192,6 +192,13 @@ window.loadUserData = async function () {
         const adminCard = document.getElementById("admin-card");
         if (adminCard) adminCard.style.display = "block";
       }
+
+      if (data.username) {
+        const viewProfileBtn = document.getElementById("view-my-profile-btn");
+        if (viewProfileBtn) {
+          viewProfileBtn.href = `profile?u=${data.username}`;
+        }
+      }
     } else {
       window.location.href = "authentication";
     }

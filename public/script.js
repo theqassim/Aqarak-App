@@ -26,11 +26,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const phone = document.getElementById("login-phone").value;
       const egyptPhoneRegex = /^01[0-2,5]{1}[0-9]{8}$/;
-      
+
       if (!egyptPhoneRegex.test(phone)) {
-        showWarning("رقم الهاتف غير صحيح. تأكد أنه يبدأ بـ 010, 011, 012, أو 015 ومكون من 11 رقم.");
-        if(typeof btn !== 'undefined') { btn.innerHTML = originalText; btn.disabled = false; }
-        if(typeof submitBtn !== 'undefined') { submitBtn.innerHTML = originalText; submitBtn.disabled = false; }
+        showWarning(
+          "رقم الهاتف غير صحيح. تأكد أنه يبدأ بـ 010, 011, 012, أو 015 ومكون من 11 رقم."
+        );
+        if (typeof btn !== "undefined") {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        if (typeof submitBtn !== "undefined") {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
         return;
       }
       const password = document.getElementById("login-password").value;
@@ -74,14 +82,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   }
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get("mode") === "register") {
-  setTimeout(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("mode") === "register") {
+    setTimeout(() => {
       switchTab("register");
-  }, 100);
-}
+    }, 100);
+  }
 
-const registerForm = document.getElementById("register-form");
+  const registerForm = document.getElementById("register-form");
   let isOtpSent = false;
   let isUsernameValid = false;
   let typingTimer;
@@ -155,10 +163,12 @@ const registerForm = document.getElementById("register-form");
           showWarning("رقم الهاتف غير كامل، يجب أن يكون 11 رقم.");
           return;
         }
-        
+
         const egyptPhoneRegex = /^01[0-2,5]{1}[0-9]{8}$/;
         if (!egyptPhoneRegex.test(phone)) {
-          showWarning("رقم الهاتف غير صحيح. يجب أن يبدأ بـ 010, 011, 012, أو 015.");
+          showWarning(
+            "رقم الهاتف غير صحيح. يجب أن يبدأ بـ 010, 011, 012, أو 015."
+          );
           return;
         }
 
@@ -273,25 +283,42 @@ window.previewProfileImage = function (event) {
     reader.readAsDataURL(file);
   }
 };
+
 window.switchTab = function (tab) {
   const loginWrapper = document.getElementById("login-form-wrapper");
   const registerWrapper = document.getElementById("register-form-wrapper");
   const btns = document.querySelectorAll(".tab-btn");
+
+  const logoContainer = document.querySelector(".logo-flip-container");
+
   document.querySelectorAll(".error-msg").forEach((e) => (e.textContent = ""));
 
   if (tab === "login") {
     loginWrapper.style.display = "block";
     registerWrapper.style.display = "none";
+
     btns[0].classList.add("active");
     btns[1].classList.remove("active");
+
+    if (logoContainer) {
+      logoContainer.classList.add("disabled-flip");
+      logoContainer.removeAttribute("onclick");
+    }
   } else {
     loginWrapper.style.display = "none";
     registerWrapper.style.display = "block";
+
     btns[0].classList.remove("active");
     btns[1].classList.add("active");
+
+    if (logoContainer) {
+      logoContainer.classList.remove("disabled-flip");
+      logoContainer.onclick = function () {
+        document.getElementById("profile-upload").click();
+      };
+    }
   }
 };
-
 window.checkStrength = function () {
   const password = document.getElementById("reg-password").value;
   const bar = document.getElementById("strength-bar");
@@ -411,7 +438,6 @@ window.showWarning = function (message) {
 window.closeWarningModal = function () {
   document.getElementById("warningModal").style.display = "none";
 };
-
 
 let pendingPhoneNumber = "";
 

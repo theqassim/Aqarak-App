@@ -325,6 +325,7 @@ const egyptLocations = {
 };
 let selectedFiles = [];
 let map, marker, circle;
+let isMapEnabled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await fetchUserData();
@@ -338,9 +339,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     toggleFields();
   }
 
-  initMap();
-});
+  initMap(true);
 
+  checkLocationOnLoad();
+});
 function initLocationSelects() {
   const govSelect = document.getElementById("gov-select");
   const citySelect = document.getElementById("city-select");
@@ -545,7 +547,7 @@ function toggleFields() {
       if (groups.finish) groups.finish.style.display = "block";
   }
 }
-function initMap() {
+function initMap(startDisabled = false) {
   const defaultLat = 30.0444;
   const defaultLng = 31.2357;
 
@@ -560,24 +562,30 @@ function initMap() {
   ).addTo(map);
 
   map.on("click", async function (e) {
+    if (!isMapEnabled) return;
     handleLocationSelect(e.latlng.lat, e.latlng.lng);
   });
 
   const searchInput = document.getElementById("map-search-input");
   if (searchInput) {
     searchInput.addEventListener("keypress", function (e) {
+      if (!isMapEnabled) return;
       if (e.key === "Enter") {
         e.preventDefault();
         searchLocation();
       }
     });
     searchInput.addEventListener("input", function () {
+      if (!isMapEnabled) return;
       if (this.value.length < 3)
         document.getElementById("search-suggestions").style.display = "none";
     });
   }
-}
 
+  if (startDisabled) {
+    disableMapUI();
+  }
+}
 async function searchLocation() {
   const query = document.getElementById("map-search-input").value;
   const resultsBox = document.getElementById("search-suggestions");
@@ -862,3 +870,111 @@ document.addEventListener("input", function (e) {
     e.target.value = val.replace(/[^0-9.]/g, "");
   }
 });
+
+function checkLocationOnLoad() {
+  const userDecision = localStorage.getItem("user_loc_preference");
+
+  if (navigator.geolocation) {
+    navigator.permissions.query({ name: "geolocation" }).then((result) => {
+      if (result.state === "granted") {
+        enableMapUI();
+        locateUserSilent();
+      } else if (result.state === "denied") {
+        disableMapUI();
+      } else {
+        disableMapUI();
+
+        if (userDecision !== "later") {
+          openPermModal();
+        }
+      }
+
+      result.onchange = function () {
+        if (this.state === "granted") enableMapUI();
+        else disableMapUI();
+      };
+    });
+  } else {
+    disableMapUI();
+  }
+}
+
+function requestLocationAccess() {
+  closePermModal();
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        localStorage.setItem("user_loc_preference", "granted");
+        enableMapUI();
+        handleLocationSelect(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        console.warn("Location access denied or error:", err);
+        disableMapUI();
+      },
+      { enableHighAccuracy: true }
+    );
+  } else {
+    alert("المتصفح لا يدعم تحديد الموقع");
+  }
+}
+
+function locateUserSilent() {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      handleLocationSelect(pos.coords.latitude, pos.coords.longitude);
+    },
+    () => {}
+  );
+}
+
+function enableMapUI() {
+  isMapEnabled = true;
+  const wrapper = document.querySelector(".map-wrapper");
+  if (wrapper) wrapper.classList.remove("map-disabled");
+
+  const searchInput = document.getElementById("map-search-input");
+  const searchBtn = document.querySelector(".map-search-btn");
+  const locateBtn = document.querySelector(".locate-fab-btn");
+  const overlay = document.getElementById("mapLockOverlay");
+
+  if (searchInput) searchInput.disabled = false;
+  if (searchBtn) searchBtn.disabled = false;
+  if (locateBtn) locateBtn.disabled = false;
+  if (overlay) overlay.style.display = "none";
+}
+
+function disableMapUI() {
+  isMapEnabled = false;
+  const wrapper = document.querySelector(".map-wrapper");
+  if (wrapper) wrapper.classList.add("map-disabled");
+
+  const searchInput = document.getElementById("map-search-input");
+  const searchBtn = document.querySelector(".map-search-btn");
+  const locateBtn = document.querySelector(".locate-fab-btn");
+  const overlay = document.getElementById("mapLockOverlay");
+
+  if (searchInput) searchInput.disabled = true;
+  if (searchBtn) searchBtn.disabled = true;
+  if (locateBtn) locateBtn.disabled = true;
+
+  if (overlay) {
+    overlay.style.display = "flex";
+    overlay.onclick = openPermModal;
+  }
+}
+
+function openPermModal() {
+  const modal = document.getElementById("locationPermModal");
+  if (modal) modal.classList.add("show");
+}
+
+function closePermModal() {
+  const modal = document.getElementById("locationPermModal");
+  if (modal) modal.classList.remove("show");
+
+  if (localStorage.getItem("user_loc_preference") !== "granted") {
+    localStorage.setItem("user_loc_preference", "later");
+  }
+}

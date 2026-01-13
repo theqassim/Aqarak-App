@@ -892,122 +892,52 @@ function injectEditModal(prop) {
   const oldModal = document.getElementById("edit-modal");
   if (oldModal) oldModal.remove();
 
-  const isSale =
-    prop.type === "buy" || prop.type === "بيع" || prop.type === "sale";
-  const isRent =
-    prop.type === "rent" || prop.type === "إيجار" || prop.type === "rent";
-
   const modalHTML = `
-        <div id="edit-modal" class="edit-modal-overlay" style="backdrop-filter: blur(8px); background: rgba(0,0,0,0.8);">
-            <div class="edit-modal-content" style="background: #0a0a0a; border: 1px solid #222; box-shadow: 0 20px 50px rgba(0,0,0,0.9); max-width: 600px; width: 95%;">
+        <div id="edit-modal" class="edit-modal-overlay">
+            <div class="edit-modal-content">
+                <h3 style="color:#00ff88; margin-bottom:20px; text-align:center;">تعديل بيانات العقار</h3>
                 
-                <h3 style="color:#fff; margin-bottom:25px; text-align:center; font-family: sans-serif; letter-spacing: 1px;">
-                    <span style="border-bottom: 2px solid #00ff88; padding-bottom: 5px;">تعديل بيانات العقار</span>
-                </h3>
-                
-                <div style="background: #111; padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #222;">
-                    <label style="color: #888; font-size: 0.9rem; display: block; margin-bottom: 15px; display:flex; justify-content:space-between;">
-                        <span>📸 صور العقار</span>
-                        <span style="font-size:0.8rem; color:#444;">يجب الإبقاء على صورة واحدة</span>
-                    </label>
-                    <div id="edit-images-container" class="img-grid-container" style="gap:10px;"></div>
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #555;">
+                    <label style="color: #00ff88; font-weight: bold; display: block; margin-bottom: 10px;">📸 صور العقار الحالية</label>
+                    <div id="edit-images-container" class="img-grid-container"></div>
                     
                     <input type="file" id="new-images-input" multiple accept="image/*" style="display: none;">
                     <button type="button" onclick="document.getElementById('new-images-input').click()" 
-                        class="btn-login-action" style="width: 100%; border: 1px dashed #333; color: #fff; margin-top: 15px; background: #1a1a1a; transition:0.3s;">
-                        <i class="fas fa-camera"></i> إضافة صور جديدة
+                        class="btn-login-action" style="width: 100%; border-color: #2196F3; color: #2196F3; margin-top: 15px;">
+                        <i class="fas fa-plus-circle"></i> إضافة صور جديدة
                     </button>
                 </div>
 
                 <form id="edit-property-form">
                     <div class="edit-input-group">
-                        <label style="color:#888; font-size:0.9rem; margin-bottom:8px;">نوع العرض</label>
-                        <div class="neon-toggle-wrapper" style="display:flex; gap:10px; background:#000; padding:6px; border-radius:12px; border:1px solid #222;">
-                            <label class="neon-radio-label">
-                                <input type="radio" name="type" value="buy" ${
-                                  isSale ? "checked" : ""
-                                }>
-                                <span class="neon-radio-btn sale-btn"><i class="fas fa-handshake"></i> بيع</span>
-                            </label>
-                            <label class="neon-radio-label">
-                                <input type="radio" name="type" value="rent" ${
-                                  isRent ? "checked" : ""
-                                }>
-                                <span class="neon-radio-btn rent-btn"><i class="fas fa-clock"></i> إيجار</span>
-                            </label>
-                        </div>
-                        <style>
-                            .neon-radio-label { flex: 1; cursor: pointer; }
-                            .neon-radio-label input { display: none; }
-                            .neon-radio-btn { 
-                                display: flex; align-items: center; justify-content: center; gap: 8px;
-                                width: 100%; padding: 12px; border-radius: 8px; 
-                                color: #555; font-weight: 500; transition: all 0.3s ease;
-                                background: transparent; border: 1px solid transparent;
-                            }
-                            /* Active States */
-                            .neon-radio-label input:checked + .sale-btn {
-                                background: #111; color: #00ff88; border-color: #00ff88;
-                                box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
-                            }
-                            .neon-radio-label input:checked + .rent-btn {
-                                background: #111; color: #00d4ff; border-color: #00d4ff;
-                                box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
-                            }
-                            /* Input Styles */
-                            .dark-input {
-                                background: #111 !important; border: 1px solid #222 !important; 
-                                color: #fff !important; padding: 12px !important; border-radius: 8px !important;
-                                width: 100%; box-sizing: border-box;
-                            }
-                            .dark-input:focus { border-color: #444 !important; outline: none; }
-                        </style>
-                    </div>
-
-                    <div class="edit-input-group">
-                        <label style="color:#888;">العنوان</label>
-                        <input type="text" name="title" class="dark-input" value="${
-                          prop.title
-                        }" required>
+                        <label>العنوان</label>
+                        <input type="text" name="title" class="edit-input" value="${prop.title}" required>
                     </div>
                     <div class="edit-input-group">
-                        <label style="color:#888;">السعر</label>
-                        <input type="text" name="price" class="dark-input" value="${
-                          prop.price
-                        }" required>
+                        <label>السعر</label>
+                        <input type="text" name="price" class="edit-input" value="${prop.price}" required>
                     </div>
-                    
                     <div class="edit-input-group" style="display:flex; gap:10px;">
                         <div style="flex:1;">
-                            <label style="color:#888;">المساحة</label>
-                            <input type="number" name="area" class="dark-input" value="${
-                              prop.area
-                            }" required>
+                            <label>المساحة</label>
+                            <input type="number" name="area" class="edit-input" value="${prop.area}" required>
                         </div>
                         <div style="flex:1;">
-                            <label style="color:#888;">الغرف</label>
-                            <input type="number" name="rooms" class="dark-input" value="${
-                              prop.rooms
-                            }">
+                            <label>الغرف</label>
+                            <input type="number" name="rooms" class="edit-input" value="${prop.rooms}">
                         </div>
                         <div style="flex:1;">
-                            <label style="color:#888;">الحمامات</label>
-                            <input type="number" name="bathrooms" class="dark-input" value="${
-                              prop.bathrooms
-                            }">
+                            <label>الحمامات</label>
+                            <input type="number" name="bathrooms" class="edit-input" value="${prop.bathrooms}">
                         </div>
                     </div>
-
                     <div class="edit-input-group">
-                        <label style="color:#888;">الوصف</label>
-                        <textarea name="description" class="dark-input" rows="4">${
-                          prop.description
-                        }</textarea>
+                        <label>الوصف</label>
+                        <textarea name="description" class="edit-input" rows="4">${prop.description}</textarea>
                     </div>
-
-                    <div class="edit-actions" style="margin-top: 30px; gap: 10px; display:flex;">
-                        <button type="submit" class="btn-save" style="flex:2; background: #fff; color: #000; border: none; font-weight:bold; padding:12px; border-radius:8px;">حفظ التغييرات</button>
-                        <button type="button" onclick="closeEditModal()" class="btn-cancel" style="flex:1; background: transparent; border: 1px solid #333; color: #888; border-radius:8px;">إلغاء</button>
+                    <div class="edit-actions">
+                        <button type="submit" class="btn-save">حفظ التعديلات</button>
+                        <button type="button" onclick="closeEditModal()" class="btn-cancel">إلغاء</button>
                     </div>
                 </form>
             </div>
@@ -1029,19 +959,18 @@ function injectEditModal(prop) {
     .getElementById("edit-property-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      const selectedType = document.querySelector(
-        'input[name="type"]:checked'
-      ).value;
-
       if (window.isPaymentActive) {
-        if (!confirm("⚠️ سيتم خصم 1 نقطة. موافق؟")) {
+        if (
+          !confirm(
+            "⚠️ تنبيه هام:\nتعديل العقار سيخصم 1 نقطة من رصيدك.\n\nهل أنت متأكد من المتابعة؟"
+          )
+        ) {
           return;
         }
       }
       const btn = e.target.querySelector(".btn-save");
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
       btn.disabled = true;
 
       const formData = new FormData();
@@ -1051,7 +980,6 @@ function injectEditModal(prop) {
       formData.append("rooms", e.target.rooms.value);
       formData.append("bathrooms", e.target.bathrooms.value);
       formData.append("description", e.target.description.value);
-      formData.append("type", selectedType);
 
       formData.append("keptImages", JSON.stringify(currentEditImages));
       newEditFiles.forEach((file) => formData.append("newImages", file));
@@ -1062,28 +990,30 @@ function injectEditModal(prop) {
           body: formData,
         });
         const data = await res.json();
+
         closeEditModal();
+
         if (res.ok) {
           window.showStatusModal(
             "success",
-            "تم التعديل",
-            "تم تحديث البيانات بنجاح"
+            "تم التعديل بنجاح!",
+            "تم تحديث بيانات العقار ونشره."
           );
         } else {
           if (data.status === "rejected") {
             window.showStatusModal(
               "rejected",
-              "مرفوض",
-              "المحتوى مخالف",
+              "عذراً، التعديل مرفوض",
+              "يحتوي التعديل على مخالفة لسياسات النشر.",
               data.reason
             );
           } else {
-            alert(data.message);
+            alert("❌ " + (data.message || "حدث خطأ ما"));
           }
         }
       } catch (err) {
         console.error(err);
-        alert("خطأ");
+        alert("خطأ في الاتصال");
       } finally {
         if (document.querySelector(".btn-save")) {
           btn.innerHTML = originalText;
@@ -1097,81 +1027,38 @@ function renderEditImages() {
   const container = document.getElementById("edit-images-container");
   container.innerHTML = "";
 
-  // تنسيق الشبكة (Grid)
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(auto-fill, minmax(80px, 1fr))";
-  container.style.gap = "10px";
-
-  // عرض الصور القديمة (المحفوظة)
   currentEditImages.forEach((url, index) => {
     const div = document.createElement("div");
     div.className = "img-box";
-    div.style.cssText = "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #333;";
-
-    div.innerHTML = `
-        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
-        <button type="button" onclick="deleteEditImage(${index}, false)" 
-            class="delete-img-btn"
-            title="حذف الصورة"
-            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #ff4444; border: 1px solid #ff4444; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10;">
-            <i class="fas fa-times" style="font-size: 10px;"></i>
-        </button>
-    `;
+    div.innerHTML = `<img src="${url}"><button type="button" onclick="removeOldImage(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
     container.appendChild(div);
   });
 
-  // عرض الصور الجديدة (المرفوعة حالياً)
   newEditFiles.forEach((file, index) => {
     const div = document.createElement("div");
     div.className = "img-box";
-    div.style.cssText = "position: relative; height: 80px; border-radius: 8px; overflow: hidden; border: 1px dashed #00ff88;";
-
+    div.style.borderColor = "#00ff88";
     const img = document.createElement("img");
-    img.style.cssText = "width: 100%; height: 100%; object-fit: cover; opacity: 0.8;";
+    img.style.opacity = "0.7";
     div.appendChild(img);
-
     const reader = new FileReader();
-    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
-
-    const btnDiv = document.createElement("div");
-    btnDiv.innerHTML = `
-        <button type="button" onclick="deleteEditImage(${index}, true)" 
-            class="delete-img-btn"
-            title="إلغاء الرفع"
-            style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.8); color: #00ff88; border: 1px solid #00ff88; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10;">
-            <i class="fas fa-times" style="font-size: 10px;"></i>
-        </button>
-    `;
-    div.appendChild(btnDiv.firstElementChild);
+    div.innerHTML += `<button type="button" onclick="removeNewFile(${index})" class="delete-img-btn"><i class="fas fa-times"></i></button>`;
     container.appendChild(div);
   });
 }
-window.deleteEditImage = function (index, isNew) {
-  const totalImages = currentEditImages.length + newEditFiles.length;
 
-  if (totalImages <= 1) {
-    showWarningAnim(
-      "عفواً، لا يمكن الحذف",
-      "يجب أن يحتوي العقار على <b>صورة واحدة</b> على الأقل لضمان جودة الإعلان."
-    );
-    return;
-  }
-
-  if (isNew) {
-    newEditFiles.splice(index, 1);
-  } else {
-    currentEditImages.splice(index, 1);
-  }
-
+window.removeOldImage = (index) => {
+  currentEditImages.splice(index, 1);
   renderEditImages();
 };
-
-window.closeEditModal = () => {
-  const modal = document.getElementById("edit-modal");
-  if (modal) modal.remove();
+window.removeNewFile = (index) => {
+  newEditFiles.splice(index, 1);
+  renderEditImages();
 };
-
 window.openEditPropertyModal = () => {
   document.getElementById("edit-modal").style.display = "flex";
 };
@@ -1557,90 +1444,4 @@ window.handleWhatsappClick = async (link, ownerPhone) => {
   }
 
   window.open(link, "_blank");
-};
-
-window.showWarningAnim = (title, msg) => {
-  const oldW = document.getElementById("luxury-warning-modal");
-  if (oldW) oldW.remove();
-
-  const styleId = "luxury-warning-style";
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.innerHTML = `
-        @keyframes luxuryEntrance {
-            0% { transform: scale(0.7) translateY(50px); opacity: 0; filter: blur(10px); }
-            60% { transform: scale(1.05) translateY(-10px); opacity: 1; filter: blur(0); }
-            100% { transform: scale(1) translateY(0); }
-        }
-        @keyframes glowPulse {
-            0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
-            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
-            100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
-        }
-        .luxury-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 99999;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .luxury-box {
-            background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
-            border: 1px solid #FFD700;
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            width: 90%;
-            max-width: 350px;
-            position: relative;
-            animation: luxuryEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
-        .luxury-icon-ring {
-            width: 80px; height: 80px;
-            border: 2px solid #FFD700;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px auto;
-            animation: glowPulse 2s infinite;
-            background: rgba(255, 215, 0, 0.05);
-        }
-        .luxury-icon {
-            color: #FFD700;
-            font-size: 35px;
-        }
-        .luxury-btn {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: #000;
-            border: none; padding: 12px 35px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1rem;
-            margin-top: 25px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
-        }
-        .luxury-btn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-        }
-      `;
-    document.head.appendChild(style);
-  }
-
-  const html = `
-    <div id="luxury-warning-modal" class="luxury-overlay" onclick="if(event.target === this) this.remove()">
-        <div class="luxury-box">
-            <div class="luxury-icon-ring">
-                <i class="fas fa-hand-paper luxury-icon"></i>
-            </div>
-            <h3 style="color: #fff; margin: 0 0 10px 0; font-family: 'Cairo', sans-serif;">${title}</h3>
-            <p style="color: #aaa; font-size: 0.95rem; margin: 0; line-height: 1.6;">${msg}</p>
-            <button class="luxury-btn" onclick="document.getElementById('luxury-warning-modal').remove()">حسناً، فهمت</button>
-        </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML("beforeend", html);
 };

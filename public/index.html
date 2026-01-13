@@ -1,48 +1,52 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta charset="UTF-8" />
-    <title>عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر</title>
+    <title>عقارك - تسجيل الدخول/انشاء حساب | بوابتك العقارية الأولى للبيع والشراء في مصر</title>
+
     <meta
       name="description"
-      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+      content="منصة عقارك (Aqarak) هي الوجهة العقارية الأذكى في مصر. سجل الآن لبيع، شراء، أو تأجير العقارات (شقق، فيلات، أراضي) بسهولة وبدون عمولات خفية. نوفر لك أدوات بحث متطورة، فحص قانوني، وتواصل مباشر مع الملاك. انضم لأكبر مجتمع عقاري مصري."
     />
+
     <meta
       name="keywords"
-      content="عقارات مصر, بيع شقق, شراء عقارات, إيجار شقق, عقارك, Aqarak, استثمار عقاري"
+      content="عقارك, Aqarak, عقارك مصر, Aqarak EG, عقارات مصر, بيع وشراء عقارات, شقق للبيع, شقق للايجار, سمسار اونلاين, تسويق عقاري, تمويل عقاري, العاصمة الإدارية, التجمع الخامس, عقارات القاهرة, منصة عقارية"
     />
-    <link rel="canonical" href="https://www.aqarakeg.com/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.aqarakeg.com/" />
     <meta
       property="og:title"
-      content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر"
+      content="عقارك (Aqarak) | سجل دخولك للمنصة العقارية الأذكى"
     />
     <meta
       property="og:description"
-      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+      content="ابحث عن عقار أحلامك أو اعرض عقارك للبيع في دقائق. منصة عقارك توفر لك الأمان، السرعة، والانتشار الواسع في سوق العقارات المصري. سجل الآن مجاناً!"
     />
     <meta property="og:image" content="https://www.aqarakeg.com/logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://www.aqarakeg.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta
-      property="twitter:title"
-      content="عقارك - تسجيل الدخول | المنصة العقارية الأذكى في مصر"
+      name="twitter:title"
+      content="عقارك (Aqarak) | سوق العقارات المصري في جيبك"
     />
     <meta
-      property="twitter:description"
-      content="سجل دخولك إلى منصة عقارك، الوجهة الأولى لبيع وشراء وإيجار العقارات في مصر. استمتع بتجربة عقارية آمنة ومدعومة بالذكاء الاصطناعي."
+      name="twitter:description"
+      content="منصة عقارك تجمع لك أفضل الفرص العقارية في مصر. بيع واشتري وأجر بأمان."
     />
-    <meta
-      property="twitter:image"
-      content="https://www.aqarakeg.com/logo.png"
+    <meta name="twitter:image" content="https://www.aqarakeg.com/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
     />
+
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+
     <link rel="stylesheet" href="styles.css" />
     <link
       rel="stylesheet"
@@ -514,70 +518,81 @@
         }
       }
 
-.modal-buttons-container {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 25px;
-  width: 100%;
-}
+      .modal-buttons-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 25px;
+        width: 100%;
+      }
 
-.modal-btn {
-  border: none;
-  border-radius: 50px;
-  padding: 12px 25px;
-  font-size: 1rem;
-  font-family: "Cairo", sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  flex: 1;
-  max-width: 200px;
-}
+      .modal-btn {
+        border: none;
+        border-radius: 50px;
+        padding: 12px 25px;
+        font-size: 1rem;
+        font-family: "Cairo", sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        flex: 1;
+        max-width: 200px;
+      }
 
-.btn-yes {
-  background: linear-gradient(45deg, var(--neon-primary), #00cc6a);
-  color: black;
-  box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
-}
-.btn-yes:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
-}
+      .btn-yes {
+        background: linear-gradient(45deg, var(--neon-primary), #00cc6a);
+        color: black;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+      }
+      .btn-yes:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
+      }
 
-.btn-no {
-  background: #333;
-  color: #ccc;
-  border: 1px solid #444;
-}
-.btn-no:hover {
-  background: #444;
-  color: white;
-  border-color: #666;
-}
+      .btn-no {
+        background: #333;
+        color: #ccc;
+        border: 1px solid #444;
+      }
+      .btn-no:hover {
+        background: #444;
+        color: white;
+        border-color: #666;
+      }
 
-@media (max-width: 480px) {
-  .modal-buttons-container {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .modal-btn {
-    width: 100%;
-    max-width: 100%;
-    padding: 14px;
-  }
-}
+      @media (max-width: 480px) {
+        .modal-buttons-container {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .modal-btn {
+          width: 100%;
+          max-width: 100%;
+          padding: 14px;
+        }
+      }
+
+      .logo-flip-container:not(.disabled-flip):hover .flip-inner {
+        transform: rotateY(180deg);
+        cursor: pointer;
+      }
+
+      .logo-flip-container.disabled-flip {
+        pointer-events: none;
+        cursor: default;
+      }
+
+      .logo-flip-container.disabled-flip .flip-inner {
+        transform: rotateY(0deg) !important;
+      }
     </style>
   </head>
   <body>
     <div class="auth-container">
       <div class="auth-frame">
         <div class="auth-header">
-          <div
-            class="logo-flip-container"
-            onclick="document.getElementById('profile-upload').click()"
-          >
+          <div class="logo-flip-container">
             <div class="flip-inner" id="flip-box">
               <div class="flip-front">
                 <img src="logo.jpg" alt="عقارك" />
@@ -637,267 +652,314 @@
 
         <div id="login-form-wrapper" class="fade-in">
           <form id="login-form">
-  <div class="input-group">
-    <label>رقم الواتساب</label>
-    <input
-      type="tel"
-      id="login-phone"
-      class="neon-input"
-      placeholder="01xxxxxxxxx"
-      required
-      maxlength="11"
-      pattern="[0-9]{11}"
-      oninvalid="this.setCustomValidity('من فضلك أدخل رقم هاتف صحيح (11 رقم)')"
-      oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^0-9]/g, '')"
-    />
-    <span id="login-phone-error" class="error-msg"></span>
-  </div>
-  <div class="input-group">
-    <label>كلمة المرور</label>
-    <div class="password-wrapper">
-      <input
-        type="password"
-        id="login-password"
-        class="neon-input"
-        placeholder="••••••••"
-        required
-        oninvalid="this.setCustomValidity('يرجى إدخال كلمة المرور')"
-        oninput="this.setCustomValidity('')"
-      />
-      <i class="fas fa-eye toggle-password" onclick="togglePassword('login-password', this)"></i>
-    </div>
-    <span id="login-pass-error" class="error-msg"></span>
-  </div>
-  <button type="submit" class="btn-submit">دخول</button>
-  <span class="forgot-link" onclick="openForgotModal()">نسيت كلمة المرور؟</span>
-</form>
+            <div class="input-group">
+              <label>رقم الواتساب</label>
+              <input
+                type="tel"
+                id="login-phone"
+                class="neon-input"
+                placeholder="01xxxxxxxxx"
+                required
+                maxlength="11"
+                pattern="[0-9]{11}"
+                oninvalid="this.setCustomValidity('من فضلك أدخل رقم هاتف صحيح (11 رقم)')"
+                oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^0-9]/g, '')"
+              />
+              <span id="login-phone-error" class="error-msg"></span>
+            </div>
+            <div class="input-group">
+              <label>كلمة المرور</label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="login-password"
+                  class="neon-input"
+                  placeholder="••••••••"
+                  required
+                  oninvalid="this.setCustomValidity('يرجى إدخال كلمة المرور')"
+                  oninput="this.setCustomValidity('')"
+                />
+                <i
+                  class="fas fa-eye toggle-password"
+                  onclick="togglePassword('login-password', this)"
+                ></i>
+              </div>
+              <span id="login-pass-error" class="error-msg"></span>
+            </div>
+            <button type="submit" class="btn-submit">دخول</button>
+            <span class="forgot-link" onclick="openForgotModal()"
+              >نسيت كلمة المرور؟</span
+            >
+          </form>
         </div>
         <div id="register-form-wrapper" class="fade-in" style="display: none">
           <form id="register-form">
-  <div id="reg-step-1">
-    <div class="input-group">
-      <label>الاسم بالكامل</label>
-      <input 
-        type="text" 
-        id="reg-name" 
-        class="neon-input" 
-        required 
-        oninvalid="this.setCustomValidity('من فضلك اكتب اسمك بالكامل')"
-        oninput="this.setCustomValidity('')"
-      />
-    </div>
+            <div id="reg-step-1">
+              <div class="input-group">
+                <label>الاسم بالكامل</label>
+                <input
+                  type="text"
+                  id="reg-name"
+                  class="neon-input"
+                  required
+                  oninvalid="this.setCustomValidity('من فضلك اكتب اسمك بالكامل')"
+                  oninput="this.setCustomValidity('')"
+                />
+              </div>
 
-    <div class="input-group">
-      <label>اسم المستخدم (إنجليزي فقط)</label>
-      <div style="position: relative">
-        <input
-          type="text"
-          id="reg-username"
-          class="neon-input"
-          placeholder="username"
-          minlength="3"
-          required
-          oninvalid="this.setCustomValidity('يرجى اختيار اسم مستخدم (حروف إنجليزية وأرقام فقط)')"
-          oninput="this.setCustomValidity(''); this.value = this.value.toLowerCase().replace(/[^a-z0-9_.]/g, '')"
-        />
-        <i id="icon-check" class="fas fa-check-circle validation-icon"></i>
-        <i id="icon-error" class="fas fa-times-circle validation-icon"></i>
-      </div>
-      <span id="username-msg" class="error-msg"></span>
-    </div>
+              <div class="input-group">
+                <label>اسم المستخدم (إنجليزي فقط)</label>
+                <div style="position: relative">
+                  <input
+                    type="text"
+                    id="reg-username"
+                    class="neon-input"
+                    placeholder="username"
+                    minlength="3"
+                    required
+                    oninvalid="this.setCustomValidity('يرجى اختيار اسم مستخدم (حروف إنجليزية وأرقام فقط)')"
+                    oninput="this.setCustomValidity(''); this.value = this.value.toLowerCase().replace(/[^a-z0-9_.]/g, '')"
+                  />
+                  <i
+                    id="icon-check"
+                    class="fas fa-check-circle validation-icon"
+                  ></i>
+                  <i
+                    id="icon-error"
+                    class="fas fa-times-circle validation-icon"
+                  ></i>
+                </div>
+                <span id="username-msg" class="error-msg"></span>
+              </div>
 
-    <div class="input-group">
-      <label>رقم الواتساب</label>
-      <input
-        type="tel"
-        id="reg-phone"
-        class="neon-input"
-        placeholder="01xxxxxxxxx"
-        required
-        maxlength="11"
-        pattern="[0-9]{11}"
-        oninvalid="this.setCustomValidity('يجب إدخال 11 رقم')"
-        oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^0-9]/g, '')"
-      />
-      <span id="reg-phone-error" class="error-msg"></span>
-    </div>
+              <div class="input-group">
+                <label>رقم الواتساب</label>
+                <input
+                  type="tel"
+                  id="reg-phone"
+                  class="neon-input"
+                  placeholder="01xxxxxxxxx"
+                  required
+                  maxlength="11"
+                  pattern="[0-9]{11}"
+                  oninvalid="this.setCustomValidity('يجب إدخال 11 رقم')"
+                  oninput="this.setCustomValidity(''); this.value = this.value.replace(/[^0-9]/g, '')"
+                />
+                <span id="reg-phone-error" class="error-msg"></span>
+              </div>
 
-    <div class="input-group">
-      <label>كلمة المرور</label>
-      <div class="password-wrapper">
-        <input
-          type="password"
-          id="reg-password"
-          class="neon-input"
-          onkeyup="checkStrength()"
-          required
-          oninvalid="this.setCustomValidity('يرجى إنشاء كلمة مرور')"
-          oninput="this.setCustomValidity('')"
-        />
-        <i class="fas fa-eye toggle-password" onclick="togglePassword('reg-password', this)"></i>
-      </div>
-      <div class="password-strength">
-        <div id="strength-bar" class="strength-bar"></div>
-      </div>
-      <span id="strength-text" style="font-size: 0.75rem; color: #aaa; margin-top: 3px; display: block;"></span>
-    </div>
+              <div class="input-group">
+                <label>كلمة المرور</label>
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="reg-password"
+                    class="neon-input"
+                    onkeyup="checkStrength()"
+                    required
+                    oninvalid="this.setCustomValidity('يرجى إنشاء كلمة مرور')"
+                    oninput="this.setCustomValidity('')"
+                  />
+                  <i
+                    class="fas fa-eye toggle-password"
+                    onclick="togglePassword('reg-password', this)"
+                  ></i>
+                </div>
+                <div class="password-strength">
+                  <div id="strength-bar" class="strength-bar"></div>
+                </div>
+                <span
+                  id="strength-text"
+                  style="
+                    font-size: 0.75rem;
+                    color: #aaa;
+                    margin-top: 3px;
+                    display: block;
+                  "
+                ></span>
+              </div>
 
-    <div class="input-group">
-      <label>تأكيد كلمة المرور</label>
-      <div class="password-wrapper">
-        <input
-          type="password"
-          id="reg-confirm-password"
-          class="neon-input"
-          required
-          oninvalid="this.setCustomValidity('يرجى تأكيد كلمة المرور')"
-          oninput="this.setCustomValidity('')"
-        />
-        <i class="fas fa-eye toggle-password" onclick="togglePassword('reg-confirm-password', this)"></i>
-      </div>
-      <span id="confirm-pass-error" class="error-msg"></span>
-    </div>
-  </div>
+              <div class="input-group">
+                <label>تأكيد كلمة المرور</label>
+                <div class="password-wrapper">
+                  <input
+                    type="password"
+                    id="reg-confirm-password"
+                    class="neon-input"
+                    required
+                    oninvalid="this.setCustomValidity('يرجى تأكيد كلمة المرور')"
+                    oninput="this.setCustomValidity('')"
+                  />
+                  <i
+                    class="fas fa-eye toggle-password"
+                    onclick="togglePassword('reg-confirm-password', this)"
+                  ></i>
+                </div>
+                <span id="confirm-pass-error" class="error-msg"></span>
+              </div>
+            </div>
 
-  <div class="input-group" id="reg-otp-group" style="display: none; animation: fadeInUp 0.5s">
-    <label style="color: var(--neon-primary)">✨ تم إرسال الكود للواتساب</label>
-    <input
-      type="text"
-      id="reg-otp"
-      class="neon-input"
-      placeholder="أدخل الكود (4 أرقام)"
-      style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;"
-    />
-  </div>
+            <div
+              class="input-group"
+              id="reg-otp-group"
+              style="display: none; animation: fadeInUp 0.5s"
+            >
+              <label style="color: var(--neon-primary)"
+                >✨ تم إرسال الكود للواتساب</label
+              >
+              <input
+                type="text"
+                id="reg-otp"
+                class="neon-input"
+                placeholder="أدخل الكود (4 أرقام)"
+                style="
+                  text-align: center;
+                  letter-spacing: 5px;
+                  font-size: 1.2rem;
+                "
+              />
+            </div>
 
-  <button type="submit" class="btn-submit" id="reg-submit-btn">إنشاء الحساب</button>
-</form>
+            <button type="submit" class="btn-submit" id="reg-submit-btn">
+              إنشاء الحساب
+            </button>
+          </form>
         </div>
-    <div id="forgotModal" class="modal">
-      <div class="modal-content">
-        <span class="close-modal" onclick="closeForgotModal()">&times;</span>
-        <h3 style="color: var(--neon-secondary); margin-bottom: 20px">
-          استعادة كلمة المرور
-        </h3>
-        <p
-          id="forgot-message"
-          style="color: #ccc; font-size: 0.9rem; margin-bottom: 20px"
-        ></p>
+        <div id="forgotModal" class="modal">
+          <div class="modal-content">
+            <span class="close-modal" onclick="closeForgotModal()"
+              >&times;</span
+            >
+            <h3 style="color: var(--neon-secondary); margin-bottom: 20px">
+              استعادة كلمة المرور
+            </h3>
+            <p
+              id="forgot-message"
+              style="color: #ccc; font-size: 0.9rem; margin-bottom: 20px"
+            ></p>
 
-        <div id="forgot-step-1">
-          <input
-            type="tel"
-            id="forgot-phone"
-            class="neon-input"
-            placeholder="رقم الواتساب المسجل"
-            style="margin-bottom: 15px"
-          />
-          <button class="btn-submit" onclick="sendForgotOTP()">
-            أرسل كود التحقق
-          </button>
-        </div>
+            <div id="forgot-step-1">
+              <input
+                type="tel"
+                id="forgot-phone"
+                class="neon-input"
+                placeholder="رقم الواتساب المسجل"
+                style="margin-bottom: 15px"
+              />
+              <button class="btn-submit" onclick="sendForgotOTP()">
+                أرسل كود التحقق
+              </button>
+            </div>
 
-        <div id="forgot-step-2" style="display: none">
-          <input
-            type="text"
-            id="forgot-otp"
-            class="neon-input"
-            placeholder="الكود"
-            style="margin-bottom: 10px; text-align: center"
-          />
-          <div class="password-wrapper" style="margin-bottom: 15px">
-            <input
-              type="password"
-              id="new-password"
-              class="neon-input"
-              placeholder="كلمة المرور الجديدة"
-            />
-            <i
-              class="fas fa-eye toggle-password"
-              onclick="togglePassword('new-password', this)"
-            ></i>
+            <div id="forgot-step-2" style="display: none">
+              <input
+                type="text"
+                id="forgot-otp"
+                class="neon-input"
+                placeholder="الكود"
+                style="margin-bottom: 10px; text-align: center"
+              />
+              <div class="password-wrapper" style="margin-bottom: 15px">
+                <input
+                  type="password"
+                  id="new-password"
+                  class="neon-input"
+                  placeholder="كلمة المرور الجديدة"
+                />
+                <i
+                  class="fas fa-eye toggle-password"
+                  onclick="togglePassword('new-password', this)"
+                ></i>
+              </div>
+              <button class="btn-submit" onclick="resetPassword()">
+                تغيير كلمة المرور
+              </button>
+            </div>
           </div>
-          <button class="btn-submit" onclick="resetPassword()">
-            تغيير كلمة المرور
-          </button>
         </div>
-      </div>
-    </div>
 
-    <div id="warningModal" class="modal">
-      <div class="modal-content" style="border-color: #ffaa00">
-        <span class="close-modal" onclick="closeWarningModal()">&times;</span>
-        <div style="text-align: center">
-          <i
-            class="fas fa-exclamation-triangle"
-            style="font-size: 3rem; color: #ffaa00; margin-bottom: 15px"
-          ></i>
-          <h3 style="color: white; margin-bottom: 10px">تنبيه</h3>
-          <p
-            id="warning-message"
-            style="color: #ccc; font-size: 1.1rem; margin-bottom: 20px"
-          ></p>
-          <button
-            class="btn-submit"
-            onclick="closeWarningModal()"
-            style="background: #ffaa00; color: #000"
+        <div id="warningModal" class="modal">
+          <div class="modal-content" style="border-color: #ffaa00">
+            <span class="close-modal" onclick="closeWarningModal()"
+              >&times;</span
+            >
+            <div style="text-align: center">
+              <i
+                class="fas fa-exclamation-triangle"
+                style="font-size: 3rem; color: #ffaa00; margin-bottom: 15px"
+              ></i>
+              <h3 style="color: white; margin-bottom: 10px">تنبيه</h3>
+              <p
+                id="warning-message"
+                style="color: #ccc; font-size: 1.1rem; margin-bottom: 20px"
+              ></p>
+              <button
+                class="btn-submit"
+                onclick="closeWarningModal()"
+                style="background: #ffaa00; color: #000"
+              >
+                حسناً
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="notFoundModal" class="modal">
+          <div
+            class="modal-content"
+            style="border-color: var(--neon-secondary)"
           >
-            حسناً
-          </button>
+            <span class="close-modal" onclick="closeNotFoundModal()"
+              >&times;</span
+            >
+            <div style="text-align: center">
+              <i
+                class="fas fa-user-plus"
+                style="
+                  font-size: 3.5rem;
+                  color: var(--neon-secondary);
+                  margin-bottom: 20px;
+                  animation: logoFloat 3s infinite ease-in-out;
+                "
+              ></i>
+              <h3 style="color: white; margin-bottom: 10px">الرقم غير مسجل</h3>
+              <p
+                style="
+                  color: #ccc;
+                  font-size: 1rem;
+                  margin-bottom: 25px;
+                  line-height: 1.6;
+                "
+              >
+                هذا الرقم غير موجود في قاعدة بياناتنا.<br />
+                هل ترغب في إنشاء حساب جديد باستخدام الرقم
+                <span
+                  id="modal-phone-display"
+                  style="color: var(--neon-primary); font-weight: bold"
+                ></span
+                >؟
+              </p>
+
+              <div class="modal-buttons-container">
+                <button
+                  class="modal-btn btn-yes"
+                  onclick="confirmCreateAccount()"
+                >
+                  نعم، إنشاء حساب
+                </button>
+
+                <button class="modal-btn btn-no" onclick="closeNotFoundModal()">
+                  لا، شكراً
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <script src="script.js"></script>
+        <script src="ban-check.js"></script>
+        <script src="global-alert.js"></script>
       </div>
     </div>
-
-    <div id="notFoundModal" class="modal">
-      <div class="modal-content" style="border-color: var(--neon-secondary)">
-        <span class="close-modal" onclick="closeNotFoundModal()">&times;</span>
-        <div style="text-align: center">
-          <i
-            class="fas fa-user-plus"
-            style="
-              font-size: 3.5rem;
-              color: var(--neon-secondary);
-              margin-bottom: 20px;
-              animation: logoFloat 3s infinite ease-in-out;
-            "
-          ></i>
-          <h3 style="color: white; margin-bottom: 10px">الرقم غير مسجل</h3>
-          <p
-            style="
-              color: #ccc;
-              font-size: 1rem;
-              margin-bottom: 25px;
-              line-height: 1.6;
-            "
-          >
-            هذا الرقم غير موجود في قاعدة بياناتنا.<br />
-            هل ترغب في إنشاء حساب جديد باستخدام الرقم
-            <span
-              id="modal-phone-display"
-              style="color: var(--neon-primary); font-weight: bold"
-            ></span
-            >؟
-          </p>
-
-         <div class="modal-buttons-container">
-  <button 
-    class="modal-btn btn-yes" 
-    onclick="confirmCreateAccount()">
-    نعم، إنشاء حساب
-  </button>
-  
-  <button 
-    class="modal-btn btn-no" 
-    onclick="closeNotFoundModal()">
-    لا، شكراً
-  </button>
-</div>
-        </div>
-      </div>
-    </div>
-
-    <script src="script.js"></script>
-    <script src="ban-check.js"></script>
-    <script src="global-alert.js"></script>
   </body>
 </html>

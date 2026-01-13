@@ -213,6 +213,13 @@ const uploadProfile = multer({
 const dbPool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
+  max: 20,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+});
+
+dbPool.on('error', (err, client) => {
+  console.error('❌ Unexpected error on idle client', err);
 });
 
 const storageServices = new CloudinaryStorage({
@@ -3388,6 +3395,17 @@ app.post(
         paramCounter++;
       }
 
+      if (newUsername) {
+        const usernameRegex = /^[a-zA-Z0-9._]+$/;
+        if (!usernameRegex.test(newUsername)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "اسم المستخدم يجب أن يكون بالإنجليزية وبدون مسافات أو رموز خاصة.",
+          });
+        }
+      }
+
       if (updateValues.length === 0)
         return res.json({ success: true, message: "لم يتغير شيء" });
 
@@ -3396,6 +3414,12 @@ app.post(
       updateValues.push(phone);
 
       await pgQuery(updateQuery, updateValues);
+      if (newUsername && newUsername !== currentUser.username) {
+        await pgQuery(
+          `UPDATE properties SET "publisherUsername" = $1 WHERE "sellerPhone" = $2`,
+          [newUsername, phone]
+        );
+      }
       res.json({ success: true, message: "تم التحديث بنجاح ✅" });
     } catch (error) {
       console.error("Update Error:", error);
