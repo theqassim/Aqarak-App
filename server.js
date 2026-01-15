@@ -298,19 +298,25 @@ const whatsappClient = new Client({
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage", // مهم جداً للينكس
+      "--disable-dev-shm-usage", // مهم جداً
       "--disable-accelerated-2d-canvas",
       "--no-first-run",
       "--no-zygote",
+      "--single-process", 
       "--disable-gpu",
-      "--disable-extensions",
-      "--disable-software-rasterizer",
-      "--mute-audio",
-      "--disable-gl-drawing-for-tests",
-      "--window-size=800,600", // صغرنا حجم الشاشة عشان نوفر رامات
-      "--single-process" // جرب نرجع ده تاني، أحياناً هو الحل الوحيد للرامات الضعيفة
+      "--disable-extensions", // قفل الإضافات
+      "--disable-component-update",
+      "--disable-default-apps",
+      "--disable-sync",
+      "--disable-background-networking",
+      "--disable-software-rasterizer", // قفل معالجة الجرافيك
+      "--mute-audio", // قفل الصوت
+      "--no-default-browser-check",
+      "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process", // بيقلل العمليات الخلفية
+      "--blink-settings=imagesEnabled=false", // 👈 بيمنع تحميل الصور تماماً (أهم سطر)
+      "--window-size=800,600"
     ],
-    timeout: 120000, // مدة انتظار أطول
+    timeout: 180000, // زودنا الوقت لـ 3 دقايق
   },
 });
 whatsappClient.on("qr", (qr) => {
