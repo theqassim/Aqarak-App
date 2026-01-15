@@ -208,7 +208,7 @@ const storageProfiles = new CloudinaryStorage({
 const uploadProfile = multer({
   storage: storageProfiles,
   limits: { fileSize: 5 * 1024 * 1024 },
-});
+}).fields([{ name: 'profileImage', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]);
 
 const dbPool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -3332,9 +3332,7 @@ app.post("/api/admin/send-notification", async (req, res) => {
   }
 });
 
-app.post(
-  "/api/user/update-profile",
-  uploadProfile.single("profileImage"),
+app.post("/api/user/update-profile", uploadProfile, async (req, res) => {
   async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: "سجل دخول أولاً" });
@@ -3353,25 +3351,43 @@ app.post(
       let updateValues = [];
       let paramCounter = 1;
 
-      const { bio } = req.body;
+      // استقبال البيانات من الفورم
+      const { bio, job_title, facebook, instagram, website } = req.body;
 
-      if (req.file) {
-        let finalPath = req.file.path;
-        if (!finalPath.startsWith("http")) {
-          finalPath = "/" + finalPath.replace(/\\/g, "/");
+      // 1. معالجة الصور (لو فيه صور اترفعت)
+      if (req.files) {
+        if (req.files['profileImage']) {
+            let pPath = req.files['profileImage'][0].path;
+            updateQuery += `profile_picture = $${paramCounter}, `;
+            updateValues.push(pPath);
+            paramCounter++;
         }
-
-        updateQuery += `profile_picture = $${paramCounter}, `;
-        updateValues.push(finalPath);
-        paramCounter++;
+        if (req.files['coverImage']) {
+            let cPath = req.files['coverImage'][0].path;
+            updateQuery += `cover_picture = $${paramCounter}, `;
+            updateValues.push(cPath);
+            paramCounter++;
+        }
       }
 
+      // 2. معالجة البيانات النصية (تتحدث سواء رفعت صور أو لأ)
       if (typeof bio !== "undefined") {
         updateQuery += `bio = $${paramCounter}, `;
         updateValues.push(bio);
         paramCounter++;
       }
 
+      if (typeof job_title !== "undefined") {
+        updateQuery += `job_title = $${paramCounter}, `;
+        updateValues.push(job_title);
+        paramCounter++;
+      }
+
+      // تجميع السوشيال ميديا في JSON
+      const socialData = JSON.stringify({ facebook, instagram, website });
+      updateQuery += `social_links = $${paramCounter}, `;
+      updateValues.push(socialData);
+      paramCounter++;
       if (newUsername && newUsername !== currentUser.username) {
         if (currentUser.last_username_change) {
           const lastChange = new Date(currentUser.last_username_change);
@@ -3426,7 +3442,7 @@ app.post(
       res.status(500).json({ message: "خطأ في السيرفر" });
     }
   }
-);
+});
 
 app.get("/api/admin/users/search", async (req, res) => {
   const token = req.cookies.auth_token;
@@ -4554,7 +4570,7 @@ app.get("/api/public/profile/:username", async (req, res) => {
   const { username } = req.params;
   try {
     const userRes = await pgQuery(
-      "SELECT name, phone, is_verified, profile_picture, created_at, ai_summary_cache, bio FROM users WHERE username = $1",
+      "SELECT name, phone, is_verified, profile_picture, cover_picture, job_title, social_links, created_at, ai_summary_cache, bio FROM users WHERE username = $1",
       [username.toLowerCase()]
     );
 
@@ -4936,6 +4952,17 @@ app.get("/admin-faq", requireAdmin, (req, res) =>
 
 app.get("*", (req, res) => {
   res.redirect("/");
+});
+
+app.get("/update-db-premium", async (req, res) => {
+  try {
+    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cover_picture TEXT`);
+    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS job_title TEXT`);
+    await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS social_links TEXT`); // JSON format
+    res.send("✅ تم تحديث قاعدة البيانات للمميزات البريميوم بنجاح!");
+  } catch (error) {
+    res.status(500).send("❌ خطأ: " + error.message);
+  }
 });
 
 app.listen(PORT, () => {

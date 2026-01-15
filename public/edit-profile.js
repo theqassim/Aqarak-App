@@ -38,6 +38,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (data.bio) {
         document.getElementById("edit-bio").value = data.bio;
+        if(data.job_title) document.getElementById("edit-job").value = data.job_title;
+if(data.cover_picture) document.getElementById("current-cover-img").src = data.cover_picture;
+if(data.social_links) {
+    try {
+        const links = JSON.parse(data.social_links);
+        document.getElementById("social-fb").value = links.facebook || "";
+        document.getElementById("social-insta").value = links.instagram || "";
+        document.getElementById("social-web").value = links.website || "";
+    } catch(e){}
+}
       }
 
       if (data.profile_picture && !data.profile_picture.includes("logo.png")) {
@@ -106,6 +116,13 @@ document
     formData.append("name", document.getElementById("display-name").value);
     formData.append("phone", document.getElementById("display-phone").value);
     formData.append("bio", document.getElementById("edit-bio").value);
+    formData.append("job_title", document.getElementById("edit-job").value);
+formData.append("facebook", document.getElementById("social-fb").value);
+formData.append("instagram", document.getElementById("social-insta").value);
+formData.append("website", document.getElementById("social-web").value);
+
+const coverFile = document.getElementById("cover-upload").files[0];
+if(coverFile) formData.append("coverImage", coverFile);
 
     const fileInput = document.getElementById("profile-upload");
     if (fileInput.files[0]) {
@@ -166,5 +183,13 @@ async function confirmDeleteAccount() {
     showCustomError("حدث خطأ في الاتصال بالسيرفر");
     btn.innerHTML = originalText;
     btn.disabled = false;
+  }
+}
+function previewCover(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) { document.getElementById("current-cover-img").src = e.target.result; };
+    reader.readAsDataURL(file);
   }
 }

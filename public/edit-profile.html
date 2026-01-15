@@ -264,6 +264,11 @@
     </header>
 
     <div class="edit-container">
+      <div class="cover-wrapper" onclick="document.getElementById('cover-upload').click()" style="position:relative; height:150px; background:#222; cursor:pointer; overflow:hidden; margin-bottom:20px;">
+    <img id="current-cover-img" src="" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
+    <i class="fas fa-camera" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:2rem;"></i>
+</div>
+<input type="file" id="cover-upload" hidden accept="image/*" onchange="previewCover(event)" />
       <div
         class="profile-flip-wrapper"
         onclick="document.getElementById('profile-upload').click()"
@@ -283,8 +288,12 @@
         accept="image/*"
         onchange="previewImage(event)"
       />
-
+       
       <form id="edit-profile-form">
+        <div class="input-group">
+  <label class="input-label">المسمى الوظيفي</label>
+  <input type="text" id="edit-job" class="neon-input" placeholder="مثال: سمسار، مطور عقاري" />
+</div>
         <div class="input-group">
           <label class="input-label">الاسم</label>
           <input type="text" id="display-name" class="neon-input" disabled />
@@ -324,6 +333,13 @@
             placeholder="اكتب نبذة مختصرة عن نفسك أو عن شركتك..."
           ></textarea>
         </div>
+
+        <div style="margin: 20px 0; border-top: 1px solid #333; padding-top:15px;">
+    <label class="input-label" style="color:#00d4ff">روابط التواصل الاجتماعي</label>
+    <input type="text" id="social-fb" class="neon-input" placeholder="رابط فيسبوك" style="margin-bottom:10px;">
+    <input type="text" id="social-insta" class="neon-input" placeholder="رابط انستجرام" style="margin-bottom:10px;">
+    <input type="text" id="social-web" class="neon-input" placeholder="موقعك الإلكتروني">
+</div>
 
         <button type="submit" class="btn-save" id="save-btn">
           حفظ التغييرات

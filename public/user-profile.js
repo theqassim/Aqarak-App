@@ -44,6 +44,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     profilePhone = profileData.phone;
     window.currentProfilePhone = profileData.phone;
+    // تغيير خلفية الهيرو لتكون صورة الغلاف
+const hero = document.querySelector('.profile-hero'); // اتأكد ان الكلاس ده موجود في الـ CSS بتاعك لـ section
+if(profileData.cover_picture) {
+    hero.style.backgroundImage = `url('${profileData.cover_picture}')`;
+    hero.style.backgroundSize = 'cover';
+    hero.style.backgroundPosition = 'center';
+    // ضيف طبقة سوداء خفيفة عشان الكلام يبان
+    hero.style.boxShadow = 'inset 0 0 0 2000px rgba(0,0,0,0.6)'; 
+}
 
     const aiContainer = document.getElementById("ai-summary-container");
     if (aiContainer) aiContainer.style.display = "none";
@@ -63,6 +72,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       avatarContainer.innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
 
     document.getElementById("user-name").innerText = profileData.name;
+    let nameHTML = profileData.name;
+if(profileData.job_title) nameHTML += `<div style="font-size:0.9rem; color:#00d4ff; font-weight:normal; margin-top:5px;">${profileData.job_title}</div>`;
+document.getElementById("user-name").innerHTML = nameHTML;
     document.title = `${profileData.name} | عقارك`;
 
     if (profileData.bio && profileData.bio.trim() !== "") {
@@ -78,7 +90,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       const editBtn = document.getElementById("edit-profile-btn");
       if (editBtn) editBtn.style.display = "inline-flex";
     }
+    if(profileData.social_links) {
+    try {
+        const links = JSON.parse(profileData.social_links);
+        let socialHTML = '<div style="margin:10px 0; display:flex; gap:15px; justify-content:center;">';
+        if(links.facebook) socialHTML += `<a href="${links.facebook}" target="_blank" style="color:#1877f2; font-size:1.5rem"><i class="fab fa-facebook"></i></a>`;
+        if(links.instagram) socialHTML += `<a href="${links.instagram}" target="_blank" style="color:#e4405f; font-size:1.5rem"><i class="fab fa-instagram"></i></a>`;
+        if(links.website) socialHTML += `<a href="${links.website}" target="_blank" style="color:white; font-size:1.5rem"><i class="fas fa-globe"></i></a>`;
+        socialHTML += '</div>';
 
+        // هنحطها قبل شريط الاحصائيات
+        document.querySelector('.user-stats-bar').insertAdjacentHTML('beforebegin', socialHTML);
+    } catch(e){}
+}
     const countBadge = document.getElementById("prop-count-badge");
     if (countBadge)
       countBadge.innerText = `${
