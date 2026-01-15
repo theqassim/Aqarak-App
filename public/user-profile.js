@@ -45,14 +45,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     profilePhone = profileData.phone;
     window.currentProfilePhone = profileData.phone;
     // تغيير خلفية الهيرو لتكون صورة الغلاف
-const hero = document.querySelector('.profile-hero'); // اتأكد ان الكلاس ده موجود في الـ CSS بتاعك لـ section
-if(profileData.cover_picture) {
-    hero.style.backgroundImage = `url('${profileData.cover_picture}')`;
-    hero.style.backgroundSize = 'cover';
-    hero.style.backgroundPosition = 'center';
-    // ضيف طبقة سوداء خفيفة عشان الكلام يبان
-    hero.style.boxShadow = 'inset 0 0 0 2000px rgba(0,0,0,0.6)'; 
-}
+const hero = document.querySelector('.profile-hero');
+    if (hero && profileData.cover_picture) {
+        // دمج الصورة مع طبقة سوداء متدرجة عشان الكلام يبان بوضوح
+        hero.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.2), #0f0f0f), url('${profileData.cover_picture}')`;
+        hero.style.backgroundSize = 'cover';
+        hero.style.backgroundPosition = 'center center';
+        hero.style.boxShadow = 'none'; // شلنا الضل القديم عشان الجرادينت أحلى
+    }
 
     const aiContainer = document.getElementById("ai-summary-container");
     if (aiContainer) aiContainer.style.display = "none";

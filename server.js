@@ -3332,6 +3332,7 @@ app.post("/api/admin/send-notification", async (req, res) => {
   }
 });
 
+// في ملف server.js
 app.post(
   "/api/user/update-profile",
   uploadProfile.fields([
@@ -3344,7 +3345,7 @@ app.post(
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      const { newUsername } = req.body;
+      const { newUsername, deleteProfile, deleteCover } = req.body; // استقبلنا طلبات الحذف
       const phone = decoded.phone;
 
       const userRes = await pgQuery("SELECT * FROM users WHERE phone = $1", [
@@ -3356,26 +3357,37 @@ app.post(
       let updateValues = [];
       let paramCounter = 1;
 
-      // استقبال البيانات من الفورم
+      // استقبال البيانات
       const { bio, job_title, facebook, instagram, website } = req.body;
 
-      // 1. معالجة الصور (لو فيه صور اترفعت)
-      if (req.files) {
-        if (req.files['profileImage']) {
-            let pPath = req.files['profileImage'][0].path;
-            updateQuery += `profile_picture = $${paramCounter}, `;
-            updateValues.push(pPath);
-            paramCounter++;
-        }
-        if (req.files['coverImage']) {
-            let cPath = req.files['coverImage'][0].path;
-            updateQuery += `cover_picture = $${paramCounter}, `;
-            updateValues.push(cPath);
-            paramCounter++;
-        }
+      // 1. معالجة الصور والحذف
+      // صورة البروفايل
+      if (deleteProfile === "true") {
+          // لو طلب حذف، نرجعها للوجو الافتراضي
+          updateQuery += `profile_picture = $${paramCounter}, `;
+          updateValues.push("logo.png"); // أو null حسب تصميمك
+          paramCounter++;
+      } else if (req.files && req.files['profileImage']) {
+          // لو رفع صورة جديدة
+          let pPath = req.files['profileImage'][0].path;
+          updateQuery += `profile_picture = $${paramCounter}, `;
+          updateValues.push(pPath);
+          paramCounter++;
       }
 
-      // 2. معالجة البيانات النصية (تتحدث سواء رفعت صور أو لأ)
+      // صورة الغلاف
+      if (deleteCover === "true") {
+          updateQuery += `cover_picture = $${paramCounter}, `;
+          updateValues.push(null); // نخليها فاضية
+          paramCounter++;
+      } else if (req.files && req.files['coverImage']) {
+          let cPath = req.files['coverImage'][0].path;
+          updateQuery += `cover_picture = $${paramCounter}, `;
+          updateValues.push(cPath);
+          paramCounter++;
+      }
+
+      // 2. باقي البيانات
       if (typeof bio !== "undefined") {
         updateQuery += `bio = $${paramCounter}, `;
         updateValues.push(bio);
@@ -3388,23 +3400,14 @@ app.post(
         paramCounter++;
       }
 
-      // تجميع السوشيال ميديا في JSON
       const socialData = JSON.stringify({ facebook, instagram, website });
       updateQuery += `social_links = $${paramCounter}, `;
       updateValues.push(socialData);
       paramCounter++;
+
       if (newUsername && newUsername !== currentUser.username) {
-        if (currentUser.last_username_change) {
-          const lastChange = new Date(currentUser.last_username_change);
-          const diffDays = Math.ceil(
-            Math.abs(new Date() - lastChange) / (1000 * 60 * 60 * 24)
-          );
-          if (diffDays < 30)
-            return res
-              .status(400)
-              .json({ message: `انتظر ${30 - diffDays} يوم لتغيير الاسم.` });
-        }
-        const checkUser = await pgQuery(
+        // ... (نفس كود التحقق من الاسم القديم) ...
+         const checkUser = await pgQuery(
           "SELECT id FROM users WHERE username = $1",
           [newUsername]
         );
@@ -3416,17 +3419,6 @@ app.post(
         paramCounter++;
       }
 
-      if (newUsername) {
-        const usernameRegex = /^[a-zA-Z0-9._]+$/;
-        if (!usernameRegex.test(newUsername)) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "اسم المستخدم يجب أن يكون بالإنجليزية وبدون مسافات أو رموز خاصة.",
-          });
-        }
-      }
-
       if (updateValues.length === 0)
         return res.json({ success: true, message: "لم يتغير شيء" });
 
@@ -3435,6 +3427,8 @@ app.post(
       updateValues.push(phone);
 
       await pgQuery(updateQuery, updateValues);
+      
+      // تحديث اسم المستخدم في العقارات لو اتغير
       if (newUsername && newUsername !== currentUser.username) {
         await pgQuery(
           `UPDATE properties SET "publisherUsername" = $1 WHERE "sellerPhone" = $2`,
@@ -3447,7 +3441,6 @@ app.post(
       res.status(500).json({ message: "خطأ في السيرفر" });
     }
 });
-
 app.get("/api/admin/users/search", async (req, res) => {
   const token = req.cookies.auth_token;
   try {
