@@ -208,7 +208,7 @@ const storageProfiles = new CloudinaryStorage({
 const uploadProfile = multer({
   storage: storageProfiles,
   limits: { fileSize: 5 * 1024 * 1024 },
-}).fields([{ name: 'profileImage', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]);
+});
 
 const dbPool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -3332,7 +3332,12 @@ app.post("/api/admin/send-notification", async (req, res) => {
   }
 });
 
-app.post("/api/user/update-profile", uploadProfile, async (req, res) => {
+app.post(
+  "/api/user/update-profile",
+  uploadProfile.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+  ]),
   async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ message: "سجل دخول أولاً" });
@@ -3441,7 +3446,6 @@ app.post("/api/user/update-profile", uploadProfile, async (req, res) => {
       console.error("Update Error:", error);
       res.status(500).json({ message: "خطأ في السيرفر" });
     }
-  }
 });
 
 app.get("/api/admin/users/search", async (req, res) => {
