@@ -302,12 +302,16 @@ const whatsappClient = new Client({
       "--disable-accelerated-2d-canvas",
       "--no-first-run",
       "--no-zygote",
-      "--single-process",
       "--disable-gpu",
+      "--disable-extensions",      // جديد: بيقفل الإضافات عشان يوفر رامات
+      "--disable-software-rasterizer", // جديد
+      "--mute-audio",              // جديد: ملوش لزمة الصوت
+      "--disable-gl-drawing-for-tests",
+      "--window-size=1280,1024",
     ],
+    timeout: 60000, // نزود وقت الانتظار عشان لو النت بطيء
   },
 });
-
 whatsappClient.on("qr", (qr) => {
   console.log("📱 QR Code received. Scan it NOW:");
   qrcode.generate(qr, { small: true });
