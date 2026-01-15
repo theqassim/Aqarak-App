@@ -294,22 +294,23 @@ const whatsappClient = new Client({
     backupSyncIntervalMs: 600000,
   }),
   puppeteer: {
-    headless: true,
+    headless: true, // لازم يكون true
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
+      "--disable-dev-shm-usage", // مهم جداً للينكس
       "--disable-accelerated-2d-canvas",
       "--no-first-run",
       "--no-zygote",
       "--disable-gpu",
-      "--disable-extensions",      // جديد: بيقفل الإضافات عشان يوفر رامات
-      "--disable-software-rasterizer", // جديد
-      "--mute-audio",              // جديد: ملوش لزمة الصوت
+      "--disable-extensions",
+      "--disable-software-rasterizer",
+      "--mute-audio",
       "--disable-gl-drawing-for-tests",
-      "--window-size=1280,1024",
+      "--window-size=800,600", // صغرنا حجم الشاشة عشان نوفر رامات
+      "--single-process" // جرب نرجع ده تاني، أحياناً هو الحل الوحيد للرامات الضعيفة
     ],
-    timeout: 60000, // نزود وقت الانتظار عشان لو النت بطيء
+    timeout: 120000, // مدة انتظار أطول
   },
 });
 whatsappClient.on("qr", (qr) => {
