@@ -4954,10 +4954,6 @@ app.get("/admin-faq", requireAdmin, (req, res) =>
   res.sendFile(path.join(__dirname, "protected_pages", "admin-faq.html"))
 );
 
-app.get("*", (req, res) => {
-  res.redirect("/");
-});
-
 app.get("/update-db-premium", async (req, res) => {
   try {
     await pgQuery(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cover_picture TEXT`);
@@ -4967,6 +4963,10 @@ app.get("/update-db-premium", async (req, res) => {
   } catch (error) {
     res.status(500).send("❌ خطأ: " + error.message);
   }
+});
+
+app.get("*", (req, res) => {
+  res.redirect("/");
 });
 
 app.listen(PORT, () => {
