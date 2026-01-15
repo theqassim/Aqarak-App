@@ -1,3 +1,8 @@
+/**
+ * user-profile.js
+ * نسخة مصححة لعرض البيانات بدون تضارب
+ */
+
 let currentReviews = [];
 let currentPage = 0;
 const REVIEWS_PER_PAGE = 5;
@@ -7,157 +12,168 @@ let userRole = "";
 let profileData = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
-  let lastScrollY = window.scrollY;
-  const header = document.getElementById("main-header");
-  if (header) {
-    window.addEventListener("scroll", () => {
-      if (window.scrollY > lastScrollY && window.scrollY > 50) {
-        header.style.transform = "translateY(-100%)";
-      } else {
-        header.style.transform = "translateY(0)";
-      }
-      lastScrollY = window.scrollY;
-    });
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get("u");
-  const requestedTab = urlParams.get("tab");
-
-  if (!username) return;
-
-  try {
-    try {
-      const authRes = await fetch("/api/auth/me");
-      if (authRes.ok) {
-        const authData = await authRes.json();
-        myPhone = authData.phone;
-        userRole = authData.role;
-      }
-    } catch (e) {
-      console.log("زائر غير مسجل");
-    }
-
-    const res = await fetch(`/api/public/profile/${username}`);
-    if (!res.ok) throw new Error("User not found");
-    profileData = await res.json();
-
-    profilePhone = profileData.phone;
-    window.currentProfilePhone = profileData.phone;
-
-    if (profileData.cover_picture) {
-        const coverEl = document.getElementById("user-cover-img");
-        if (coverEl) {
-            coverEl.src = profileData.cover_picture;
-            coverEl.style.display = "block";
-        }
-    }
-
-    // 2. عرض المسمى الوظيفي
-    if (profileData.job_title) {
-        const jobEl = document.getElementById("user-job-title");
-        if (jobEl) {
-            jobEl.textContent = profileData.job_title;
-            jobEl.style.display = "block";
-        }
-    }
-
-    // 3. عرض السوشيال ميديا
-    if (profileData.social_links) {
-        try {
-            const links = JSON.parse(profileData.social_links);
-            const container = document.getElementById("social-links-container");
-            if (container) {
-                container.innerHTML = ""; // تنظيف
-                if (links.facebook) container.innerHTML += `<a href="${links.facebook}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fab fa-facebook"></i></a>`;
-                if (links.instagram) container.innerHTML += `<a href="${links.instagram}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fab fa-instagram"></i></a>`;
-                if (links.website) container.innerHTML += `<a href="${links.website}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fas fa-globe"></i></a>`;
+    // 1. التعامل مع الهيدر عند السكرول
+    let lastScrollY = window.scrollY;
+    const header = document.getElementById("main-header");
+    if (header) {
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > lastScrollY && window.scrollY > 50) {
+                header.style.transform = "translateY(-100%)";
+            } else {
+                header.style.transform = "translateY(0)";
             }
-        } catch (e) { console.error("Social links parse error", e); }
-    }
-    // تغيير خلفية الهيرو لتكون صورة الغلاف
-const hero = document.querySelector('.profile-hero');
-    if (hero && profileData.cover_picture) {
-        // دمج الصورة مع طبقة سوداء متدرجة عشان الكلام يبان بوضوح
-        hero.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.2), #0f0f0f), url('${profileData.cover_picture}')`;
-        hero.style.backgroundSize = 'cover';
-        hero.style.backgroundPosition = 'center center';
-        hero.style.boxShadow = 'none'; // شلنا الضل القديم عشان الجرادينت أحلى
+            lastScrollY = window.scrollY;
+        });
     }
 
-    const aiContainer = document.getElementById("ai-summary-container");
-    if (aiContainer) aiContainer.style.display = "none";
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get("u");
+    const requestedTab = urlParams.get("tab");
 
-    const verifiedIcon = profileData.is_verified
-      ? `<div class="verified-badge"><i class="fas fa-check"></i></div>`
-      : "";
+    if (!username) return;
 
-    const avatarImg =
-      profileData.profile_picture &&
-      !profileData.profile_picture.includes("logo.png")
-        ? profileData.profile_picture
-        : "logo.png";
-
-    const avatarContainer = document.getElementById("avatar-container");
-    if (avatarContainer)
-      avatarContainer.innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
-
-    document.getElementById("user-name").innerText = profileData.name;
-    let nameHTML = profileData.name;
-if(profileData.job_title) nameHTML += `<div style="font-size:0.9rem; color:#00d4ff; font-weight:normal; margin-top:5px;">${profileData.job_title}</div>`;
-document.getElementById("user-name").innerHTML = nameHTML;
-    document.title = `${profileData.name} | عقارك`;
-
-    if (profileData.bio && profileData.bio.trim() !== "") {
-      const bioContainer = document.getElementById("user-bio-container");
-      const bioText = document.getElementById("user-bio-text");
-      if (bioContainer && bioText) {
-        bioText.innerText = profileData.bio;
-        bioContainer.style.display = "block";
-      }
-    }
-
-    if (myPhone && profilePhone && myPhone === profilePhone) {
-      const editBtn = document.getElementById("edit-profile-btn");
-      if (editBtn) editBtn.style.display = "inline-flex";
-    }
-    if(profileData.social_links) {
     try {
-        const links = JSON.parse(profileData.social_links);
-        let socialHTML = '<div style="margin:10px 0; display:flex; gap:15px; justify-content:center;">';
-        if(links.facebook) socialHTML += `<a href="${links.facebook}" target="_blank" style="color:#1877f2; font-size:1.5rem"><i class="fab fa-facebook"></i></a>`;
-        if(links.instagram) socialHTML += `<a href="${links.instagram}" target="_blank" style="color:#e4405f; font-size:1.5rem"><i class="fab fa-instagram"></i></a>`;
-        if(links.website) socialHTML += `<a href="${links.website}" target="_blank" style="color:white; font-size:1.5rem"><i class="fas fa-globe"></i></a>`;
-        socialHTML += '</div>';
+        // التحقق من هوية الزائر
+        try {
+            const authRes = await fetch("/api/auth/me");
+            if (authRes.ok) {
+                const authData = await authRes.json();
+                myPhone = authData.phone;
+                userRole = authData.role;
+            }
+        } catch (e) {
+            console.log("زائر غير مسجل");
+        }
 
-        // هنحطها قبل شريط الاحصائيات
-        document.querySelector('.user-stats-bar').insertAdjacentHTML('beforebegin', socialHTML);
-    } catch(e){}
-}
-    const countBadge = document.getElementById("prop-count-badge");
-    if (countBadge)
-      countBadge.innerText = `${
-        profileData.properties ? profileData.properties.length : 0
-      } عقار`;
+        // جلب بيانات البروفايل
+        const res = await fetch(`/api/public/profile/${username}`);
+        if (!res.ok) throw new Error("User not found");
+        profileData = await res.json();
 
-    let joinYear = "2025";
-    if (profileData.created_at)
-      joinYear = new Date(profileData.created_at).getFullYear();
-    const joinText = document.getElementById("join-date-text");
-    if (joinText) joinText.innerText = `عضو منذ ${joinYear}`;
+        profilePhone = profileData.phone;
+        window.currentProfilePhone = profileData.phone;
 
-    if (profileData.phone) fetchReviews(profileData.phone);
+        // --- [تحديث واجهة المستخدم] ---
 
-    renderProperties(profileData.properties || []);
+        // 1. الاسم (Name)
+        document.getElementById("user-name").innerText = profileData.name;
+        document.title = `${profileData.name} | عقارك`;
 
-    if (requestedTab === "reviews") window.switchTab("reviews");
-  } catch (error) {
-    console.error(error);
-    const nameEl = document.getElementById("user-name");
-    if (nameEl) nameEl.innerText = "مستخدم غير موجود";
-  }
+        // 2. المسمى الوظيفي (Job Title)
+        const jobEl = document.getElementById("user-job-title");
+        if (profileData.job_title && profileData.job_title.trim() !== "") {
+            if (jobEl) {
+                jobEl.textContent = profileData.job_title;
+                jobEl.style.display = "block";
+            }
+        } else {
+            if (jobEl) jobEl.style.display = "none";
+        }
+
+        // 3. النبذة التعريفية (Bio)
+        const bioContainer = document.getElementById("user-bio-container");
+        const bioText = document.getElementById("user-bio-text");
+        if (profileData.bio && profileData.bio.trim() !== "") {
+            if (bioContainer && bioText) {
+                bioText.innerText = profileData.bio;
+                bioContainer.style.display = "block";
+            }
+        } else {
+            if (bioContainer) bioContainer.style.display = "none";
+        }
+
+        // 4. صورة البروفايل (Avatar)
+        const verifiedIcon = profileData.is_verified
+            ? `<div class="verified-badge"><i class="fas fa-check"></i></div>`
+            : "";
+        const avatarImg = (profileData.profile_picture && !profileData.profile_picture.includes("logo.png"))
+            ? profileData.profile_picture
+            : "logo.png";
+        
+        const avatarContainer = document.getElementById("avatar-container");
+        if (avatarContainer) {
+            avatarContainer.innerHTML = `<img src="${avatarImg}" class="profile-avatar">${verifiedIcon}`;
+        }
+
+        // 5. صورة الغلاف (Cover)
+        const coverEl = document.getElementById("user-cover-img");
+        if (profileData.cover_picture) {
+            if (coverEl) {
+                coverEl.src = profileData.cover_picture;
+                coverEl.style.display = "block";
+            }
+            // تحديث خلفية الهيرو
+            const hero = document.querySelector('.profile-hero');
+            if (hero) {
+                hero.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.2), #0f0f0f), url('${profileData.cover_picture}')`;
+                hero.style.backgroundSize = 'cover';
+                hero.style.backgroundPosition = 'center center';
+            }
+        }
+
+        // 6. روابط التواصل الاجتماعي (Social Links) - تصحيح المنطق
+        const socialContainer = document.getElementById("social-links-container");
+        if (profileData.social_links && socialContainer) {
+            try {
+                // التأكد من أن البيانات JSON أو كائن
+                const links = (typeof profileData.social_links === 'string') 
+                    ? JSON.parse(profileData.social_links) 
+                    : profileData.social_links;
+
+                socialContainer.innerHTML = ""; // تفريغ الحاوية أولاً
+                
+                if (links.facebook) {
+                    socialContainer.innerHTML += `<a href="${links.facebook}" target="_blank" class="social-icon-link" title="فيسبوك"><i class="fab fa-facebook"></i></a>`;
+                }
+                if (links.instagram) {
+                    socialContainer.innerHTML += `<a href="${links.instagram}" target="_blank" class="social-icon-link" title="انستجرام"><i class="fab fa-instagram"></i></a>`;
+                }
+                if (links.website) {
+                    socialContainer.innerHTML += `<a href="${links.website}" target="_blank" class="social-icon-link" title="الموقع الإلكتروني"><i class="fas fa-globe"></i></a>`;
+                }
+            } catch (e) {
+                console.error("Social links parse error", e);
+            }
+        }
+
+        // 7. زر التعديل (Edit Button)
+        if (myPhone && profilePhone && myPhone === profilePhone) {
+            const editBtn = document.getElementById("edit-profile-btn");
+            if (editBtn) editBtn.style.display = "inline-flex";
+        }
+
+        // 8. الإحصائيات (Stats)
+        const countBadge = document.getElementById("prop-count-badge");
+        if (countBadge) {
+            countBadge.innerText = `${profileData.properties ? profileData.properties.length : 0} عقار`;
+        }
+
+        let joinYear = "2025";
+        if (profileData.created_at) {
+            joinYear = new Date(profileData.created_at).getFullYear();
+        }
+        const joinText = document.getElementById("join-date-text");
+        if (joinText) joinText.innerText = `عضو منذ ${joinYear}`;
+
+        // 9. الذكاء الاصطناعي والتقييمات
+        const aiContainer = document.getElementById("ai-summary-container");
+        if (aiContainer) aiContainer.style.display = "none"; // إخفاء افتراضي
+
+        if (profileData.phone) fetchReviews(profileData.phone);
+        renderProperties(profileData.properties || []);
+
+        // التبديل للتاب المطلوب
+        if (requestedTab === "reviews") window.switchTab("reviews");
+
+    } catch (error) {
+        console.error(error);
+        const nameEl = document.getElementById("user-name");
+        if (nameEl) nameEl.innerText = "مستخدم غير موجود";
+    }
 });
 
+// ... باقي الدوال (renderProperties, switchTab, fetchReviews, etc.) تبقى كما هي دون تغيير ...
+// تأكد فقط من نسخ باقي الكود الأصلي الموجود أسفل دالة DOMContentLoaded
 function renderProperties(properties) {
   const grid = document.getElementById("properties-grid");
   const loading = document.getElementById("loading-props");
