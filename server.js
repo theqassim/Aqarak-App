@@ -4614,7 +4614,7 @@ app.get("/api/public/profile/:username", async (req, res) => {
       [username.toLowerCase(), user.phone]
     );
 
-    res.json({
+   res.json({
       name: user.name,
       phone: user.phone,
       is_verified: user.is_verified,
@@ -4622,6 +4622,11 @@ app.get("/api/public/profile/:username", async (req, res) => {
       created_at: user.created_at,
       ai_summary: user.ai_summary_cache,
       bio: user.bio,
+      // البيانات الجديدة التي كانت ناقصة:
+      cover_picture: user.cover_picture,
+      job_title: user.job_title,
+      social_links: user.social_links,
+      // ------------------------------------
       properties: propsRes.rows,
     });
   } catch (error) {
