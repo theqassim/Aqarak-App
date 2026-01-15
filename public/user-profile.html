@@ -861,6 +861,30 @@
           opacity: 0.6;
         }
       }
+      .profile-cover-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+.profile-cover-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.4; /* تقليل الشفافية عشان الكلام يبان */
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+.social-icon-link {
+    color: #ccc;
+    font-size: 1.2rem;
+    transition: 0.3s;
+}
+.social-icon-link:hover {
+    color: var(--neon-primary);
+    transform: translateY(-3px);
+}
     </style>
   </head>
   <body>
@@ -894,10 +918,17 @@
       </div>
     </header>
 
-    <section class="profile-hero">
-      <div class="profile-avatar-wrapper" id="avatar-container"></div>
-      <h1 class="user-name-title" id="user-name">...</h1>
-
+   <section class="profile-hero" style="position: relative; overflow: hidden;">
+    <div class="profile-cover-bg">
+        <img id="user-cover-img" src="" alt="Cover" style="display:none;">
+    </div>
+    
+    <div class="profile-avatar-wrapper" id="avatar-container"></div>
+    <h1 class="user-name-title" id="user-name">...</h1>
+    
+    <p id="user-job-title" style="color:var(--neon-secondary); margin-top:-10px; margin-bottom:15px; font-size:1.1rem; display:none;"></p>
+    
+    <div id="social-links-container" style="display:flex; justify-content:center; gap:15px; margin-bottom:15px;"></div>
       <div
         id="user-bio-container"
         style="

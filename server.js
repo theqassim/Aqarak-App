@@ -3405,9 +3405,18 @@ app.post(
       updateValues.push(socialData);
       paramCounter++;
 
-      if (newUsername && newUsername !== currentUser.username) {
-        // ... (نفس كود التحقق من الاسم القديم) ...
-         const checkUser = await pgQuery(
+       if (newUsername && newUsername !== currentUser.username) {
+        if (currentUser.last_username_change) {
+          const lastChange = new Date(currentUser.last_username_change);
+          const diffDays = Math.ceil(
+            Math.abs(new Date() - lastChange) / (1000 * 60 * 60 * 24)
+          );
+          if (diffDays < 30)
+            return res
+              .status(400)
+              .json({ message: `انتظر ${30 - diffDays} يوم لتغيير الاسم.` });
+        }
+        const checkUser = await pgQuery(
           "SELECT id FROM users WHERE username = $1",
           [newUsername]
         );
@@ -3419,6 +3428,16 @@ app.post(
         paramCounter++;
       }
 
+      if (newUsername) {
+        const usernameRegex = /^[a-zA-Z0-9._]+$/;
+        if (!usernameRegex.test(newUsername)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "اسم المستخدم يجب أن يكون بالإنجليزية وبدون مسافات أو رموز خاصة.",
+          });
+        }
+      }
       if (updateValues.length === 0)
         return res.json({ success: true, message: "لم يتغير شيء" });
 

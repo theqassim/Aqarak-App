@@ -44,6 +44,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     profilePhone = profileData.phone;
     window.currentProfilePhone = profileData.phone;
+
+    if (profileData.cover_picture) {
+        const coverEl = document.getElementById("user-cover-img");
+        if (coverEl) {
+            coverEl.src = profileData.cover_picture;
+            coverEl.style.display = "block";
+        }
+    }
+
+    // 2. عرض المسمى الوظيفي
+    if (profileData.job_title) {
+        const jobEl = document.getElementById("user-job-title");
+        if (jobEl) {
+            jobEl.textContent = profileData.job_title;
+            jobEl.style.display = "block";
+        }
+    }
+
+    // 3. عرض السوشيال ميديا
+    if (profileData.social_links) {
+        try {
+            const links = JSON.parse(profileData.social_links);
+            const container = document.getElementById("social-links-container");
+            if (container) {
+                container.innerHTML = ""; // تنظيف
+                if (links.facebook) container.innerHTML += `<a href="${links.facebook}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fab fa-facebook"></i></a>`;
+                if (links.instagram) container.innerHTML += `<a href="${links.instagram}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fab fa-instagram"></i></a>`;
+                if (links.website) container.innerHTML += `<a href="${links.website}" target="_blank" class="social-icon-link" style="color:white; font-size:1.5rem; margin:0 10px;"><i class="fas fa-globe"></i></a>`;
+            }
+        } catch (e) { console.error("Social links parse error", e); }
+    }
     // تغيير خلفية الهيرو لتكون صورة الغلاف
 const hero = document.querySelector('.profile-hero');
     if (hero && profileData.cover_picture) {
