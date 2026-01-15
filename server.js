@@ -1327,8 +1327,13 @@ app.get("/api/auth/me", async (req, res) => {
       });
     }
 
+    // ---------------------------------------------------------
+    // التعديل هنا: تمت إضافة (cover_picture, job_title, social_links)
+    // ---------------------------------------------------------
     const userRes = await pgQuery(
-      "SELECT role, phone, username, name, is_banned, wallet_balance, is_verified, profile_picture, bio FROM users WHERE id = $1",
+      `SELECT role, phone, username, name, is_banned, wallet_balance, 
+      is_verified, profile_picture, bio, cover_picture, job_title, social_links 
+      FROM users WHERE id = $1`,
       [decoded.id]
     );
 
@@ -1363,6 +1368,12 @@ app.get("/api/auth/me", async (req, res) => {
       is_verified: user.is_verified,
       profile_picture: user.profile_picture,
       bio: user.bio,
+      // ---------------------------------------------------------
+      // وهنا أيضاً نمرر البيانات الجديدة للفرونت إند
+      // ---------------------------------------------------------
+      cover_picture: user.cover_picture,
+      job_title: user.job_title,
+      social_links: user.social_links,
       isPaymentActive: isPaymentActive,
     });
   } catch (err) {
