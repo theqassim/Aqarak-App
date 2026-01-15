@@ -13,6 +13,12 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const { Client, RemoteAuth } = require("whatsapp-web.js");
+const originalSendMessage = Client.prototype.sendMessage;
+Client.prototype.sendMessage = async function(chatId, content, options = {}) {
+    options = options || {};
+    options.sendSeen = false; // ده السطر السحري اللي هيمنع الخطأ
+    return originalSendMessage.call(this, chatId, content, options);
+};
 const qrcode = require("qrcode-terminal");
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
